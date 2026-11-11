@@ -1,0 +1,32 @@
+# CoreDash Nexus — real power meters for the "Energy" page (plating + brass rolling plant).
+# One 3-phase power analyser per feeder (Modbus RTU on RS-485 or Modbus TCP).
+# Register addresses below are PLACEHOLDERS: copy them from your meter's register map
+# (float32 values, word order differs between brands — set wordOrder accordingly).
+devices:
+  - id: PM-MDB
+    driver: modbus-tcp
+    host: 192.168.10.50
+    port: 502
+    unitId: 1
+    pollMs: 1000
+    tags:
+      - { id: MDB.P_KW,     address: 3059, type: float32, wordOrder: be, unit: kW,   desc: Total active power }
+      - { id: MDB.Q_KVAR,   address: 3067, type: float32, wordOrder: be, unit: kvar, desc: Total reactive power }
+      - { id: MDB.S_KVA,    address: 3075, type: float32, wordOrder: be, unit: kVA,  desc: Total apparent power }
+      - { id: MDB.PF,       address: 3083, type: float32, wordOrder: be, desc: True power factor }
+      - { id: MDB.DPF,      address: 3091, type: float32, wordOrder: be, desc: Displacement power factor (cos phi) }
+      - { id: MDB.THD_I,    address: 21299, type: float32, wordOrder: be, unit: '%', desc: Current THD, worst phase }
+  # Repeat for each feeder: REC-1..3 (plating rectifiers), IF-1, MILL-1, CL-1, ANN-1, HYD-1, CMP-1, CHL-1, SCB-1, PMP-1, LGT-1
+  - id: PM-REC2
+    driver: modbus-rtu
+    port: /dev/ttyUSB0
+    baudRate: 19200
+    unitId: 12
+    pollMs: 1000
+    tags:
+      - { id: REC-2.P_KW,   address: 3059, type: float32, wordOrder: be, unit: kW }
+      - { id: REC-2.Q_KVAR, address: 3067, type: float32, wordOrder: be, unit: kvar }
+      - { id: REC-2.PF,     address: 3083, type: float32, wordOrder: be }
+      - { id: REC-2.THD_I,  address: 21299, type: float32, wordOrder: be, unit: '%' }
+# Capacitor-bank controller (APFC) status, if it has Modbus:
+#  - { id: CAP.STEPS, address: <reg>, type: uint16 }   # number of steps switched in

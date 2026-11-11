@@ -160,6 +160,19 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     await click('[data-act="ack"]');
     assert.ok(await until(() => gw.alarms.active().filter((a) => !a.acked).length < before), 'acknowledged on the gateway');
 
+    // plant power simulation: scene animates, measures improve the PF shown to management
+    await click('[data-act="tab"][data-arg="power"]');
+    await page.waitForSelector('.pw-svg');
+    const kw1 = await page.$eval('#pw-m-kw', (e) => e.textContent); await sleep(1500);
+    assert.notStrictEqual(await page.$eval('#pw-m-kw', (e) => e.textContent), kw1, 'live power changes');
+    const pfAfter = async () => parseFloat(await page.$eval('.pw-cmp b', (e) => e.textContent));
+    const pfBefore = await pfAfter();
+    await click('[data-act="pw-preset"][data-arg="all"]');
+    assert.ok(await until(async () => (await pfAfter()) > 0.95), 'all measures lift the plant PF above 0.95');
+    assert.ok(pfBefore < 0.85, 'as-is PF below the 0.85 penalty line');
+    await shot('07d-power');
+    await click('[data-act="pw-preset"][data-arg="none"]');
+
     // report
     await click('[data-act="tab"][data-arg="report"]');
     await page.waitForSelector('.devcard.gold');
