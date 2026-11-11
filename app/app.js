@@ -16,7 +16,7 @@ const hhmm = (ts) => new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit',
 // ---------------------------------------------------------------- text
 const L = {
   th: {
-    site: 'โรงงาน A · บางนา', home: 'หน้าหลัก', control: 'ควบคุม', alerts: 'แจ้งเตือน', report: 'รายงาน',
+    site: 'โรงงาน A · บางนา', home: 'หน้าหลัก', overview: 'ภาพรวมโรงงาน', control: 'ควบคุม', alerts: 'แจ้งเตือน', report: 'รายงาน',
     kwNow: 'kW ตอนนี้', usedToday: 'ใช้ไฟวันนี้', estCost: 'ค่าไฟประมาณ', peakLimit: 'เพดาน Peak 320 kW', waterFlow: 'อัตราการใช้น้ำ', tankLevel: 'ระดับถัง T-1',
     machRun: 'เครื่องจักรทำงาน', lightsOn: 'ไฟเปิดอยู่', zones: 'โซน', scenes: 'สั่งงานด่วน (Scenes)', sMorning: 'เริ่มกะเช้า', sLunch: 'พักเที่ยง', sOff: 'ปิดโรงงาน',
     power: 'กำลังไฟฟ้าล่าสุด', allOk: 'ทุกระบบทำงานปกติ', allOkSub: 'อุปกรณ์ออนไลน์ครบ', hasAlerts: 'มีแจ้งเตือน', items: 'รายการ',
@@ -37,7 +37,7 @@ const L = {
     days: ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
   },
   en: {
-    site: 'Plant A · Bang Na', home: 'Home', control: 'Control', alerts: 'Alerts', report: 'Reports',
+    site: 'Plant A · Bang Na', home: 'Home', overview: 'Plant overview', control: 'Control', alerts: 'Alerts', report: 'Reports',
     kwNow: 'kW now', usedToday: 'Used today', estCost: 'Est. cost', peakLimit: 'Peak limit 320 kW', waterFlow: 'Water flow', tankLevel: 'Tank T-1 level',
     machRun: 'Machines running', lightsOn: 'Lights on', zones: 'zones', scenes: 'Quick scenes', sMorning: 'Start shift', sLunch: 'Lunch break', sOff: 'Shut down',
     power: 'Recent power', allOk: 'All systems normal', allOkSub: 'All devices online', hasAlerts: 'Active alerts:', items: '',
@@ -280,6 +280,8 @@ function valveText(v) {
   const pos = V(v.pos) ?? 0;
   return [pos === 0 ? t().closed : t().openP + Math.round(pos) + '%', pos === 0 ? 'var(--mu)' : 'var(--it)', pos === 0 ? '#64748B' : '#1F5FFF'];
 }
+const embedded = () => { try { return window.self !== window.top; } catch (_) { return true; } };
+const isDesk = () => typeof window !== 'undefined' && window.innerWidth >= 1024;
 const canCommand = () => src && src.user && src.user.role !== 'viewer';
 
 // ---------------------------------------------------------------- views
@@ -306,7 +308,7 @@ function langButtons() {
 
 function header() {
   const x = t(), open = src.activeAlarms().filter((a) => !a.acked).length;
-  const titles = { home: 'CoreDash Nexus', scada: 'SCADA', control: x.control, alerts: x.alerts, report: x.report };
+  const titles = { home: isDesk() ? x.overview : 'CoreDash Nexus', scada: 'SCADA', control: x.control, alerts: x.alerts, report: x.report };
   const conn = src.connected ? '#3B82F6' : '#F59E0B';
   return `<header class="hdr">
     ${badge(34, 41)}
@@ -318,7 +320,11 @@ function header() {
 
 function tabs() {
   const x = t(), open = src.activeAlarms().some((a) => !a.acked);
-  return `<nav class="tabs" aria-label="tabs">${['home', 'scada', 'control', 'alerts', 'report'].map((k) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k ? 'page' : 'false'}">${svg(ICON[k], 24)}<span>${k === 'scada' ? 'SCADA' : x[k]}</span>${k === 'alerts' && open ? '<span class="dot"></span>' : ''}</button>`).join('')}</nav>`;
+  const desk = isDesk();
+  const label = (k) => (k === 'scada' ? 'SCADA' : k === 'home' && desk ? x.overview : x[k]);
+  const brand = desk ? `<div class="side-brand">${badge(40, 48)}<div><b>CoreDash Nexus</b><span>${x.site}</span></div></div>` : '';
+  const foot = desk ? `<div class="side-foot"><button data-act="settings">${svg(ICON.gear, 22)}<span>${x.settings}</span></button><div class="devcard side-dev">${badge(96, 117)}<small>${x.devBy}</small><b>${x.devName}</b></div></div>` : '';
+  return `<nav class="tabs" aria-label="tabs">${brand}${['home', 'scada', 'control', 'alerts', 'report'].map((k) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k ? 'page' : 'false'}">${svg(ICON[k], 24)}<span>${label(k)}</span>${k === 'alerts' && open ? '<span class="dot"></span>' : ''}</button>`).join('')}${foot}</nav>`;
 }
 
 function viewHome() {
@@ -361,6 +367,7 @@ function viewHome() {
 
 function installCard() {
   const x = t();
+  if (embedded()) return '';
   const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   if (standalone) return '';
   if (S.installEvt) return `<div class="install">${svg(ICON.home)}<span style="flex:1">${x.install}</span><button class="btn primary" style="min-height:40px;padding:8px 14px" data-act="install">${x.installBtn}</button></div>`;
@@ -377,7 +384,7 @@ function viewScada() {
   const pipe = (on, extra, st) => `<div class="pipe ${extra || ''}${on ? ' on' : ''}" style="${st}"></div>`;
   const inOn = p01 && vpos('V-101') > 0, supOn = vpos('V-102') > 0 && lvl > 2, drOn = vpos('V-103') > 0 && lvl > 2;
   const valve = (id, left, top, rot) => { const vt = valveText(VALVES.find((v) => v.id === id)); return `<button class="eq${sel(id)}" data-act="sheet" data-arg="${id}" aria-label="${id}" style="left:${left}px;top:${top}px;width:48px;height:40px${rot ? ';transform:rotate(90deg)' : ''}"><svg width="36" height="24" viewBox="0 0 40 28" aria-hidden="true"><path d="M2 2 L20 14 L2 26 Z M38 2 L20 14 L38 26 Z" fill="${vt[2]}" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/></svg></button>`; };
-  const lab = (id, left, top, extra) => { const vt = valveText(VALVES.find((v) => v.id === id)); return `<div class="lbl" style="left:${left}px;top:${top}px;${extra || ''}"><b>${id}</b><span style="color:${vt[1]}">${vt[0]}</span></div>`; };
+  const lab = (id, left, top, extra) => { const v = VALVES.find((q) => q.id === id), vt = valveText(v), p = Math.round(V(v.pos) ?? 0); return `<div class="lbl" style="left:${left}px;top:${top}px;${extra || ''}"><b>${id}</b><span style="color:${vt[1]}">${p === 0 ? x.closed : p + '%'}</span></div>`; };
   const coolOn = V('CHL-01.RUN') && V('P-02.RUN') && vpos('V-201') > 0;
   const cool = ['CHL-01', 'P-02', 'V-201'].map((id) => {
     const isV = id === 'V-201', bad = !isV && alarmsFor(id), on = isV ? vpos(id) > 0 : V(id + '.RUN');
@@ -437,7 +444,7 @@ function viewControl() {
         <div class="grid3">${b(0, x.close)}${b(50, '50%')}${b(100, x.open)}</div></div>`;
     }).join('');
   }
-  return `<div class="seg" role="tablist">${segs}</div>${canCommand() ? '' : `<div class="banner" style="border-radius:10px">${x.viewOnly}</div>`}${body}`;
+  return `<div class="seg" role="tablist">${segs}</div>${canCommand() ? '' : `<div class="banner" style="border-radius:10px">${x.viewOnly}</div>`}<div class="cgrid">${body}</div>`;
 }
 
 function viewAlerts() {
@@ -480,7 +487,7 @@ function viewReport() {
     <span style="font-weight:600;color:var(--tx);font-size:14px">${x.share} · ${n0(kwNow)} kW</span>
     ${parts.map((p) => `<div style="display:flex;flex-direction:column;gap:4px"><div class="row" style="justify-content:space-between;font-size:13px"><span style="color:var(--t2)">${tr(p[0])}</span><b class="num" style="color:var(--tx)">${Math.round(p[1] / tot * 100)}%</b></div><div class="bar"><span style="width:${Math.round(p[1] / tot * 100)}%;background:${p[2]}"></span></div></div>`).join('')}
   </div>
-  <button class="btn primary" data-act="print">${x.exportPdf}</button>`;
+  ${embedded() ? '' : `<button class="btn primary" data-act="print">${x.exportPdf}</button>`}`;
 }
 
 function viewSheet() {
@@ -554,7 +561,11 @@ function render() {
   if (S.view !== 'app') return;
   const prevMain = root.querySelector('main');
   const scroll = prevMain ? prevMain.scrollTop : 0;
-  const body = { home: viewHome, scada: viewScada, control: viewControl, alerts: viewAlerts, report: viewReport }[S.tab]();
+  const views = { home: viewHome, scada: viewScada, control: viewControl, alerts: viewAlerts, report: viewReport };
+  const body = isDesk() && S.tab === 'home'
+    ? `<div class="dgrid"><section class="col">${viewHome()}</section><section class="col">${viewScada()}</section><section class="col">${viewAlerts()}</section></div>`
+    : `<div class="wrap wrap-${S.tab}">${views[S.tab]()}</div>`;
+  root.classList.toggle('desk', isDesk());
   root.innerHTML = header() + `<main>${body}</main>` + tabs() + viewSheet() + viewSettings() + viewConfirm() +
     (S.toast ? `<div class="toast ${S.toast.bad ? 'bad' : ''}" role="status">${esc(S.toast.text)}</div>` : '');
   const main = root.querySelector('main');
@@ -646,6 +657,7 @@ root.addEventListener('change', (ev) => {
 });
 root.addEventListener('pointerdown', (ev) => { if (ev.target.type === 'range') interacting = true; });
 window.addEventListener('pointerup', () => { if (interacting) { setTimeout(() => { interacting = false; schedule(); }, 300); } });
+let lastDesk = null; window.addEventListener('resize', () => { if (isDesk() !== lastDesk) { lastDesk = isDesk(); schedule(); } });
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; schedule(); });
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== S.tab && ['home', 'scada', 'control', 'alerts', 'report'].includes(h)) { S.tab = h; schedule(); } });
 

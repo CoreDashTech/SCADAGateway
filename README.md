@@ -73,6 +73,17 @@ Gateway มีแอปมือถือในตัวที่ **`/app/`** (�
 - ไอคอนแอปเป็นโลโก้ **CoreDash Technology**, เปิดเต็มจอ, เปิดได้แม้ออฟไลน์ (แสดง “กำลังเชื่อมใหม่”)
 - ถ้าเปิดจากที่ที่ไม่มี Gateway จะเข้า **โหมดสาธิต** อัตโนมัติ (จำลองข้อมูลในเครื่อง)
 
+### เผยแพร่บน GitHub Pages (สาธิตลูกค้า)
+
+repo นี้เปิดบน GitHub Pages ได้ทันที: `index.html` (หน้าแรกภาษาไทย), `en.html` (English) และ Web App ที่ `app/`
+GitHub Pages รัน Gateway (Node.js) ไม่ได้ แอปจึงเข้า **โหมดสาธิต** เอง และเพราะเป็น HTTPS จึง **ติดตั้งลงมือถือได้จากลิงก์นั้นเลย**
+
+1. อัปโหลดทุกไฟล์ในโฟลเดอร์นี้ขึ้น repo (รวม `.nojekyll`, `index.html`, `en.html`, `app/`)
+2. Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)`
+3. เปิด `https://<user>.github.io/<repo>/` · Web App: `https://<user>.github.io/<repo>/app/`
+
+แก้หน้าแรก: แก้ `tools/landing.dc.html` แล้วรัน `node tools/build-landing.cjs tools/landing.dc.html .`
+
 ### ติดตั้งลงมือถือ
 
 เบราว์เซอร์จะยอมให้ติดตั้งเมื่อเปิดผ่าน **HTTPS** เท่านั้น (ยกเว้น `localhost`) ทางที่ง่ายที่สุด:
