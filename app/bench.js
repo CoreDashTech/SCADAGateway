@@ -12,12 +12,12 @@
 // each unit gets a small individual offset so three meters of one model never read identically.
 const B0 = (th, en) => ({ th, en });
 export const MODELS = {
-  'SMCV4': { name: 'SMCV4', code: 'SM', kind: B0('มาตรน้ำแบบหน้าปัดแห้ง หลายใบพัด', 'Multi-jet, dry dial'), err: [[-1, 1.6], [0, 0.6], [1, -0.2], [2, -0.5]],
-    look: { style: 'subdials', rim: '#1D4ED8', rim2: '#93C5FD', face: '#F8FAFC', ink: '#0F172A', accent: '#DC2626', blk: 5, red: 3 } },
-  'GMCV3-V3.5': { name: 'GMCV3-V3.5', code: 'GM', kind: B0('มาตรน้ำทองเหลือง เข็มกวาดกลาง', 'Brass body, centre sweep hand'), err: [[-1, -2.2], [0, -0.8], [1, 0.3], [2, 0.5]],
-    look: { style: 'sweep', rim: '#A16207', rim2: '#FDE68A', face: '#FFFBEB', ink: '#3B2F14', accent: '#B91C1C', blk: 5, red: 4 } },
-  'ASAHI GMK': { name: 'ASAHI GMK', code: 'AG', kind: B0('มาตรน้ำแบบเฟือง หน้าปัด 3 เข็ม', 'Gear-train dial, three pointers'), err: [[-1, 2.4], [0, 1.0], [1, 0.6], [2, 0.8]],
-    look: { style: 'pointers', rim: '#334155', rim2: '#CBD5E1', face: '#FFFFFF', ink: '#111827', accent: '#DC2626', blk: 5, red: 2 } }
+  'SMCV4': { name: 'SMCV4', code: 'SM', idBase: 69100004, res: 0.01, kind: B0('มาตรน้ำอิเล็กทรอนิกส์ จอ LCD', 'Electronic meter, LCD display'), err: [[-1, 0.9], [0, 0.4], [1, 0.1], [2, -0.2]],
+    look: { style: 'lcd', ring: '#0B3954', ring2: '#082A40', track: '#145374', arc: '#34D399', pill: '#1E4A6B', title: '#0B3954', ink: '#0F172A', rim: '#0B3954', rim2: '#34D399', subs: [] } },
+  'GMCV3-V3.5': { name: 'GMCV3-V3.5', code: 'GM', idBase: 71250012, res: 0.01, kind: B0('มาตรน้ำอิเล็กทรอนิกส์ จอ LCD', 'Electronic meter, LCD display'), err: [[-1, -1.2], [0, -0.5], [1, 0.2], [2, 0.3]],
+    look: { style: 'lcd', ring: '#2A2F3A', ring2: '#161A22', track: '#3B4250', arc: '#F59E0B', pill: '#3A4150', title: '#7C4A03', ink: '#1F2937', rim: '#2A2F3A', rim2: '#F59E0B', subs: [] } },
+  'ASAHI GMK': { name: 'ASAHI GMK', code: 'AG', res: 0.05, kind: B0('มาตรน้ำแบบแห้ง ล้อตัวเลข 7 หลัก + เข็ม ×0.0001', 'Dry-dial, 7-drum register + ×0.0001 pointer'), err: [[-1, 2.4], [0, 1.0], [1, 0.6], [2, 0.8]],
+    look: { style: 'asahi', rim: '#1F2937', rim2: '#6B7280', body: '#B08A2E', face: '#FFFFFF', ink: '#111111', accent: '#EF3B3B', blk: 4, red: 3, subs: [{ cx: 140, cy: 127, r: 23, rev: 1, label: 'X0.0001' }], star: { cx: 94, cy: 122, r: 11 } } }
 };
 export const MODEL_NAMES = Object.keys(MODELS);
 export const POSITIONS = ['M1', 'M2', 'M3'];
@@ -86,7 +86,7 @@ export class BenchSim {
     for (const [i, m] of this.meters.entries()) {
       m.model = name;
       m.err = M.err.map(([x, e], k) => [x, e + UNIT_OFFSET[m.id][k]]);
-      this.serials[m.id] = `${M.code}${yymm}-${String(1041 + i * 7).padStart(5, '0')}`;
+      this.serials[m.id] = M.idBase ? String(M.idBase + i * 7) : `${M.code}${yymm}-${String(1041 + i * 7).padStart(5, '0')}`;
     }
     if (!quiet) this.emit();
   }
@@ -185,7 +185,7 @@ export class BenchSim {
         break;
       case 1:
         this.v[dk] = false;
-        for (const m of this.meters) r.start[m.id] = quant(m.reading, 0.05);
+        for (const m of this.meters) r.start[m.id] = quant(m.reading, MODELS[m.model].res);
         this.lastRead = { kind: 'start', key: r.key, at: performance.now() };
         go(2);
         break;
@@ -208,7 +208,7 @@ export class BenchSim {
       case 5: {
         const pts = this.points();
         for (const m of this.meters) {
-          r.end[m.id] = quant(m.reading, 0.05);
+          r.end[m.id] = quant(m.reading, MODELS[m.model].res);
           this.lastRead = { kind: 'end', key: r.key, at: performance.now() };
           if (!this.selected[m.id]) continue;
           const vm = r.end[m.id] - r.start[m.id];
@@ -230,72 +230,175 @@ const quant = (v, d) => +(Math.round(v / d) * d).toFixed(6);
 
 
 // ---------------------------------------------------------------- meter dial faces
-// Each model gets its own dial: drawn in a 200 × 200 box. Ids are prefixed so several dials can live in one page.
-// Register: black drums = whole m³, red drums = litres (and 0.1 L for 4 red drums). Pointers turn with the litres.
+// Mechanical water-meter dials drawn in a 200 × 200 box (ids prefixed so several dials can share a page).
+// Register as on Thai TIS 3078 meters: black drums = whole m³, red drums = litres (4th red drum = 0.1 L),
+// odometer-style rolling drums, a red ×0.0001 m³ pointer (0.1 L per division, 1 L per turn) and a red flow star.
 const r1 = (v) => v.toFixed(1);
-function ticks(cx, cy, r0, r1x, n, color, w = 1.2, every = 0, long = 0) {
+const MONO = "'Roboto Condensed','Arial Narrow','DejaVu Sans Condensed',sans-serif";
+function scale(p, cx, cy, r, ink, n = 50) {
   let o = '';
-  for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, rr = every && k % every === 0 ? r0 - long : r0; o += `<line x1="${r1(cx + Math.sin(a) * rr)}" y1="${r1(cy - Math.cos(a) * rr)}" x2="${r1(cx + Math.sin(a) * r1x)}" y2="${r1(cy - Math.cos(a) * r1x)}" stroke="${color}" stroke-width="${w}"/>`; }
+  for (let k = 0; k < n; k++) {
+    const a = k / n * Math.PI * 2, big = k % 5 === 0, r0 = big ? r - 5 : r - 3;
+    o += `<line x1="${r1(cx + Math.sin(a) * r0)}" y1="${r1(cy - Math.cos(a) * r0)}" x2="${r1(cx + Math.sin(a) * r)}" y2="${r1(cy - Math.cos(a) * r)}" stroke="${ink}" stroke-width="${big ? 1 : 0.6}"/>`;
+  }
+  for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, rr = r - 9.5; o += `<text x="${r1(cx + Math.sin(a) * rr)}" y="${r1(cy - Math.cos(a) * rr + 2.6)}" font-size="${(r * 0.3).toFixed(1)}" text-anchor="middle" fill="${ink}" font-family="${MONO}">${k}</text>`; }
   return o;
 }
-function subdial(p, i, cx, cy, r, L, label) {
-  const nums = Array.from({ length: 10 }, (_, k) => { const a = k / 10 * Math.PI * 2; return `<text x="${r1(cx + Math.sin(a) * (r - 6))}" y="${r1(cy - Math.cos(a) * (r - 6) + 2.4)}" font-size="5.6" text-anchor="middle" fill="${L.ink}">${k}</text>`; }).join('');
-  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFFFF" stroke="${L.ink}" stroke-width="0.8"/>${ticks(cx, cy, r - 1.5, r, 10, L.ink, 0.6)}${nums}
-    <g id="${p}-sub${i}"><path d="M${cx},${cy - r + 4} L${cx + 2.2},${cy} L${cx},${cy + 3} L${cx - 2.2},${cy} Z" fill="${L.accent}"/></g><circle cx="${cx}" cy="${cy}" r="1.6" fill="${L.ink}"/>
-    <text x="${cx}" y="${cy + r + 7}" font-size="5.2" text-anchor="middle" fill="${L.ink}">${label}</text>`;
+function pointerDial(p, i, s, L) {
+  return `<circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="${L.face}"/>${scale(p, s.cx, s.cy, s.r, L.ink)}
+    <circle cx="${s.cx}" cy="${s.cy}" r="${(s.r * 0.36).toFixed(1)}" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="0.6"/>
+    <g id="${p}-sub${i}"><path d="M${s.cx},${r1(s.cy - s.r * 0.62)} C${r1(s.cx + s.r * 0.16)},${r1(s.cy - s.r * 0.2)} ${r1(s.cx + s.r * 0.2)},${r1(s.cy + s.r * 0.12)} ${s.cx},${r1(s.cy + s.r * 0.16)} C${r1(s.cx - s.r * 0.2)},${r1(s.cy + s.r * 0.12)} ${r1(s.cx - s.r * 0.16)},${r1(s.cy - s.r * 0.2)} ${s.cx},${r1(s.cy - s.r * 0.62)} Z" fill="${L.accent}" stroke="#9F1239" stroke-width="0.4"/></g>
+    <text x="${s.cx}" y="${r1(s.cy + s.r + 8)}" font-size="6.6" text-anchor="middle" fill="${L.ink}" font-family="${MONO}" transform="rotate(-6 ${s.cx} ${r1(s.cy + s.r + 8)})">${s.label}</text>`;
 }
+function starWin(p, s, L) {
+  return `<circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1"/><circle cx="${s.cx}" cy="${s.cy}" r="${(s.r * 0.78).toFixed(1)}" fill="#111827"/>
+    <g transform="translate(${s.cx},${s.cy})"><g id="${p}-star">${[0, 90, 180, 270].map((a) => `<path d="M-2.2,0 L-2.6,${r1(-s.r * 0.86)} Q0,${r1(-s.r * 1.02)} 2.6,${r1(-s.r * 0.86)} L2.2,0 Z" fill="${L.accent}" transform="rotate(${a})"/>`).join('')}<circle r="2.2" fill="#FCA5A5"/></g></g>`;
+}
+function drumY(L, reading) {
+  const n = L.blk + L.red, v = reading / (L.red === 4 ? 0.1 : 1);
+  return Array.from({ length: n }, (_, k) => {
+    const pow = n - 1 - k, x = v / 10 ** pow, digit = Math.floor(x) % 10;
+    // odometer carry: a drum only turns while every drum to its right reads 9 (the last 1 of 10^pow)
+    const rest = v % 10 ** pow, edge = 10 ** pow - 1;
+    const off = pow === 0 ? x - Math.floor(x) : rest > edge ? rest - edge : 0;
+    return -(digit + off) * 21;
+  });
+}
+function register(p, L, x0, y0, reading = 0) {
+  const ys = drumY(L, reading);
+  const n = L.blk + L.red, w = 13.4, h = 21, gap = 0.8;
+  let o = `<defs>${Array.from({ length: n }, (_, k) => `<clipPath id="${p}-c${k}"><rect x="${r1(x0 + k * (w + gap))}" y="${y0}" width="${w}" height="${h}" rx="1.2"/></clipPath>`).join('')}
+    <linearGradient id="${p}-dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0.45"/><stop offset="0.28" stop-color="#000" stop-opacity="0"/><stop offset="0.72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.45"/></linearGradient></defs>`;
+  const W = n * (w + gap) - gap;
+  // black window frame with the step on the right (as on the real register)
+  o += `<path d="M${r1(x0 - 4)},${r1(y0 - 4)} H${r1(x0 + W + 4)} V${r1(y0 + h * 0.55)} H${r1(x0 + W + 1)} V${r1(y0 - 1)} H${r1(x0 - 1)} V${r1(y0 + h + 1)} H${r1(x0 + L.blk * (w + gap) - 2)} V${r1(y0 + h + 4)} H${r1(x0 - 4)} Z" fill="#111"/>`;
+  o += `<rect x="${r1(x0 + W + 1)}" y="${r1(y0 + h * 0.62)}" width="3.2" height="${r1(h * 0.42)}" fill="#111"/><path d="M${r1(x0 + W + 0.5)},${r1(y0 + h * 0.5)} l-3,1.6 l3,1.6 Z" fill="#111"/>`;
+  for (let k = 0; k < n; k++) {
+    const red = k >= L.blk, x = x0 + k * (w + gap), cx = x + w / 2;
+    const col = Array.from({ length: 11 }, (_, d) => `<text x="${r1(cx)}" y="${r1(y0 + h / 2 + 6 + d * h)}" font-size="16.5" font-weight="500" text-anchor="middle" fill="${red ? L.accent : '#111'}" font-family="${MONO}">${d % 10}</text>`).join('');
+    o += `<g clip-path="url(#${p}-c${k})"><rect x="${r1(x)}" y="${y0}" width="${w}" height="${h}" fill="#FAFAFA"/><g id="${p}-d${k}" transform="translate(0,${ys[k].toFixed(2)})">${col}</g><rect x="${r1(x)}" y="${y0}" width="${w}" height="${h}" fill="url(#${p}-dg)"/></g>`;
+  }
+  o += `<text x="${r1(x0 + L.blk * (w + gap) - 2.4)}" y="${r1(y0 + h + 9)}" font-size="13" font-weight="700" fill="#111">,</text>`;
+  return o;
+}
+
+// ---------- electronic meters with a 7-segment LCD (SMCV4, GMCV3-V3.5)
+const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg', ' ': '', '-': 'g' };
+function segDigit(id, x, y, w, h, t, ink, ch = ' ') {
+  const on = SEG[ch] ?? '';
+  const m = h / 2, k = t / 2, g = 0.6;
+  const H = (yy) => `M${r1(x + k + g)},${r1(yy)} l${r1(k)},${r1(-k)} h${r1(w - 2 * t - 2 * g)} l${r1(k)},${r1(k)} l${r1(-k)},${r1(k)} h${r1(-(w - 2 * t - 2 * g))} Z`;
+  const V = (xx, y0) => `M${r1(xx)},${r1(y0 + k + g)} l${r1(k)},${r1(k)} v${r1(m - 2 * t - 2 * g + 0.4)} l${r1(-k)},${r1(k)} l${r1(-k)},${r1(-k)} v${r1(-(m - 2 * t - 2 * g + 0.4))} Z`;
+  const d = { a: H(y + k), g: H(y + m), d: H(y + h - k), f: V(x + k, y), b: V(x + w - k, y), e: V(x + k, y + m - k), c: V(x + w - k, y + m - k) };
+  return `<g id="${id}" data-v="${ch}" transform="translate(${r1(x)},${r1(y + h)}) skewX(-7) translate(${r1(-x)},${r1(-y - h)})">${Object.entries(d).map(([s, path]) => `<path data-s="${s}" d="${path}" fill="${ink}" fill-opacity="${on.includes(s) ? 1 : 0.07}"/>`).join('')}</g>`;
+}
+function lcdFace(p, M, L, info) {
+  const q3 = info.q3 ?? 2.5, q4 = q3 * 1250, id = info.serial || '', reading = info.reading || 0;
+  const sum = [...id].reduce((t, c) => t + c.charCodeAt(0), 0), bat = (3.08 + (sum % 9) / 100).toFixed(2);
+  const arcR = 86, A0 = 225, SW = 270;
+  const pt = (deg, r) => [100 + Math.sin(deg * Math.PI / 180) * r, 100 - Math.cos(deg * Math.PI / 180) * r];
+  const [sx, sy] = pt(A0, arcR), [ex, ey] = pt(A0 + SW, arcR), arcLen = arcR * SW * Math.PI / 180;
+  const arcD = `M${r1(sx)},${r1(sy)} A${arcR},${arcR} 0 1 1 ${r1(ex)},${r1(ey)}`;
+  const name = M.name === 'SMCV4' ? 'SMCV.4' : M.name;
+  let o = `<defs>
+      <linearGradient id="${p}-bz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F1F5F9"/><stop offset="0.45" stop-color="#94A3B8"/><stop offset="1" stop-color="#E2E8F0"/></linearGradient>
+      <radialGradient id="${p}-rg" cx="0.5" cy="0.4" r="0.6"><stop offset="0.8" stop-color="${L.ring}"/><stop offset="1" stop-color="${L.ring2}"/></radialGradient>
+      <radialGradient id="${p}-fc" cx="0.45" cy="0.35" r="0.75"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E2E8F0"/></radialGradient>
+      <linearGradient id="${p}-lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DCE2C8"/><stop offset="1" stop-color="#B8C09F"/></linearGradient>
+      <linearGradient id="${p}-sh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+      <linearGradient id="${p}-pl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.pill}"/><stop offset="1" stop-color="${L.ring2}"/></linearGradient>
+      <clipPath id="${p}-lc"><rect x="39" y="66" width="122" height="38" rx="4"/></clipPath></defs>
+    <circle cx="100" cy="100" r="99" fill="url(#${p}-bz)"/><circle cx="100" cy="100" r="95" fill="url(#${p}-rg)"/>
+    <path d="${arcD}" fill="none" stroke="${L.track}" stroke-width="5.5" stroke-linecap="round"/>
+    <path id="${p}-arc" data-q4="${q4}" d="${arcD}" fill="none" stroke="${L.arc}" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="${r1(arcLen)}" stroke-dashoffset="${r1(arcLen * 0.97)}"/>
+    <circle cx="100" cy="100" r="80" fill="url(#${p}-fc)" stroke="#CBD5E1" stroke-width="1"/>
+    <text x="100" y="45" font-size="13.5" font-weight="800" letter-spacing="1.6" text-anchor="middle" fill="${L.title}" font-family="'Space Grotesk',Arial,sans-serif">${name}</text>
+    <text x="100" y="53" font-size="4.6" letter-spacing="1.6" text-anchor="middle" fill="#64748B" font-family="Arial,sans-serif">WATER METER</text>
+    <rect x="35" y="62" width="130" height="46" rx="6.5" fill="#4B5563"/><rect x="39" y="66" width="122" height="38" rx="4" fill="url(#${p}-lg)"/>
+    <text x="46" y="73" font-size="4" letter-spacing="0.6" fill="#5B6450" font-family="Arial,sans-serif">TOTAL VOLUME</text>
+    <text x="149" y="78.5" font-size="5.6" font-weight="700" fill="#111" font-family="Arial,sans-serif">m<tspan dy="-2" font-size="3.8">3</tspan></text>`;
+  const v = lcdVol(reading);
+  for (let k = 0; k < 7; k++) o += segDigit(`${p}-lm${k}`, 44 + k * 9, 77, 7.8, 19, 1.9, '#111', v.i[k]);
+  o += `<rect x="${r1(44 + 7 * 9 - 0.2)}" y="93.4" width="2.4" height="2.4" fill="#111"/>`;
+  for (let k = 0; k < 5; k++) o += segDigit(`${p}-ld${k}`, 111.5 + k * 7.5, 81.5, 6.4, 14.5, 1.35, '#111', v.d[k]);
+  o += `<g clip-path="url(#${p}-lc)"><path d="M88,66 L104,66 L84,104 L68,104 Z" fill="url(#${p}-sh)"/></g>
+    <rect x="52" y="112" width="96" height="23" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="0.8"/>
+    <text x="100" y="119" font-size="4" letter-spacing="1.4" text-anchor="middle" fill="#64748B" font-family="Arial,sans-serif">METER ID</text>
+    <text x="100" y="131" font-size="10.5" font-weight="800" letter-spacing="1.2" text-anchor="middle" fill="${L.title}" font-family="'Space Mono','DejaVu Sans Mono',monospace">${id}</text>
+    <text id="${p}-dt" x="100" y="143" font-size="5.6" text-anchor="middle" fill="#475569" font-family="Arial,sans-serif">${lcdClock()}</text>
+    <rect x="66" y="147.5" width="68" height="11.5" rx="5.75" fill="url(#${p}-pl)"/><text x="78" y="155.2" font-size="4" letter-spacing="0.8" fill="#A5B4CB" font-family="Arial,sans-serif">SIZE</text><line x1="92" y1="150" x2="92" y2="157" stroke="#64748B" stroke-width="0.6"/>
+    <text x="113" y="155.6" font-size="6.6" font-weight="800" text-anchor="middle" fill="#FFFFFF" font-family="Arial,sans-serif">15 <tspan font-size="4.4">mm</tspan></text>
+    <text x="100" y="166" font-size="4.4" text-anchor="middle" fill="#64748B" font-family="Arial,sans-serif">Q3 ${q3} m³/h · R${info.R ?? 160} · Class 2</text>
+    <text x="100" y="189.5" font-size="5.6" font-weight="800" text-anchor="middle" fill="#FFFFFF" font-family="Arial,sans-serif">BAT ${bat} V</text>
+    <circle cx="100" cy="100" r="80" fill="url(#${p}-gl)" opacity="0.35" pointer-events="none"/>`;
+  return `<defs><radialGradient id="${p}-gl" cx="0.32" cy="0.22" r="0.85"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.6"/><stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.05"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>` + o;
+}
+const lcdClock = () => { const d = new Date(), z = (n) => String(n).padStart(2, '0'); return `${z(d.getDate())}/${z(d.getMonth() + 1)}/${d.getFullYear()} · ${z(d.getHours())}:${z(d.getMinutes())}`; };
+const lcdVol = (L) => { const c = Math.floor(L * 100 + 1e-6), i = String(Math.floor(c / 100000)).padStart(7, ' '), d = String(c % 100000).padStart(5, '0'); return { i, d }; };
+function setSegs(root, id, ch) {
+  const g = root.querySelector('#' + id); if (!g) return;
+  const on = SEG[ch] ?? '';
+  if (g.dataset.v === ch) return; g.dataset.v = ch;
+  for (const el of g.children) el.setAttribute('fill-opacity', on.includes(el.dataset.s) ? '1' : '0.07');
+}
+
 export function dialSvg(p, modelName, info = {}) {
-  const M = MODELS[modelName] || MODELS.SMCV4, L = M.look;
-  const nb = L.blk, nr = L.red, cw = 12, wTot = (nb + nr) * cw, x0 = 100 - wTot / 2, ry = L.style === 'pointers' ? 58 : 64;
-  const drums = Array.from({ length: nb + nr }, (_, k) => `<rect x="${x0 + k * cw + 0.6}" y="${ry}" width="${cw - 1.2}" height="17" rx="1.5" fill="${k < nb ? '#111827' : '#B91C1C'}"/>`).join('');
-  const digits = `<text id="${p}-blk" x="${x0 + nb * cw / 2}" y="${ry + 13.4}" font-family="'Space Mono','DejaVu Sans Mono',monospace" font-size="13.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="3.2">${'0'.repeat(nb)}</text>
-    <text id="${p}-red" x="${x0 + nb * cw + nr * cw / 2}" y="${ry + 13.4}" font-family="'Space Mono','DejaVu Sans Mono',monospace" font-size="13.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="3.2">${'0'.repeat(nr)}</text>`;
-  const rim = `<defs><linearGradient id="${p}-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.rim2}"/><stop offset="0.5" stop-color="${L.rim}"/><stop offset="1" stop-color="${L.rim2}"/></linearGradient>
-      <radialGradient id="${p}-gl" cx="0.35" cy="0.25" r="0.8"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.06"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>
-    <circle cx="100" cy="100" r="98" fill="url(#${p}-g)"/>
-    ${L.style === 'sweep' ? Array.from({ length: 8 }, (_, k) => { const a = k / 8 * Math.PI * 2; return `<circle cx="${r1(100 + Math.sin(a) * 92)}" cy="${r1(100 - Math.cos(a) * 92)}" r="3.4" fill="${L.rim}" stroke="${L.rim2}" stroke-width="1"/>`; }).join('') : ''}
-    <circle cx="100" cy="100" r="84" fill="${L.face}" stroke="#00000033" stroke-width="2"/>`;
-  const label = `<text x="100" y="${L.style === 'pointers' ? 40 : 44}" font-size="11" font-weight="700" text-anchor="middle" fill="${L.ink}" font-family="'Space Grotesk',sans-serif">${M.name}</text>
-    <text x="100" y="${L.style === 'pointers' ? 51 : 56}" font-size="6.4" text-anchor="middle" fill="${L.ink}" opacity="0.8">m³ · Q3 ${info.q3 ?? 2.5} · R${info.R ?? 160} · DN15 · Class 2</text>
-    <text x="${x0 + wTot + 4}" y="${ry + 12}" font-size="7" fill="${L.ink}">m³</text>
-    <text x="100" y="${L.style === 'pointers' ? 29 : 32}" font-size="6" text-anchor="middle" fill="${L.ink}" opacity="0.8">SN ${info.serial || ''}</text>
-    <path d="M86,186 L114,186 M108,182 L114,186 L108,190" stroke="${L.ink}" stroke-width="1.4" fill="none" opacity="0.7"/>`;
-  let body = '';
-  if (L.style === 'subdials') {
-    body = subdial(p, 0, 70, 116, 17, L, '×0.0001') + subdial(p, 1, 130, 116, 17, L, '×0.00001')
-      + `<g transform="translate(100,150)"><g id="${p}-star">${[0, 60, 120, 180, 240, 300].map((a) => `<path d="M0,0 L2.4,-10 L-2.4,-10 Z" fill="${L.accent}" transform="rotate(${a})"/>`).join('')}</g><circle r="2" fill="${L.ink}"/></g>`;
-  } else if (L.style === 'sweep') {
-    const nums = Array.from({ length: 10 }, (_, k) => { const a = k / 10 * Math.PI * 2; return `<text x="${r1(100 + Math.sin(a) * 66)}" y="${r1(100 - Math.cos(a) * 66 + 3.6)}" font-size="10" text-anchor="middle" fill="${L.ink}" font-weight="600">${k}</text>`; }).join('');
-    body = ticks(100, 100, 75, 81, 50, L.ink, 0.8, 5, 4) + nums
-      + `<text x="100" y="132" font-size="6.4" text-anchor="middle" fill="${L.ink}">×0.0001 m³</text>`
-      + `<g transform="translate(100,148)"><g id="${p}-star">${[0, 90, 180, 270].map((a) => `<path d="M0,0 L2.6,-8 L-2.6,-8 Z" fill="${L.accent}" transform="rotate(${a})"/>`).join('')}</g></g>`
-      + `<g id="${p}-sub0"><path d="M100,30 L103,100 L100,118 L97,100 Z" fill="${L.accent}"/></g><circle cx="100" cy="100" r="5" fill="${L.accent}"/><circle cx="100" cy="100" r="2" fill="#FFFFFF"/>`;
-  } else {
-    const lab = ['×0.001', '×0.0001', '×0.00001'];
-    body = [0, 1, 2].map((i) => subdial(p, i, 58 + i * 42, 114, 16, L, lab[i])).join('')
-      + `<g transform="translate(100,152)"><g id="${p}-star"><path d="M-9,0 L9,0 M0,-9 L0,9" stroke="${L.accent}" stroke-width="3" stroke-linecap="round"/><circle r="9" fill="none" stroke="${L.accent}" stroke-width="1"/></g></g>`;
+  const M = MODELS[modelName] || MODELS.SMCV4, L = M.look, R = info.R ?? 160, q3 = info.q3 ?? 2.5;
+  if (L.style === 'lcd') return lcdFace(p, M, L, info);
+  const n = L.blk + L.red, x0 = 100 - (n * 14.2 - 0.8) / 2 - 4;
+  // brass meter body seen from above, lid ring, glass dome, then the white dial
+  let o = `<defs><radialGradient id="${p}-br" cx="0.4" cy="0.35" r="0.75"><stop offset="0" stop-color="#F6DE8D"/><stop offset="0.55" stop-color="${L.body}"/><stop offset="1" stop-color="#5C4410"/></radialGradient>
+      <linearGradient id="${p}-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.rim2}"/><stop offset="0.5" stop-color="${L.rim}"/><stop offset="1" stop-color="${L.rim2}"/></linearGradient>
+      <radialGradient id="${p}-gl" cx="0.32" cy="0.22" r="0.85"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.6"/><stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0.08"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="100" cy="100" r="99" fill="url(#${p}-br)"/>
+    <circle cx="100" cy="100" r="92" fill="url(#${p}-g)"/>
+    <circle cx="100" cy="100" r="86" fill="${L.face}" stroke="#00000022" stroke-width="2"/>`;
+  if (L.style === 'lcd') {
+    o += lcdFace(p, M, L, info);
+    o += `<text x="100" y="183" font-size="5.4" text-anchor="middle" fill="${L.ink}" opacity="0.75" font-family="Arial,sans-serif">No. ${info.serial || ''}</text>`;
+    o += `<circle cx="100" cy="100" r="86" fill="url(#${p}-gl)" pointer-events="none"/>`;
+    return o;
   }
-  return `${rim}${label}${drums}${digits}${body}<circle cx="100" cy="100" r="84" fill="url(#${p}-gl)" pointer-events="none"/>`;
+  if (L.style === 'gmc') o += Array.from({ length: 6 }, (_, k) => { const a = k / 6 * Math.PI * 2 + 0.5; return `<circle cx="${r1(100 + Math.sin(a) * 95.5)}" cy="${r1(100 - Math.cos(a) * 95.5)}" r="2.6" fill="#E7D08A" stroke="#5C4410" stroke-width="0.8"/>`; }).join('');
+  // unit marks above the register
+  o += `<text x="88" y="${L.style === 'asahi' ? 52 : 50}" font-size="${L.style === 'asahi' ? 15 : 12}" text-anchor="middle" fill="${L.ink}" font-family="'IBM Plex Sans Thai',sans-serif">ม.³ <tspan font-size="${L.style === 'asahi' ? 21 : 16}" font-weight="700" font-family="Arial,sans-serif">m³</tspan></text>`;
+  if (L.style === 'asahi') o += `<path d="M131,49 L133,42 L135,49 Z" fill="#111"/>`;
+  o += register(p, L, x0, 58, info.reading || 0);
+  const spec = (x, y, anchor, lines, big) => lines.map((t, i) => `<text x="${x}" y="${y + i * 10.4}" font-size="${i === lines.length - 1 && big ? 9.6 : 7.4}" ${i === lines.length - 1 && big ? 'font-weight="800"' : ''} text-anchor="${anchor}" fill="${L.ink}" font-family="Arial,sans-serif">${t}</text>`).join('');
+  if (L.style === 'asahi') {
+    o += spec(30, 112, 'start', ['15 mm', 'Class 2', `Q3 : ${q3} m³/h`, `Q3/Q1 : ${R} H`, 'ASAHI'], true);
+    o += starWin(p, L.star, L) + pointerDial(p, 0, L.subs[0], L);
+    o += `<text x="100" y="168" font-size="6.6" text-anchor="middle" fill="${L.ink}" font-family="Arial,sans-serif">TIS3078-2563</text><text x="100" y="177" font-size="7" font-weight="700" text-anchor="middle" fill="${L.ink}" font-family="Arial,sans-serif">GMK</text>`;
+  } else if (L.style === 'smc') {
+    o += pointerDial(p, 0, L.subs[0], L) + pointerDial(p, 1, L.subs[1], L) + starWin(p, L.star, L);
+    o += spec(100, 157, 'middle', [`DN15 · Class 2 · Q3 ${q3} m³/h · R${R} H`, 'SMCV4'], true);
+    o += `<text x="100" y="179" font-size="6.2" text-anchor="middle" fill="${L.ink}" font-family="Arial,sans-serif">TIS3078-2563</text>`;
+  } else {
+    o += starWin(p, L.star, L) + pointerDial(p, 0, L.subs[0], L);
+    o += spec(36, 148, 'start', ['DN15 · Class 2', `Q3 ${q3} · R${R}`], false);
+    o += `<text x="100" y="170" font-size="9.6" font-weight="800" text-anchor="middle" fill="${L.ink}" font-family="Arial,sans-serif">GMCV3-V3.5</text><text x="100" y="179" font-size="6.2" text-anchor="middle" fill="${L.ink}" font-family="Arial,sans-serif">TIS3078-2563</text>`;
+  }
+  o += `<text x="100" y="${L.style === 'asahi' ? 185 : 187}" font-size="5.4" text-anchor="middle" fill="${L.ink}" opacity="0.75" font-family="Arial,sans-serif">No. ${info.serial || ''}</text>`;
+  o += `<circle cx="100" cy="100" r="86" fill="url(#${p}-gl)" pointer-events="none"/><circle cx="100" cy="100" r="91" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.2"/>`;
+  return o;
 }
-// Turn the drums and pointers. reading in litres.
-export function updateDial(root, p, modelName, reading) {
+// Turn the drums (odometer carry) and the pointers. reading in litres.
+export function updateDial(root, p, modelName, reading, Q = 0) {
   const L = (MODELS[modelName] || MODELS.SMCV4).look, q = (id) => root.querySelector('#' + p + '-' + id);
-  const m3 = Math.floor(reading / 1000), litres = reading - m3 * 1000;
-  const b = q('blk'), rd = q('red');
-  if (!b) return;
-  b.textContent = String(m3 % 10 ** L.blk).padStart(L.blk, '0');
-  rd.textContent = L.red === 4 ? String(Math.floor(litres * 10)).padStart(4, '0') : L.red === 2 ? String(Math.floor(litres / 10)).padStart(2, '0') : String(Math.floor(litres)).padStart(3, '0');
-  const rot = (el, deg, cx, cy) => { if (el) el.setAttribute('transform', `rotate(${(deg % 360).toFixed(1)} ${cx} ${cy})`); };
-  const frac = (v) => v - Math.floor(v);
-  if (L.style === 'subdials') {
-    rot(q('sub0'), frac(reading / 1) * 360, 70, 116);       // 1 L per turn  (0.1 L per division)
-    rot(q('sub1'), frac(reading / 0.1) * 360, 130, 116);    // 0.1 L per turn
-  } else if (L.style === 'sweep') {
-    rot(q('sub0'), frac(reading) * 360, 100, 100);          // 1 L per turn
-  } else {
-    [10, 1, 0.1].forEach((d, i) => rot(q('sub' + i), frac(reading / d) * 360, 58 + i * 42, 114));
+  if (L.style === 'lcd') {
+    const v = lcdVol(reading);
+    for (let k = 0; k < 7; k++) setSegs(root, `${p}-lm${k}`, v.i[k]);
+    for (let k = 0; k < 5; k++) setSegs(root, `${p}-ld${k}`, v.d[k]);
+    const arc = q('arc');
+    if (arc) { const len = parseFloat(arc.getAttribute('stroke-dasharray')), f = Math.max(0.03, Math.min(1, Q / (parseFloat(arc.dataset.q4) || 3125))); arc.setAttribute('stroke-dashoffset', (len * (1 - f)).toFixed(1)); }
+    const dt = q('dt'); if (dt) { const c = lcdClock(); if (dt.textContent !== c) dt.textContent = c; }
+    return;
   }
-  const st = q('star'); if (st) st.setAttribute('transform', `rotate(${(frac(reading / 0.05) * 360).toFixed(1)})`);
+  if (!q('d0')) return;
+  drumY(L, reading).forEach((y, k) => q('d' + k).setAttribute('transform', `translate(0,${y.toFixed(2)})`));
+  const frac = (x) => x - Math.floor(x);
+  L.subs.forEach((s, i) => { const el = q('sub' + i); if (el) el.setAttribute('transform', `rotate(${(frac(reading / s.rev) * 360).toFixed(1)} ${s.cx} ${s.cy})`); });
+  const st = q('star'); if (st) st.setAttribute('transform', `rotate(${(frac(reading / 0.04) * 360).toFixed(1)})`);
 }
 
 // ---------------------------------------------------------------- animated schematic
@@ -414,14 +517,14 @@ export function createBenchView(opts = {}) {
     const L = TX[lang()] || TX.th, r = sim.run, q = (id) => dials.querySelector('#' + id);
     const last = {}; for (const x of sim.results) last[x.meter] = x;
     for (const m of sim.meters) {
-      updateDial(dials, 'dd' + m.id, m.model, m.reading);
+      updateDial(dials, 'dd' + m.id, m.model, m.reading, sim.Q);
       const card = q(`df-${m.id}`).parentElement; card.classList.toggle('off', !sim.selected[m.id]);
       const res = !r ? last[m.id] : null;
       const start = r ? r.start[m.id] : res ? res.start : null;
       const end = r ? r.end[m.id] : res ? res.end : null;
       q('ds-' + m.id).textContent = start != null ? start.toFixed(2) + ' ' + L.unit : '—';
       q('dnl-' + m.id).textContent = end != null ? L.end : L.now;
-      q('dn-' + m.id).textContent = (end != null ? end : quant(m.reading, 0.05)).toFixed(2) + ' ' + L.unit;
+      q('dn-' + m.id).textContent = (end != null ? end : quant(m.reading, MODELS[m.model].res)).toFixed(2) + ' ' + L.unit;
       const vm = start != null ? (end != null ? end : m.reading) - start : null;
       q('dv-' + m.id).textContent = vm != null ? vm.toFixed(2) + ' ' + L.unit : '—';
       const ref = r ? (r.vref != null ? r.vref : sim.tank[r.tank]) : res ? res.vref : null;
@@ -470,8 +573,8 @@ export function createBenchView(opts = {}) {
     $('bn-supply').setAttribute('opacity', (0.8 + 0.05 * Math.sin(t * 2)).toFixed(2));
     // meters
     for (const m of sim.meters) {
-      updateDial(svg, 'bd' + m.id, m.model, m.reading);
-      $('bn-reg-' + m.id).textContent = quant(m.reading, 0.05).toFixed(2).padStart(8, '0');
+      updateDial(svg, 'bd' + m.id, m.model, m.reading, sim.Q);
+      $('bn-reg-' + m.id).textContent = quant(m.reading, MODELS[m.model].res).toFixed(2).padStart(8, '0');
       $('bn-sel-' + m.id).setAttribute('opacity', sim.selected[m.id] ? '1' : '0');
       $('bn-e-' + m.id).textContent = sim.Q > 0.5 ? `${sim.meterError(m, sim.Q) >= 0 ? '+' : ''}${sim.meterError(m, sim.Q).toFixed(2)} %*` : '';
     }

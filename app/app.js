@@ -443,7 +443,7 @@ function viewBench() {
       <span class="pm">≈ ${fmtDur(v / pts[k] * 3600 + 90)}</span>
     </button>`;
   }).join('');
-  const modelCards = MODEL_NAMES.map((n) => { const on = bench.model === n, M = MODELS[n]; return `<button class="modcard ${on ? 'on' : ''}" data-act="bench-model" data-arg="${esc(n)}" aria-pressed="${on}" ${busy ? 'disabled' : ''}><span class="tick">${on ? '✓' : ''}</span><svg viewBox="0 0 200 200" class="mini-dial" aria-hidden="true">${dialSvg('mc' + M.code, n, { q3: bench.q3, R: bench.R, serial: '—' })}</svg><b>${esc(n)}</b><small>${esc(tr(M.kind))}</small></button>`; }).join('');
+  const modelCards = MODEL_NAMES.map((n) => { const on = bench.model === n, M = MODELS[n]; return `<button class="modcard ${on ? 'on' : ''}" data-act="bench-model" data-arg="${esc(n)}" aria-pressed="${on}" ${busy ? 'disabled' : ''}><span class="tick">${on ? '✓' : ''}</span><svg viewBox="0 0 200 200" class="mini-dial" aria-hidden="true">${dialSvg('mc' + M.code, n, { q3: bench.q3, R: bench.R, serial: '—', reading: 397.4 })}</svg><b>${esc(n)}</b><small>${esc(tr(M.kind))}</small></button>`; }).join('');
   const mCards = POSITIONS.map((id) => { const on = !!bench.selected[id]; return `<div class="poscard ${on ? 'on' : ''}"><button class="posbtn" data-act="bench-meter" data-arg="${id}" aria-pressed="${on}" ${busy ? 'disabled' : ''}><span class="tick">${on ? '✓' : ''}</span><b style="color:${POS_COLORS[id]}">${id}</b><span>${esc(bench.model)}</span>${bench.fault === id ? `<small class="bad">${x.faultOn}</small>` : ''}</button><label class="sn"><small>S/N</small><input data-serial="${id}" value="${esc(bench.serials[id] || '')}" maxlength="24" ${busy ? 'disabled' : ''} aria-label="${id} serial"></label></div>`; }).join('');
   const sec = (n, title, hint, body) => `<div class="wstep"><div class="wh"><span class="wn">${n}</span><div><b>${title}</b>${hint ? `<small>${hint}</small>` : ''}</div></div>${body}</div>`;
   const total = BS.runTotal || 1, idx = run ? total - bench.queue.length : 0;
@@ -975,15 +975,44 @@ function render() {
     ? `<div class="overview"><section class="twin-hero"><div class="row"><h2>${t().twinTitle}</h2></div>${twinBlock()}</section><div class="dgrid"><section class="col">${viewHome()}</section><section class="col">${viewScada()}</section><section class="col">${viewAlerts()}</section></div></div>`
     : `<div class="wrap wrap-${S.tab}">${views[S.tab]()}</div>`;
   root.classList.toggle('desk', isDesk());
-  root.innerHTML = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() + viewPreview() +
+  const html = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() + viewPreview() +
     (S.toast ? `<div class="toast ${S.toast.bad ? 'bad' : ''}" role="status">${esc(S.toast.text)}</div>` : '');
+  // update the page in place (no wholesale innerHTML swap): scrolling, focus and animations keep going
+  if (!root.querySelector('main')) root.innerHTML = html;
+  else { const tpl = document.createElement('template'); tpl.innerHTML = html; morphChildren(root, tpl.content); }
   mountTwin();
   mountBench();
   mountPower();
   const rp = root.querySelector('.rp-scrim'); if (rp) rp.scrollTop = rpScroll;
   const main = root.querySelector('main');
-  if (main && S.keepScroll) main.scrollTop = scroll;
+  if (main && !S.keepScroll) { main.scrollTop = 0; window.scrollTo(0, 0); }
   S.keepScroll = true;
+}
+// ---------------------------------------------------------------- tiny DOM morph
+// Elements whose id ends in "-slot" host persistent animated nodes (digital twin, bench, power plant): their children are left alone.
+function morphNode(a, b) {
+  if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b); return; }
+  if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+  if (a.nodeType !== 1) return;
+  const slotA = !!a.id && a.id.endsWith('-slot'), slotB = !!b.id && b.id.endsWith('-slot');
+  if ((slotA || slotB) && a.id !== b.id) { a.replaceWith(b); return; }
+  const keep = slotA;
+  for (const { name, value } of [...b.attributes]) if (a.getAttribute(name) !== value) a.setAttribute(name, value);
+  for (const { name } of [...a.attributes]) if (!b.hasAttribute(name) && !(keep && name.startsWith('data-'))) a.removeAttribute(name);
+  if (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT') {
+    if (document.activeElement !== a) { const v = b.getAttribute('value') ?? ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.value !== v && a.tagName !== 'SELECT') a.value = v; }
+    return;
+  }
+  if (keep) return;
+  morphChildren(a, b);
+}
+function morphChildren(a, b) {
+  const na = [...a.childNodes], nb = [...b.childNodes];
+  for (let i = 0; i < nb.length; i++) {
+    if (i < na.length) morphNode(na[i], nb[i]);
+    else a.appendChild(nb[i]);
+  }
+  for (let i = nb.length; i < na.length; i++) na[i].remove();
 }
 function schedule(ms = 0) { if (!renderTimer) renderTimer = setTimeout(render, ms); }
 function toast(text, bad) { S.toast = { text, bad }; schedule(); clearTimeout(toast.t); toast.t = setTimeout(() => { S.toast = null; schedule(); }, 2800); }
