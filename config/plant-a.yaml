@@ -1,0 +1,146 @@
+# CoreDash Nexus Gateway — site configuration (Plant A)
+# ไฟล์ตั้งค่าหลักของไซต์: อุปกรณ์, Tag, อลาร์ม, Interlock, ตารางเวลา, ผู้ใช้
+# Every value shown in the screens is a "tag". Edit this file to map tags to real registers/topics.
+
+site:
+  id: plant-a
+  name: { th: "โรงงาน A · บางนา", en: "Plant A · Bang Na" }
+  timezone: Asia/Bangkok
+
+server:
+  port: 8080            # REST + WebSocket (ws://host:8080/ws)
+  cors: "*"             # restrict to your web origin in production
+  commandTtlSec: 30     # a prepared command must be confirmed within this time
+
+historian:
+  dir: ./data/history   # one JSONL file per day
+  sampleSec: 5          # write every tag at most every 5 s (on change or heartbeat)
+  memoryPoints: 720     # points kept in RAM per tag for fast trends
+
+audit:
+  file: ./data/audit.jsonl   # append-only, hash-chained (tamper-evident)
+
+# ---------------------------------------------------------------------------
+# Devices. driver: modbus-tcp | modbus-rtu | mqtt | sim
+# Set environment variable SIMULATE=1 to replace every device with the built-in plant simulator.
+# ---------------------------------------------------------------------------
+devices:
+  - id: PLC-01
+    name: { th: "PLC ระบบน้ำ", en: "Water system PLC" }
+    driver: modbus-tcp
+    host: 192.168.10.10
+    port: 502
+    unitId: 1
+    pollMs: 1000
+    timeoutMs: 1500
+
+  - id: MDB-1
+    name: { th: "มิเตอร์ไฟหลัก 3 เฟส", en: "3-phase main meter" }
+    driver: modbus-rtu
+    path: /dev/ttyUSB0      # COM1 on Windows
+    baudRate: 9600
+    parity: none
+    unitId: 1
+    pollMs: 1000
+    timeoutMs: 800
+
+  - id: WM-01
+    name: { th: "มิเตอร์น้ำอัจฉริยะ", en: "Smart water meter" }
+    driver: modbus-rtu
+    path: /dev/ttyUSB0      # same RS-485 bus as MDB-1, different unit id
+    baudRate: 9600
+    parity: none
+    unitId: 5
+    pollMs: 2000
+    timeoutMs: 800
+
+  - id: LGT-01
+    name: { th: "ตัวควบคุมแสงสว่าง", en: "Lighting controller" }
+    driver: mqtt
+    url: mqtts://broker.plant-a.local:8883
+    username: gateway
+    passwordEnv: MQTT_PASSWORD   # read from environment, never commit secrets
+    clientId: coredash-gw-01
+
+# ---------------------------------------------------------------------------
+# Tags. source.type for Modbus: coil | discrete | holding | input
+# dataType: bool | int16 | uint16 | int32 | uint32 | float32   (word order: wordSwap true/false)
+# value = raw * scale + offset
+# writable: true lets operators command it (subject to role + confirmation)
+# ---------------------------------------------------------------------------
+tags:
+  # --- water system (PLC-01) ---
+  - { id: P-01.RUN,      device: PLC-01, type: coil,    address: 0,  dataType: bool, writable: true,  name: { th: "ปั๊มน้ำดิบ เดิน/หยุด", en: "Raw water pump run" } }
+  - { id: P-01.FAULT,    device: PLC-01, type: discrete, address: 0, dataType: bool, name: { th: "ปั๊มน้ำดิบ ฟอลต์", en: "Raw water pump fault" } }
+  - { id: P-01.AMPS,     device: PLC-01, type: input,   address: 0,  dataType: float32, unit: A }
+  - { id: P-02.RUN,      device: PLC-01, type: coil,    address: 1,  dataType: bool, writable: true,  name: { th: "ปั๊มน้ำหล่อเย็น เดิน/หยุด", en: "Cooling pump run" } }
+  - { id: P-02.VIB,      device: PLC-01, type: input,   address: 2,  dataType: float32, unit: mm/s }
+  - { id: V-101.POS,     device: PLC-01, type: holding, address: 10, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
+  - { id: V-102.POS,     device: PLC-01, type: holding, address: 11, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
+  - { id: V-103.POS,     device: PLC-01, type: holding, address: 12, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
+  - { id: V-201.POS,     device: PLC-01, type: holding, address: 13, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
+  - { id: T-1.LEVEL,     device: PLC-01, type: input,   address: 20, dataType: uint16, scale: 0.1, unit: "%" }
+  - { id: CHL-01.RUN,    device: PLC-01, type: coil,    address: 2,  dataType: bool, writable: true }
+  - { id: CHL-01.SUPPLY_T, device: PLC-01, type: input, address: 22, dataType: int16, scale: 0.1, unit: "°C" }
+  - { id: INJ-01.MOLD_T, device: PLC-01, type: input,   address: 24, dataType: int16, scale: 0.1, unit: "°C" }
+
+  # --- main power meter (MDB-1). Register map: check your meter's manual ---
+  - { id: MDB-1.V_L1,    device: MDB-1, type: input, address: 0,  dataType: float32, unit: V }
+  - { id: MDB-1.V_L2,    device: MDB-1, type: input, address: 2,  dataType: float32, unit: V }
+  - { id: MDB-1.V_L3,    device: MDB-1, type: input, address: 4,  dataType: float32, unit: V }
+  - { id: MDB-1.KW,      device: MDB-1, type: input, address: 52, dataType: float32, scale: 0.001, unit: kW }
+  - { id: MDB-1.PF,      device: MDB-1, type: input, address: 62, dataType: float32 }
+  - { id: MDB-1.HZ,      device: MDB-1, type: input, address: 70, dataType: float32, unit: Hz }
+  - { id: MDB-1.KWH,     device: MDB-1, type: input, address: 342, dataType: float32, unit: kWh }
+
+  # --- water meter (WM-01) ---
+  - { id: WM-01.FLOW,    device: WM-01, type: holding, address: 0, dataType: float32, unit: "m³/h" }
+  - { id: WM-01.TOTAL,   device: WM-01, type: holding, address: 2, dataType: uint32, scale: 0.01, unit: "m³" }
+
+  # --- lighting over MQTT: state topic + command topic, JSON payload ---
+  - { id: L-A.ON,    device: LGT-01, topic: plant-a/lighting/zone-a/state, jsonPath: on,    commandTopic: plant-a/lighting/zone-a/set, commandKey: on,    dataType: bool, writable: true }
+  - { id: L-A.LEVEL, device: LGT-01, topic: plant-a/lighting/zone-a/state, jsonPath: level, commandTopic: plant-a/lighting/zone-a/set, commandKey: level, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
+  - { id: L-O.ON,    device: LGT-01, topic: plant-a/lighting/outdoor/state, jsonPath: on,   commandTopic: plant-a/lighting/outdoor/set, commandKey: on,   dataType: bool, writable: true }
+
+# ---------------------------------------------------------------------------
+# Alarm rules. op: ">" "<" ">=" "<=" "==" "!=" ; delaySec: condition must hold this long
+# severity: critical | high | medium ; notify: channel ids from `notify`
+# ---------------------------------------------------------------------------
+alarms:
+  - { id: TANK_OVERFLOW, tag: T-1.LEVEL,     op: ">=", value: 97,  severity: critical, notify: [line, sms, push], escalateMin: 5,
+      text: { th: "ถัง T-1 ล้น — Interlock ตัด P-01", en: "Tank T-1 overflow — interlock tripped P-01" } }
+  - { id: TANK_LOW,      tag: T-1.LEVEL,     op: "<",  value: 15,  severity: medium,   notify: [line, push],
+      text: { th: "ถัง T-1 ระดับต่ำ", en: "Tank T-1 low" } }
+  - { id: P02_VIB,       tag: P-02.VIB,      op: ">",  value: 4.5, delaySec: 30, severity: high, notify: [line, push], escalateMin: 15,
+      text: { th: "P-02 สั่นสะเทือนเกินเกณฑ์", en: "P-02 vibration above limit" } }
+  - { id: MOLD_HOT,      tag: INJ-01.MOLD_T, op: ">",  value: 60,  severity: high,     notify: [line, push],
+      text: { th: "แม่พิมพ์ INJ-01 ร้อนเกิน 60 °C", en: "INJ-01 mold above 60 °C" } }
+  - { id: PEAK_DEMAND,   tag: MDB-1.KW,      op: ">",  value: 320, delaySec: 60, severity: medium, notify: [line, email],
+      text: { th: "กำลังไฟเกินเพดาน Peak", en: "Power above peak limit" } }
+
+# Interlocks run in the gateway every scan, in every mode, before any operator command.
+interlocks:
+  - { id: IL_TANK_HIGH, when: { tag: T-1.LEVEL, op: ">=", value: 97 }, force: { tag: P-01.RUN, value: false },
+      text: { th: "ถังเต็ม 97% — ห้ามเดิน P-01", en: "Tank at 97% — P-01 blocked" } }
+  - { id: IL_P01_FAULT, when: { tag: P-01.FAULT, op: "==", value: true }, force: { tag: P-01.RUN, value: false },
+      text: { th: "P-01 มีฟอลต์ — ห้ามเดิน", en: "P-01 fault — start blocked" } }
+
+# Schedules run on the gateway (keep working when the cloud is offline). days: 1=Mon … 7=Sun
+schedules:
+  - { id: PERIMETER_ON, at: "18:15", days: [1,2,3,4,5,6,7], set: [{ tag: L-O.ON, value: true }] }
+  - { id: PERIMETER_OFF, at: "06:00", days: [1,2,3,4,5,6,7], set: [{ tag: L-O.ON, value: false }] }
+  - { id: MORNING_SHIFT, at: "07:30", days: [1,2,3,4,5], set: [{ tag: L-A.ON, value: true }, { tag: L-A.LEVEL, value: 80 }, { tag: V-102.POS, value: 50 }] }
+
+# Notification channels. Secrets come from environment variables.
+notify:
+  line:  { type: line-messaging, tokenEnv: LINE_CHANNEL_TOKEN, to: "Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }   # LINE OA group id
+  email: { type: webhook, url: "https://hooks.example.com/coredash-email" }
+  sms:   { type: webhook, url: "https://hooks.example.com/coredash-sms" }
+  push:  { type: webhook, url: "https://hooks.example.com/coredash-push" }
+
+# Users and roles. role: viewer | operator | engineer | admin
+# token: API bearer token (store a SHA-256 hash in production: tokenSha256)
+users:
+  - { id: wipa,    name: "Wipa Srisuk",    role: admin,    tokenEnv: TOKEN_WIPA }
+  - { id: somchai, name: "Somchai Jaidee", role: operator, tokenEnv: TOKEN_SOMCHAI }
+  - { id: exec,    name: "Management",     role: viewer,   tokenEnv: TOKEN_EXEC }

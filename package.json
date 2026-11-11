@@ -1,0 +1,27 @@
+{
+  "name": "coredash-gateway",
+  "version": "1.0.0",
+  "description": "CoreDash Nexus Gateway \u2014 Modbus/MQTT to WebSocket/REST bridge for the CoreDash Nexus SCADA web and mobile apps",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js config/plant-a.yaml",
+    "sim": "SIMULATE=1 DEMO_TOKENS=1 node src/index.js config/plant-a.yaml",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "keywords": [],
+  "author": "CoreDash Technology",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^5.3.0",
+    "modbus-serial": "^8.0.25",
+    "mqtt": "^5.16.1",
+    "ws": "^8.22.2",
+    "yaml": "^2.9.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "aedes": "^1.2.0"
+  }
+}

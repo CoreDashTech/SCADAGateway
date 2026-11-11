@@ -1,0 +1,30 @@
+# CoreDash Nexus — gateway + MQTT broker
+# Demo:  SIMULATE=1 DEMO_TOKENS=1 docker compose up
+# Live:  put secrets in .env (TOKEN_WIPA=..., MQTT_PASSWORD=..., LINE_CHANNEL_TOKEN=...) then docker compose up -d
+services:
+  gateway:
+    build: .
+    restart: unless-stopped
+    ports: ["8080:8080"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - SIMULATE=${SIMULATE:-0}
+      - DEMO_TOKENS=${DEMO_TOKENS:-0}
+    volumes:
+      - gateway-data:/data
+      - ./config:/app/config:ro
+    # RS-485 USB adapter for Modbus RTU meters (remove if not used)
+    # devices: ["/dev/ttyUSB0:/dev/ttyUSB0"]
+    depends_on: [mqtt]
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports: ["1883:1883"]
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+volumes:
+  gateway-data:
