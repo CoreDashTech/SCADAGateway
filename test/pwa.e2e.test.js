@@ -129,9 +129,28 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     await click('[data-act="bench-run"]');
     await page.waitForSelector('.runbox');
     assert.ok(await until(async () => (await page.$$('.rtable')).length >= 2 && (await page.$$eval('.rtable', (ts) => ts[0].querySelectorAll('tbody tr').length)) === 3, 20000), 'three meter results');
-    const errs = await page.$$eval('.rtable', (ts) => [...ts[0].querySelectorAll('tbody tr')].map((r) => parseFloat(r.children[5].textContent)));
-    assert.ok(errs.every((e) => Math.abs(e) < 2), 'Q3 errors inside ±2 %');
+    const cells = await page.$$eval('.rtable', (ts) => [...ts[0].querySelectorAll('tbody tr')].map((r) => [...r.children].map((c) => c.textContent)));
+    for (const c of cells) {
+      const start = parseFloat(c[3]), end = parseFloat(c[4]), vm = parseFloat(c[5]);
+      assert.ok(end > start && Math.abs(end - start - vm) < 0.011, 'start and end dial readings recorded, meter volume = end − start');
+      assert.ok(Math.abs(parseFloat(c[7])) < 2, 'Q3 errors inside ±2 %');
+    }
+    await page.waitForSelector('.sumcard .vtile');
+    assert.strictEqual((await page.$$('.dials .dcard')).length, 3, 'three big meter dials');
     await shot('07b-bench');
+    // report preview + Excel export
+    await click('.sumcard [data-act="rp-open"]');
+    await page.waitForSelector('.rp-page .rp-table');
+    await shot('07c-report');
+    const dl = fs.mkdtempSync(path.join(os.tmpdir(), 'cd-dl-'));
+    const cdp = await page.target().createCDPSession();
+    await cdp.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: dl });
+    await click('.rp-bar [data-act="rp-xlsx"]');
+    assert.ok(await until(() => fs.readdirSync(dl).some((f) => f.endsWith('.xlsx'))), 'Excel file downloaded');
+    const xbuf = fs.readFileSync(path.join(dl, fs.readdirSync(dl).find((f) => f.endsWith('.xlsx'))));
+    assert.strictEqual(xbuf.readUInt32LE(0), 0x04034b50, 'xlsx is a zip');
+    assert.ok(xbuf.includes(Buffer.from('xl/charts/chart1.xml')), 'xlsx carries the error chart');
+    await click('.rp-bar [data-act="rp-close"]');
 
     // alarms → acknowledge
     await click('[data-act="tab"][data-arg="alerts"]');

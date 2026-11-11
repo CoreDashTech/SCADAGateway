@@ -2,7 +2,8 @@
 // Data comes from the CoreDash Gateway over WebSocket (live) or from a built-in plant simulator (demo).
 import { CoreDashClient } from './coredash-client.mjs';
 import { createTwin } from './twin.js';
-import { BenchSim, createBenchView, METERS, TANKS, STEPS, flowPoints, errorChart } from './bench.js';
+import { BenchSim, createBenchView, TANKS, STEPS, flowPoints, MODELS, MODEL_NAMES, POSITIONS, POS_COLORS, dialSvg } from './bench.js';
+import { reportHTML, buildXlsx, curveChart, barChart, summarize, docNumber, RT } from './report.js';
 
 const B = (th, en) => ({ th, en });
 const store = {
@@ -38,7 +39,7 @@ const L = {
     closeIn: 'ปิดน้ำเข้า V-101', drainOpen: 'ระบาย V-103', o50: 'เปิด 50%', o100: 'เปิด 100%', closePanel: 'ปิดแผง', nothingToDo: 'ทุกอุปกรณ์อยู่ในสถานะนี้แล้ว',
     days: ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'],
     twin: 'ห้องควบคุม 3D', pid: 'แผนผัง P&ID', twinTitle: 'ห้องควบคุมเสมือน', auto: 'อัตโนมัติ', day: 'กลางวัน', night: 'กลางคืน', labels: 'ป้ายค่า', zoomIn: 'ขยาย', zoomOut: 'ย่อ', twinHint: 'แตะเครื่องจักร วาล์ว หรือโคมไฟเพื่อสั่งการ', zoneA: 'ZONE A · ไลน์ผลิต', zoneB: 'ZONE B · ฉีดพลาสติก', zoneU: 'UTILITY · น้ำ & หล่อเย็น', twinAria: 'ภาพจำลองโรงงานแบบเรียลไทม์', lux: 'ความสว่าง', on: 'เปิด', off: 'ปิด', kwNowL: 'กำลังไฟ', pf: 'Power Factor', energy: 'พลังงานสะสม', moldT: 'อุณหภูมิแม่พิมพ์', coolBy: 'ระบายความร้อนด้วย', moldNote: 'ถ้าเกิน 60 °C ระบบจะแจ้งอลาร์ม',
-    bench: 'ทดสอบมาตร', benchTitle: 'แท่นทดสอบมาตรวัดน้ำ (ถังตวง)', benchStd: 'วิธีปริมาตร · ISO 4064 / OIML R 49 · ข้อมูลจำลอง', setup: 'ตั้งค่าการทดสอบ', meterUnder: 'มาตรที่ทดสอบ (ต่ออนุกรม)', spec: 'สเปกมาตร (ตามใบรับรอง)', testPoint: 'จุดทดสอบ', volume: 'ปริมาตรทดสอบ', autoVol: 'อัตโนมัติ', speed: 'ความเร็วจำลอง', runOne: 'ทดสอบ', runSet: 'ทดสอบครบชุด Q1 · Q2 · Q3', stopRun: 'หยุด', fault: 'จำลองมาตรชำรุด', live: 'สถานะขณะทดสอบ', flowNow: 'อัตราไหล (FT-01)', simTime: 'เวลาจำลอง', eta: 'เหลือประมาณ', stepNow: 'ขั้นตอน', manual: 'โหมดช่าง: สั่งวาล์วเอง', manualHint: 'ใช้ตรวจเช็กวาล์ว ไล่อากาศ หรือดูเซนเซอร์ทำงาน ถ้าเติมจนเต็ม เซนเซอร์กันล้น LSHH จะตัดให้อัตโนมัติ — ถ้าต้องการผลทดสอบ ให้ใช้ปุ่ม ▶ เริ่มทดสอบอัตโนมัติ', fillAt: 'เติมที่', closeAll: 'ปิดทั้งหมด', results: 'ผลการทดสอบ', colMeter: 'มาตร', colPoint: 'จุด', colQ: 'อัตราไหล', colVref: 'ปริมาตรอ้างอิง', colVm: 'มาตรอ่านได้', colE: 'ค่าผิดพลาด', colMpe: 'เกณฑ์', colRes: 'ผล', pass: 'ผ่าน', failR: 'ไม่ผ่าน', clear: 'ล้างผล', noResults: 'ยังไม่มีผล กด ▶ เริ่มทดสอบอัตโนมัติ ในขั้นที่ 4', curve: 'กราฟค่าผิดพลาดเทียบเกณฑ์ (เส้นประ = เกณฑ์ ±5% / ±2%)', guide: 'ตำแหน่งเซนเซอร์และอุปกรณ์', gSensor: 'อุปกรณ์', gWhere: 'ติดตั้งที่', gWhy: 'หน้าที่', gType: 'ชนิดที่แนะนำ', neckTitle: 'ทำไมเซนเซอร์ปริมาตรต้องอยู่ที่คอถังแคบ', neckText: 'คอ Ø50 มม. จุ 1.96 มล./มม. ส่วนตัวถัง Ø650 มม. จุ 332 มล./มม. เซนเซอร์คลาดเคลื่อน ±1 มม. ที่คอถัง = ±0.002 ลิตร แต่ที่ตัวถัง = ±0.33 ลิตร (มากกว่า 170 เท่า)', planTitle: 'ปริมาตรและเวลาที่แนะนำ', tankUsed: 'ถังที่ใช้', alarmOv: 'กันล้นทำงาน', reportBench: 'รายงานผลการทดสอบมาตรวัดน้ำ', benchNote: '* ค่าผิดพลาดบนรูปคือค่าจำลองขณะไหล ผลจริงคำนวณจากปริมาตรอ้างอิงที่อ่านจากคอถัง แก้อุณหภูมิเป็น 20 °C แล้ว', minutes: 'นาที', selectMeter: 'เลือกมาตรอย่างน้อย 1 ตัว', faultOn: 'จำลองชำรุด', s1: 'เลือกมาตรที่จะทดสอบ', s1h: 'ต่ออนุกรมกันบนแท่น ทดสอบพร้อมกันได้ทั้ง 3 ตัว แตะเพื่อเลือก/ไม่เลือก', s2: 'ตั้งสเปกตามใบรับรองมาตร', s2h: 'ดู Q3 และ R บนหน้าปัดมาตร ระบบคำนวณอัตราไหล Q1–Q4 ให้เอง', s3: 'เลือกจุดทดสอบ (เลือกได้หลายจุด)', s3h: 'ระบบจะทดสอบทุกจุดที่ติ๊ก ✓ เรียงจากไหลน้อยไปมาก', s4: 'กดเริ่ม ระบบทำให้อัตโนมัติจนจบ', presetStd: 'มาตรฐาน Q1 + Q2 + Q3', presetAll: 'ทุกจุด Q1–Q4', startAuto: 'เริ่มทดสอบอัตโนมัติ', summary: 'จะทดสอบมาตร {m} ตัว ที่ {p} · ใช้น้ำ {w} L · ใช้เวลาจริงประมาณ {t}', startNote: 'ระบบจะ ระบายถัง → เปิดน้ำ → ปิดเมื่อถึงเซนเซอร์ → อ่านค่า → คำนวณผ่าน/ไม่ผ่าน ทีละจุดเอง ไม่ต้องกดอะไรเพิ่ม', selectPoint: 'เลือกจุดทดสอบอย่างน้อย 1 จุด', nowTesting: 'กำลังทดสอบ', pointOf: 'จุดที่ {a} จาก {b}', filled: 'น้ำในถัง', pointTime: 'เวลาจุดนี้', how1: 'เลือกมาตร', how2: 'ตั้งสเปก Q3 / R', how3: 'ติ๊กจุดทดสอบ', how4: 'กดปุ่มเขียว ▶ เริ่มทดสอบ แล้วรอผล', manualSub: 'สำหรับช่างตรวจเช็กอุปกรณ์ · ไม่บันทึกผล', mValves: 'แตะวาล์วเพื่อเปิด/ปิด', mFlows: 'เปิดน้ำเข้าถังที่อัตราไหล (ใช้ไล่อากาศ / ตรวจเซนเซอร์)',
+    bench: 'ทดสอบมาตร', benchTitle: 'แท่นทดสอบมาตรวัดน้ำ (ถังตวง)', benchStd: 'วิธีปริมาตร · ISO 4064 / OIML R 49 · ข้อมูลจำลอง', setup: 'ตั้งค่าการทดสอบ', meterUnder: 'มาตรที่ทดสอบ (ต่ออนุกรม)', spec: 'สเปกมาตร (ตามใบรับรอง)', testPoint: 'จุดทดสอบ', volume: 'ปริมาตรทดสอบ', autoVol: 'อัตโนมัติ', speed: 'ความเร็วจำลอง', runOne: 'ทดสอบ', runSet: 'ทดสอบครบชุด Q1 · Q2 · Q3', stopRun: 'หยุด', fault: 'จำลองมาตรชำรุด', live: 'สถานะขณะทดสอบ', flowNow: 'อัตราไหล (FT-01)', simTime: 'เวลาจำลอง', eta: 'เหลือประมาณ', stepNow: 'ขั้นตอน', manual: 'โหมดช่าง: สั่งวาล์วเอง', manualHint: 'ใช้ตรวจเช็กวาล์ว ไล่อากาศ หรือดูเซนเซอร์ทำงาน ถ้าเติมจนเต็ม เซนเซอร์กันล้น LSHH จะตัดให้อัตโนมัติ — ถ้าต้องการผลทดสอบ ให้ใช้ปุ่ม ▶ เริ่มทดสอบอัตโนมัติ', fillAt: 'เติมที่', closeAll: 'ปิดทั้งหมด', results: 'ผลการทดสอบ', colMeter: 'มาตร', colPoint: 'จุด', colQ: 'อัตราไหล', colVref: 'ปริมาตรอ้างอิง', colVm: 'มาตรอ่านได้', colE: 'ค่าผิดพลาด', colMpe: 'เกณฑ์', colRes: 'ผล', pass: 'ผ่าน', failR: 'ไม่ผ่าน', clear: 'ล้างผล', noResults: 'ยังไม่มีผล กด ▶ เริ่มทดสอบอัตโนมัติ ในขั้นที่ 4', curve: 'กราฟค่าผิดพลาดเทียบเกณฑ์ (เส้นประ = เกณฑ์ ±5% / ±2%)', guide: 'ตำแหน่งเซนเซอร์และอุปกรณ์', gSensor: 'อุปกรณ์', gWhere: 'ติดตั้งที่', gWhy: 'หน้าที่', gType: 'ชนิดที่แนะนำ', neckTitle: 'ทำไมเซนเซอร์ปริมาตรต้องอยู่ที่คอถังแคบ', neckText: 'คอ Ø50 มม. จุ 1.96 มล./มม. ส่วนตัวถัง Ø650 มม. จุ 332 มล./มม. เซนเซอร์คลาดเคลื่อน ±1 มม. ที่คอถัง = ±0.002 ลิตร แต่ที่ตัวถัง = ±0.33 ลิตร (มากกว่า 170 เท่า)', planTitle: 'ปริมาตรและเวลาที่แนะนำ', tankUsed: 'ถังที่ใช้', alarmOv: 'กันล้นทำงาน', reportBench: 'รายงานผลการทดสอบมาตรวัดน้ำ', benchNote: '* ค่าผิดพลาดบนรูปคือค่าจำลองขณะไหล ผลจริงคำนวณจากปริมาตรอ้างอิงที่อ่านจากคอถัง แก้อุณหภูมิเป็น 20 °C แล้ว', minutes: 'นาที', selectMeter: 'เลือกมาตรอย่างน้อย 1 ตัว', faultOn: 'จำลองชำรุด', s1pos: 'ตำแหน่งบนแท่น (แตะเพื่อเลือก/ไม่เลือก) · แก้หมายเลขเครื่องได้', dialTitle: 'หน้าปัดมาตร · ค่าเริ่มต้น / สิ้นสุด', dialHint: 'ระบบอ่านค่าตอนเริ่มและตอนจบของทุกจุดทดสอบ ขณะน้ำหยุดนิ่ง', colStart: 'เริ่มต้น (L)', colEnd: 'สิ้นสุด (L)', sumTitle: 'สรุปผลการทดสอบ', rpPreview: 'ดูตัวอย่างรายงาน', rpPdf: 'บันทึก PDF / พิมพ์', doneTitle: 'ทดสอบเสร็จแล้ว', donePass: 'ผ่าน {a} จาก {b} รายการ', savedX: 'บันทึกไฟล์แล้ว · ', pdfHint: 'เปิดแอปเต็มหน้าจอ (ไม่ใช่ในกรอบ) เพื่อบันทึก PDF', s1: 'เลือกรุ่นมาตรที่จะทดสอบ', s1h: 'ทั้ง 3 ตำแหน่งบนแท่นเป็นรุ่นเดียวกัน ต่ออนุกรม ทดสอบพร้อมกัน', s2: 'ตั้งสเปกตามใบรับรองมาตร', s2h: 'ดู Q3 และ R บนหน้าปัดมาตร ระบบคำนวณอัตราไหล Q1–Q4 ให้เอง', s3: 'เลือกจุดทดสอบ (เลือกได้หลายจุด)', s3h: 'ระบบจะทดสอบทุกจุดที่ติ๊ก ✓ เรียงจากไหลน้อยไปมาก', s4: 'กดเริ่ม ระบบทำให้อัตโนมัติจนจบ', presetStd: 'มาตรฐาน Q1 + Q2 + Q3', presetAll: 'ทุกจุด Q1–Q4', startAuto: 'เริ่มทดสอบอัตโนมัติ', summary: 'จะทดสอบมาตร {m} ตัว ที่ {p} · ใช้น้ำ {w} L · ใช้เวลาจริงประมาณ {t}', startNote: 'ระบบจะ ระบายถัง → เปิดน้ำ → ปิดเมื่อถึงเซนเซอร์ → อ่านค่า → คำนวณผ่าน/ไม่ผ่าน ทีละจุดเอง ไม่ต้องกดอะไรเพิ่ม', selectPoint: 'เลือกจุดทดสอบอย่างน้อย 1 จุด', nowTesting: 'กำลังทดสอบ', pointOf: 'จุดที่ {a} จาก {b}', filled: 'น้ำในถัง', pointTime: 'เวลาจุดนี้', how1: 'เลือกรุ่นมาตร', how2: 'ตั้งสเปก Q3 / R', how3: 'ติ๊กจุดทดสอบ', how4: 'กดปุ่มเขียว ▶ เริ่มทดสอบ แล้วรอผล', manualSub: 'สำหรับช่างตรวจเช็กอุปกรณ์ · ไม่บันทึกผล', mValves: 'แตะวาล์วเพื่อเปิด/ปิด', mFlows: 'เปิดน้ำเข้าถังที่อัตราไหล (ใช้ไล่อากาศ / ตรวจเซนเซอร์)',
     blkTitle: 'ระบบป้องกันบล็อกคำสั่งนี้', blkNow: 'ตอนนี้', blkRule: 'เงื่อนไขบล็อก', blkFix: 'แก้ไขแล้วสั่งต่อ', blkFixHint: 'กดแก้ไข แล้วแอปจะเด้งคำสั่งเดิมให้ยืนยันทันทีที่ปลดล็อก', blkWait: 'รอปลดล็อกแล้วสั่งให้อัตโนมัติ', blkBypass: 'ข้ามระบบป้องกันชั่วคราว (วิศวกรขึ้นไป)', blkReason: 'เหตุผล (บันทึกใน Audit log)', blkReasonPh: 'เช่น ทดสอบปั๊มหลังซ่อม มีช่างเฝ้าหน้างาน', blkDo: 'ข้ามระบบป้องกัน', blkMin: 'นาที', blkNeedRole: 'บัญชีนี้เป็นผู้ควบคุม ต้องให้วิศวกรหรือผู้ดูแลระบบเป็นผู้ข้ามระบบป้องกัน', blkNoBypass: 'ระบบป้องกันนี้ข้ามไม่ได้ เพราะเป็นการป้องกันขั้นสุดท้าย (เทียบเท่าสวิตช์กันล้นแบบต่อสายตรง) ต้องแก้สาเหตุก่อน', blkReasonShort: 'กรุณาใส่เหตุผลอย่างน้อย 5 ตัวอักษร', close2: 'ปิด', waiting: 'รอปลดล็อก', cancelWait: 'ยกเลิก', ready: 'ปลดล็อกแล้ว', byp: 'ข้ามระบบป้องกันอยู่', bypLeft: 'เหลือ', bypBy: 'โดย', restore: 'คืนค่าป้องกัน', bypassed: 'ข้ามระบบป้องกันแล้ว · ', restored: 'คืนค่าระบบป้องกันแล้ว'
   },
   en: {
@@ -62,7 +63,7 @@ const L = {
     closeIn: 'Close inlet V-101', drainOpen: 'Drain V-103', o50: 'Open 50%', o100: 'Open 100%', closePanel: 'Close', nothingToDo: 'Everything is already in that state',
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     twin: '3D control room', pid: 'P&ID diagram', twinTitle: 'Virtual control room', auto: 'Auto', day: 'Day', night: 'Night', labels: 'Labels', zoomIn: 'Zoom in', zoomOut: 'Zoom out', twinHint: 'Tap a machine, valve or light to control it', zoneA: 'ZONE A · PRODUCTION', zoneB: 'ZONE B · MOLDING', zoneU: 'UTILITY · WATER & COOLING', twinAria: 'Live plant scene', lux: 'Brightness', on: 'On', off: 'Off', kwNowL: 'Power', pf: 'Power factor', energy: 'Energy meter', moldT: 'Mold temperature', coolBy: 'Cooled by', moldNote: 'Alarm above 60 °C',
-    bench: 'Meter test', benchTitle: 'Water-meter test bench (proving tank)', benchStd: 'Volumetric method · ISO 4064 / OIML R 49 · simulated data', setup: 'Test setup', meterUnder: 'Meters under test (in series)', spec: 'Meter rating (per certificate)', testPoint: 'Test point', volume: 'Test volume', autoVol: 'Auto', speed: 'Simulation speed', runOne: 'Run', runSet: 'Run full set Q1 · Q2 · Q3', stopRun: 'Stop', fault: 'Simulate a worn meter', live: 'Live status', flowNow: 'Flow (FT-01)', simTime: 'Simulated time', eta: 'Time left', stepNow: 'Step', manual: 'Technician mode: manual valves', manualHint: 'Check valves, purge air or watch the sensors. Fill until full and the LSHH overflow sensor trips by itself. For test results use ▶ Start automatic test.', fillAt: 'Fill at', closeAll: 'Close all', results: 'Test results', colMeter: 'Meter', colPoint: 'Point', colQ: 'Flow', colVref: 'Reference vol.', colVm: 'Meter vol.', colE: 'Error', colMpe: 'MPE', colRes: 'Result', pass: 'Pass', failR: 'Fail', clear: 'Clear', noResults: 'No results yet — press ▶ Start automatic test in step 4', curve: 'Error curve vs MPE (dashed = ±5% / ±2% limits)', guide: 'Sensor and instrument placement', gSensor: 'Device', gWhere: 'Location', gWhy: 'Purpose', gType: 'Recommended type', neckTitle: 'Why the volume sensors sit in the narrow neck', neckText: 'A Ø50 mm neck holds 1.96 mL per mm; a Ø650 mm body holds 332 mL per mm. A ±1 mm sensor error is ±0.002 L in the neck but ±0.33 L in the body (over 170× more).', planTitle: 'Recommended volumes and times', tankUsed: 'Tank', alarmOv: 'Overflow protection tripped', reportBench: 'Water-meter test report', benchNote: '* Errors on the drawing are live simulated values; results use the reference volume read from the tank neck, corrected to 20 °C.', minutes: 'min', selectMeter: 'Select at least one meter', faultOn: 'worn', s1: 'Choose the meters to test', s1h: 'They are in series on the bench, so all three test at once. Tap to select.', s2: 'Set the rating from the meter certificate', s2h: 'Read Q3 and R on the meter dial; Q1–Q4 are calculated for you', s3: 'Choose test points (several allowed)', s3h: 'Every ticked ✓ point runs, lowest flow first', s4: 'Press start; the bench runs by itself', presetStd: 'Standard Q1 + Q2 + Q3', presetAll: 'All points Q1–Q4', startAuto: 'Start automatic test', summary: 'Tests {m} meter(s) at {p} · uses {w} L of water · about {t} in real time', startNote: 'The bench drains → fills → closes at the sensor → reads → passes/fails each point on its own. Nothing else to press.', selectPoint: 'Select at least one test point', nowTesting: 'Testing', pointOf: 'Point {a} of {b}', filled: 'Water in tank', pointTime: 'Time on this point', how1: 'Pick meters', how2: 'Set Q3 / R', how3: 'Tick test points', how4: 'Press the green ▶ Start button and wait', manualSub: 'For technicians checking equipment · results not saved', mValves: 'Tap a valve to open/close', mFlows: 'Fill the tank at a flow rate (purge air / check sensors)',
+    bench: 'Meter test', benchTitle: 'Water-meter test bench (proving tank)', benchStd: 'Volumetric method · ISO 4064 / OIML R 49 · simulated data', setup: 'Test setup', meterUnder: 'Meters under test (in series)', spec: 'Meter rating (per certificate)', testPoint: 'Test point', volume: 'Test volume', autoVol: 'Auto', speed: 'Simulation speed', runOne: 'Run', runSet: 'Run full set Q1 · Q2 · Q3', stopRun: 'Stop', fault: 'Simulate a worn meter', live: 'Live status', flowNow: 'Flow (FT-01)', simTime: 'Simulated time', eta: 'Time left', stepNow: 'Step', manual: 'Technician mode: manual valves', manualHint: 'Check valves, purge air or watch the sensors. Fill until full and the LSHH overflow sensor trips by itself. For test results use ▶ Start automatic test.', fillAt: 'Fill at', closeAll: 'Close all', results: 'Test results', colMeter: 'Meter', colPoint: 'Point', colQ: 'Flow', colVref: 'Reference vol.', colVm: 'Meter vol.', colE: 'Error', colMpe: 'MPE', colRes: 'Result', pass: 'Pass', failR: 'Fail', clear: 'Clear', noResults: 'No results yet — press ▶ Start automatic test in step 4', curve: 'Error curve vs MPE (dashed = ±5% / ±2% limits)', guide: 'Sensor and instrument placement', gSensor: 'Device', gWhere: 'Location', gWhy: 'Purpose', gType: 'Recommended type', neckTitle: 'Why the volume sensors sit in the narrow neck', neckText: 'A Ø50 mm neck holds 1.96 mL per mm; a Ø650 mm body holds 332 mL per mm. A ±1 mm sensor error is ±0.002 L in the neck but ±0.33 L in the body (over 170× more).', planTitle: 'Recommended volumes and times', tankUsed: 'Tank', alarmOv: 'Overflow protection tripped', reportBench: 'Water-meter test report', benchNote: '* Errors on the drawing are live simulated values; results use the reference volume read from the tank neck, corrected to 20 °C.', minutes: 'min', selectMeter: 'Select at least one meter', faultOn: 'worn', s1pos: 'Positions on the bench (tap to include/exclude) · serial numbers are editable', dialTitle: 'Meter dials · start / end readings', dialHint: 'Each point is read at the start and at the end with the water at rest', colStart: 'Start (L)', colEnd: 'End (L)', sumTitle: 'Test summary', rpPreview: 'Preview report', rpPdf: 'Save PDF / Print', doneTitle: 'Test complete', donePass: '{a} of {b} passed', savedX: 'Saved · ', pdfHint: 'Open the app full screen (not in a frame) to save a PDF', s1: 'Choose the meter model', s1h: 'All three bench positions carry the same model, in series, tested together', s2: 'Set the rating from the meter certificate', s2h: 'Read Q3 and R on the meter dial; Q1–Q4 are calculated for you', s3: 'Choose test points (several allowed)', s3h: 'Every ticked ✓ point runs, lowest flow first', s4: 'Press start; the bench runs by itself', presetStd: 'Standard Q1 + Q2 + Q3', presetAll: 'All points Q1–Q4', startAuto: 'Start automatic test', summary: 'Tests {m} meter(s) at {p} · uses {w} L of water · about {t} in real time', startNote: 'The bench drains → fills → closes at the sensor → reads → passes/fails each point on its own. Nothing else to press.', selectPoint: 'Select at least one test point', nowTesting: 'Testing', pointOf: 'Point {a} of {b}', filled: 'Water in tank', pointTime: 'Time on this point', how1: 'Pick the model', how2: 'Set Q3 / R', how3: 'Tick test points', how4: 'Press the green ▶ Start button and wait', manualSub: 'For technicians checking equipment · results not saved', mValves: 'Tap a valve to open/close', mFlows: 'Fill the tank at a flow rate (purge air / check sensors)',
     blkTitle: 'A safety interlock blocked this command', blkNow: 'Now', blkRule: 'Blocks when', blkFix: 'Fix it and continue', blkFixHint: 'Pick a fix; the app brings your command back for confirmation as soon as it is unblocked', blkWait: 'Wait until unblocked, then ask me', blkBypass: 'Temporary bypass (engineer or admin)', blkReason: 'Reason (saved in the audit log)', blkReasonPh: 'e.g. pump test after repair, technician on site', blkDo: 'Bypass interlock', blkMin: 'min', blkNeedRole: 'This account is an operator; an engineer or admin must bypass an interlock', blkNoBypass: 'This interlock cannot be bypassed: it is the last line of defence (like a hard-wired overflow switch). Fix the cause first.', blkReasonShort: 'Please enter a reason of at least 5 characters', close2: 'Close', waiting: 'Waiting to unblock', cancelWait: 'Cancel', ready: 'Unblocked', byp: 'Interlock bypassed', bypLeft: 'left', bypBy: 'by', restore: 'Restore', bypassed: 'Interlock bypassed · ', restored: 'Interlock restored'
   }
 };
@@ -376,8 +377,9 @@ const fmtDur = (sec) => { const m = Math.floor(sec / 60), s2 = Math.round(sec % 
 function mountBench() {
   const slot = root.querySelector('#bench-slot');
   if (!slot) return;
-  if (!benchView) { benchView = createBenchView(); benchView.attach(bench); bench.on(() => schedule(100)); }
+  if (!benchView) { benchView = createBenchView({ lang: () => S.lang }); benchView.attach(bench); bench.on(() => schedule(100)); }
   slot.appendChild(benchView.el);
+  const ds = root.querySelector('#dial-slot'); if (ds) ds.appendChild(benchView.dials);
   const sc = benchView.el.querySelector('.bench-scroll');
   if (sc && sc.dataset.left) sc.scrollLeft = Number(sc.dataset.left);
   else if (sc && sc.scrollWidth > sc.clientWidth) { sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) * 0.4; sc.dataset.left = sc.scrollLeft; }
@@ -394,7 +396,7 @@ function viewBench() {
   const steps = STEPS.map((st, i) => `<li class="${bench.step === i ? 'now' : bench.step > i ? 'done' : ''}"><span class="num">${i + 1}</span>${tr(st)}</li>`).join('');
   const valves = [['in', 'XV-IN'], ['s', 'XV-S'], ['l', 'XV-L'], ['ds', 'XV-DS'], ['dl', 'XV-DL']].map(([k, l]) => `<button class="vbtn ${bench.v[k] ? 'on' : ''}" data-act="bench-valve" data-arg="${k}" aria-pressed="${bench.v[k]}" ${busy ? 'disabled' : ''}><span class="dotS" style="background:${bench.v[k] ? '#3B82F6' : '#64748B'}"></span>${l}<small>${bench.v[k] ? x.open : x.close}</small></button>`).join('');
   const res = bench.results.slice().reverse();
-  const rows = res.map((r) => `<tr><td><b>${r.meter}</b> <span class="muted">${esc(r.model)}${r.fault ? ' · ' + x.faultOn : ''}</span></td><td>${r.key}</td><td class="num">${fmtQ(r.Q)}</td><td class="num">${r.vref.toFixed(3)} L</td><td class="num">${r.vm.toFixed(2)} L</td><td class="num" style="color:${r.pass ? 'var(--it)' : 'var(--bad)'};font-weight:700">${r.e >= 0 ? '+' : ''}${r.e.toFixed(2)} %</td><td class="num">±${r.mpe} %</td><td><span class="pill ${r.pass ? 'run' : 'alarm'}">${r.pass ? x.pass : x.failR}</span></td></tr>`).join('');
+  const rows = res.map((r) => `<tr><td><b style="color:${POS_COLORS[r.meter]}">${r.meter}</b><div class="muted" style="font-size:11px">${esc(r.serial || '')}${r.fault ? ' · ' + x.faultOn : ''}</div></td><td><b>${r.key}</b></td><td class="num">${fmtQ(r.Q)}</td><td class="num">${r.start != null ? r.start.toFixed(2) : '—'}</td><td class="num">${r.end != null ? r.end.toFixed(2) : '—'}</td><td class="num">${r.vm.toFixed(2)}</td><td class="num">${r.vref.toFixed(3)}</td><td class="num" style="color:${r.pass ? 'var(--it)' : 'var(--bad)'};font-weight:700">${r.e >= 0 ? '+' : ''}${r.e.toFixed(2)} %</td><td class="num">±${r.mpe} %</td><td><span class="pill ${r.pass ? 'run' : 'alarm'}">${r.pass ? x.pass : x.failR}</span></td></tr>`).join('');
   const plan = ['Q1', 'Q2', 'Q3', 'Q4'].map((k) => { const v = DEFAULT_VOL[k]; return `<tr><td><b>${k}</b></td><td class="num">${fmtQ(pts[k])}</td><td class="num">${v} L</td><td>${v <= 10.5 ? TANKS.S.name : TANKS.L.name}</td><td class="num">${fmtDur(v / pts[k] * 3600)}</td><td class="num">±${k === 'Q1' ? 5 : 2} %</td></tr>`; }).join('');
   const G = S.lang === 'th' ? [
     ['LSL-S / LSL-L', 'ก้นถังตวง เหนือวาล์วระบาย', 'ยืนยันถังแห้ง (จุดศูนย์) ก่อนเริ่มทุกครั้ง', 'Capacitive / conductive point'],
@@ -424,7 +426,7 @@ function viewBench() {
   // ---------- easy flow: 1 meters · 2 rating · 3 points · 4 start
   const PK = ['Q1', 'Q2', 'Q3', 'Q4'];
   const chosen = PK.filter((k) => BS.pts[k]);
-  const nMeters = METERS.filter((m) => bench.selected[m.id]).length;
+  const nMeters = POSITIONS.filter((id) => bench.selected[id]).length;
   const volOf = (k) => BS.vol || DEFAULT_VOL[k];
   const realSec = chosen.reduce((sum, k) => sum + volOf(k) / pts[k] * 3600 + 90, 0);
   const water = chosen.reduce((sum, k) => sum + volOf(k), 0);
@@ -439,7 +441,8 @@ function viewBench() {
       <span class="pm">≈ ${fmtDur(v / pts[k] * 3600 + 90)}</span>
     </button>`;
   }).join('');
-  const mCards = METERS.map((m) => { const on = !!bench.selected[m.id]; return `<button class="mcard ${on ? 'on' : ''}" data-act="bench-meter" data-arg="${m.id}" aria-pressed="${on}" ${busy ? 'disabled' : ''}><span class="tick">${on ? '✓' : ''}</span><b>${m.id}</b><span>${esc(m.model)}</span>${bench.fault === m.id ? `<small class="bad">${x.faultOn}</small>` : ''}</button>`; }).join('');
+  const modelCards = MODEL_NAMES.map((n) => { const on = bench.model === n, M = MODELS[n]; return `<button class="modcard ${on ? 'on' : ''}" data-act="bench-model" data-arg="${esc(n)}" aria-pressed="${on}" ${busy ? 'disabled' : ''}><span class="tick">${on ? '✓' : ''}</span><svg viewBox="0 0 200 200" class="mini-dial" aria-hidden="true">${dialSvg('mc' + M.code, n, { q3: bench.q3, R: bench.R, serial: '—' })}</svg><b>${esc(n)}</b><small>${esc(tr(M.kind))}</small></button>`; }).join('');
+  const mCards = POSITIONS.map((id) => { const on = !!bench.selected[id]; return `<div class="poscard ${on ? 'on' : ''}"><button class="posbtn" data-act="bench-meter" data-arg="${id}" aria-pressed="${on}" ${busy ? 'disabled' : ''}><span class="tick">${on ? '✓' : ''}</span><b style="color:${POS_COLORS[id]}">${id}</b><span>${esc(bench.model)}</span>${bench.fault === id ? `<small class="bad">${x.faultOn}</small>` : ''}</button><label class="sn"><small>S/N</small><input data-serial="${id}" value="${esc(bench.serials[id] || '')}" maxlength="24" ${busy ? 'disabled' : ''} aria-label="${id} serial"></label></div>`; }).join('');
   const sec = (n, title, hint, body) => `<div class="wstep"><div class="wh"><span class="wn">${n}</span><div><b>${title}</b>${hint ? `<small>${hint}</small>` : ''}</div></div>${body}</div>`;
   const total = BS.runTotal || 1, idx = run ? total - bench.queue.length : 0;
   const fillPct = run ? clamp(bench.tank[run.tank] / run.V * 100, 0, 100) : 0;
@@ -452,6 +455,7 @@ function viewBench() {
       <div class="grid2"><div class="stat"><small>${x.filled} (${TANKS[run.tank].name})</small><b>${bench.tank[run.tank].toFixed(run.tank === 'S' ? 3 : 2)} / ${run.V} L</b></div><div class="stat"><small>${remaining != null ? x.eta : x.pointTime}</small><b>${fmtDur(remaining != null ? remaining : pointSec)}</b></div></div>
       <button class="btn warn big" data-act="bench-stop">■ ${x.stopRun}</button>
     </div>` : `
+    ${bench.results.length && !busy ? (() => { const sm = summarize(bench.results); return `<div class="donebar ${sm.allPass ? 'ok' : 'ng'}"><b>${sm.allPass ? '✓' : '!'} ${x.doneTitle}</b><span>${x.donePass.replace('{a}', sm.nPass).replace('{b}', sm.nRows)}</span><span class="dbtns"><button class="btn primary" data-act="rp-open">👁 ${x.rpPreview}</button><button class="btn" data-act="rp-xlsx">⬇ Excel</button></span></div>`; })() : ''}
     <div class="startbox">
       <div class="sum">${chosen.length && nMeters ? x.summary.replace('{m}', nMeters).replace('{p}', chosen.join(' → ')).replace('{w}', water).replace('{t}', fmtDur(realSec)) : `<span class="bad">${!nMeters ? x.selectMeter : x.selectPoint}</span>`}</div>
       <button class="btn go" data-act="bench-run" ${chosen.length && nMeters ? '' : 'disabled'}>▶ ${x.startAuto}</button>
@@ -465,13 +469,14 @@ function viewBench() {
   ${bench.alarm ? `<div class="status warn"><span class="dotS pulse" style="width:14px;height:14px;background:#F59E0B"></span><div><b style="color:var(--tx)">${x.alarmOv}</b><div class="muted">${esc(tr(bench.alarm.text))}</div></div></div>` : ''}
   <div class="bgrid2">
     <section class="card col wizard">
-      ${sec(1, x.s1, x.s1h, `<div class="mgrid">${mCards}</div>`)}
+      ${sec(1, x.s1, x.s1h, `<div class="modgrid">${modelCards}</div><div class="lbl2 muted">${x.s1pos}</div><div class="mgrid">${mCards}</div>`)}
       ${sec(2, x.s2, x.s2h, `<div class="chipwrap">${q3s}</div><div class="chipwrap">${rs}</div>`)}
       ${sec(3, x.s3, x.s3h, `<div class="chipwrap"><button class="chip" data-act="bench-preset" data-arg="std" ${busy ? 'disabled' : ''}>${x.presetStd}</button><button class="chip" data-act="bench-preset" data-arg="all" ${busy ? 'disabled' : ''}>${x.presetAll}</button></div><div class="pgrid">${ptCards}</div>
         <div class="row" style="flex-wrap:wrap;gap:6px"><span class="muted" style="font-size:13px">${x.volume}:</span>${vols}</div>`)}
     </section>
     <div class="col" style="gap:14px">
       <div class="bench-wrap card"><div id="bench-slot"></div><div class="muted" style="font-size:12px">${x.benchNote}</div></div>
+      <section class="card col"><div class="row" style="flex-wrap:wrap"><h2>${x.dialTitle}</h2><span class="muted" style="font-size:12px">${x.dialHint}</span></div><div id="dial-slot"></div></section>
       <section class="card col">
         <h2>${x.live}</h2>
         <div class="grid2">
@@ -492,13 +497,11 @@ function viewBench() {
       </section>
     </div>
   </div>
+  ${res.length ? viewBenchSummary(pts) : ''}
   <section class="card col">
-    <div class="row" style="flex-wrap:wrap"><h2>${x.results}</h2><span class="muted">${x.spec}: DN15 · Q3 ${bench.q3} m³/h · R${bench.R}</span>
-      <span style="margin-left:auto;display:flex;gap:8px">${res.length ? `<button class="btn" style="min-height:40px;padding:8px 14px" data-act="bench-clear">${x.clear}</button>` : ''}${embedded() ? '' : `<button class="btn primary" style="min-height:40px;padding:8px 14px" data-act="print">${x.exportPdf}</button>`}</span></div>
-    <div class="devcard gold printonly">${badge(56, 68)}<div><small>${x.reportBy}</small><b>${x.devName}</b><span style="font-size:12px;color:#C7D2EC;display:block">${x.reportBench} · ${new Date().toLocaleString(S.lang === 'th' ? 'th-TH' : 'en-GB')}</span></div></div>
-    ${res.length ? `<div class="tscroll"><table class="rtable"><thead><tr><th>${x.colMeter}</th><th>${x.colPoint}</th><th>${x.colQ}</th><th>${x.colVref}</th><th>${x.colVm}</th><th>${x.colE}</th><th>${x.colMpe}</th><th>${x.colRes}</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="muted" style="font-size:13px">${x.curve}</div>${errorChart(bench.results, pts, S.lang)}
-      <div class="chipwrap legend">${METERS.map((m, i) => `<span><i style="background:${['#3B82F6', '#22D3EE', '#F5B820'][i]}"></i>${m.id} · ${esc(m.model)}</span>`).join('')}<span><i style="background:#F59E0B;height:2px"></i>MPE</span></div>` : `<div class="muted">${x.noResults}</div>`}
+    <div class="row" style="flex-wrap:wrap"><h2>${x.results}</h2><span class="muted">${esc(bench.model)} · DN15 · Q3 ${bench.q3} m³/h · R${bench.R}</span>
+      <span style="margin-left:auto;display:flex;gap:8px">${res.length ? `<button class="btn" style="min-height:40px;padding:8px 14px" data-act="bench-clear">${x.clear}</button>` : ''}</span></div>
+    ${res.length ? `<div class="tscroll"><table class="rtable"><thead><tr><th>${x.colMeter}</th><th>${x.colPoint}</th><th>${x.colQ}</th><th>${x.colStart}</th><th>${x.colEnd}</th><th>${x.colVm}</th><th>${x.colVref}</th><th>${x.colE}</th><th>${x.colMpe}</th><th>${x.colRes}</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="muted">${x.noResults}</div>`}
   </section>
   <section class="card col">
     <h2>${x.guide}</h2>
@@ -507,6 +510,45 @@ function viewBench() {
     <h2 style="margin-top:6px">${x.planTitle}</h2>
     <div class="tscroll"><table class="rtable"><thead><tr><th>${x.colPoint}</th><th>${x.colQ}</th><th>${x.volume}</th><th>${x.tankUsed}</th><th>${x.simTime}</th><th>${x.colMpe}</th></tr></thead><tbody>${plan}</tbody></table></div>
   </section>`;
+}
+
+function viewBenchSummary(pts) {
+  const x = t(), R = RT[S.lang], sm = summarize(bench.results);
+  const tiles = sm.meters.map((m) => `<div class="vtile ${m.pass ? 'ok' : 'ng'}"><div class="row"><b style="color:${POS_COLORS[m.id]}">${m.id}</b><span class="muted">SN ${esc(m.serial)}</span></div><div class="vbig">${m.pass ? '✓ ' + R.pass : '✕ ' + R.fail}</div><div class="muted">${R.ptsPassed} ${m.rows.filter((r) => r.pass).length}/${m.rows.length} · ${R.maxErr} ${m.maxE >= 0 ? '+' : ''}${m.maxE.toFixed(2)} %</div></div>`).join('');
+  const kpi = [[R.kMeters, sm.meters.length], [R.kPoints, sm.keys.join(' · ')], [R.kPass, `${sm.nPass}/${sm.nRows}`], [R.kWater, sm.water.toFixed(1) + ' L'], [R.kTime, Math.round(sm.time / 60) + ' min']].map(([k, v]) => `<div class="stat"><small>${k}</small><b>${esc(v)}</b></div>`).join('');
+  const p = flowPoints(sm.q3, sm.R);
+  return `<section class="card col sumcard">
+    <div class="row" style="flex-wrap:wrap;gap:10px"><h2>${x.sumTitle}</h2><span class="pill ${sm.allPass ? 'run' : 'alarm'}">${sm.allPass ? '✓ ' + R.pass : '✕ ' + R.fail} ${sm.nPass}/${sm.nRows}</span><span class="muted" style="font-size:12px">${docNumber(sm.t0)} · ${esc(sm.model)}</span>
+      <span class="dbtns" style="margin-left:auto"><button class="btn primary" data-act="rp-open">👁 ${x.rpPreview}</button><button class="btn" data-act="rp-xlsx">⬇ Excel</button><button class="btn" data-act="rp-pdf">🖨 PDF</button></span></div>
+    <div class="vtiles">${tiles}</div>
+    <div class="kpis">${kpi}</div>
+    <div class="charts2"><div><h3>${R.chartCurve}</h3>${curveChart(sm.rows, p)}</div><div><h3>${R.chartBar}</h3>${barChart(sm.rows)}</div></div>
+  </section>`;
+}
+let rpCache = { key: '', html: '' };
+function viewPreview() {
+  if (!S.preview || !bench.results.length) return '';
+  const x = t();
+  const key = S.lang + '|' + bench.results.length + '|' + bench.results[bench.results.length - 1].ts;
+  if (rpCache.key !== key) rpCache = { key, html: reportHTML(bench.results, reportMeta(), S.lang, badge(64, 78)) };
+  return `<div class="rp-scrim" role="dialog" aria-label="${x.rpPreview}"><div class="rp-bar"><b>${x.rpPreview}</b><span class="dbtns"><button class="btn" data-act="rp-xlsx">⬇ Excel</button><button class="btn primary" data-act="rp-pdf">🖨 ${x.rpPdf}</button><button class="btn" data-act="rp-close">${x.close2}</button></span></div><div class="rp-paper">${rpCache.html}</div></div>`;
+}
+function reportMeta() { return { site: tr(B('โรงงาน A · บางนา', 'Plant A · Bang Na')), bench: 'TB-01 · CoreDash Nexus', operator: (src && src.user && src.user.name) || '—', simulated: true }; }
+function saveXlsx() {
+  if (!bench.results.length) return;
+  const data = buildXlsx(bench.results, reportMeta(), S.lang);
+  const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = docNumber(summarize(bench.results).t0) + '.xlsx';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  toast(t().savedX + a.download);
+}
+function printReport() {
+  if (!S.preview) { S.preview = true; render(); }
+  document.body.classList.add('print-report');
+  const done = () => { document.body.classList.remove('print-report'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => { try { window.print(); } catch (_) { toast(t().pdfHint, true); } setTimeout(done, 1500); }, 250);
 }
 
 // ---------------------------------------------------------------- views
@@ -843,15 +885,17 @@ function render() {
   if (twin) { const sc = twin.el.querySelector('.twin-scroll'); if (sc && twin.el.isConnected) sc.dataset.left = sc.scrollLeft; }
   if (benchView) { const sc = benchView.el.querySelector('.bench-scroll'); if (sc && benchView.el.isConnected) sc.dataset.left = sc.scrollLeft; }
   const scroll = prevMain ? prevMain.scrollTop : 0;
+  const prevRp = root.querySelector('.rp-scrim'), rpScroll = prevRp ? prevRp.scrollTop : 0;
   const views = { home: viewHome, scada: viewScadaTab, bench: viewBench, control: viewControl, alerts: viewAlerts, report: viewReport };
   const body = isDesk() && S.tab === 'home'
     ? `<div class="overview"><section class="twin-hero"><div class="row"><h2>${t().twinTitle}</h2></div>${twinBlock()}</section><div class="dgrid"><section class="col">${viewHome()}</section><section class="col">${viewScada()}</section><section class="col">${viewAlerts()}</section></div></div>`
     : `<div class="wrap wrap-${S.tab}">${views[S.tab]()}</div>`;
   root.classList.toggle('desk', isDesk());
-  root.innerHTML = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() +
+  root.innerHTML = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() + viewPreview() +
     (S.toast ? `<div class="toast ${S.toast.bad ? 'bad' : ''}" role="status">${esc(S.toast.text)}</div>` : '');
   mountTwin();
   mountBench();
+  const rp = root.querySelector('.rp-scrim'); if (rp) rp.scrollTop = rpScroll;
   const main = root.querySelector('main');
   if (main && S.keepScroll) main.scrollTop = scroll;
   S.keepScroll = true;
@@ -975,10 +1019,15 @@ root.addEventListener('click', async (ev) => {
     case 'bench-pt': BS.pts[arg] = !BS.pts[arg]; break;
     case 'bench-preset': BS.pts = { Q1: true, Q2: true, Q3: true, Q4: arg === 'all' }; break;
     case 'bench-manual': BS.manual = !BS.manual; break;
+    case 'bench-model': bench.setModel(arg); if (bench.fault) bench.injectFault(null); break;
+    case 'rp-open': S.preview = true; break;
+    case 'rp-close': S.preview = false; break;
+    case 'rp-xlsx': saveXlsx(); break;
+    case 'rp-pdf': printReport(); break;
     case 'bench-vol': BS.vol = arg === 'auto' ? null : Number(arg); break;
     case 'bench-speed': bench.speed = Number(arg); break;
     case 'bench-stop': bench.stop(); break;
-    case 'bench-fault': bench.injectFault(bench.fault ? null : (METERS.find((m) => bench.selected[m.id]) || METERS[0]).id); break;
+    case 'bench-fault': bench.injectFault(bench.fault ? null : ([...POSITIONS].reverse().find((id) => bench.selected[id]) || 'M3')); break;
     case 'bench-clear': bench.clearResults(); break;
     case 'bench-valve': bench.alarm = null; bench.setValve(arg, !bench.v[arg]); break;
     case 'bench-flow': { const p = bench.points(); if (arg === 'off') { bench.v = { in: false, s: false, l: false, ds: false, dl: false }; bench.setFlow(0); } else { bench.alarm = null; if (!bench.v.s && !bench.v.l) bench.v.l = true; bench.setFlow(p[arg]); } break; }
@@ -1009,9 +1058,9 @@ root.addEventListener('change', (ev) => {
   if (el.dataset && el.dataset.range) { interacting = false; quickSet(el.dataset.range, Number(el.value)); schedule(); }
 });
 root.addEventListener('pointerdown', (ev) => { if (ev.target.type === 'range') interacting = true; });
-root.addEventListener('input', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) S.bypassReason = ev.target.value; });
-root.addEventListener('focusin', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) interacting = true; });
-root.addEventListener('focusout', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) { interacting = false; schedule(300); } });
+root.addEventListener('input', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) S.bypassReason = ev.target.value; if (ev.target.dataset && ev.target.dataset.serial) bench.serials[ev.target.dataset.serial] = ev.target.value.trim(); });
+root.addEventListener('focusin', (ev) => { if (ev.target.dataset && (ev.target.dataset.reason || ev.target.dataset.serial)) interacting = true; });
+root.addEventListener('focusout', (ev) => { if (ev.target.dataset && (ev.target.dataset.reason || ev.target.dataset.serial)) { interacting = false; schedule(300); } });
 window.addEventListener('pointerup', () => { if (interacting) { setTimeout(() => { interacting = false; schedule(); }, 300); } });
 let lastDesk = null; window.addEventListener('resize', () => { if (isDesk() !== lastDesk) { lastDesk = isDesk(); schedule(); } });
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; schedule(); });

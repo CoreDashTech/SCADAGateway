@@ -8,11 +8,24 @@
 // Flow rates: Q1 = Q3 / R, Q2 = 1.6 · Q1, Q4 = 1.25 · Q3.
 // Meter error curves below are SIMULATED for demonstration, not manufacturer data.
 
-export const METERS = [
-  { id: 'M1', model: 'SMCV4', err: [[-1, 1.8], [0, 0.7], [1, -0.3], [2, -0.6]] },
-  { id: 'M2', model: 'GMCV3-V3.5', err: [[-1, -2.6], [0, -0.9], [1, 0.4], [2, 0.6]] },
-  { id: 'M3', model: 'ASAHI GMK', err: [[-1, 2.9], [0, 1.1], [1, 0.7], [2, 1.0]] }
-];
+// Meter models. On the bench all three positions carry the SAME model (one batch under test);
+// each unit gets a small individual offset so three meters of one model never read identically.
+const B0 = (th, en) => ({ th, en });
+export const MODELS = {
+  'SMCV4': { name: 'SMCV4', code: 'SM', kind: B0('มาตรน้ำแบบหน้าปัดแห้ง หลายใบพัด', 'Multi-jet, dry dial'), err: [[-1, 1.6], [0, 0.6], [1, -0.2], [2, -0.5]],
+    look: { style: 'subdials', rim: '#1D4ED8', rim2: '#93C5FD', face: '#F8FAFC', ink: '#0F172A', accent: '#DC2626', blk: 5, red: 3 } },
+  'GMCV3-V3.5': { name: 'GMCV3-V3.5', code: 'GM', kind: B0('มาตรน้ำทองเหลือง เข็มกวาดกลาง', 'Brass body, centre sweep hand'), err: [[-1, -2.2], [0, -0.8], [1, 0.3], [2, 0.5]],
+    look: { style: 'sweep', rim: '#A16207', rim2: '#FDE68A', face: '#FFFBEB', ink: '#3B2F14', accent: '#B91C1C', blk: 5, red: 4 } },
+  'ASAHI GMK': { name: 'ASAHI GMK', code: 'AG', kind: B0('มาตรน้ำแบบเฟือง หน้าปัด 3 เข็ม', 'Gear-train dial, three pointers'), err: [[-1, 2.4], [0, 1.0], [1, 0.6], [2, 0.8]],
+    look: { style: 'pointers', rim: '#334155', rim2: '#CBD5E1', face: '#FFFFFF', ink: '#111827', accent: '#DC2626', blk: 5, red: 2 } }
+};
+export const MODEL_NAMES = Object.keys(MODELS);
+export const POSITIONS = ['M1', 'M2', 'M3'];
+export const POS_COLORS = { M1: '#3B82F6', M2: '#14B8A6', M3: '#F59E0B' };
+const UNIT_OFFSET = { M1: [0.35, 0.15, 0.05, 0.05], M2: [-0.5, -0.2, -0.1, 0], M3: [0.9, 0.3, 0.15, 0.2] };
+const START_READ = { M1: 1234.5, M2: 876.25, M3: 2210.1 };
+// kept for older imports: the default model in each position
+export const METERS = POSITIONS.map((id) => ({ id, model: 'SMCV4' }));
 
 // Proving tanks: stacked sections from the bottom. Narrow necks around the nominal volumes give
 // high resolution: a neck of Ø50 mm holds 1.96 mL per mm, a body of Ø650 mm holds 332 mL per mm.
@@ -32,11 +45,11 @@ export const mpeFor = (Q, pts) => (Q < pts.Q2 ? 5 : 2);
 const B = (th, en) => ({ th, en });
 export const STEPS = [
   B('ระบายถังจนแห้ง (LSL) + รอหยด 30 วินาที', 'Drain to empty (LSL) + 30 s drip'),
-  B('ปิดวาล์วระบาย · บันทึกค่าเริ่มต้นของมาตร', 'Close drain · record meter start readings'),
+  B('ปิดวาล์วระบาย · อ่านค่าเริ่มต้นหน้าปัดมาตรทุกตัว', 'Close drain · read every meter dial (start)'),
   B('เปิดวาล์วเติม · ไหลที่อัตราทดสอบ', 'Open fill valve · flow at test rate'),
   B('น้ำถึงเซนเซอร์ปริมาตร → ปิดวาล์วเร็ว', 'Volume sensor reached → fast valve close'),
   B('รอน้ำนิ่ง 10 วินาที · อ่านสเกลคอถัง', 'Settle 10 s · read tank neck scale'),
-  B('อ่านค่ามาตร · คำนวณค่าผิดพลาด', 'Read meters · compute errors'),
+  B('อ่านค่าสิ้นสุดหน้าปัดมาตร · คำนวณค่าผิดพลาด', 'Read every meter dial (end) · compute errors'),
   B('เสร็จสิ้น', 'Done')
 ];
 
@@ -46,6 +59,8 @@ export class BenchSim {
     this.speed = 60;
     this.q3 = 2.5; this.R = 160;
     this.selected = { M1: true, M2: true, M3: true };
+    this.model = 'SMCV4';
+    this.serials = {};
     this.fault = null;               // meter id with an injected fault
     this.reset();
     this.listeners = [];
@@ -57,11 +72,23 @@ export class BenchSim {
     this.Qset = 0; this.Q = 0;
     this.v = { in: false, s: false, l: false, ds: false, dl: false };
     this.tank = { S: 0, L: 0 };
-    this.meters = METERS.map((m, i) => ({ ...m, reading: [1234.5, 876.25, 2210.1][i] }));
+    this.meters = POSITIONS.map((id) => ({ id, model: this.model, err: [], reading: START_READ[id] }));
+    this.setModel(this.model, true);
     this.temp = 28.4; this.p1 = 3.2; this.p2 = 2.9;
     this.alarm = null;
     this.run = null; this.queue = []; this.results = this.results || [];
     this.log = [];
+  }
+  setModel(name, quiet) {
+    if (!MODELS[name] || (this.mode === 'auto' && this.run)) return;
+    this.model = name;
+    const M = MODELS[name], yymm = new Date().toISOString().slice(2, 7).replace('-', '');
+    for (const [i, m] of this.meters.entries()) {
+      m.model = name;
+      m.err = M.err.map(([x, e], k) => [x, e + UNIT_OFFSET[m.id][k]]);
+      this.serials[m.id] = `${M.code}${yymm}-${String(1041 + i * 7).padStart(5, '0')}`;
+    }
+    if (!quiet) this.emit();
   }
   on(fn) { this.listeners.push(fn); }
   emit() { for (const f of this.listeners) f(); }
@@ -87,6 +114,7 @@ export class BenchSim {
     // points: [{ key, Q, V }]
     this.alarm = null;
     this.queue = points.slice();
+    this.lastRead = null;
     this.mode = 'auto';
     this.next();
   }
@@ -158,6 +186,7 @@ export class BenchSim {
       case 1:
         this.v[dk] = false;
         for (const m of this.meters) r.start[m.id] = quant(m.reading, 0.05);
+        this.lastRead = { kind: 'start', key: r.key, at: performance.now() };
         go(2);
         break;
       case 2:
@@ -180,11 +209,12 @@ export class BenchSim {
         const pts = this.points();
         for (const m of this.meters) {
           r.end[m.id] = quant(m.reading, 0.05);
+          this.lastRead = { kind: 'end', key: r.key, at: performance.now() };
           if (!this.selected[m.id]) continue;
           const vm = r.end[m.id] - r.start[m.id];
           const e = (vm - r.vref) / r.vref * 100;
           const mpe = mpeFor(r.Q, pts);
-          this.results.push({ ts: Date.now(), meter: m.id, model: m.model, key: r.key, Q: r.Q, V: r.V, tank: TANKS[k].name, vref: r.vref, vread: r.vread, vm, e, mpe, pass: Math.abs(e) <= mpe, temp: r.temp, dur: this.t - r.t0, fault: this.fault === m.id });
+          this.results.push({ ts: Date.now(), meter: m.id, model: m.model, serial: this.serials[m.id], start: r.start[m.id], end: r.end[m.id], q3: this.q3, R: this.R, key: r.key, Q: r.Q, V: r.V, tank: TANKS[k].name, vref: r.vref, vread: r.vread, vm, e, mpe, pass: Math.abs(e) <= mpe, temp: r.temp, dur: this.t - r.t0, fault: this.fault === m.id });
         }
         this.v[dk] = true; // start draining for the next point
         go(6);
@@ -196,11 +226,82 @@ export class BenchSim {
   }
 }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const quant = (v, d) => Math.round(v / d) * d;
+const quant = (v, d) => +(Math.round(v / d) * d).toFixed(6);
+
+
+// ---------------------------------------------------------------- meter dial faces
+// Each model gets its own dial: drawn in a 200 × 200 box. Ids are prefixed so several dials can live in one page.
+// Register: black drums = whole m³, red drums = litres (and 0.1 L for 4 red drums). Pointers turn with the litres.
+const r1 = (v) => v.toFixed(1);
+function ticks(cx, cy, r0, r1x, n, color, w = 1.2, every = 0, long = 0) {
+  let o = '';
+  for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, rr = every && k % every === 0 ? r0 - long : r0; o += `<line x1="${r1(cx + Math.sin(a) * rr)}" y1="${r1(cy - Math.cos(a) * rr)}" x2="${r1(cx + Math.sin(a) * r1x)}" y2="${r1(cy - Math.cos(a) * r1x)}" stroke="${color}" stroke-width="${w}"/>`; }
+  return o;
+}
+function subdial(p, i, cx, cy, r, L, label) {
+  const nums = Array.from({ length: 10 }, (_, k) => { const a = k / 10 * Math.PI * 2; return `<text x="${r1(cx + Math.sin(a) * (r - 6))}" y="${r1(cy - Math.cos(a) * (r - 6) + 2.4)}" font-size="5.6" text-anchor="middle" fill="${L.ink}">${k}</text>`; }).join('');
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFFFF" stroke="${L.ink}" stroke-width="0.8"/>${ticks(cx, cy, r - 1.5, r, 10, L.ink, 0.6)}${nums}
+    <g id="${p}-sub${i}"><path d="M${cx},${cy - r + 4} L${cx + 2.2},${cy} L${cx},${cy + 3} L${cx - 2.2},${cy} Z" fill="${L.accent}"/></g><circle cx="${cx}" cy="${cy}" r="1.6" fill="${L.ink}"/>
+    <text x="${cx}" y="${cy + r + 7}" font-size="5.2" text-anchor="middle" fill="${L.ink}">${label}</text>`;
+}
+export function dialSvg(p, modelName, info = {}) {
+  const M = MODELS[modelName] || MODELS.SMCV4, L = M.look;
+  const nb = L.blk, nr = L.red, cw = 12, wTot = (nb + nr) * cw, x0 = 100 - wTot / 2, ry = L.style === 'pointers' ? 58 : 64;
+  const drums = Array.from({ length: nb + nr }, (_, k) => `<rect x="${x0 + k * cw + 0.6}" y="${ry}" width="${cw - 1.2}" height="17" rx="1.5" fill="${k < nb ? '#111827' : '#B91C1C'}"/>`).join('');
+  const digits = `<text id="${p}-blk" x="${x0 + nb * cw / 2}" y="${ry + 13.4}" font-family="'Space Mono','DejaVu Sans Mono',monospace" font-size="13.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="3.2">${'0'.repeat(nb)}</text>
+    <text id="${p}-red" x="${x0 + nb * cw + nr * cw / 2}" y="${ry + 13.4}" font-family="'Space Mono','DejaVu Sans Mono',monospace" font-size="13.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="3.2">${'0'.repeat(nr)}</text>`;
+  const rim = `<defs><linearGradient id="${p}-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.rim2}"/><stop offset="0.5" stop-color="${L.rim}"/><stop offset="1" stop-color="${L.rim2}"/></linearGradient>
+      <radialGradient id="${p}-gl" cx="0.35" cy="0.25" r="0.8"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.06"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="100" cy="100" r="98" fill="url(#${p}-g)"/>
+    ${L.style === 'sweep' ? Array.from({ length: 8 }, (_, k) => { const a = k / 8 * Math.PI * 2; return `<circle cx="${r1(100 + Math.sin(a) * 92)}" cy="${r1(100 - Math.cos(a) * 92)}" r="3.4" fill="${L.rim}" stroke="${L.rim2}" stroke-width="1"/>`; }).join('') : ''}
+    <circle cx="100" cy="100" r="84" fill="${L.face}" stroke="#00000033" stroke-width="2"/>`;
+  const label = `<text x="100" y="${L.style === 'pointers' ? 40 : 44}" font-size="11" font-weight="700" text-anchor="middle" fill="${L.ink}" font-family="'Space Grotesk',sans-serif">${M.name}</text>
+    <text x="100" y="${L.style === 'pointers' ? 51 : 56}" font-size="6.4" text-anchor="middle" fill="${L.ink}" opacity="0.8">m³ · Q3 ${info.q3 ?? 2.5} · R${info.R ?? 160} · DN15 · Class 2</text>
+    <text x="${x0 + wTot + 4}" y="${ry + 12}" font-size="7" fill="${L.ink}">m³</text>
+    <text x="100" y="${L.style === 'pointers' ? 29 : 32}" font-size="6" text-anchor="middle" fill="${L.ink}" opacity="0.8">SN ${info.serial || ''}</text>
+    <path d="M86,186 L114,186 M108,182 L114,186 L108,190" stroke="${L.ink}" stroke-width="1.4" fill="none" opacity="0.7"/>`;
+  let body = '';
+  if (L.style === 'subdials') {
+    body = subdial(p, 0, 70, 116, 17, L, '×0.0001') + subdial(p, 1, 130, 116, 17, L, '×0.00001')
+      + `<g transform="translate(100,150)"><g id="${p}-star">${[0, 60, 120, 180, 240, 300].map((a) => `<path d="M0,0 L2.4,-10 L-2.4,-10 Z" fill="${L.accent}" transform="rotate(${a})"/>`).join('')}</g><circle r="2" fill="${L.ink}"/></g>`;
+  } else if (L.style === 'sweep') {
+    const nums = Array.from({ length: 10 }, (_, k) => { const a = k / 10 * Math.PI * 2; return `<text x="${r1(100 + Math.sin(a) * 66)}" y="${r1(100 - Math.cos(a) * 66 + 3.6)}" font-size="10" text-anchor="middle" fill="${L.ink}" font-weight="600">${k}</text>`; }).join('');
+    body = ticks(100, 100, 75, 81, 50, L.ink, 0.8, 5, 4) + nums
+      + `<text x="100" y="132" font-size="6.4" text-anchor="middle" fill="${L.ink}">×0.0001 m³</text>`
+      + `<g transform="translate(100,148)"><g id="${p}-star">${[0, 90, 180, 270].map((a) => `<path d="M0,0 L2.6,-8 L-2.6,-8 Z" fill="${L.accent}" transform="rotate(${a})"/>`).join('')}</g></g>`
+      + `<g id="${p}-sub0"><path d="M100,30 L103,100 L100,118 L97,100 Z" fill="${L.accent}"/></g><circle cx="100" cy="100" r="5" fill="${L.accent}"/><circle cx="100" cy="100" r="2" fill="#FFFFFF"/>`;
+  } else {
+    const lab = ['×0.001', '×0.0001', '×0.00001'];
+    body = [0, 1, 2].map((i) => subdial(p, i, 58 + i * 42, 114, 16, L, lab[i])).join('')
+      + `<g transform="translate(100,152)"><g id="${p}-star"><path d="M-9,0 L9,0 M0,-9 L0,9" stroke="${L.accent}" stroke-width="3" stroke-linecap="round"/><circle r="9" fill="none" stroke="${L.accent}" stroke-width="1"/></g></g>`;
+  }
+  return `${rim}${label}${drums}${digits}${body}<circle cx="100" cy="100" r="84" fill="url(#${p}-gl)" pointer-events="none"/>`;
+}
+// Turn the drums and pointers. reading in litres.
+export function updateDial(root, p, modelName, reading) {
+  const L = (MODELS[modelName] || MODELS.SMCV4).look, q = (id) => root.querySelector('#' + p + '-' + id);
+  const m3 = Math.floor(reading / 1000), litres = reading - m3 * 1000;
+  const b = q('blk'), rd = q('red');
+  if (!b) return;
+  b.textContent = String(m3 % 10 ** L.blk).padStart(L.blk, '0');
+  rd.textContent = L.red === 4 ? String(Math.floor(litres * 10)).padStart(4, '0') : L.red === 2 ? String(Math.floor(litres / 10)).padStart(2, '0') : String(Math.floor(litres)).padStart(3, '0');
+  const rot = (el, deg, cx, cy) => { if (el) el.setAttribute('transform', `rotate(${(deg % 360).toFixed(1)} ${cx} ${cy})`); };
+  const frac = (v) => v - Math.floor(v);
+  if (L.style === 'subdials') {
+    rot(q('sub0'), frac(reading / 1) * 360, 70, 116);       // 1 L per turn  (0.1 L per division)
+    rot(q('sub1'), frac(reading / 0.1) * 360, 130, 116);    // 0.1 L per turn
+  } else if (L.style === 'sweep') {
+    rot(q('sub0'), frac(reading) * 360, 100, 100);          // 1 L per turn
+  } else {
+    [10, 1, 0.1].forEach((d, i) => rot(q('sub' + i), frac(reading / d) * 360, 58 + i * 42, 114));
+  }
+  const st = q('star'); if (st) st.setAttribute('transform', `rotate(${(frac(reading / 0.05) * 360).toFixed(1)})`);
+}
 
 // ---------------------------------------------------------------- animated schematic
 const f1 = (v) => v.toFixed(1);
-export function createBenchView() {
+export function createBenchView(opts = {}) {
+  const lang = opts.lang || (() => 'th');
   const host = document.createElement('div');
   host.className = 'bench';
   const s = [];
@@ -225,8 +326,8 @@ export function createBenchView() {
   s.push(gauge(250, 'PT-01', 'PT-01'));
   s.push(`<g><path d="M285,${HY - 12} L315,${HY - 12} L322,${HY} L315,${HY + 12} L285,${HY + 12} L278,${HY} Z" fill="#55627E" stroke="#8B97B3" stroke-width="1.5"/><path d="M300,${HY + 12} L300,${HY + 30} L292,${HY + 30} L308,${HY + 30}" stroke="#8B97B3" stroke-width="3" fill="none"/></g><text x="300" y="${HY + 50}" class="bn-tag" text-anchor="middle">STRAINER</text>`);
   // meters under test
-  [[370, 'M1'], [500, 'M2'], [630, 'M3']].forEach(([x, id], i) => {
-    s.push(`<g class="bn-meter" data-bench="meter" data-arg="${id}"><rect x="${x - 34}" y="${HY - 13}" width="68" height="26" rx="6" fill="url(#bn-steel)"/><circle cx="${x}" cy="${HY - 30}" r="34" fill="#0D1426" stroke="#B9C6DE" stroke-width="4"/><circle cx="${x}" cy="${HY - 30}" r="27" fill="#F5F8FC"/>${Array.from({ length: 10 }, (_, k) => { const a = k * 36 * Math.PI / 180; return `<line x1="${f1(x + Math.sin(a) * 22)}" y1="${f1(HY - 30 - Math.cos(a) * 22)}" x2="${f1(x + Math.sin(a) * 26)}" y2="${f1(HY - 30 - Math.cos(a) * 26)}" stroke="#55627E" stroke-width="1.5"/>`; }).join('')}<line id="bn-needle-${id}" x1="${x}" y1="${HY - 30}" x2="${x}" y2="${HY - 52}" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/><circle cx="${x}" cy="${HY - 30}" r="3" fill="#0D1426"/><rect x="${x - 50}" y="${HY + 22}" width="100" height="26" rx="5" fill="#05080F" stroke="#3A4A6E"/><text id="bn-reg-${id}" x="${x}" y="${HY + 41}" class="bn-reg" text-anchor="middle">0000.00</text><rect id="bn-sel-${id}" x="${x - 56}" y="${HY - 72}" width="112" height="128" rx="12" fill="none" stroke="#5B9BFF" stroke-width="2" stroke-dasharray="6 5"/></g><text x="${x}" y="${HY + 70}" class="bn-tag" text-anchor="middle">${id} · ${METERS[i].model}</text><text id="bn-e-${id}" x="${x}" y="${HY + 88}" class="bn-val" text-anchor="middle"></text>`);
+  [[370, 'M1'], [500, 'M2'], [630, 'M3']].forEach(([x, id]) => {
+    s.push(`<g class="bn-meter" data-bench="meter" data-arg="${id}"><rect x="${x - 40}" y="${HY - 13}" width="80" height="26" rx="6" fill="url(#bn-steel)"/><rect x="${x - 46}" y="${HY - 11}" width="8" height="22" rx="2" fill="#8B97B3"/><rect x="${x + 38}" y="${HY - 11}" width="8" height="22" rx="2" fill="#8B97B3"/><g id="bn-dial-${id}" transform="translate(${x - 37},${HY - 104}) scale(0.37)"></g><rect x="${x - 50}" y="${HY + 22}" width="100" height="26" rx="5" fill="#05080F" stroke="#3A4A6E"/><text id="bn-reg-${id}" x="${x}" y="${HY + 41}" class="bn-reg" text-anchor="middle">0000.00</text><rect id="bn-sel-${id}" x="${x - 58}" y="${HY - 112}" width="116" height="166" rx="12" fill="none" stroke="#5B9BFF" stroke-width="2" stroke-dasharray="6 5"/></g><text id="bn-lbl-${id}" x="${x}" y="${HY + 70}" class="bn-tag" text-anchor="middle">${id}</text><text id="bn-e-${id}" x="${x}" y="${HY + 88}" class="bn-val" text-anchor="middle"></text>`);
   });
   s.push(gauge(720, 'PT-02', 'PT-02'));
   s.push(`<g data-bench="info" data-arg="FT-01"><rect x="770" y="${HY - 18}" width="64" height="36" rx="8" fill="#2B3A5E" stroke="#8B97B3" stroke-width="2"/><rect x="782" y="${HY - 64}" width="40" height="46" rx="6" fill="#1A2234" stroke="#8B97B3" stroke-width="2"/><rect x="772" y="${HY - 104}" width="60" height="36" rx="6" fill="#05080F" stroke="#3A4A6E"/><text id="bn-ft" x="802" y="${HY - 82}" class="bn-reg" text-anchor="middle" style="font-size:13px">0.0</text></g><text x="802" y="${HY + 34}" class="bn-tag" text-anchor="middle">FT-01 (REF)</text><text x="802" y="${HY + 50}" class="bn-tag" text-anchor="middle" style="opacity:0.7">L/h</text>`);
@@ -284,6 +385,56 @@ export function createBenchView() {
   const svg = host.querySelector('svg');
   const $ = (id) => svg.querySelector('#' + id);
   let raf = 0, alive = true, sim = null, last = performance.now(), imp = 0;
+  // big dial panel (mounted separately by the app)
+  const dials = document.createElement('div');
+  dials.className = 'dials';
+  let dialKey = '';
+  const TX = { th: { start: 'ค่าเริ่มต้น', now: 'ค่าขณะนี้', end: 'ค่าสิ้นสุด', vm: 'มาตรวัดได้', ref: 'ถังตวง (อ้างอิง)', err: 'ค่าผิดพลาด', off: 'ไม่ได้ทดสอบ', readS: 'อ่านค่าเริ่มต้นแล้ว', readE: 'อ่านค่าสิ้นสุดแล้ว', unit: 'ลิตร' },
+    en: { start: 'Start', now: 'Now', end: 'End', vm: 'Meter volume', ref: 'Proving tank (ref.)', err: 'Error', off: 'Not under test', readS: 'Start read', readE: 'End read', unit: 'L' } };
+  function rebuild() {
+    const L = TX[lang()] || TX.th;
+    for (const m of sim.meters) {
+      const g = $('bn-dial-' + m.id);
+      g.innerHTML = dialSvg('bd' + m.id, m.model, { q3: sim.q3, R: sim.R, serial: sim.serials[m.id] });
+      $('bn-lbl-' + m.id).textContent = `${m.id} · ${m.model}`;
+    }
+    dials.innerHTML = sim.meters.map((m) => `<div class="dcard" data-pos="${m.id}">
+      <div class="dhead"><b style="color:${POS_COLORS[m.id]}">${m.id}</b><span>${m.model}</span><small>SN ${sim.serials[m.id]}</small></div>
+      <div class="dflash" id="df-${m.id}"></div>
+      <svg viewBox="0 0 200 200" class="dial-svg" role="img" aria-label="${m.id} ${m.model}">${dialSvg('dd' + m.id, m.model, { q3: sim.q3, R: sim.R, serial: sim.serials[m.id] })}</svg>
+      <dl class="dread">
+        <dt>${L.start}</dt><dd id="ds-${m.id}">—</dd>
+        <dt id="dnl-${m.id}">${L.now}</dt><dd id="dn-${m.id}">—</dd>
+        <dt>${L.vm}</dt><dd id="dv-${m.id}">—</dd>
+        <dt>${L.ref}</dt><dd id="dr-${m.id}">—</dd>
+        <dt>${L.err}</dt><dd id="de-${m.id}">—</dd>
+      </dl></div>`).join('');
+  }
+  function updatePanel() {
+    const L = TX[lang()] || TX.th, r = sim.run, q = (id) => dials.querySelector('#' + id);
+    const last = {}; for (const x of sim.results) last[x.meter] = x;
+    for (const m of sim.meters) {
+      updateDial(dials, 'dd' + m.id, m.model, m.reading);
+      const card = q(`df-${m.id}`).parentElement; card.classList.toggle('off', !sim.selected[m.id]);
+      const res = !r ? last[m.id] : null;
+      const start = r ? r.start[m.id] : res ? res.start : null;
+      const end = r ? r.end[m.id] : res ? res.end : null;
+      q('ds-' + m.id).textContent = start != null ? start.toFixed(2) + ' ' + L.unit : '—';
+      q('dnl-' + m.id).textContent = end != null ? L.end : L.now;
+      q('dn-' + m.id).textContent = (end != null ? end : quant(m.reading, 0.05)).toFixed(2) + ' ' + L.unit;
+      const vm = start != null ? (end != null ? end : m.reading) - start : null;
+      q('dv-' + m.id).textContent = vm != null ? vm.toFixed(2) + ' ' + L.unit : '—';
+      const ref = r ? (r.vref != null ? r.vref : sim.tank[r.tank]) : res ? res.vref : null;
+      q('dr-' + m.id).textContent = ref != null ? ref.toFixed(3) + ' ' + L.unit : '—';
+      const e = r && r.vref != null && end != null ? (vm - r.vref) / r.vref * 100 : !r && res ? res.e : null;
+      const de = q('de-' + m.id);
+      de.textContent = !sim.selected[m.id] ? L.off : e != null ? `${e >= 0 ? '+' : ''}${e.toFixed(2)} %` : '—';
+      de.className = e == null ? '' : res && !res.pass ? 'bad' : 'good';
+      const fl = q('df-' + m.id), lr = sim.lastRead, on = lr && performance.now() - lr.at < 2200;
+      fl.textContent = on ? `📷 ${lr.kind === 'start' ? L.readS : L.readE} · ${lr.key}` : '';
+      fl.classList.toggle('on', !!on);
+    }
+  }
 
   function frame(now) {
     if (!alive) return;
@@ -291,6 +442,9 @@ export function createBenchView() {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     if (!sim) return;
     sim.tick(dt);
+    const key = [sim.model, sim.q3, sim.R, lang(), ...sim.meters.map((m) => sim.serials[m.id])].join('|');
+    if (key !== dialKey) { dialKey = key; rebuild(); }
+    if (dials.isConnected) updatePanel();
     if (!host.isConnected) return;
     const t = now / 1000, flowing = sim.Q > 0.5;
     imp = (imp + (sim.v.in ? 900 : 0) * dt) % 360;
@@ -316,9 +470,7 @@ export function createBenchView() {
     $('bn-supply').setAttribute('opacity', (0.8 + 0.05 * Math.sin(t * 2)).toFixed(2));
     // meters
     for (const m of sim.meters) {
-      const a = (m.reading % 1) * 360;
-      const x = { M1: 370, M2: 500, M3: 630 }[m.id];
-      $('bn-needle-' + m.id).setAttribute('transform', `rotate(${a.toFixed(1)} ${x} ${150 - 30})`);
+      updateDial(svg, 'bd' + m.id, m.model, m.reading);
       $('bn-reg-' + m.id).textContent = quant(m.reading, 0.05).toFixed(2).padStart(8, '0');
       $('bn-sel-' + m.id).setAttribute('opacity', sim.selected[m.id] ? '1' : '0');
       $('bn-e-' + m.id).textContent = sim.Q > 0.5 ? `${sim.meterError(m, sim.Q) >= 0 ? '+' : ''}${sim.meterError(m, sim.Q).toFixed(2)} %*` : '';
@@ -335,7 +487,7 @@ export function createBenchView() {
     $('bn-alarm').setAttribute('opacity', sim.alarm ? (0.5 + 0.5 * Math.sin(t * 9)).toFixed(2) : '0');
   }
   raf = requestAnimationFrame(frame);
-  return { el: host, attach(s2) { sim = s2; }, destroy() { alive = false; cancelAnimationFrame(raf); } };
+  return { el: host, dials, attach(s2) { sim = s2; }, destroy() { alive = false; cancelAnimationFrame(raf); } };
 }
 function secAt(T, v) { return T.sections.find((s) => v >= s.v0 && v <= s.v1) || T.sections[T.sections.length - 1]; }
 function volToY(T, bottom, v) { let y = bottom; for (const s of T.sections) { if (v <= s.v1) return y - s.h * (v - s.v0) / (s.v1 - s.v0); y -= s.h; } return y; }
