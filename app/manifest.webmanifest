@@ -1,0 +1,19 @@
+{
+  "name": "CoreDash Nexus — SCADA",
+  "short_name": "CoreDash",
+  "description": "Monitor and control machines, power, water, lighting and valves. Developed by CoreDash Technology.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060B1A",
+  "theme_color": "#0A1230",
+  "lang": "th",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -81,6 +81,8 @@ tags:
   - { id: V-201.POS,     device: PLC-01, type: holding, address: 13, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
   - { id: T-1.LEVEL,     device: PLC-01, type: input,   address: 20, dataType: uint16, scale: 0.1, unit: "%" }
   - { id: CHL-01.RUN,    device: PLC-01, type: coil,    address: 2,  dataType: bool, writable: true }
+  - { id: CMP-01.RUN,    device: PLC-01, type: coil,    address: 3,  dataType: bool, writable: true, name: { th: "ปั๊มลม", en: "Air compressor" } }
+  - { id: CNV-01.RUN,    device: PLC-01, type: coil,    address: 4,  dataType: bool, writable: true, name: { th: "สายพานลำเลียง", en: "Conveyor" } }
   - { id: CHL-01.SUPPLY_T, device: PLC-01, type: input, address: 22, dataType: int16, scale: 0.1, unit: "°C" }
   - { id: INJ-01.MOLD_T, device: PLC-01, type: input,   address: 24, dataType: int16, scale: 0.1, unit: "°C" }
 
@@ -100,6 +102,8 @@ tags:
   # --- lighting over MQTT: state topic + command topic, JSON payload ---
   - { id: L-A.ON,    device: LGT-01, topic: plant-a/lighting/zone-a/state, jsonPath: on,    commandTopic: plant-a/lighting/zone-a/set, commandKey: on,    dataType: bool, writable: true }
   - { id: L-A.LEVEL, device: LGT-01, topic: plant-a/lighting/zone-a/state, jsonPath: level, commandTopic: plant-a/lighting/zone-a/set, commandKey: level, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
+  - { id: L-B.ON,    device: LGT-01, topic: plant-a/lighting/zone-b/state, jsonPath: on,    commandTopic: plant-a/lighting/zone-b/set, commandKey: on,    dataType: bool, writable: true }
+  - { id: L-B.LEVEL, device: LGT-01, topic: plant-a/lighting/zone-b/state, jsonPath: level, commandTopic: plant-a/lighting/zone-b/set, commandKey: level, dataType: uint16, unit: "%", writable: true, min: 0, max: 100 }
   - { id: L-O.ON,    device: LGT-01, topic: plant-a/lighting/outdoor/state, jsonPath: on,   commandTopic: plant-a/lighting/outdoor/set, commandKey: on,   dataType: bool, writable: true }
 
 # ---------------------------------------------------------------------------

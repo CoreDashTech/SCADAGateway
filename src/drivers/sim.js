@@ -14,7 +14,7 @@ class SimDriver {
       'P-01.RUN': true, 'P-01.FAULT': false, 'P-02.RUN': true, 'P-02.VIB': 7.6, 'CHL-01.RUN': true,
       'V-101.POS': 100, 'V-102.POS': 60, 'V-103.POS': 0, 'V-201.POS': 100,
       'T-1.LEVEL': 62, 'CHL-01.SUPPLY_T': 7.4, 'INJ-01.MOLD_T': 44.5,
-      'L-A.ON': true, 'L-A.LEVEL': 80, 'L-O.ON': false,
+      'L-A.ON': true, 'L-A.LEVEL': 80, 'L-B.ON': true, 'L-B.LEVEL': 70, 'L-O.ON': false, 'CMP-01.RUN': true, 'CNV-01.RUN': false,
       'MDB-1.KWH': 182340.5, 'WM-01.TOTAL': 48211.4, p02Fault: true
     };
     this.targets = {};
@@ -48,7 +48,7 @@ class SimDriver {
     s['CHL-01.SUPPLY_T'] += ((s['CHL-01.RUN'] ? 7 : 18) - s['CHL-01.SUPPLY_T']) * 0.08 + (Math.random() - 0.5) * 0.1;
     const moldTarget = cool ? 42 + s['CHL-01.SUPPLY_T'] * 0.3 + (100 - s['V-201.POS']) * 0.15 : 78;
     s['INJ-01.MOLD_T'] += (moldTarget - s['INJ-01.MOLD_T']) * 0.05;
-    const kw = 40 + 21.6 + 19.5 + 44 + 25 + (s['CHL-01.RUN'] ? 45 : 0) + (s['P-01.RUN'] ? 12.3 : 0) + (s['P-02.RUN'] ? 9.7 : 0)
+    const kw = 40 + 21.6 + 19.5 + 44 + (s['CMP-01.RUN'] ? 25 : 0) + (s['CNV-01.RUN'] ? 4 : 0) + (s['L-B.ON'] ? 3 * s['L-B.LEVEL'] / 100 : 0) + (s['CHL-01.RUN'] ? 45 : 0) + (s['P-01.RUN'] ? 12.3 : 0) + (s['P-02.RUN'] ? 9.7 : 0)
       + (s['L-A.ON'] ? 3.6 * s['L-A.LEVEL'] / 100 : 0) + (s['L-O.ON'] ? 2.4 : 0) + (Math.random() - 0.5) * 8;
     s['MDB-1.KW'] = kw;
     s['MDB-1.KWH'] += kw * dt / 3600;

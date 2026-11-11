@@ -1,7 +1,7 @@
 {
   "name": "coredash-gateway",
   "version": "1.0.0",
-  "description": "CoreDash Nexus Gateway \u2014 Modbus/MQTT to WebSocket/REST bridge for the CoreDash Nexus SCADA web and mobile apps",
+  "description": "CoreDash Nexus Gateway — Modbus/MQTT to WebSocket/REST bridge for the CoreDash Nexus SCADA web and mobile apps",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js config/plant-a.yaml",
@@ -22,6 +22,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "aedes": "^1.2.0"
+    "aedes": "^1.2.0",
+    "puppeteer-core": "^25.17.0"
   }
 }

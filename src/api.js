@@ -87,6 +87,14 @@ function createServer(gw) {
     res.json(s);
   });
 
+  // ---- Installable mobile web app (PWA) ---------------------------------------
+  const path = require('path');
+  const appDir = path.join(__dirname, '..', 'app');
+  app.get('/', (req, res) => res.redirect('/app/'));
+  app.get('/app/coredash-client.mjs', (req, res) => res.type('text/javascript').sendFile(path.join(__dirname, '..', 'client', 'coredash-client.mjs')));
+  app.get('/app/sw.js', (req, res) => { res.set('Service-Worker-Allowed', '/app/'); res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(appDir, 'sw.js')); });
+  app.use('/app', express.static(appDir, { index: 'index.html', setHeaders: (res, p) => { if (p.endsWith('.webmanifest')) res.type('application/manifest+json'); if (p.endsWith('index.html')) res.set('Cache-Control', 'no-cache'); } }));
+
   const server = http.createServer(app);
 
   // ---- WebSocket ------------------------------------------------------------
