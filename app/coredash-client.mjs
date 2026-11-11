@@ -55,7 +55,7 @@ export class CoreDashClient {
     if (msg.reqId && this.waiting.has(msg.reqId)) {
       const w = this.waiting.get(msg.reqId);
       this.waiting.delete(msg.reqId);
-      if (msg.type === 'error') { const e = new Error(msg.message || msg.error); e.code = msg.error; w.reject(e); } else w.resolve(msg);
+      if (msg.type === 'error') { const e = new Error(msg.message || msg.error); e.code = msg.error; e.details = msg.details; w.reject(e); } else w.resolve(msg);
       return;
     }
     switch (msg.type) {
@@ -81,6 +81,7 @@ export class CoreDashClient {
         break;
       }
       case 'devices': this.devices = msg.devices; this.emit('devices', msg.devices); break;
+      case 'interlocks': this.interlocks = msg.interlocks; this.emit('interlocks', msg.interlocks); break;
       case 'audit': this.emit('audit', msg.entry); break;
       default: this.emit(msg.type, msg);
     }
@@ -100,6 +101,8 @@ export class CoreDashClient {
   async confirm(id) { return (await this.request({ type: 'command.confirm', id })).entry; }
   async cancel(id) { return (await this.request({ type: 'command.cancel', id })).cancelled; }
   async ack(alarmId) { return (await this.request({ type: 'alarm.ack', id: alarmId })).alarm; }
+  async bypass(id, minutes, reason) { return (await this.request({ type: 'interlock.bypass', id, minutes, reason })).bypass; }
+  async restore(id) { return (await this.request({ type: 'interlock.restore', id })).restored; }
 
   close() { this.closed = true; if (this.ws) this.ws.close(); }
 }

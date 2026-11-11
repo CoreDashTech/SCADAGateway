@@ -67,6 +67,48 @@ test('interlock: tank at 98% forces P-01 off and blocks a start command', async 
   assert.ok(il.body.find((x) => x.id === 'IL_TANK_HIGH').active);
 });
 
+test('interlock help: details + fixes, engineer bypass with reason lets the command through, LSHH never bypassable', async () => {
+  gw.sim.force('V-102.POS', 0); gw.sim.force('V-103.POS', 0); gw.sim.force('T-1.LEVEL', 98);
+  assert.ok(await until(() => gw.store.value('P-01.RUN') === false));
+  const r = await api('POST', '/api/commands', 'demo-operator', { tag: 'P-01.RUN', value: true });
+  assert.strictEqual(r.status, 409);
+  assert.strictEqual(r.body.details.id, 'IL_TANK_HIGH');
+  assert.strictEqual(r.body.details.limit, 97);
+  assert.strictEqual(r.body.details.bypassable, true);
+  assert.deepStrictEqual(r.body.details.fixes[0].set, [{ tag: 'V-103.POS', value: 100 }]);
+
+  const url = '/api/interlocks/IL_TANK_HIGH/bypass';
+  assert.strictEqual((await api('POST', url, 'demo-operator', { minutes: 15, reason: 'pump test' })).status, 403, 'operator cannot bypass');
+  assert.strictEqual((await api('POST', url, 'demo-engineer', { minutes: 15 })).body.error, 'REASON_REQUIRED');
+  assert.strictEqual((await api('POST', url, 'demo-engineer', { minutes: 120, reason: 'pump test' })).body.error, 'BAD_VALUE', 'max 30 min');
+  const ok = await api('POST', url, 'demo-engineer', { minutes: 15, reason: 'pump test after repair' });
+  assert.strictEqual(ok.status, 200);
+  assert.ok(ok.body.until > Date.now() + 14 * 60000);
+
+  const prep = await api('POST', '/api/commands', 'demo-operator', { tag: 'P-01.RUN', value: true });
+  assert.strictEqual(prep.status, 200, 'command allowed while bypassed');
+  assert.strictEqual((await api('POST', `/api/commands/${prep.body.id}/confirm`, 'demo-operator')).body.result, 'ok');
+  assert.ok(await until(() => gw.store.value('P-01.RUN') === true), 'P-01 runs');
+  await sleep(400);
+  assert.strictEqual(gw.store.value('P-01.RUN'), true, 'not forced off again while bypassed');
+
+  // the final cut-off still trips and cannot be bypassed
+  gw.sim.force('T-1.LEVEL', 99.8);
+  assert.ok(await until(() => gw.store.value('P-01.RUN') === false), 'LSHH trips P-01');
+  const no = await api('POST', '/api/interlocks/IL_TANK_LSHH/bypass', 'demo-admin', { minutes: 5, reason: 'try to bypass' });
+  assert.strictEqual(no.status, 409);
+  assert.strictEqual(no.body.error, 'NOT_BYPASSABLE');
+
+  // expiry restores the interlock and is audited
+  gw.sim.force('T-1.LEVEL', 98);
+  gw.interlocks.bypasses.get('IL_TANK_HIGH').until = Date.now() - 1;
+  gw.interlocks.expire();
+  assert.strictEqual((await api('GET', '/api/interlocks', 'demo-viewer')).body.find((x) => x.id === 'IL_TANK_HIGH').bypass, null);
+  const acts = gw.audit.list(50).map((e) => e.action);
+  assert.ok(acts.includes('interlock.bypass') && acts.includes('interlock.restore'), 'bypass and restore audited');
+  assert.strictEqual((await api('POST', '/api/commands', 'demo-operator', { tag: 'P-01.RUN', value: true })).status, 409, 'blocked again after expiry');
+});
+
 test('alarm: overflow raises, notifies LINE/SMS/push channels, operator acknowledges', async () => {
   assert.ok(await until(async () => (await api('GET', '/api/alarms', 'demo-viewer')).body.active.some((a) => a.rule === 'TANK_OVERFLOW')));
   const a = (await api('GET', '/api/alarms', 'demo-viewer')).body.active.find((x) => x.rule === 'TANK_OVERFLOW');
@@ -135,4 +177,12 @@ test('scheduler fires a schedule once at its time in the site time zone', async 
   const s = new Scheduler([{ id: 'PERIMETER_ON', at: '18:15', days: [3], set: [{ tag: 'L-O.ON', value: true }] }], fake, { now: () => new Date('2026-11-11T11:15:20Z'), log: quiet });
   await s.tick(); await s.tick();
   assert.deepStrictEqual(calls, [['schedule:PERIMETER_ON', 'L-O.ON', true]]);
+});
+
+test('interlock: when both tank interlocks hold, the non-bypassable one is reported', async () => {
+  gw.sim.force('V-102.POS', 0); gw.sim.force('V-103.POS', 0); gw.sim.force('T-1.LEVEL', 99.8);
+  const r = await api('POST', '/api/commands', 'demo-operator', { tag: 'P-01.RUN', value: true });
+  assert.strictEqual(r.body.details.id, 'IL_TANK_LSHH');
+  assert.strictEqual(r.body.details.bypassable, false);
+  gw.sim.force('T-1.LEVEL', 60);
 });

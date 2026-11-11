@@ -37,7 +37,7 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
 
   const audit = new AuditLog(cfg.audit.file);
   const commands = new CommandService({ store, drivers, interlocks: cfg.interlocks, audit, ttlSec: cfg.server.commandTtlSec });
-  const interlocks = new InterlockEngine(cfg.interlocks, store, commands, log);
+  const interlocks = new InterlockEngine(cfg.interlocks, store, commands, log, { audit });
   const alarms = new AlarmEngine(cfg.alarms, store);
   const historian = new Historian(store, cfg.historian);
   const scheduler = new Scheduler(cfg.schedules, commands, { timeZone: cfg.site.timezone, log });
@@ -69,7 +69,7 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
   gw.stop = async () => {
     const stopped = new Set();
     for (const { driver } of deviceDrivers) if (!stopped.has(driver)) { stopped.add(driver); driver.stop(); }
-    alarms.stop(); historian.stop(); scheduler.stop();
+    alarms.stop(); historian.stop(); scheduler.stop(); interlocks.stop();
     await gw.server.close();
   };
   return gw;

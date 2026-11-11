@@ -75,17 +75,59 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     assert.ok(await until(() => gw.store.value('P-01.RUN') === false));
     await click('[data-act="seg"][data-arg="machines"]');
     await click('[data-act="set"][data-arg="P-01.RUN"][data-val="true"]');
-    assert.ok(await until(async () => /Interlock/.test(await text())), 'interlock message shown');
-    assert.strictEqual(await page.$('.dialog'), null, 'no confirm dialog for a blocked command');
+    await page.waitForSelector('.dialog.blk');
+    assert.match(await page.$eval('.dialog.blk', (e) => e.textContent), /IL_TANK_HIGH/, 'blocked dialog names the interlock');
+    assert.ok(await page.$('[data-act="blk-fix"]'), 'one-tap fixes offered');
+    assert.strictEqual(await page.$('[data-act="blk-bypass"]'), null, 'operator cannot bypass');
     await shot('05-interlock');
+    // fix: open V-103 → confirm → when the level drops, the original start comes back for confirmation
+    await click('[data-act="blk-fix"][data-arg="0"]');
+    await page.waitForSelector('.dialog [data-act="confirm"]');
+    await click('[data-act="confirm"]');
+    assert.ok(await until(() => gw.store.value('V-103.POS') === 100), 'fix applied');
+    assert.ok(await until(async () => /รอปลดล็อก|Waiting to unblock/.test(await text())), 'waiting banner');
+    gw.sim.force('T-1.LEVEL', 90);
+    assert.ok(await until(async () => Boolean(await page.$('.dialog [data-act="confirm"]')), 8000), 'start re-prompted when unblocked');
+    await shot('05b-interlock-ready');
+    await click('[data-act="confirm"]');
+    assert.ok(await until(() => gw.store.value('P-01.RUN') === true), 'P-01 started after the fix');
 
     // SCADA mimic
     await click('[data-act="tab"][data-arg="scada"]');
+    // virtual control room: animated, live, clickable
+    await page.waitForSelector('.twin-svg');
+    const rot = () => page.$eval('#tw-P-02-rot .tw-rot', (e) => e.getAttribute('transform'));
+    const a1 = await rot(); await sleep(300);
+    assert.notStrictEqual(await rot(), a1, 'pump impeller animates');
+    assert.strictEqual(await page.$eval('#tw-v-T-1', (e) => e.textContent), `${Math.round(gw.store.value('T-1.LEVEL'))} %`, 'tank label shows the live level');
+    await click('[data-act="daynight"][data-arg="night"]');
+    await sleep(500);
+    assert.ok(Number(await page.$eval('.tw-light[data-light="L-A"]', (e) => e.getAttribute('opacity'))) > 0.4, 'zone A light glows at night');
+    await shot('06a-twin-night');
+    await page.$eval('.twin-svg [data-arg="L-A"]', (e) => e.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    await page.waitForSelector('.sheet');
+    await click('[data-act="set"][data-arg="L-A.ON"][data-val="false"]');
+    await page.waitForSelector('.dialog');
+    await click('[data-act="confirm"]');
+    assert.ok(await until(() => gw.store.value('L-A.ON') === false), 'light switched off from the 3D room');
+    assert.ok(await until(async () => Number(await page.$eval('.tw-light[data-light="L-A"]', (e) => e.getAttribute('opacity'))) === 0), 'light cone goes dark');
+    await click('[data-act="scada-mode"][data-arg="pid"]');
     await page.waitForSelector('.mimic');
     await click('[data-act="sheet"][data-arg="P-02"]');
     await page.waitForSelector('.sheet');
     await shot('06-scada-sheet');
     await click('[data-act="close-sheet"]');
+
+    // meter test bench: run Q3 at ×300 and get a result for every selected meter
+    await click('[data-act="tab"][data-arg="bench"]');
+    await page.waitForSelector('.bench-svg');
+    await click('[data-act="bench-speed"][data-arg="300"]');
+    await click('[data-act="bench-point"][data-arg="Q3"]');
+    await click('[data-act="bench-run"][data-arg="one"]');
+    assert.ok(await until(async () => (await page.$$('.rtable')).length >= 2 && (await page.$$eval('.rtable', (ts) => ts[0].querySelectorAll('tbody tr').length)) === 3, 20000), 'three meter results');
+    const errs = await page.$$eval('.rtable', (ts) => [...ts[0].querySelectorAll('tbody tr')].map((r) => parseFloat(r.children[5].textContent)));
+    assert.ok(errs.every((e) => Math.abs(e) < 2), 'Q3 errors inside ±2 %');
+    await shot('07b-bench');
 
     // alarms → acknowledge
     await click('[data-act="tab"][data-arg="alerts"]');

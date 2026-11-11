@@ -1,6 +1,8 @@
 // CoreDash Nexus — installable mobile web app (PWA). Developed by CoreDash Technology.
 // Data comes from the CoreDash Gateway over WebSocket (live) or from a built-in plant simulator (demo).
 import { CoreDashClient } from './coredash-client.mjs';
+import { createTwin } from './twin.js';
+import { BenchSim, createBenchView, METERS, TANKS, STEPS, flowPoints, errorChart } from './bench.js';
 
 const B = (th, en) => ({ th, en });
 const store = {
@@ -34,7 +36,10 @@ const L = {
     role: { viewer: 'ผู้ดู (Viewer)', operator: 'ผู้ควบคุม (Operator)', engineer: 'วิศวกร (Engineer)', admin: 'ผู้ดูแลระบบ (Admin)' }, viewOnly: 'บัญชีนี้ดูได้อย่างเดียว',
     level: 'ระดับ', volume: 'ปริมาตร', inflow: 'น้ำเข้า', outflow: 'น้ำออก', pos: 'ตำแหน่ง', flow: 'อัตราไหล', amps: 'กระแส', vib: 'ความสั่น', chw: 'น้ำเย็นจ่าย', rated: 'พิกัด',
     closeIn: 'ปิดน้ำเข้า V-101', drainOpen: 'ระบาย V-103', o50: 'เปิด 50%', o100: 'เปิด 100%', closePanel: 'ปิดแผง', nothingToDo: 'ทุกอุปกรณ์อยู่ในสถานะนี้แล้ว',
-    days: ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
+    days: ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'],
+    twin: 'ห้องควบคุม 3D', pid: 'แผนผัง P&ID', twinTitle: 'ห้องควบคุมเสมือน', auto: 'อัตโนมัติ', day: 'กลางวัน', night: 'กลางคืน', labels: 'ป้ายค่า', zoomIn: 'ขยาย', zoomOut: 'ย่อ', twinHint: 'แตะเครื่องจักร วาล์ว หรือโคมไฟเพื่อสั่งการ', zoneA: 'ZONE A · ไลน์ผลิต', zoneB: 'ZONE B · ฉีดพลาสติก', zoneU: 'UTILITY · น้ำ & หล่อเย็น', twinAria: 'ภาพจำลองโรงงานแบบเรียลไทม์', lux: 'ความสว่าง', on: 'เปิด', off: 'ปิด', kwNowL: 'กำลังไฟ', pf: 'Power Factor', energy: 'พลังงานสะสม', moldT: 'อุณหภูมิแม่พิมพ์', coolBy: 'ระบายความร้อนด้วย', moldNote: 'ถ้าเกิน 60 °C ระบบจะแจ้งอลาร์ม',
+    bench: 'ทดสอบมาตร', benchTitle: 'แท่นทดสอบมาตรวัดน้ำ (ถังตวง)', benchStd: 'วิธีปริมาตร · ISO 4064 / OIML R 49 · ข้อมูลจำลอง', setup: 'ตั้งค่าการทดสอบ', meterUnder: 'มาตรที่ทดสอบ (ต่ออนุกรม)', spec: 'สเปกมาตร (ตามใบรับรอง)', testPoint: 'จุดทดสอบ', volume: 'ปริมาตรทดสอบ', autoVol: 'อัตโนมัติ', speed: 'ความเร็วจำลอง', runOne: 'ทดสอบ', runSet: 'ทดสอบครบชุด Q1 · Q2 · Q3', stopRun: 'หยุด', fault: 'จำลองมาตรชำรุด', live: 'สถานะขณะทดสอบ', flowNow: 'อัตราไหล (FT-01)', simTime: 'เวลาจำลอง', eta: 'เหลือประมาณ', stepNow: 'ขั้นตอน', manual: 'สั่งเองแบบแมนนวล', manualHint: 'เปิด/ปิดวาล์ว และตั้งอัตราไหลเอง ลองเติมจนเต็มเพื่อดูเซนเซอร์กันล้น LSHH ตัดอัตโนมัติ', fillAt: 'เติมที่', closeAll: 'ปิดทั้งหมด', results: 'ผลการทดสอบ', colMeter: 'มาตร', colPoint: 'จุด', colQ: 'อัตราไหล', colVref: 'ปริมาตรอ้างอิง', colVm: 'มาตรอ่านได้', colE: 'ค่าผิดพลาด', colMpe: 'เกณฑ์', colRes: 'ผล', pass: 'ผ่าน', failR: 'ไม่ผ่าน', clear: 'ล้างผล', noResults: 'ยังไม่มีผล กด “ทดสอบครบชุด” เพื่อเริ่ม', curve: 'กราฟค่าผิดพลาดเทียบเกณฑ์ (เส้นประ = เกณฑ์ ±5% / ±2%)', guide: 'ตำแหน่งเซนเซอร์และอุปกรณ์', gSensor: 'อุปกรณ์', gWhere: 'ติดตั้งที่', gWhy: 'หน้าที่', gType: 'ชนิดที่แนะนำ', neckTitle: 'ทำไมเซนเซอร์ปริมาตรต้องอยู่ที่คอถังแคบ', neckText: 'คอ Ø50 มม. จุ 1.96 มล./มม. ส่วนตัวถัง Ø650 มม. จุ 332 มล./มม. เซนเซอร์คลาดเคลื่อน ±1 มม. ที่คอถัง = ±0.002 ลิตร แต่ที่ตัวถัง = ±0.33 ลิตร (มากกว่า 170 เท่า)', planTitle: 'ปริมาตรและเวลาที่แนะนำ', tankUsed: 'ถังที่ใช้', alarmOv: 'กันล้นทำงาน', reportBench: 'รายงานผลการทดสอบมาตรวัดน้ำ', benchNote: '* ค่าผิดพลาดบนรูปคือค่าจำลองขณะไหล ผลจริงคำนวณจากปริมาตรอ้างอิงที่อ่านจากคอถัง แก้อุณหภูมิเป็น 20 °C แล้ว', minutes: 'นาที', selectMeter: 'เลือกมาตรอย่างน้อย 1 ตัว', faultOn: 'จำลองชำรุด',
+    blkTitle: 'ระบบป้องกันบล็อกคำสั่งนี้', blkNow: 'ตอนนี้', blkRule: 'เงื่อนไขบล็อก', blkFix: 'แก้ไขแล้วสั่งต่อ', blkFixHint: 'กดแก้ไข แล้วแอปจะเด้งคำสั่งเดิมให้ยืนยันทันทีที่ปลดล็อก', blkWait: 'รอปลดล็อกแล้วสั่งให้อัตโนมัติ', blkBypass: 'ข้ามระบบป้องกันชั่วคราว (วิศวกรขึ้นไป)', blkReason: 'เหตุผล (บันทึกใน Audit log)', blkReasonPh: 'เช่น ทดสอบปั๊มหลังซ่อม มีช่างเฝ้าหน้างาน', blkDo: 'ข้ามระบบป้องกัน', blkMin: 'นาที', blkNeedRole: 'บัญชีนี้เป็นผู้ควบคุม ต้องให้วิศวกรหรือผู้ดูแลระบบเป็นผู้ข้ามระบบป้องกัน', blkNoBypass: 'ระบบป้องกันนี้ข้ามไม่ได้ เพราะเป็นการป้องกันขั้นสุดท้าย (เทียบเท่าสวิตช์กันล้นแบบต่อสายตรง) ต้องแก้สาเหตุก่อน', blkReasonShort: 'กรุณาใส่เหตุผลอย่างน้อย 5 ตัวอักษร', close2: 'ปิด', waiting: 'รอปลดล็อก', cancelWait: 'ยกเลิก', ready: 'ปลดล็อกแล้ว', byp: 'ข้ามระบบป้องกันอยู่', bypLeft: 'เหลือ', bypBy: 'โดย', restore: 'คืนค่าป้องกัน', bypassed: 'ข้ามระบบป้องกันแล้ว · ', restored: 'คืนค่าระบบป้องกันแล้ว'
   },
   en: {
     site: 'Plant A · Bang Na', home: 'Home', overview: 'Plant overview', control: 'Control', alerts: 'Alerts', report: 'Reports',
@@ -55,7 +60,10 @@ const L = {
     role: { viewer: 'Viewer', operator: 'Operator', engineer: 'Engineer', admin: 'Admin' }, viewOnly: 'This account is view-only',
     level: 'Level', volume: 'Volume', inflow: 'Inflow', outflow: 'Outflow', pos: 'Position', flow: 'Flow', amps: 'Current', vib: 'Vibration', chw: 'Chilled water', rated: 'Rated',
     closeIn: 'Close inlet V-101', drainOpen: 'Drain V-103', o50: 'Open 50%', o100: 'Open 100%', closePanel: 'Close', nothingToDo: 'Everything is already in that state',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    twin: '3D control room', pid: 'P&ID diagram', twinTitle: 'Virtual control room', auto: 'Auto', day: 'Day', night: 'Night', labels: 'Labels', zoomIn: 'Zoom in', zoomOut: 'Zoom out', twinHint: 'Tap a machine, valve or light to control it', zoneA: 'ZONE A · PRODUCTION', zoneB: 'ZONE B · MOLDING', zoneU: 'UTILITY · WATER & COOLING', twinAria: 'Live plant scene', lux: 'Brightness', on: 'On', off: 'Off', kwNowL: 'Power', pf: 'Power factor', energy: 'Energy meter', moldT: 'Mold temperature', coolBy: 'Cooled by', moldNote: 'Alarm above 60 °C',
+    bench: 'Meter test', benchTitle: 'Water-meter test bench (proving tank)', benchStd: 'Volumetric method · ISO 4064 / OIML R 49 · simulated data', setup: 'Test setup', meterUnder: 'Meters under test (in series)', spec: 'Meter rating (per certificate)', testPoint: 'Test point', volume: 'Test volume', autoVol: 'Auto', speed: 'Simulation speed', runOne: 'Run', runSet: 'Run full set Q1 · Q2 · Q3', stopRun: 'Stop', fault: 'Simulate a worn meter', live: 'Live status', flowNow: 'Flow (FT-01)', simTime: 'Simulated time', eta: 'Time left', stepNow: 'Step', manual: 'Manual control', manualHint: 'Open/close valves and set the flow yourself. Fill until full to see the LSHH overflow sensor trip.', fillAt: 'Fill at', closeAll: 'Close all', results: 'Test results', colMeter: 'Meter', colPoint: 'Point', colQ: 'Flow', colVref: 'Reference vol.', colVm: 'Meter vol.', colE: 'Error', colMpe: 'MPE', colRes: 'Result', pass: 'Pass', failR: 'Fail', clear: 'Clear', noResults: 'No results yet — press “Run full set” to start', curve: 'Error curve vs MPE (dashed = ±5% / ±2% limits)', guide: 'Sensor and instrument placement', gSensor: 'Device', gWhere: 'Location', gWhy: 'Purpose', gType: 'Recommended type', neckTitle: 'Why the volume sensors sit in the narrow neck', neckText: 'A Ø50 mm neck holds 1.96 mL per mm; a Ø650 mm body holds 332 mL per mm. A ±1 mm sensor error is ±0.002 L in the neck but ±0.33 L in the body (over 170× more).', planTitle: 'Recommended volumes and times', tankUsed: 'Tank', alarmOv: 'Overflow protection tripped', reportBench: 'Water-meter test report', benchNote: '* Errors on the drawing are live simulated values; results use the reference volume read from the tank neck, corrected to 20 °C.', minutes: 'min', selectMeter: 'Select at least one meter', faultOn: 'worn',
+    blkTitle: 'A safety interlock blocked this command', blkNow: 'Now', blkRule: 'Blocks when', blkFix: 'Fix it and continue', blkFixHint: 'Pick a fix; the app brings your command back for confirmation as soon as it is unblocked', blkWait: 'Wait until unblocked, then ask me', blkBypass: 'Temporary bypass (engineer or admin)', blkReason: 'Reason (saved in the audit log)', blkReasonPh: 'e.g. pump test after repair, technician on site', blkDo: 'Bypass interlock', blkMin: 'min', blkNeedRole: 'This account is an operator; an engineer or admin must bypass an interlock', blkNoBypass: 'This interlock cannot be bypassed: it is the last line of defence (like a hard-wired overflow switch). Fix the cause first.', blkReasonShort: 'Please enter a reason of at least 5 characters', close2: 'Close', waiting: 'Waiting to unblock', cancelWait: 'Cancel', ready: 'Unblocked', byp: 'Interlock bypassed', bypLeft: 'left', bypBy: 'by', restore: 'Restore', bypassed: 'Interlock bypassed · ', restored: 'Interlock restored'
   }
 };
 
@@ -85,13 +93,20 @@ const ALARM_RULES = [
   { id: 'MOLD_HOT', tag: 'INJ-01.MOLD_T', op: '>', value: 60, severity: 'high', text: B('แม่พิมพ์ INJ-01 ร้อนเกิน 60 °C', 'INJ-01 mold above 60 °C') },
   { id: 'PEAK_DEMAND', tag: 'MDB-1.KW', op: '>', value: 320, delaySec: 10, severity: 'medium', text: B('กำลังไฟเกินเพดาน Peak', 'Power above peak limit') }
 ];
+const INTERLOCKS = [
+  { id: 'IL_TANK_HIGH', tag: 'T-1.LEVEL', op: '>=', value: 97, force: ['P-01.RUN', false], bypassable: true, maxBypassMin: 30, text: B('ถังเต็ม 97% — ห้ามเดิน P-01', 'Tank at 97% — P-01 blocked'),
+    fixes: [{ label: B('ระบายถัง: เปิด V-103 100%', 'Drain the tank: open V-103 100%'), set: [{ tag: 'V-103.POS', value: 100 }] }, { label: B('จ่ายน้ำออก: เปิด V-102 100%', 'Draw water: open V-102 100%'), set: [{ tag: 'V-102.POS', value: 100 }] }] },
+  { id: 'IL_TANK_LSHH', tag: 'T-1.LEVEL', op: '>=', value: 99.5, force: ['P-01.RUN', false], bypassable: false, text: B('ถังล้น 99.5% (LSHH) — ตัด P-01 เสมอ', 'Tank 99.5% (LSHH) — P-01 always tripped'), fixes: [] }
+];
+INTERLOCKS[1].fixes = INTERLOCKS[0].fixes.slice(0, 1);
 const cmp = (v, op, r) => ({ '>': v > r, '<': v < r, '>=': v >= r, '<=': v <= r, '==': v === r }[op]);
 
 // ---------------------------------------------------------------- demo source: same model as the gateway simulator
 class DemoSource {
   constructor() {
     this.mode = 'demo';
-    this.user = { id: 'demo', name: 'Demo Operator', role: 'operator' };
+    this.user = { id: 'demo', name: 'Demo Engineer', role: 'engineer' };
+    this.bypasses = new Map();
     this.connected = true;
     this.s = {
       'P-01.RUN': true, 'P-01.FAULT': false, 'P-02.RUN': true, 'CHL-01.RUN': true, 'CMP-01.RUN': true, 'CNV-01.RUN': false,
@@ -116,6 +131,7 @@ class DemoSource {
   stop() { clearInterval(this.timer); }
   has(tag) { return tag in this.s; }
   value(tag) { return this.s[tag]; }
+  values() { return this.s; }
   step() {
     const s = this.s;
     for (const [id, t] of Object.entries(this.targets)) { s[id] = s[id] < t ? Math.min(t, s[id] + 25) : Math.max(t, s[id] - 25); if (s[id] === t) delete this.targets[id]; }
@@ -134,8 +150,14 @@ class DemoSource {
     s['MDB-1.KW'] = kw; s['MDB-1.KWH'] += kw / 3600; s['WM-01.FLOW'] = raw; s['WM-01.TOTAL'] += raw / 3600;
     const last = this.hist[this.hist.length - 1];
     if (Date.now() - last[0] > 60000) { this.hist.push([Date.now(), kw]); this.hist.shift(); }
-    // interlock: tank full -> P-01 off
-    if (s['T-1.LEVEL'] >= 97 && s['P-01.RUN']) { s['P-01.RUN'] = false; this.addLog(B('Interlock: ตัด P-01 (ถังเต็ม 97%)', 'Interlock: P-01 tripped (tank 97%)'), 'PLC'); }
+    // interlocks: tank full -> P-01 off (unless bypassed); LSHH is never bypassable
+    for (const [id, b] of this.bypasses) if (b.until <= Date.now()) { this.bypasses.delete(id); this.addLog(B(`คืนค่าระบบป้องกัน ${id} (หมดเวลา)`, `Interlock ${id} restored (expired)`), 'PLC'); }
+    for (const il of INTERLOCKS) {
+      if (s[il.force[0]] !== il.force[1] && cmp(s[il.tag], il.op, il.value) && !this.bypasses.has(il.id)) {
+        s[il.force[0]] = il.force[1];
+        this.addLog(B(`Interlock ${il.id}: ตัด ${il.force[0].split('.')[0]}`, `Interlock ${il.id}: tripped ${il.force[0].split('.')[0]}`), 'PLC');
+      }
+    }
     this.alarms(Date.now());
   }
   alarms(t) {
@@ -160,7 +182,14 @@ class DemoSource {
   addLog(text, by) { this.log.unshift({ ts: Date.now(), text, by }); this.log.length = Math.min(this.log.length, 12); }
   async prepare(tag, value) {
     if (!(tag in this.s)) throw err('UNKNOWN_TAG', tag);
-    if (tag === 'P-01.RUN' && value === true && this.s['T-1.LEVEL'] >= 97) throw err('INTERLOCK', 'IL_TANK_HIGH');
+    for (const il of [...INTERLOCKS].sort((a, b) => a.bypassable - b.bypassable)) {
+      if (il.force[0] !== tag || value === il.force[1] || this.bypasses.has(il.id)) continue;
+      if (cmp(this.s[il.tag], il.op, il.value)) {
+        const e = err('INTERLOCK', 'Blocked by interlock ' + il.id);
+        e.details = { id: il.id, text: il.text, tag: il.tag, op: il.op, limit: il.value, value: this.s[il.tag], bypassable: il.bypassable, maxBypassMin: il.maxBypassMin || 30, fixes: il.fixes };
+        throw e;
+      }
+    }
     const id = Math.random().toString(36).slice(2);
     this.pending.set(id, { id, tag, value, at: Date.now() });
     return { id, tag, value };
@@ -182,6 +211,18 @@ class DemoSource {
     this.emit('alarms');
   }
   async history() { return this.hist.slice(); }
+  interlocks() { return INTERLOCKS.map((il) => ({ id: il.id, text: il.text, active: cmp(this.s[il.tag], il.op, il.value), bypass: this.bypasses.get(il.id) || null })); }
+  async bypass(id, minutes, reason) {
+    const il = INTERLOCKS.find((q) => q.id === id);
+    if (!il.bypassable) throw err('NOT_BYPASSABLE', id);
+    if (!reason || reason.trim().length < 5) throw err('REASON_REQUIRED', 'reason');
+    const b = { id, until: Date.now() + minutes * 60000, by: this.user.name, reason: reason.trim(), minutes };
+    this.bypasses.set(id, b);
+    this.addLog(B(`ข้ามระบบป้องกัน ${id} ${minutes} นาที: ${b.reason}`, `Bypassed ${id} for ${minutes} min: ${b.reason}`), this.user.name);
+    this.emit('alarms');
+    return b;
+  }
+  async restore(id) { this.bypasses.delete(id); this.addLog(B(`คืนค่าระบบป้องกัน ${id}`, `Interlock ${id} restored`), this.user.name); this.emit('alarms'); return true; }
 }
 
 // ---------------------------------------------------------------- live source: CoreDash Gateway
@@ -204,6 +245,7 @@ class LiveSource {
     this.client.on('snapshot', (m) => { this.alarmList = m.alarms || []; this.emit('tags'); });
     this.client.on('tags', () => this.emit('tags'));
     this.client.on('connection', () => this.emit('conn'));
+    this.client.on('interlocks', () => this.emit('alarms'));
     this.client.on('alarm', ({ event, alarm }) => {
       this.alarmList = [alarm, ...this.alarmList.filter((x) => x.rule !== alarm.rule)].slice(0, 20);
       this.emit(event === 'raise' ? { alarm } : 'alarms');
@@ -220,11 +262,15 @@ class LiveSource {
   stop() { if (this.client) this.client.close(); }
   has(tag) { return Boolean(this.client && this.client.values[tag]); }
   value(tag) { return this.client ? this.client.value(tag) : undefined; }
+  values() { const o = {}; if (this.client) for (const [k, v] of Object.entries(this.client.values)) o[k] = v.value; return o; }
   activeAlarms() { return this.alarmList.filter((a) => !(a.acked && a.state === 'cleared')); }
   prepare(tag, value) { return this.client.prepare(tag, value); }
   confirm(id) { return this.client.confirm(id); }
   cancel(id) { return this.client.cancel(id).catch(() => {}); }
   ack(id) { return this.client.ack(id); }
+  interlocks() { return (this.client && this.client.interlocks || []).map((il) => ({ ...il, bypass: il.bypass && il.bypass.until > Date.now() ? { ...il.bypass, by: il.bypass.by } : null })); }
+  bypass(id, minutes, reason) { return this.client.bypass(id, minutes, reason); }
+  restore(id) { return this.client.restore(id); }
   async history(tag, from) {
     const r = await fetch(`${this.base}/api/history?tag=${encodeURIComponent(tag)}&from=${from}&max=120`, { headers: { Authorization: 'Bearer ' + this.token } });
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -243,13 +289,15 @@ function fmtVal(v, lang) {
 const S = {
   view: 'boot', tab: (location.hash || '#home').slice(1), seg: 'machines', sheet: null, settings: false,
   pending: null, toast: null, lang: store.get('lang', 'th'), theme: store.get('theme', 'navy'),
-  gw: null, loginErr: '', hist: null, installEvt: null, busy: false
+  gw: null, loginErr: '', hist: null, installEvt: null, busy: false,
+  scadaMode: 'twin', blocked: null, deferred: null, bypassMin: 15, bypassReason: '', dayNight: store.get('dayNight', 'auto'), labels: true, zoom: null
 };
-if (!['home', 'scada', 'control', 'alerts', 'report'].includes(S.tab)) S.tab = 'home';
+if (!['home', 'scada', 'bench', 'control', 'alerts', 'report'].includes(S.tab)) S.tab = 'home';
 let src = null;
+window.coredash = { get source() { return src; }, state: () => S };
 const root = typeof document !== 'undefined' ? document.getElementById('app') : null;
 const t = () => L[S.lang];
-const tr = (o) => (o ? o[S.lang] ?? o.en : '');
+const tr = (o) => (o == null ? '' : typeof o === 'string' ? o : o[S.lang] ?? o.en);
 
 function applyPrefs() {
   document.documentElement.lang = S.lang;
@@ -267,6 +315,7 @@ const ICON = {
   home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', scada: 'M4 6h5v5H4zM15 13h5v5h-5zM9 8.5h4v7h2', control: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
   alerts: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0', report: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+  bench: 'M9 3h6M10 3v6L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9V3M7 15h10',
   bulb: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z', warn: 'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',
   sun: 'M12 3v2M5.6 5.6l1.4 1.4M3 12h2M19 12h2M17 7l1.4-1.4M7 16a5 5 0 0 1 10 0M3 20h18', clock: 'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', power: 'M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10'
 };
@@ -283,6 +332,149 @@ function valveText(v) {
 const embedded = () => { try { return window.self !== window.top; } catch (_) { return true; } };
 const isDesk = () => typeof window !== 'undefined' && window.innerWidth >= 1024;
 const canCommand = () => src && src.user && src.user.role !== 'viewer';
+
+// ---------------------------------------------------------------- virtual control room
+let twin = null, twinLang = null, twinCentered = false;
+function getTwin() {
+  if (!twin || twinLang !== S.lang) {
+    if (twin) twin.destroy();
+    const x = t();
+    twin = createTwin({ zoneA: x.zoneA, zoneB: x.zoneB, zoneU: x.zoneU, aria: x.twinAria });
+    twinLang = S.lang; twinCentered = false;
+  }
+  return twin;
+}
+function twinBar() {
+  const x = t();
+  const dn = [['auto', x.auto], ['day', x.day], ['night', x.night]].map(([k, l]) => `<button class="chip ${S.dayNight === k ? 'on' : ''}" data-act="daynight" data-arg="${k}" aria-pressed="${S.dayNight === k}">${l}</button>`).join('');
+  return `<div class="twin-bar"><div class="chips">${dn}</div><button class="chip ${S.labels ? 'on' : ''}" data-act="labels" aria-pressed="${S.labels}">${x.labels}</button><div class="chips" style="margin-left:auto"><button class="chip" data-act="zoom" data-arg="-1" aria-label="${x.zoomOut}">−</button><button class="chip" data-act="zoom" data-arg="1" aria-label="${x.zoomIn}">+</button></div></div>`;
+}
+function twinBlock() {
+  return `<div class="twin-block">${twinBar()}<div id="twin-slot"></div><div class="muted twin-hint">${t().twinHint}</div></div>`;
+}
+function mountTwin() {
+  const slot = root.querySelector('#twin-slot');
+  if (!slot) return;
+  const tw = getTwin();
+  slot.appendChild(tw.el);
+  if (S.zoom == null) S.zoom = isDesk() ? 1 : 1.7;
+  tw.setZoom(S.zoom);
+  tw.update(src.values(), src.activeAlarms(), { dayNight: S.dayNight, labels: S.labels, t: t() });
+  const sc = tw.el.querySelector('.twin-scroll');
+  if (!twinCentered && sc.scrollWidth > sc.clientWidth) { sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) * 0.55; twinCentered = true; }
+  else if (sc.dataset.left) sc.scrollLeft = Number(sc.dataset.left);
+}
+
+// ---------------------------------------------------------------- meter test bench
+const bench = new BenchSim();
+let benchView = null;
+const BS = { point: 'Q3', vol: null };
+const DEFAULT_VOL = { Q1: 10, Q2: 10, Q3: 100, Q4: 200 };
+const fmtQ = (q) => (q >= 1000 ? (q / 1000).toFixed(q >= 10000 ? 1 : 3).replace(/0+$/, '').replace(/\.$/, '') + ' m³/h' : (Math.round(q * 100) / 100) + ' L/h');
+const fmtDur = (sec) => { const m = Math.floor(sec / 60), s2 = Math.round(sec % 60); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m}:${String(s2).padStart(2, '0')}`; };
+function mountBench() {
+  const slot = root.querySelector('#bench-slot');
+  if (!slot) return;
+  if (!benchView) { benchView = createBenchView(); benchView.attach(bench); bench.on(() => schedule(100)); }
+  slot.appendChild(benchView.el);
+  const sc = benchView.el.querySelector('.bench-scroll');
+  if (sc && sc.dataset.left) sc.scrollLeft = Number(sc.dataset.left);
+  else if (sc && sc.scrollWidth > sc.clientWidth) { sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) * 0.4; sc.dataset.left = sc.scrollLeft; }
+}
+function viewBench() {
+  const x = t(), pts = bench.points(), run = bench.run;
+  const chip = (act, arg, label, on, extra = '') => `<button class="chip ${on ? 'on' : ''}" data-act="${act}" data-arg="${arg}" aria-pressed="${on}" ${extra}>${label}</button>`;
+  const busy = bench.mode === 'auto';
+  const meters = METERS.map((m) => chip('bench-meter', m.id, `${m.id} · ${m.model}${bench.fault === m.id ? ' · ' + x.faultOn : ''}`, bench.selected[m.id], busy ? 'disabled' : '')).join('');
+  const q3s = [1.6, 2.5, 4].map((q) => chip('bench-q3', q, 'Q3 ' + q, bench.q3 === q, busy ? 'disabled' : '')).join('');
+  const rs = [80, 100, 160, 200, 250].map((r) => chip('bench-r', r, 'R' + r, bench.R === r, busy ? 'disabled' : '')).join('');
+  const pointBtns = ['Q1', 'Q2', 'Q3', 'Q4'].map((k) => `<button class="pt ${BS.point === k ? 'on' : ''}" data-act="bench-point" data-arg="${k}" ${busy ? 'disabled' : ''}><b>${k}</b><span>${fmtQ(pts[k])}</span><small>${(BS.vol || DEFAULT_VOL[k])} L</small></button>`).join('');
+  const vols = [null, 10, 100, 200].map((v) => chip('bench-vol', v ?? 'auto', v ? v + ' L' : x.autoVol, BS.vol === v, busy ? 'disabled' : '')).join('');
+  const speeds = [1, 10, 60, 300].map((v) => chip('bench-speed', v, '×' + v, bench.speed === v)).join('');
+  const tankK = run ? run.tank : null;
+  const remaining = run && bench.step === 2 && bench.Q > 0.1 ? (run.V - bench.tank[run.tank]) / bench.Q * 3600 : null;
+  const steps = STEPS.map((st, i) => `<li class="${bench.step === i ? 'now' : bench.step > i ? 'done' : ''}"><span class="num">${i + 1}</span>${tr(st)}</li>`).join('');
+  const valves = [['in', 'XV-IN'], ['s', 'XV-S'], ['l', 'XV-L'], ['ds', 'XV-DS'], ['dl', 'XV-DL']].map(([k, l]) => `<button class="vbtn ${bench.v[k] ? 'on' : ''}" data-act="bench-valve" data-arg="${k}" aria-pressed="${bench.v[k]}" ${busy ? 'disabled' : ''}><span class="dotS" style="background:${bench.v[k] ? '#3B82F6' : '#64748B'}"></span>${l}<small>${bench.v[k] ? x.open : x.close}</small></button>`).join('');
+  const flows = ['Q1', 'Q2', 'Q3', 'Q4'].map((k) => chip('bench-flow', k, `${x.fillAt} ${k}`, Math.abs(bench.Qset - pts[k]) < 0.01 && bench.Qset > 0, busy ? 'disabled' : '')).join('');
+  const res = bench.results.slice().reverse();
+  const rows = res.map((r) => `<tr><td><b>${r.meter}</b> <span class="muted">${esc(r.model)}${r.fault ? ' · ' + x.faultOn : ''}</span></td><td>${r.key}</td><td class="num">${fmtQ(r.Q)}</td><td class="num">${r.vref.toFixed(3)} L</td><td class="num">${r.vm.toFixed(2)} L</td><td class="num" style="color:${r.pass ? 'var(--it)' : 'var(--bad)'};font-weight:700">${r.e >= 0 ? '+' : ''}${r.e.toFixed(2)} %</td><td class="num">±${r.mpe} %</td><td><span class="pill ${r.pass ? 'run' : 'alarm'}">${r.pass ? x.pass : x.failR}</span></td></tr>`).join('');
+  const plan = ['Q1', 'Q2', 'Q3', 'Q4'].map((k) => { const v = DEFAULT_VOL[k]; return `<tr><td><b>${k}</b></td><td class="num">${fmtQ(pts[k])}</td><td class="num">${v} L</td><td>${v <= 10.5 ? TANKS.S.name : TANKS.L.name}</td><td class="num">${fmtDur(v / pts[k] * 3600)}</td><td class="num">±${k === 'Q1' ? 5 : 2} %</td></tr>`; }).join('');
+  const G = S.lang === 'th' ? [
+    ['LSL-S / LSL-L', 'ก้นถังตวง เหนือวาล์วระบาย', 'ยืนยันถังแห้ง (จุดศูนย์) ก่อนเริ่มทุกครั้ง', 'Capacitive / conductive point'],
+    ['LS-10', 'กึ่งกลางคอถัง TK-20 ที่ 10.00 L', 'สั่งปิดวาล์วเร็วเมื่อครบ 10 L (Q1, Q2)', 'Optical / capacitive ปรับระดับได้'],
+    ['LS-100', 'กึ่งกลางคอล่าง TK-200 ที่ 100.0 L', 'หยุดที่ 100 L (Q3)', 'Optical / capacitive ปรับระดับได้'],
+    ['LS-200', 'กึ่งกลางคอบน TK-200 ที่ 200.0 L', 'หยุดที่ 200 L (Q3, Q4)', 'Optical / capacitive ปรับระดับได้'],
+    ['LSHH-S / LSHH-L', 'เหนือคอบนสุด (11.2 L / 210 L)', 'กันล้น: ตัดวาล์วทั้งหมด + อลาร์ม ต่อตรงเข้ารีเลย์ความปลอดภัย', 'Float switch'],
+    ['LT-01', 'ฝาบนถัง TK-200', 'วัดระดับต่อเนื่อง แสดงปริมาตรและเวลาที่เหลือ', 'Radar 80 GHz'],
+    ['FT-01', 'ปลายน้ำของชุดมาตร ก่อน FCV-01', 'อ้างอิงและคุมอัตราไหลให้คงที่ระหว่างทดสอบ', 'Electromagnetic DN15 · ±0.2 %'],
+    ['PT-01 / PT-02', 'ก่อนและหลังชุดมาตร', 'แรงดันทดสอบ และแรงดันตกคร่อมมาตร (≤ 0.63 bar ที่ Q3)', 'Pressure transmitter 0–10 bar'],
+    ['TT-01', 'ก่อนเข้าถังตวง', 'แก้ค่าปริมาตรถังตวงเป็น 20 °C', 'PT100 class A'],
+    ['XV-S / XV-L', 'เหนือถังตวง ชิดทางเข้าถังที่สุด', 'วาล์วเปิด-ปิดเร็ว (≤ 0.5 วินาที) ลดน้ำค้างในท่อ', 'Pneumatic ball valve'],
+    ['XV-DS / XV-DL', 'ก้นถังตวง', 'ระบายน้ำกลับถังพัก TK-SUP', 'Pneumatic ball valve']
+  ] : [
+    ['LSL-S / LSL-L', 'Tank bottom, above the drain valve', 'Confirms an empty tank (zero) before every run', 'Capacitive / conductive point'],
+    ['LS-10', 'Middle of the TK-20 neck at 10.00 L', 'Fast valve close at 10 L (Q1, Q2)', 'Adjustable optical / capacitive'],
+    ['LS-100', 'Middle of the TK-200 lower neck at 100.0 L', 'Stop at 100 L (Q3)', 'Adjustable optical / capacitive'],
+    ['LS-200', 'Middle of the TK-200 upper neck at 200.0 L', 'Stop at 200 L (Q3, Q4)', 'Adjustable optical / capacitive'],
+    ['LSHH-S / LSHH-L', 'Above the top neck (11.2 L / 210 L)', 'Overflow: close all valves + alarm, hard-wired to a safety relay', 'Float switch'],
+    ['LT-01', 'Top cover of TK-200', 'Continuous level for volume and time-left display', 'Radar 80 GHz'],
+    ['FT-01', 'Downstream of the meters, before FCV-01', 'Reference and closed-loop control of the test flow', 'Electromagnetic DN15 · ±0.2 %'],
+    ['PT-01 / PT-02', 'Before and after the meter string', 'Test pressure and pressure loss (≤ 0.63 bar at Q3)', 'Pressure transmitter 0–10 bar'],
+    ['TT-01', 'Before the proving tanks', 'Correct the tank volume to 20 °C', 'PT100 class A'],
+    ['XV-S / XV-L', 'Above each tank, as close to the inlet as possible', 'Fast open/close (≤ 0.5 s) to cut line drain-back', 'Pneumatic ball valve'],
+    ['XV-DS / XV-DL', 'Tank bottom', 'Drain back to TK-SUP', 'Pneumatic ball valve']
+  ];
+  return `
+  <div class="row" style="flex-wrap:wrap"><h2>${x.benchTitle}</h2><span class="pill run">${x.benchStd}</span></div>
+  ${bench.alarm ? `<div class="status warn"><span class="dotS pulse" style="width:14px;height:14px;background:#F59E0B"></span><div><b style="color:var(--tx)">${x.alarmOv}</b><div class="muted">${esc(tr(bench.alarm.text))}</div></div></div>` : ''}
+  <div class="bench-wrap"><div id="bench-slot"></div><div class="muted" style="font-size:12px">${x.benchNote}</div></div>
+  <div class="bgrid">
+    <section class="card col">
+      <h2>${x.setup}</h2>
+      <div><div class="muted lbl2">${x.meterUnder}</div><div class="chipwrap">${meters}</div></div>
+      <div><div class="muted lbl2">${x.spec}</div><div class="chipwrap">${q3s}</div><div class="chipwrap" style="margin-top:6px">${rs}</div></div>
+      <div><div class="muted lbl2">${x.testPoint}</div><div class="ptgrid">${pointBtns}</div></div>
+      <div><div class="muted lbl2">${x.volume}</div><div class="chipwrap">${vols}</div></div>
+      <div><div class="muted lbl2">${x.speed}</div><div class="chipwrap">${speeds}</div></div>
+      <div class="grid2">
+        ${busy ? `<button class="btn warn" data-act="bench-stop" style="grid-column:1 / -1">${x.stopRun}</button>` : `<button class="btn" data-act="bench-run" data-arg="one">${x.runOne} ${BS.point}</button><button class="btn primary" data-act="bench-run" data-arg="set">${x.runSet}</button>`}
+      </div>
+      <button class="btn" data-act="bench-fault" ${busy ? 'disabled' : ''}>${x.fault}${bench.fault ? ' · ' + bench.fault : ''}</button>
+    </section>
+    <section class="card col">
+      <h2>${x.live}</h2>
+      <div class="grid2">
+        <div class="stat"><small>${x.flowNow}</small><b>${bench.Q.toFixed(1)} L/h</b></div>
+        <div class="stat"><small>${x.simTime}</small><b>${fmtDur(bench.t)}</b></div>
+        <div class="stat"><small>TK-20</small><b>${bench.tank.S.toFixed(3)} L</b></div>
+        <div class="stat"><small>TK-200</small><b>${bench.tank.L.toFixed(2)} L</b></div>
+      </div>
+      ${run ? `<div class="muted">${x.testPoint}: <b style="color:var(--tx)">${run.key} · ${fmtQ(run.Q)} · ${run.V} L</b> · ${x.tankUsed} ${TANKS[tankK].name}${remaining != null ? ` · ${x.eta} ${fmtDur(remaining)}` : ''}</div>` : ''}
+      <ol class="steps">${steps}</ol>
+    </section>
+    <section class="card col">
+      <h2>${x.manual}</h2>
+      <div class="muted">${x.manualHint}</div>
+      <div class="vgrid">${valves}</div>
+      <div class="chipwrap">${flows}${chip('bench-flow', 'off', x.closeAll, false, busy ? 'disabled' : '')}</div>
+    </section>
+  </div>
+  <section class="card col">
+    <div class="row" style="flex-wrap:wrap"><h2>${x.results}</h2><span class="muted">${x.spec}: DN15 · Q3 ${bench.q3} m³/h · R${bench.R}</span>
+      <span style="margin-left:auto;display:flex;gap:8px">${res.length ? `<button class="btn" style="min-height:40px;padding:8px 14px" data-act="bench-clear">${x.clear}</button>` : ''}${embedded() ? '' : `<button class="btn primary" style="min-height:40px;padding:8px 14px" data-act="print">${x.exportPdf}</button>`}</span></div>
+    <div class="devcard gold printonly">${badge(56, 68)}<div><small>${x.reportBy}</small><b>${x.devName}</b><span style="font-size:12px;color:#C7D2EC;display:block">${x.reportBench} · ${new Date().toLocaleString(S.lang === 'th' ? 'th-TH' : 'en-GB')}</span></div></div>
+    ${res.length ? `<div class="tscroll"><table class="rtable"><thead><tr><th>${x.colMeter}</th><th>${x.colPoint}</th><th>${x.colQ}</th><th>${x.colVref}</th><th>${x.colVm}</th><th>${x.colE}</th><th>${x.colMpe}</th><th>${x.colRes}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="muted" style="font-size:13px">${x.curve}</div>${errorChart(bench.results, pts, S.lang)}
+      <div class="chipwrap legend">${METERS.map((m, i) => `<span><i style="background:${['#3B82F6', '#22D3EE', '#F5B820'][i]}"></i>${m.id} · ${esc(m.model)}</span>`).join('')}<span><i style="background:#F59E0B;height:2px"></i>MPE</span></div>` : `<div class="muted">${x.noResults}</div>`}
+  </section>
+  <section class="card col">
+    <h2>${x.guide}</h2>
+    <div class="tscroll"><table class="rtable"><thead><tr><th>${x.gSensor}</th><th>${x.gWhere}</th><th>${x.gWhy}</th><th>${x.gType}</th></tr></thead><tbody>${G.map((g) => `<tr><td><b class="num">${g[0]}</b></td><td>${g[1]}</td><td>${g[2]}</td><td class="muted">${g[3]}</td></tr>`).join('')}</tbody></table></div>
+    <div class="neck"><b>${x.neckTitle}</b><span>${x.neckText}</span></div>
+    <h2 style="margin-top:6px">${x.planTitle}</h2>
+    <div class="tscroll"><table class="rtable"><thead><tr><th>${x.colPoint}</th><th>${x.colQ}</th><th>${x.volume}</th><th>${x.tankUsed}</th><th>${x.simTime}</th><th>${x.colMpe}</th></tr></thead><tbody>${plan}</tbody></table></div>
+  </section>`;
+}
 
 // ---------------------------------------------------------------- views
 function viewLogin() {
@@ -308,7 +500,7 @@ function langButtons() {
 
 function header() {
   const x = t(), open = src.activeAlarms().filter((a) => !a.acked).length;
-  const titles = { home: isDesk() ? x.overview : 'CoreDash Nexus', scada: 'SCADA', control: x.control, alerts: x.alerts, report: x.report };
+  const titles = { home: isDesk() ? x.overview : 'CoreDash Nexus', scada: 'SCADA', bench: isDesk() ? x.benchTitle : x.bench, control: x.control, alerts: x.alerts, report: x.report };
   const conn = src.connected ? '#3B82F6' : '#F59E0B';
   return `<header class="hdr">
     ${badge(34, 41)}
@@ -324,7 +516,7 @@ function tabs() {
   const label = (k) => (k === 'scada' ? 'SCADA' : k === 'home' && desk ? x.overview : x[k]);
   const brand = desk ? `<div class="side-brand">${badge(40, 48)}<div><b>CoreDash Nexus</b><span>${x.site}</span></div></div>` : '';
   const foot = desk ? `<div class="side-foot"><button data-act="settings">${svg(ICON.gear, 22)}<span>${x.settings}</span></button><div class="devcard side-dev">${badge(96, 117)}<small>${x.devBy}</small><b>${x.devName}</b></div></div>` : '';
-  return `<nav class="tabs" aria-label="tabs">${brand}${['home', 'scada', 'control', 'alerts', 'report'].map((k) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k ? 'page' : 'false'}">${svg(ICON[k], 24)}<span>${label(k)}</span>${k === 'alerts' && open ? '<span class="dot"></span>' : ''}</button>`).join('')}${foot}</nav>`;
+  return `<nav class="tabs" aria-label="tabs">${brand}${['home', 'scada', 'bench', 'control', 'alerts', 'report'].map((k) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k ? 'page' : 'false'}">${svg(ICON[k], 24)}<span>${label(k)}</span>${k === 'alerts' && open ? '<span class="dot"></span>' : ''}</button>`).join('')}${foot}</nav>`;
 }
 
 function viewHome() {
@@ -375,6 +567,13 @@ function installCard() {
   return '';
 }
 
+function scadaSeg() {
+  const x = t();
+  return `<div class="seg seg2" role="tablist"><button role="tab" aria-selected="${S.scadaMode === 'twin'}" data-act="scada-mode" data-arg="twin">${x.twin}</button><button role="tab" aria-selected="${S.scadaMode === 'pid'}" data-act="scada-mode" data-arg="pid">${x.pid}</button></div>`;
+}
+function viewScadaTab() {
+  return scadaSeg() + (S.scadaMode === 'twin' ? twinBlock() : viewScada());
+}
 function viewScada() {
   const x = t();
   const p01 = V('P-01.RUN'), pumpBg = (id) => alarmsFor(id) ? '#B45309' : (V(id + '.RUN') ? '#1F5FFF' : '#475569');
@@ -501,6 +700,20 @@ function viewSheet() {
     const inflow = V('P-01.RUN') ? 20 * (V('V-101.POS') || 0) / 100 : 0, out = 15 * (V('V-102.POS') || 0) / 100 + 25 * (V('V-103.POS') || 0) / 100;
     stats = [[x.level, n0(lvl) + '%'], [x.volume, n1(lvl / 2) + ' m³'], [x.inflow, n1(inflow) + ' m³/h'], [x.outflow, n1(out) + ' m³/h']];
     actions = [`<button class="btn" data-act="set" data-arg="V-101.POS" data-val="0" ${dis}>${x.closeIn}</button>`, `<button class="btn warn" data-act="set" data-arg="V-103.POS" data-val="100" ${dis}>${x.drainOpen}</button>`];
+  } else if (LIGHTS.some((l) => l.id === id)) {
+    const l = LIGHTS.find((q) => q.id === id), on = Boolean(V(l.on)), lv = l.level ? V(l.level) ?? 100 : 100;
+    name = l.name; state = on ? x.on + (l.level ? ' ' + n0(lv) + '%' : '') : x.off; tone = on ? 'run' : 'stop';
+    stats = [[x.lamps, String(l.lamps)], [x.lux, on ? n0(lv * 5) + ' lux' : '0 lux']];
+    actions = [`<button class="btn warn" data-act="set" data-arg="${l.on}" data-val="false" ${dis}>${x.off}</button>`, `<button class="btn primary" data-act="set" data-arg="${l.on}" data-val="true" ${dis}>${x.on}</button>`];
+    if (l.level) actions.push(`<div class="grid3" style="grid-column:1 / -1">${[30, 60, 100].map((p) => `<button class="btn ${on && Math.round(lv) === p ? 'on' : ''}" data-act="set" data-arg="${l.level}" data-val="${p}" ${on ? dis : 'disabled'}>${p}%</button>`).join('')}</div>`);
+  } else if (id === 'MDB-1') {
+    name = B('ตู้ไฟหลัก 3 เฟส', '3-phase main board'); state = n0(V('MDB-1.KW')) + ' kW'; tone = (V('MDB-1.KW') ?? 0) > 320 ? 'alarm' : 'run';
+    stats = [[x.kwNowL, n0(V('MDB-1.KW')) + ' kW'], [x.energy, n0(V('MDB-1.KWH')) + ' kWh'], [x.pf, V('MDB-1.PF') != null ? Number(V('MDB-1.PF')).toFixed(2) : '0.93'], ['Peak', '320 kW']];
+  } else if (id === 'INJ-01') {
+    const mt = V('INJ-01.MOLD_T') ?? 0;
+    name = B('เครื่องฉีดพลาสติก INJ-01', 'Injection molder INJ-01'); state = n1(mt) + ' °C'; tone = mt > 60 ? 'alarm' : 'run';
+    stats = [[x.moldT, n1(mt) + ' °C'], [x.coolBy, 'V-201 · P-02 · CHL-01']];
+    actions = [`<div class="muted" style="grid-column:1 / -1">${x.moldNote}</div>`];
   } else if (id.startsWith('V-')) {
     const v = VALVES.find((q) => q.id === id), pos = V(v.pos) ?? 0;
     name = v.name; state = valveText(v)[0]; tone = pos === 0 ? 'stop' : 'run';
@@ -540,6 +753,40 @@ function viewSettings() {
     </div></div>`;
 }
 
+function viewBlocked() {
+  const b = S.blocked; if (!b) return '';
+  const x = t(), d = b.details;
+  const val = typeof d.value === 'number' ? n1(d.value) : String(d.value);
+  const unit = d.tag === 'T-1.LEVEL' ? ' %' : '';
+  const role = src.user && src.user.role;
+  const canBypass = role === 'engineer' || role === 'admin';
+  const fixes = (d.fixes || []).map((f, i) => `<button class="btn primary" data-act="blk-fix" data-arg="${i}" ${canCommand() ? '' : 'disabled'}>${esc(tr(f.label))}</button>`).join('');
+  const mins = [5, 15, 30].filter((m) => m <= (d.maxBypassMin || 30)).map((m) => `<button class="chip ${S.bypassMin === m ? 'on' : ''}" data-act="blk-min" data-arg="${m}" aria-pressed="${S.bypassMin === m}">${m} ${x.blkMin}</button>`).join('');
+  return `<div class="scrim center"><div class="dialog blk" role="alertdialog" aria-label="${x.blkTitle}">
+    <div class="row"><span class="blk-ico">${svg(ICON.warn, 26, '#F59E0B')}</span><div><h3>${x.blkTitle}</h3><div class="muted">${esc(d.id)}</div></div></div>
+    <p style="font-weight:600">${esc(tr(d.text))}</p>
+    <div class="grid2"><div class="stat"><small>${x.blkNow}</small><b>${esc(d.tag)} = ${esc(val)}${unit}</b></div><div class="stat"><small>${x.blkRule}</small><b>${esc(d.op)} ${esc(d.limit)}${unit}</b></div></div>
+    ${fixes ? `<div class="blk-sec"><b>${x.blkFix}</b><span class="muted">${x.blkFixHint}</span>${fixes}</div>` : ''}
+    <button class="btn" data-act="blk-wait">${x.blkWait}</button>
+    <div class="blk-sec">
+      <b>${x.blkBypass}</b>
+      ${!d.bypassable ? `<span class="muted">${x.blkNoBypass}</span>` : !canBypass ? `<span class="muted">${x.blkNeedRole}</span>` : `
+        <label class="muted" for="byp-reason">${x.blkReason}</label>
+        <input id="byp-reason" data-reason="1" type="text" maxlength="200" placeholder="${x.blkReasonPh}" value="${esc(S.bypassReason)}">
+        <div class="chipwrap">${mins}</div>
+        <button class="btn warn" data-act="blk-bypass">${x.blkDo} ${S.bypassMin} ${x.blkMin}</button>`}
+    </div>
+    <button class="btn" data-act="blk-close">${x.close2}</button>
+  </div></div>`;
+}
+function bypassBanner() {
+  if (!src || !src.interlocks) return '';
+  const x = t();
+  const list = src.interlocks().filter((il) => il.bypass);
+  const parts = list.map((il) => { const left = Math.max(0, il.bypass.until - Date.now()) / 1000; return `<div class="byp"><span class="dotS pulse" style="background:#F59E0B"></span><span><b>${x.byp}: ${esc(il.id)}</b> · ${x.bypLeft} ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} · ${x.bypBy} ${esc(il.bypass.by)}</span><button class="chip" data-act="blk-restore" data-arg="${esc(il.id)}">${x.restore}</button></div>`; });
+  if (S.deferred) parts.push(`<div class="byp wait"><span class="dotS pulse" style="background:#3B82F6"></span><span><b>${x.waiting}:</b> ${esc(tr(describe(S.deferred.steps)))}</span><button class="chip" data-act="blk-unwait">${x.cancelWait}</button></div>`);
+  return parts.join('');
+}
 function viewConfirm() {
   if (!S.pending) return '';
   const x = t();
@@ -560,14 +807,18 @@ function render() {
   if (S.view === 'login') { root.innerHTML = viewLogin(); return; }
   if (S.view !== 'app') return;
   const prevMain = root.querySelector('main');
+  if (twin) { const sc = twin.el.querySelector('.twin-scroll'); if (sc && twin.el.isConnected) sc.dataset.left = sc.scrollLeft; }
+  if (benchView) { const sc = benchView.el.querySelector('.bench-scroll'); if (sc && benchView.el.isConnected) sc.dataset.left = sc.scrollLeft; }
   const scroll = prevMain ? prevMain.scrollTop : 0;
-  const views = { home: viewHome, scada: viewScada, control: viewControl, alerts: viewAlerts, report: viewReport };
+  const views = { home: viewHome, scada: viewScadaTab, bench: viewBench, control: viewControl, alerts: viewAlerts, report: viewReport };
   const body = isDesk() && S.tab === 'home'
-    ? `<div class="dgrid"><section class="col">${viewHome()}</section><section class="col">${viewScada()}</section><section class="col">${viewAlerts()}</section></div>`
+    ? `<div class="overview"><section class="twin-hero"><div class="row"><h2>${t().twinTitle}</h2></div>${twinBlock()}</section><div class="dgrid"><section class="col">${viewHome()}</section><section class="col">${viewScada()}</section><section class="col">${viewAlerts()}</section></div></div>`
     : `<div class="wrap wrap-${S.tab}">${views[S.tab]()}</div>`;
   root.classList.toggle('desk', isDesk());
-  root.innerHTML = header() + `<main>${body}</main>` + tabs() + viewSheet() + viewSettings() + viewConfirm() +
+  root.innerHTML = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() +
     (S.toast ? `<div class="toast ${S.toast.bad ? 'bad' : ''}" role="status">${esc(S.toast.text)}</div>` : '');
+  mountTwin();
+  mountBench();
   const main = root.querySelector('main');
   if (main && S.keepScroll) main.scrollTop = scroll;
   S.keepScroll = true;
@@ -585,7 +836,7 @@ function describe(steps) {
   return { th: parts.map((p) => p.th).join(', '), en: parts.map((p) => p.en).join(', ') };
 }
 function errorText(e) {
-  const map = { INTERLOCK: B('ถูกบล็อกโดย Interlock (ระบบป้องกัน)', 'Blocked by an interlock'), FORBIDDEN: B('บัญชีนี้ไม่มีสิทธิ์สั่งการ', 'This account cannot command'), OUT_OF_RANGE: B('ค่าเกินช่วงที่อนุญาต', 'Value out of range'), EXPIRED: B('หมดเวลายืนยัน ลองใหม่อีกครั้ง', 'Confirmation expired, try again') };
+  const map = { NOT_BYPASSABLE: B('ระบบป้องกันนี้ข้ามไม่ได้', 'This interlock cannot be bypassed'), REASON_REQUIRED: B('ต้องใส่เหตุผล', 'A reason is required'), INTERLOCK: B('ถูกบล็อกโดย Interlock (ระบบป้องกัน)', 'Blocked by an interlock'), FORBIDDEN: B('บัญชีนี้ไม่มีสิทธิ์สั่งการ', 'This account cannot command'), OUT_OF_RANGE: B('ค่าเกินช่วงที่อนุญาต', 'Value out of range'), EXPIRED: B('หมดเวลายืนยัน ลองใหม่อีกครั้ง', 'Confirmation expired, try again') };
   return map[e.code] ? tr(map[e.code]) : e.message;
 }
 async function command(steps, title) {
@@ -594,11 +845,37 @@ async function command(steps, title) {
   // Step 1: validate everything on the gateway first (role, range, interlocks)
   const cmds = [];
   try { for (const s of steps) cmds.push(await src.prepare(s.tag, s.value)); }
-  catch (e) { for (const c of cmds) src.cancel(c.id); toast(t().failed + errorText(e), true); return; }
+  catch (e) {
+    for (const c of cmds) src.cancel(c.id);
+    if (e.code === 'INTERLOCK' && e.details) { S.blocked = { details: e.details, steps, title }; S.sheet = null; S.bypassReason = ''; schedule(); return; }
+    toast(t().failed + errorText(e), true); return;
+  }
   const d = describe(steps);
   S.pending = { cmds, steps, text: title ? { th: `${title.th}: ${d.th}`, en: `${title.en}: ${d.en}` } : { th: d.th + ' ?', en: d.en + '?' } };
   S.sheet = null;
   schedule();
+}
+async function retryDeferred() {
+  const d = S.deferred;
+  if (!d || S.pending || S.blocked || !src) return;
+  try {
+    const c = await src.prepare(d.steps[0].tag, d.steps[0].value);
+    await src.cancel(c.id);
+  } catch (e) { if (e.code === 'INTERLOCK') return; S.deferred = null; toast(t().failed + errorText(e), true); return; }
+  S.deferred = null;
+  toast(t().ready + ' · ' + tr(describe(d.steps)));
+  await command(d.steps, d.title);
+}
+async function doBypass() {
+  const b = S.blocked; if (!b) return;
+  const x = t();
+  if ((S.bypassReason || '').trim().length < 5) { toast(x.blkReasonShort, true); return; }
+  try {
+    await src.bypass(b.details.id, S.bypassMin, S.bypassReason.trim());
+    S.blocked = null;
+    toast(x.bypassed + b.details.id);
+    await command(b.steps, b.title); // bring the original command back for confirmation
+  } catch (e) { toast(t().failed + errorText(e), true); }
 }
 async function confirmPending() {
   const p = S.pending; if (!p) return;
@@ -623,6 +900,15 @@ const SCENES = {
 // ---------------------------------------------------------------- events
 function wireEvents() {
 root.addEventListener('click', async (ev) => {
+  const bel = ev.target.closest('[data-bench]');
+  if (bel && !ev.target.closest('[data-act]')) {
+    const kind = bel.dataset.bench, a = bel.dataset.arg;
+    if (kind === 'valve' && bench.mode !== 'auto') { bench.alarm = null; bench.setValve(a, !bench.v[a]); }
+    else if (kind === 'meter' && bench.mode !== 'auto') bench.selected[a] = !bench.selected[a];
+    else if (kind === 'sensor') toast(`${a}: ${a.startsWith('LSHH') ? (S.lang === 'th' ? 'กันล้น' : 'overflow protection') : a.startsWith('LSL') ? (S.lang === 'th' ? 'ถังแห้ง / จุดศูนย์' : 'empty / zero') : (S.lang === 'th' ? 'เซนเซอร์ปริมาตรที่คอถัง' : 'neck volume sensor')}`);
+    schedule();
+    return;
+  }
   const el = ev.target.closest('[data-act]'); if (!el || el.disabled) return;
   const act = el.dataset.act, arg = el.dataset.arg;
   S.keepScroll = true;
@@ -640,8 +926,37 @@ root.addEventListener('click', async (ev) => {
     case 'confirm': await confirmPending(); break;
     case 'cancel': if (S.pending) S.pending.cmds.forEach((c) => src.cancel(c.id)); S.pending = null; break;
     case 'ack': try { await src.ack(arg); } catch (e) { toast(t().failed + errorText(e), true); } break;
-    case 'view-eq': S.tab = 'scada'; S.sheet = MACHINES.some((m) => m.id === arg) || VALVES.some((v) => v.id === arg) || arg === 'T-1' ? arg : null; break;
+    case 'view-eq': S.tab = 'scada'; S.sheet = MACHINES.some((m) => m.id === arg) || VALVES.some((v) => v.id === arg) || ['T-1', 'INJ-01', 'MDB-1'].includes(arg) ? arg : null; break;
     case 'print': window.print(); break;
+    case 'scada-mode': S.scadaMode = arg; break;
+    case 'blk-close': S.blocked = null; break;
+    case 'blk-min': S.bypassMin = Number(arg); break;
+    case 'blk-wait': S.deferred = { steps: S.blocked.steps, title: S.blocked.title }; S.blocked = null; break;
+    case 'blk-unwait': S.deferred = null; break;
+    case 'blk-fix': { const b = S.blocked, f = b.details.fixes[Number(arg)]; S.deferred = { steps: b.steps, title: b.title }; S.blocked = null; await command(f.set.map((q) => ({ tag: q.tag, value: q.value })), f.label); break; }
+    case 'blk-bypass': await doBypass(); break;
+    case 'blk-restore': try { await src.restore(arg); toast(t().restored); } catch (e) { toast(t().failed + errorText(e), true); } break;
+    case 'bench-meter': bench.selected[arg] = !bench.selected[arg]; break;
+    case 'bench-q3': bench.q3 = Number(arg); break;
+    case 'bench-r': bench.R = Number(arg); break;
+    case 'bench-point': BS.point = arg; break;
+    case 'bench-vol': BS.vol = arg === 'auto' ? null : Number(arg); break;
+    case 'bench-speed': bench.speed = Number(arg); break;
+    case 'bench-stop': bench.stop(); break;
+    case 'bench-fault': bench.injectFault(bench.fault ? null : (METERS.find((m) => bench.selected[m.id]) || METERS[0]).id); break;
+    case 'bench-clear': bench.clearResults(); break;
+    case 'bench-valve': bench.alarm = null; bench.setValve(arg, !bench.v[arg]); break;
+    case 'bench-flow': { const p = bench.points(); if (arg === 'off') { bench.v = { in: false, s: false, l: false, ds: false, dl: false }; bench.setFlow(0); } else { bench.alarm = null; if (!bench.v.s && !bench.v.l) bench.v.l = true; bench.setFlow(p[arg]); } break; }
+    case 'bench-run': {
+      if (!Object.values(bench.selected).some(Boolean)) { toast(t().selectMeter, true); break; }
+      const p = bench.points();
+      const mk = (k) => ({ key: k, Q: p[k], V: BS.vol || DEFAULT_VOL[k] });
+      bench.start(arg === 'set' ? ['Q1', 'Q2', 'Q3'].map(mk) : [mk(BS.point)]);
+      break;
+    }
+    case 'daynight': S.dayNight = arg; store.set('dayNight', arg); break;
+    case 'labels': S.labels = !S.labels; break;
+    case 'zoom': S.zoom = clamp(Math.round(((S.zoom || 1) + Number(arg) * 0.35) * 100) / 100, 1, 3); break;
     case 'install': if (S.installEvt) { S.installEvt.prompt(); S.installEvt = null; } break;
     case 'notif': if ('Notification' in window) await Notification.requestPermission(); break;
     case 'logout': store.set('session', null); if (src) src.stop(); src = null; S.settings = false; S.view = 'login'; break;
@@ -656,10 +971,13 @@ root.addEventListener('change', (ev) => {
   if (el.dataset && el.dataset.range) { interacting = false; quickSet(el.dataset.range, Number(el.value)); schedule(); }
 });
 root.addEventListener('pointerdown', (ev) => { if (ev.target.type === 'range') interacting = true; });
+root.addEventListener('input', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) S.bypassReason = ev.target.value; });
+root.addEventListener('focusin', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) interacting = true; });
+root.addEventListener('focusout', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) { interacting = false; schedule(300); } });
 window.addEventListener('pointerup', () => { if (interacting) { setTimeout(() => { interacting = false; schedule(); }, 300); } });
 let lastDesk = null; window.addEventListener('resize', () => { if (isDesk() !== lastDesk) { lastDesk = isDesk(); schedule(); } });
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; schedule(); });
-window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== S.tab && ['home', 'scada', 'control', 'alerts', 'report'].includes(h)) { S.tab = h; schedule(); } });
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== S.tab && ['home', 'scada', 'bench', 'control', 'alerts', 'report'].includes(h)) { S.tab = h; schedule(); } });
 
 }
 
@@ -679,6 +997,8 @@ function attach(source) {
   S.view = 'app';
   if (S.tab === 'report') loadHistory();
   setInterval(() => { if (S.tab === 'report') loadHistory(); }, 60000);
+  setInterval(() => { if (S.tab === 'bench') schedule(); }, 500);
+  setInterval(() => { retryDeferred(); if (src && src.interlocks && src.interlocks().some((il) => il.bypass)) schedule(); }, 2000);
   schedule();
 }
 

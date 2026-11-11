@@ -23,7 +23,8 @@ The gateway bridges field devices (Modbus TCP/RTU, MQTT) to the CoreDash Nexus w
 | **Drivers** | Modbus TCP, Modbus RTU (หลายอุปกรณ์บนสาย RS-485 เส้นเดียวกันได้), MQTT (JSON) · อ่านแบบรวมบล็อก, ต่อใหม่อัตโนมัติ (backoff), วัดสุขภาพการสื่อสาร |
 | **ชนิดข้อมูล** | bool, int16, uint16, int32, uint32, float32 (สลับ word ได้), scale/offset |
 | **คำสั่ง** | ยืนยัน 2 ชั้น (prepare → confirm ภายใน 30 วินาที, คนเดียวกันเท่านั้น), ตรวจสิทธิ์ตามบทบาท, ตรวจช่วงค่า, ตรวจ Interlock ซ้ำก่อนเขียน |
-| **Interlock** | บังคับค่าปลอดภัยทุกโหมด และบล็อกคำสั่งที่ขัดกับ Interlock |
+| **Interlock** | บังคับค่าปลอดภัยทุกโหมด และบล็อกคำสั่งที่ขัดกับ Interlock — แอปแสดงสาเหตุ ค่าปัจจุบัน/เกณฑ์ ปุ่มแก้ไขทันที (`fixes`) และสั่งคำสั่งเดิมให้อัตโนมัติเมื่อปลดล็อก |
+| **Bypass ชั่วคราว** | วิศวกร/ผู้ดูแลเท่านั้น ต้องใส่เหตุผล ≥5 ตัวอักษร เลือก 5/15/30 นาที (≤ `maxBypassMin`) หมดเวลาคืนค่าเอง บันทึก `interlock.bypass` / `interlock.restore` ใน Audit log Interlock ที่ตั้ง `bypassable: false` (เช่น `IL_TANK_LSHH` 99.5%) ข้ามไม่ได้เด็ดขาด |
 | **Alarm** | เงื่อนไข + หน่วงเวลา, สถานะแบบ ISA-18.2 (active / acked / cleared), ส่งต่อ (escalation) เมื่อไม่มีคนรับทราบ |
 | **แจ้งเตือน** | LINE Official Account (Messaging API), Webhook สำหรับ Email / SMS / Push |
 | **Historian** | เก็บค่าในหน่วยความจำสำหรับกราฟเร็ว + ไฟล์ JSONL รายวัน, API ดึงกราฟย้อนหลัง |
@@ -106,6 +107,22 @@ GitHub Pages รัน Gateway (Node.js) ไม่ได้ แอปจึง�
 
 `npm test` รันชุดทดสอบแอปแบบ end-to-end ใน Chrome ด้วย (ข้ามอัตโนมัติถ้าไม่มี Chrome) — เข้าสู่ระบบ, สั่งวาล์วแบบยืนยัน, ตรวจ Interlock, รับทราบอลาร์ม, เปลี่ยนภาษา/ธีม และเปิดแบบออฟไลน์ ตั้ง `SHOTS_DIR=./shots` เพื่อเก็บภาพหน้าจอทุกขั้น
 
+## แท่นทดสอบมาตรวัดน้ำ (ถังตวง) / Water-meter test bench
+
+แท็บ **ทดสอบมาตร** ในแอปจำลองแท่นทดสอบความเที่ยงตรงมาตรวัดน้ำแบบปริมาตร (ISO 4064 / OIML R 49):
+
+- มาตร 3 ตัวต่ออนุกรม: **SMCV4 · GMCV3-V3.5 · ASAHI GMK** + มาตรอ้างอิง FT-01, เกจแรงดันก่อน/หลัง, อุณหภูมิ
+- ถังตวง 2 ใบ: **TK-20** (คอวัดที่ 10 L) และ **TK-200** (คอวัดที่ 100 L และ 200 L) น้ำขึ้นจริงตามอัตราไหล
+- เซนเซอร์: LSL (ถังแห้ง), **LS-10 / LS-100 / LS-200** (ที่กึ่งกลางคอถังแคบ), LSHH (กันล้น), LT-01 (เรดาร์)
+- ทดสอบอัตโนมัติ Q1 · Q2 · Q3 (Q4 เลือกเองได้): ระบาย → อ่านค่าเริ่ม → เติม → ปิดวาล์วเร็วที่เซนเซอร์ → รอน้ำนิ่ง → อ่านคอถัง → คำนวณ
+- ค่าผิดพลาด E = (V มาตร − V อ้างอิง) / V อ้างอิง × 100 เทียบเกณฑ์ ±5 % (Q1 ≤ Q < Q2) และ ±2 % (Q2 ≤ Q ≤ Q4) พร้อมกราฟและพิมพ์รายงาน
+- ตั้ง Q3 / R ตามใบรับรองของมาตรจริง (ค่าเริ่มต้น DN15 · Q3 2.5 m³/h · R160 → Q1 15.6 L/h, Q2 25 L/h, Q4 3.125 m³/h)
+- เร่งเวลาจำลอง ×1 ถึง ×300 (Q1 ที่ 10 L ใช้เวลาจริง ~38 นาที)
+
+> กราฟค่าผิดพลาดของแต่ละรุ่นในโหมดจำลองเป็น **ค่าสมมติ** ไม่ใช่ข้อมูลผู้ผลิต
+
+รายการ I/O สำหรับสร้างแท่นจริงต่อ PLC อยู่ที่ `config/bench-io.example.yaml`
+
 ## การแมป Tag / Tag mapping
 
 ทุกค่าที่แสดงบนหน้าจอคือ **Tag** หนึ่งตัว เช่น `T-1.LEVEL`, `V-101.POS`, `P-01.RUN`, `MDB-1.KW`
@@ -144,7 +161,9 @@ GitHub Pages รัน Gateway (Node.js) ไม่ได้ แอปจึง�
 | POST | `/api/commands` | operator | ขั้น 1: เตรียมคำสั่ง `{tag, value}` |
 | POST | `/api/commands/:id/confirm` | operator | ขั้น 2: ยืนยันและเขียนค่า |
 | GET | `/api/devices` | viewer | สุขภาพการสื่อสาร (online/degraded/offline, latency, errors/h) |
-| GET | `/api/interlocks` | viewer | สถานะ Interlock |
+| GET | `/api/interlocks` | viewer | สถานะ Interlock (รวม bypass ที่ใช้อยู่) |
+| POST | `/api/interlocks/:id/bypass` | engineer | `{ minutes, reason }` ข้ามชั่วคราว |
+| DELETE | `/api/interlocks/:id/bypass` | engineer | คืนค่าระบบป้องกันทันที |
 | GET | `/api/audit` | engineer | Audit log |
 | GET | `/api/audit/verify` | admin | ตรวจ hash-chain |
 | PATCH | `/api/schedules/:id` | engineer | เปิด/ปิดตารางเวลา |

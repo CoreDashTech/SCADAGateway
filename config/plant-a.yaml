@@ -125,8 +125,15 @@ alarms:
 # Interlocks run in the gateway every scan, in every mode, before any operator command.
 interlocks:
   - { id: IL_TANK_HIGH, when: { tag: T-1.LEVEL, op: ">=", value: 97 }, force: { tag: P-01.RUN, value: false },
-      text: { th: "ถังเต็ม 97% — ห้ามเดิน P-01", en: "Tank at 97% — P-01 blocked" } }
-  - { id: IL_P01_FAULT, when: { tag: P-01.FAULT, op: "==", value: true }, force: { tag: P-01.RUN, value: false },
+      bypassable: true, maxBypassMin: 30,
+      text: { th: "ถังเต็ม 97% — ห้ามเดิน P-01", en: "Tank at 97% — P-01 blocked" },
+      fixes: [ { label: { th: "ระบายถัง: เปิด V-103 100%", en: "Drain the tank: open V-103 100%" }, set: [{ tag: V-103.POS, value: 100 }] },
+               { label: { th: "จ่ายน้ำออก: เปิด V-102 100%", en: "Draw water: open V-102 100%" }, set: [{ tag: V-102.POS, value: 100 }] } ] }
+  # Last line of defence, never bypassable (mirror of a hard-wired LSHH switch)
+  - { id: IL_TANK_LSHH, when: { tag: T-1.LEVEL, op: ">=", value: 99.5 }, force: { tag: P-01.RUN, value: false }, bypassable: false,
+      text: { th: "ถังล้น 99.5% (LSHH) — ตัด P-01 เสมอ", en: "Tank 99.5% (LSHH) — P-01 always tripped" },
+      fixes: [ { label: { th: "ระบายถัง: เปิด V-103 100%", en: "Drain the tank: open V-103 100%" }, set: [{ tag: V-103.POS, value: 100 }] } ] }
+  - { id: IL_P01_FAULT, when: { tag: P-01.FAULT, op: "==", value: true }, force: { tag: P-01.RUN, value: false }, bypassable: false,
       text: { th: "P-01 มีฟอลต์ — ห้ามเดิน", en: "P-01 fault — start blocked" } }
 
 # Schedules run on the gateway (keep working when the cloud is offline). days: 1=Mon … 7=Sun

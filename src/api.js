@@ -52,7 +52,7 @@ function createServer(gw) {
   const wrap = (fn) => async (req, res) => {
     try { res.json(await fn(req, res)); }
     catch (err) {
-      if (err instanceof CommandError) return res.status(err.status).json({ error: err.code, message: err.message });
+      if (err instanceof CommandError || err.code) return res.status(err.status || 400).json({ error: err.code, message: err.message, details: err.details });
       gw.log.error(err);
       res.status(500).json({ error: 'INTERNAL', message: err.message });
     }
@@ -78,6 +78,8 @@ function createServer(gw) {
   app.delete('/api/commands/:id', auth('operator'), (req, res) => res.json({ cancelled: commands.cancel(req.user, req.params.id) }));
   app.get('/api/devices', auth(), (req, res) => res.json(gw.devices()));
   app.get('/api/interlocks', auth(), (req, res) => res.json(interlocks.status()));
+  app.post('/api/interlocks/:id/bypass', auth('engineer'), wrap((req) => interlocks.bypass(req.params.id, req.user, req.body.minutes, req.body.reason)));
+  app.delete('/api/interlocks/:id/bypass', auth('engineer'), (req, res) => res.json({ restored: interlocks.clearBypass(req.params.id, req.user) }));
   app.get('/api/audit', auth('engineer'), (req, res) => res.json(audit.list(Math.min(500, Number(req.query.limit) || 100))));
   app.get('/api/audit/verify', auth('admin'), (req, res) => res.json(AuditLog.verify(cfg.audit.file)));
   app.patch('/api/schedules/:id', auth('engineer'), (req, res) => {
@@ -121,6 +123,11 @@ function createServer(gw) {
           reply('command.result', { ok: true, entry: await commands.confirm(user, msg.id) });
         } else if (msg.type === 'command.cancel') {
           reply('command.cancelled', { cancelled: commands.cancel(user, msg.id) });
+        } else if (msg.type === 'interlock.bypass') {
+          reply('interlock.bypassed', { bypass: interlocks.bypass(msg.id, user, msg.minutes, msg.reason) });
+        } else if (msg.type === 'interlock.restore') {
+          if (!roleAtLeast(user.role, 'engineer')) throw new CommandError('FORBIDDEN', 'Only an engineer or admin can restore', 403);
+          reply('interlock.restored', { restored: interlocks.clearBypass(msg.id, user) });
         } else if (msg.type === 'alarm.ack') {
           if (!roleAtLeast(user.role, 'operator')) throw new CommandError('FORBIDDEN', 'Viewer cannot acknowledge', 403);
           reply('alarm.acked', { alarm: alarms.ack(msg.id, user) });
@@ -128,7 +135,7 @@ function createServer(gw) {
           reply('error', { error: 'UNKNOWN_TYPE' });
         }
       } catch (err) {
-        reply('error', { error: err.code || 'ERROR', message: err.message });
+        reply('error', { error: err.code || 'ERROR', message: err.message, details: err.details });
       }
     });
     ws.on('close', () => clients.delete(client));
@@ -146,6 +153,7 @@ function createServer(gw) {
   const devTimer = setInterval(() => broadcast({ type: 'devices', devices: gw.devices() }), 5000);
   for (const ev of ['raise', 'clear', 'ack', 'escalate']) alarms.on(ev, (a) => broadcast({ type: 'alarm', event: ev, alarm: a }));
   commands.on('executed', (entry) => broadcast({ type: 'audit', entry }));
+  interlocks.on('change', () => broadcast({ type: 'interlocks', interlocks: interlocks.status() }));
 
   return {
     app, server, wss,

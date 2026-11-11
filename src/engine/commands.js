@@ -7,7 +7,7 @@ const { roleAtLeast } = require('../config');
 const { compare } = require('./compare');
 
 class CommandError extends Error {
-  constructor(code, message, status = 400) { super(message); this.code = code; this.status = status; }
+  constructor(code, message, status = 400, details) { super(message); this.code = code; this.status = status; if (details) this.details = details; }
 }
 
 class CommandService extends EventEmitter {
@@ -38,14 +38,23 @@ class CommandService extends EventEmitter {
       if (def.max !== undefined && v > def.max) throw new CommandError('OUT_OF_RANGE', `${tagId} max is ${def.max}`);
     }
     const blocked = this.blockingInterlock(tagId, v);
-    if (blocked) throw new CommandError('INTERLOCK', `Blocked by interlock ${blocked.id}`, 409);
+    if (blocked) {
+      const w = this.store.get(blocked.when.tag);
+      throw new CommandError('INTERLOCK', `Blocked by interlock ${blocked.id}`, 409, {
+        id: blocked.id, text: blocked.text, tag: blocked.when.tag, op: blocked.when.op, limit: blocked.when.value, value: w ? w.value : null,
+        bypassable: blocked.bypassable !== false, maxBypassMin: blocked.maxBypassMin || 30, fixes: blocked.fixes || []
+      });
+    }
     return { def, value: v };
   }
 
   // An interlock blocks a command that would set its forced tag away from the forced value.
   blockingInterlock(tagId, value) {
-    for (const il of this.interlocks) {
+    // report a non-bypassable interlock first: bypassing a softer one would not help
+    const order = [...this.interlocks].sort((a, b) => (a.bypassable === false ? 0 : 1) - (b.bypassable === false ? 0 : 1));
+    for (const il of order) {
       if (il.force.tag !== tagId || value === il.force.value) continue;
+      if (this.isBypassed && this.isBypassed(il.id)) continue;
       const w = this.store.get(il.when.tag);
       if (w && compare(w.value, il.when.op, il.when.value)) return il;
     }
