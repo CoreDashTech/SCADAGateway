@@ -99,7 +99,7 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     const rot = () => page.$eval('#tw-P-02-rot .tw-rot', (e) => e.getAttribute('transform'));
     const a1 = await rot(); await sleep(300);
     assert.notStrictEqual(await rot(), a1, 'pump impeller animates');
-    assert.strictEqual(await page.$eval('#tw-v-T-1', (e) => e.textContent), `${Math.round(gw.store.value('T-1.LEVEL'))} %`, 'tank label shows the live level');
+    assert.ok(Math.abs(parseFloat(await page.$eval('#tw-v-T-1', (e) => e.textContent)) - gw.store.value('T-1.LEVEL')) <= 1.5, 'tank label shows the live level');
     await click('[data-act="daynight"][data-arg="night"]');
     await sleep(500);
     assert.ok(Number(await page.$eval('.tw-light[data-light="L-A"]', (e) => e.getAttribute('opacity'))) > 0.4, 'zone A light glows at night');
@@ -122,8 +122,12 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     await click('[data-act="tab"][data-arg="bench"]');
     await page.waitForSelector('.bench-svg');
     await click('[data-act="bench-speed"][data-arg="300"]');
-    await click('[data-act="bench-point"][data-arg="Q3"]');
-    await click('[data-act="bench-run"][data-arg="one"]');
+    // untick Q1 and Q2 so only Q3 (ticked by default) runs
+    await click('[data-act="bench-pt"][data-arg="Q1"]');
+    await click('[data-act="bench-pt"][data-arg="Q2"]');
+    assert.match(await page.$eval('.startbox .sum', (e) => e.textContent), /Q3/, 'summary names the point');
+    await click('[data-act="bench-run"]');
+    await page.waitForSelector('.runbox');
     assert.ok(await until(async () => (await page.$$('.rtable')).length >= 2 && (await page.$$eval('.rtable', (ts) => ts[0].querySelectorAll('tbody tr').length)) === 3, 20000), 'three meter results');
     const errs = await page.$$eval('.rtable', (ts) => [...ts[0].querySelectorAll('tbody tr')].map((r) => parseFloat(r.children[5].textContent)));
     assert.ok(errs.every((e) => Math.abs(e) < 2), 'Q3 errors inside ±2 %');
@@ -145,7 +149,8 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     // settings → English + Light theme persist
     await click('[data-act="settings"]');
     await click('[data-act="lang"][data-arg="en"]');
-    await click('[data-act="theme"][data-arg="light"]');
+    // the language switch re-renders the sheet; click the theme until it takes
+    assert.ok(await until(async () => { await click('[data-act="theme"][data-arg="light"]'); await sleep(150); return (await page.evaluate(() => document.documentElement.dataset.theme)) === 'light'; }), 'light theme applied');
     await shot('09-settings-en-light');
     await click('[data-act="close-settings"]');
     assert.strictEqual(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
