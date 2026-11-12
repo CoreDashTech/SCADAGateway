@@ -160,6 +160,35 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     await click('[data-act="ack"]');
     assert.ok(await until(() => gw.alarms.active().filter((a) => !a.acked).length < before), 'acknowledged on the gateway');
 
+    // residential home: scene, lights, valve with confirmation, meter reading saved to history
+    await click('[data-act="tab"][data-arg="house"]');
+    await page.waitForSelector('.hm-svg');
+    await click('[data-act="hm-scene"][data-arg="home"]');
+    assert.ok(await until(async () => /[1-9]\/8/.test(await text())), 'lights switched on by the scene');
+    await click('[data-act="hm-sec"][data-arg="valve"]');
+    await click('[data-act="hm-valve"][data-arg="V-GDN"][data-val="1"]');
+    await click('[data-act="hm-conf"][data-arg="1"]');
+    assert.ok(await until(async () => /14\.0 L\/min|1[0-9]\.[0-9] L\/min|2[0-9]\.[0-9] L\/min/.test(await text()), 8000), 'garden water flows after opening the valve');
+    await click('[data-act="hm-sec"][data-arg="cam"]');
+    await page.waitForSelector('.cam canvas');
+    await click('[data-act="hm-sec"][data-arg="meter"]');
+    // mechanical meter: real on-device OCR of a sample photo
+    await click('[data-act="hm-model"][data-arg="ASAHI GMK"]');
+    await click('[data-act="hm-read"]'); await click('[data-act="ocr-demo"]');
+    await page.waitForSelector('[data-act="ocr-save"]', { timeout: 90000 });
+    const drums = await page.$$eval('.drum b', (e) => e.map((x) => x.textContent).join(''));
+    assert.match(drums, /^\d{7}$/, 'seven drums read from the photo');
+    assert.strictEqual(drums.slice(0, 4), '0182', 'whole cubic metres read correctly');
+    await shot('07f-ocr');
+    await click('[data-act="hm-mclose"]');
+    await click('[data-act="hm-model"][data-arg="SMCV4"]');
+    const rowsBefore = await page.$$eval('.rtable tbody tr', (r) => r.length);
+    await click('[data-act="hm-read"]'); await click('[data-act="hm-scan"]');
+    await page.waitForSelector('[data-act="hm-save"]', { timeout: 8000 });
+    await click('[data-act="hm-save"]');
+    assert.ok(await until(async () => (await page.$$eval('.rtable tbody tr', (r) => r.length)) === Math.min(12, rowsBefore + 1)), 'reading added to the history');
+    await shot('07e-house');
+
     // plant power simulation: scene animates, measures improve the PF shown to management
     await click('[data-act="tab"][data-arg="power"]');
     await page.waitForSelector('.pw-svg');

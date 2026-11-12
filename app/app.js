@@ -4,6 +4,8 @@ import { CoreDashClient } from './coredash-client.mjs';
 import { createTwin } from './twin.js';
 import { BenchSim, createBenchView, TANKS, STEPS, flowPoints, MODELS, MODEL_NAMES, POSITIONS, POS_COLORS, dialSvg } from './bench.js';
 import { PowerSim, createPowerView, pfColor } from './power.js';
+import { loadImage as ocrLoadImage, locateRegister, readRegister, getWorker as ocrWorker } from './meter-ocr.js';
+import { HomeSim, createHomeView, drawCam, LIGHTS as HL, LOADS as HLOADS, VALVES as HV, CAMS } from './home.js';
 import { MACHINES as PMACH, FIXES, TARIFF_DEFAULT, averages, fixKey } from './power-sim.js';
 import { reportHTML, buildXlsx, curveChart, barChart, summarize, docNumber, RT } from './report.js';
 
@@ -41,7 +43,7 @@ const L = {
     closeIn: 'ปิดน้ำเข้า V-101', drainOpen: 'ระบาย V-103', o50: 'เปิด 50%', o100: 'เปิด 100%', closePanel: 'ปิดแผง', nothingToDo: 'ทุกอุปกรณ์อยู่ในสถานะนี้แล้ว',
     days: ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'],
     twin: 'ห้องควบคุม 3D', pid: 'แผนผัง P&ID', twinTitle: 'ห้องควบคุมเสมือน', auto: 'อัตโนมัติ', day: 'กลางวัน', night: 'กลางคืน', labels: 'ป้ายค่า', zoomIn: 'ขยาย', zoomOut: 'ย่อ', twinHint: 'แตะเครื่องจักร วาล์ว หรือโคมไฟเพื่อสั่งการ', zoneA: 'ZONE A · ไลน์ผลิต', zoneB: 'ZONE B · ฉีดพลาสติก', zoneU: 'UTILITY · น้ำ & หล่อเย็น', twinAria: 'ภาพจำลองโรงงานแบบเรียลไทม์', lux: 'ความสว่าง', on: 'เปิด', off: 'ปิด', kwNowL: 'กำลังไฟ', pf: 'Power Factor', energy: 'พลังงานสะสม', moldT: 'อุณหภูมิแม่พิมพ์', coolBy: 'ระบายความร้อนด้วย', moldNote: 'ถ้าเกิน 60 °C ระบบจะแจ้งอลาร์ม',
-    bench: 'ทดสอบมาตร', benchTitle: 'แท่นทดสอบมาตรวัดน้ำ (ถังตวง)', benchStd: 'วิธีปริมาตร · ISO 4064 / OIML R 49 · ข้อมูลจำลอง', setup: 'ตั้งค่าการทดสอบ', meterUnder: 'มาตรที่ทดสอบ (ต่ออนุกรม)', spec: 'สเปกมาตร (ตามใบรับรอง)', testPoint: 'จุดทดสอบ', volume: 'ปริมาตรทดสอบ', autoVol: 'อัตโนมัติ', speed: 'ความเร็วจำลอง', runOne: 'ทดสอบ', runSet: 'ทดสอบครบชุด Q1 · Q2 · Q3', stopRun: 'หยุด', fault: 'จำลองมาตรชำรุด', live: 'สถานะขณะทดสอบ', flowNow: 'อัตราไหล (FT-01)', simTime: 'เวลาจำลอง', eta: 'เหลือประมาณ', stepNow: 'ขั้นตอน', manual: 'โหมดช่าง: สั่งวาล์วเอง', manualHint: 'ใช้ตรวจเช็กวาล์ว ไล่อากาศ หรือดูเซนเซอร์ทำงาน ถ้าเติมจนเต็ม เซนเซอร์กันล้น LSHH จะตัดให้อัตโนมัติ — ถ้าต้องการผลทดสอบ ให้ใช้ปุ่ม ▶ เริ่มทดสอบอัตโนมัติ', fillAt: 'เติมที่', closeAll: 'ปิดทั้งหมด', results: 'ผลการทดสอบ', colMeter: 'มาตร', colPoint: 'จุด', colQ: 'อัตราไหล', colVref: 'ปริมาตรอ้างอิง', colVm: 'มาตรอ่านได้', colE: 'ค่าผิดพลาด', colMpe: 'เกณฑ์', colRes: 'ผล', pass: 'ผ่าน', failR: 'ไม่ผ่าน', clear: 'ล้างผล', noResults: 'ยังไม่มีผล กด ▶ เริ่มทดสอบอัตโนมัติ ในขั้นที่ 4', curve: 'กราฟค่าผิดพลาดเทียบเกณฑ์ (เส้นประ = เกณฑ์ ±5% / ±2%)', guide: 'ตำแหน่งเซนเซอร์และอุปกรณ์', gSensor: 'อุปกรณ์', gWhere: 'ติดตั้งที่', gWhy: 'หน้าที่', gType: 'ชนิดที่แนะนำ', neckTitle: 'ทำไมเซนเซอร์ปริมาตรต้องอยู่ที่คอถังแคบ', neckText: 'คอ Ø50 มม. จุ 1.96 มล./มม. ส่วนตัวถัง Ø650 มม. จุ 332 มล./มม. เซนเซอร์คลาดเคลื่อน ±1 มม. ที่คอถัง = ±0.002 ลิตร แต่ที่ตัวถัง = ±0.33 ลิตร (มากกว่า 170 เท่า)', planTitle: 'ปริมาตรและเวลาที่แนะนำ', tankUsed: 'ถังที่ใช้', alarmOv: 'กันล้นทำงาน', reportBench: 'รายงานผลการทดสอบมาตรวัดน้ำ', benchNote: '* ค่าผิดพลาดบนรูปคือค่าจำลองขณะไหล ผลจริงคำนวณจากปริมาตรอ้างอิงที่อ่านจากคอถัง แก้อุณหภูมิเป็น 20 °C แล้ว', minutes: 'นาที', selectMeter: 'เลือกมาตรอย่างน้อย 1 ตัว', faultOn: 'จำลองชำรุด', s1pos: 'ตำแหน่งบนแท่น (แตะเพื่อเลือก/ไม่เลือก) · แก้หมายเลขเครื่องได้', dialTitle: 'หน้าปัดมาตร · ค่าเริ่มต้น / สิ้นสุด', dialHint: 'ระบบอ่านค่าตอนเริ่มและตอนจบของทุกจุดทดสอบ ขณะน้ำหยุดนิ่ง', colStart: 'เริ่มต้น (L)', colEnd: 'สิ้นสุด (L)', sumTitle: 'สรุปผลการทดสอบ', rpPreview: 'ดูตัวอย่างรายงาน', rpPdf: 'บันทึก PDF / พิมพ์', doneTitle: 'ทดสอบเสร็จแล้ว', donePass: 'ผ่าน {a} จาก {b} รายการ', savedX: 'บันทึกไฟล์แล้ว · ', tabPower: 'พลังงาน', pwTitle: 'จำลองพลังงานโรงชุบและโรงรีดทองเหลือง', pwSub: 'P · Q · D · S · cos φ · THD · ข้อมูลจำลอง', pwExec: 'ภาพรวมสำหรับผู้บริหาร: ก่อน → หลังปรับปรุง', pwExecSub: 'ค่าเฉลี่ยตลอดรอบการผลิต เปิด/ปิดมาตรการด้านล่างเพื่อดูผล', pwP0: 'ก่อนปรับปรุง', pwP1: 'ระยะที่ 1: แก้ PF (คาปาซิเตอร์ + เตาอบ + มอเตอร์)', pwP2: 'ครบทุกมาตรการ', pwPF: 'PF จริง', pwCur: 'กระแสรวม', pwLoss: 'สูญเสียหม้อแปลง/สาย', pwKW: 'กำลังจริง', pwBill: 'ค่าไฟประมาณการ/เดือน', pwFrom: 'จาก', pwPFch: 'ค่าปรับเพาเวอร์แฟกเตอร์/เดือน', pwSaveM: 'ประหยัดได้/เดือน', pwInvest: 'เงินลงทุน', pwPay: 'คืนทุน', pwYear: 'ปี', pwMonth: 'เดือน', pwSave: 'ประหยัด', pwRelease: 'คืนพิกัดหม้อแปลง', pwTr: 'โหลด TR', pwScene: 'โรงงานเสมือน · การไหลของกำลังไฟฟ้า', pwSceneHint: 'แตะเครื่องจักรเพื่อดูรูปคลื่นและฮาร์มอนิก · เส้นเขียว = P เส้นส้ม = Q', pwRegen: 'คืนพลังงาน', pwFixes: 'แนวทางปรับปรุงเพาเวอร์แฟกเตอร์และคุณภาพไฟฟ้า', pwFixHint: 'ตัวเลขในการ์ด = ผลของมาตรการนั้นอย่างเดียว เทียบกับก่อนปรับปรุง', pwDetuned: 'มีรีแอคเตอร์ 7% (แนะนำ)', pwPlain: 'คาปาซิเตอร์ธรรมดา', pwResonance: 'เกิดเรโซแนนซ์กับฮาร์มอนิกลำดับ 5–7: THD พุ่งสูง คาปาซิเตอร์ร้อน ฟิวส์ขาด อายุสั้น — โรงงานที่มีเรกติไฟเออร์/VFD ต้องใช้แบบมีรีแอคเตอร์', pwCostNote: 'ราคาลงทุนเป็นตัวเลขประมาณการเพื่อเปรียบเทียบเท่านั้น ควรขอใบเสนอราคาและวัดค่าจริงด้วย Power Analyzer ก่อนตัดสินใจ', pwTable: 'การใช้พลังงานรายเครื่อง', pwTableHint: 'เรียงตาม kvar มากไปน้อย = ตัวการที่ควรแก้ก่อน · แตะแถวเพื่อดูรูปคลื่น', pwMach: 'เครื่องจักร', pwShareQ: 'สัดส่วน kvar', pwWhy: 'สาเหตุตามหลัก Power Electronics', pwTotal: 'รวมที่แผงเมน', pwSumNote: 'รวมผลคาปาซิเตอร์/ฟิลเตอร์ที่แผงเมนแล้ว', pwTheory: 'หลักวิชาแบบเข้าใจง่าย', pwThP: 'กำลังจริง (kW)', pwThPd: 'พลังงานที่ทำงานจริง: ความร้อน แรงบิด ไฟฟ้าเคมี — คิดเงินเป็น kWh', pwThQ: 'กำลังรีแอกทีฟ (kvar)', pwThQd: 'พลังงานที่วิ่งไป-กลับระหว่างสนามแม่เหล็ก/การหน่วงมุม SCR กับแหล่งจ่าย ไม่ได้ทำงาน แต่ทำให้กระแสสูง แก้ด้วยคาปาซิเตอร์', pwThD: 'กำลังบิดเบือน (kVA)', pwThDd: 'จากกระแสฮาร์มอนิกของเรกติไฟเออร์/อินเวอร์เตอร์ คาปาซิเตอร์แก้ไม่ได้ ต้องใช้ฟิลเตอร์หรืออุปกรณ์ที่สะอาดกว่า', pwThS: 'กำลังปรากฏ (kVA)', pwThPF: 'คาปาซิเตอร์แก้ได้แค่ cos φ ส่วน THD ต้องใช้ฟิลเตอร์', pwThGoal: 'เป้าหมาย', pwThGoald: '“เพิ่ม” PF ให้เข้าใกล้ 1 = ลด kvar และฮาร์มอนิก → กระแสลด สายเย็นลง หม้อแปลงรับโหลดเพิ่มได้ ไม่โดนค่าปรับ', pwTariff: 'อัตราค่าไฟที่ใช้คำนวณ (แก้ไขได้)', pwTE: 'ค่าพลังงานเฉลี่ยรวม Ft', pwTD: 'ค่าความต้องการพลังไฟฟ้า', pwTP: 'ค่าเพาเวอร์แฟกเตอร์', pwTH: 'ชั่วโมงทำงาน/เดือน', pwTariffNote: 'ค่าเริ่มต้นอ้างอิงตารางอัตรา กฟภ. (กิจการขนาดใหญ่ TOU แรงดันต่ำกว่า 22 kV และค่าเพาเวอร์แฟกเตอร์ 56.07 บาท/kvar ส่วนที่เกิน 61.97% ของ kW) ค่าพลังงานเฉลี่ยเป็นค่าสมมติ ควรใส่ตามบิลจริง', pdfHint: 'เปิดแอปเต็มหน้าจอ (ไม่ใช่ในกรอบ) เพื่อบันทึก PDF', s1: 'เลือกรุ่นมาตรที่จะทดสอบ', s1h: 'ทั้ง 3 ตำแหน่งบนแท่นเป็นรุ่นเดียวกัน ต่ออนุกรม ทดสอบพร้อมกัน', s2: 'ตั้งสเปกตามใบรับรองมาตร', s2h: 'ดู Q3 และ R บนหน้าปัดมาตร ระบบคำนวณอัตราไหล Q1–Q4 ให้เอง', s3: 'เลือกจุดทดสอบ (เลือกได้หลายจุด)', s3h: 'ระบบจะทดสอบทุกจุดที่ติ๊ก ✓ เรียงจากไหลน้อยไปมาก', s4: 'กดเริ่ม ระบบทำให้อัตโนมัติจนจบ', presetStd: 'มาตรฐาน Q1 + Q2 + Q3', presetAll: 'ทุกจุด Q1–Q4', startAuto: 'เริ่มทดสอบอัตโนมัติ', summary: 'จะทดสอบมาตร {m} ตัว ที่ {p} · ใช้น้ำ {w} L · ใช้เวลาจริงประมาณ {t}', startNote: 'ระบบจะ ระบายถัง → เปิดน้ำ → ปิดเมื่อถึงเซนเซอร์ → อ่านค่า → คำนวณผ่าน/ไม่ผ่าน ทีละจุดเอง ไม่ต้องกดอะไรเพิ่ม', selectPoint: 'เลือกจุดทดสอบอย่างน้อย 1 จุด', nowTesting: 'กำลังทดสอบ', pointOf: 'จุดที่ {a} จาก {b}', filled: 'น้ำในถัง', pointTime: 'เวลาจุดนี้', how1: 'เลือกรุ่นมาตร', how2: 'ตั้งสเปก Q3 / R', how3: 'ติ๊กจุดทดสอบ', how4: 'กดปุ่มเขียว ▶ เริ่มทดสอบ แล้วรอผล', manualSub: 'สำหรับช่างตรวจเช็กอุปกรณ์ · ไม่บันทึกผล', mValves: 'แตะวาล์วเพื่อเปิด/ปิด', mFlows: 'เปิดน้ำเข้าถังที่อัตราไหล (ใช้ไล่อากาศ / ตรวจเซนเซอร์)',
+    bench: 'ทดสอบมาตร', benchTitle: 'แท่นทดสอบมาตรวัดน้ำ (ถังตวง)', benchStd: 'วิธีปริมาตร · ISO 4064 / OIML R 49 · ข้อมูลจำลอง', setup: 'ตั้งค่าการทดสอบ', meterUnder: 'มาตรที่ทดสอบ (ต่ออนุกรม)', spec: 'สเปกมาตร (ตามใบรับรอง)', testPoint: 'จุดทดสอบ', volume: 'ปริมาตรทดสอบ', autoVol: 'อัตโนมัติ', speed: 'ความเร็วจำลอง', runOne: 'ทดสอบ', runSet: 'ทดสอบครบชุด Q1 · Q2 · Q3', stopRun: 'หยุด', fault: 'จำลองมาตรชำรุด', live: 'สถานะขณะทดสอบ', flowNow: 'อัตราไหล (FT-01)', simTime: 'เวลาจำลอง', eta: 'เหลือประมาณ', stepNow: 'ขั้นตอน', manual: 'โหมดช่าง: สั่งวาล์วเอง', manualHint: 'ใช้ตรวจเช็กวาล์ว ไล่อากาศ หรือดูเซนเซอร์ทำงาน ถ้าเติมจนเต็ม เซนเซอร์กันล้น LSHH จะตัดให้อัตโนมัติ — ถ้าต้องการผลทดสอบ ให้ใช้ปุ่ม ▶ เริ่มทดสอบอัตโนมัติ', fillAt: 'เติมที่', closeAll: 'ปิดทั้งหมด', results: 'ผลการทดสอบ', colMeter: 'มาตร', colPoint: 'จุด', colQ: 'อัตราไหล', colVref: 'ปริมาตรอ้างอิง', colVm: 'มาตรอ่านได้', colE: 'ค่าผิดพลาด', colMpe: 'เกณฑ์', colRes: 'ผล', pass: 'ผ่าน', failR: 'ไม่ผ่าน', clear: 'ล้างผล', noResults: 'ยังไม่มีผล กด ▶ เริ่มทดสอบอัตโนมัติ ในขั้นที่ 4', curve: 'กราฟค่าผิดพลาดเทียบเกณฑ์ (เส้นประ = เกณฑ์ ±5% / ±2%)', guide: 'ตำแหน่งเซนเซอร์และอุปกรณ์', gSensor: 'อุปกรณ์', gWhere: 'ติดตั้งที่', gWhy: 'หน้าที่', gType: 'ชนิดที่แนะนำ', neckTitle: 'ทำไมเซนเซอร์ปริมาตรต้องอยู่ที่คอถังแคบ', neckText: 'คอ Ø50 มม. จุ 1.96 มล./มม. ส่วนตัวถัง Ø650 มม. จุ 332 มล./มม. เซนเซอร์คลาดเคลื่อน ±1 มม. ที่คอถัง = ±0.002 ลิตร แต่ที่ตัวถัง = ±0.33 ลิตร (มากกว่า 170 เท่า)', planTitle: 'ปริมาตรและเวลาที่แนะนำ', tankUsed: 'ถังที่ใช้', alarmOv: 'กันล้นทำงาน', reportBench: 'รายงานผลการทดสอบมาตรวัดน้ำ', benchNote: '* ค่าผิดพลาดบนรูปคือค่าจำลองขณะไหล ผลจริงคำนวณจากปริมาตรอ้างอิงที่อ่านจากคอถัง แก้อุณหภูมิเป็น 20 °C แล้ว', minutes: 'นาที', selectMeter: 'เลือกมาตรอย่างน้อย 1 ตัว', faultOn: 'จำลองชำรุด', s1pos: 'ตำแหน่งบนแท่น (แตะเพื่อเลือก/ไม่เลือก) · แก้หมายเลขเครื่องได้', dialTitle: 'หน้าปัดมาตร · ค่าเริ่มต้น / สิ้นสุด', dialHint: 'ระบบอ่านค่าตอนเริ่มและตอนจบของทุกจุดทดสอบ ขณะน้ำหยุดนิ่ง', colStart: 'เริ่มต้น (L)', colEnd: 'สิ้นสุด (L)', sumTitle: 'สรุปผลการทดสอบ', rpPreview: 'ดูตัวอย่างรายงาน', rpPdf: 'บันทึก PDF / พิมพ์', doneTitle: 'ทดสอบเสร็จแล้ว', donePass: 'ผ่าน {a} จาก {b} รายการ', savedX: 'บันทึกไฟล์แล้ว · ', tabHouse: 'บ้าน', hmTitle: 'บ้านพักอาศัย', hmSub: 'บ้านอัจฉริยะ · ข้อมูลจำลอง', hmOverview: 'ภาพรวมบ้าน', hmMeter: 'มาตรน้ำ', hmCam: 'กล้องวงจรปิด', hmLight: 'ไฟฟ้า/แสงสว่าง', hmValve: 'วาล์วน้ำ', hmHouseName: 'บ้านเลขที่ 88/8 · หมู่บ้านตัวอย่าง', hmTapHint: 'แตะไฟ กล้อง มาตรน้ำ หรือแท็งก์ในภาพเพื่อสั่งงาน', hmLightHint: 'แตะวงเหลืองในภาพเพื่อเปิด/ปิดไฟจุดนั้น', hmValveHint: 'น้ำไหลในท่อแสดงด้วยเส้นสีฟ้าเคลื่อนที่', hmAuto: 'อัตโนมัติ', hmDay: 'กลางวัน', hmNight: 'กลางคืน', hmPowerNow: 'ใช้ไฟตอนนี้', hmToday: 'วันนี้', hmLightsOn: 'ไฟที่เปิดอยู่', hmWaterNow: 'น้ำกำลังไหล', hmMeterLast: 'อ่านมาตรล่าสุด', hmCams: 'กล้องวงจรปิด', hmRec: 'บันทึกต่อเนื่อง 24 ชม.', hmMainValve: 'วาล์วน้ำหลัก', hmOpen: 'เปิด', hmClosed: 'ปิด', hmOpening: 'กำลังเปิด…', hmClosing: 'กำลังปิด…', hmTank: 'แท็งก์น้ำ', hmScHome: 'กลับถึงบ้าน', hmScNight: 'เข้านอน', hmScAway: 'ไม่อยู่บ้าน', hmScOff: 'ปิดไฟทั้งหมด', hmSceneDone: 'สั่งฉากแล้ว', hmOffS: 'ปิด', hmLightsW: 'ไฟแสงสว่างรวม', hmHouseW: 'ใช้ไฟทั้งบ้านตอนนี้', hmKwhToday: 'พลังงานวันนี้', hmCostToday: 'ค่าไฟวันนี้ (ประมาณ)', hmLightList: 'จุดไฟแสงสว่าง', hmLoads: 'เครื่องใช้ไฟฟ้าหลัก', hmPriceNote: 'ค่าไฟประมาณ 4.18 บาท/หน่วย (ค่าสมมติ) · ระบบจริงอ่านจากสมาร์ทมิเตอร์/สวิตช์อัจฉริยะ', hmFlow: 'อัตราการไหล', hmWaterToday: 'น้ำที่ใช้วันนี้', hmMeterNow: 'ค่ามาตรตอนนี้', hmValveList: 'ควบคุมวาล์วทางไกล', hmLastCmd: 'สั่งล่าสุด', hmDoOpen: 'เปิดวาล์ว', hmDoClose: 'ปิดวาล์ว', hmConfOpen: 'วาล์วจะค่อยๆ เปิดภายใน 3 วินาที และแสดงสถานะเมื่อเปิดสุด', hmConfClose: 'วาล์วจะค่อยๆ ปิดภายใน 3 วินาที น้ำจะหยุดไหลในจุดนี้', hmConfirm: 'ยืนยันสั่งงาน', hmSent: 'ส่งคำสั่งแล้ว', hmLeak: 'ตรวจพบน้ำรั่ว: มีน้ำไหลต่อเนื่องทั้งที่ไม่มีการใช้น้ำ', hmLeakSub: 'มาตรยังหมุน 0.6 ลิตร/นาที (≈ 860 ลิตร/วัน)', hmCutMain: 'ปิดวาล์วหลักทันที', hmLeakOn: 'จำลองน้ำรั่ว', hmLeakOff: 'หยุดจำลองน้ำรั่ว', hmCamTitle: 'กล้องวงจรปิด 4 ตัว', hmCamHint: 'แตะเพื่อดูภาพเต็มจอ · กลางคืนเปลี่ยนเป็นอินฟราเรดอัตโนมัติ', hmCamNote: 'ภาพเป็นการจำลอง · ต่อของจริงผ่าน NVR/กล้อง IP (RTSP → WebRTC) ที่เกตเวย์', hmSnap: 'ถ่ายภาพ', hmSnapDone: 'บันทึกภาพแล้ว', hmMeterPick: 'มาตรน้ำของบ้านนี้', hmMeterPickHint: 'เลือกรุ่น ระบบจะใช้วิธีอ่านค่าที่เหมาะกับรุ่นนั้น', hmReadNow: 'อ่านค่ามาตรน้ำ', hmLastRead: 'ค่าที่อ่านล่าสุด', hmReadAt: 'อ่านเมื่อ', hmUsedSince: 'ใช้ไปจากครั้งก่อน', hmNowSince: 'ใช้ไปตั้งแต่อ่านล่าสุด', hmUsage: 'ปริมาณน้ำที่ใช้รายเดือน (m³)', hmHistory: 'ประวัติการอ่านมาตร', hmDate: 'วันที่', hmTime: 'เวลา', hmReadingM3: 'ค่ามาตร (m³)', hmUsedM3: 'ใช้ไป (m³)', hmCost: 'ค่าน้ำ', hmMethod: 'วิธีอ่าน', hmMech: 'แมคคานิค', hmSimTag: 'จำลอง', hmWaterNote: 'ค่าน้ำประมาณ 12 บาท/ม³ (ค่าสมมติ) · ประวัติเก็บไว้ในเครื่องนี้', hmNoCam: 'เปิดกล้องไม่ได้ จะใช้ภาพจำลองแทน', hmNfcTap: 'แตะมือถือที่หน้ามาตร SMCV4', hmNfcWait: 'กำลังอ่านข้อมูลจากมาตร…', hmNfcReal: 'มือถือนี้รองรับ Web NFC: แตะแล้วระบบจะอ่านค่าจากแท็กของมาตร', hmNfcSim: 'อุปกรณ์นี้ไม่รองรับ Web NFC (ใช้ได้กับ Chrome บน Android) จะแสดงผลแบบจำลอง', hmStartNfc: 'เริ่มอ่าน NFC', hmCapture: 'ถ่ายและอ่านค่า', hmReading: 'กำลังอ่าน…', hmOpenCam: 'เปิดกล้อง', hmVolume: 'ปริมาตร', hmLitres: 'ลิตร', hmMeterId: 'หมายเลขมาตร', hmBattery: 'แบตเตอรี่', hmCheck: 'ตรวจสอบตัวเลขที่อ่านได้ (แก้ได้ก่อนบันทึก)', hmAgain: 'อ่านใหม่', hmSave: 'บันทึกค่า', hmSaved: 'บันทึกค่ามาตรแล้ว', hmGuide: 'ให้ตัวเลข 7 หลักอยู่พอดีกรอบ', hmOcrHow: 'อ่านค่ามาตรแมคคานิคจากรูป', hmOcr1: 'ถ่ายให้หน้าปัดตรง เห็นตัวเลขชัด ไม่มีแสงสะท้อน', hmOcr2: 'ระบบหาแถวตัวเลข 7 หลัก (ดำ = ม³, แดง = ลิตร) และอ่านทีละล้อ', hmOcr3: 'ตรวจตัวเลข แตะ ▲▼ แก้ได้ แล้วกดบันทึก', hmPickPhoto: 'ถ่าย/เลือกรูป', hmOcrDemo: 'ลองกับรูปจำลอง', hmOcrNote: 'อ่านตัวเลขบนเครื่องนี้ด้วย Tesseract.js (ไม่ส่งรูปออกไปไหน) · ครั้งแรกโหลดโมเดลประมาณ 7 MB', hmOcrFind: 'กำลังหาแถวตัวเลขในรูป…', hmOcrRead: 'กำลังอ่านตัวเลขทีละล้อ…', hmOcrFail: 'อ่านรูปไม่ได้ ลองถ่ายใหม่ให้ชัดขึ้น', hmAdjust: 'ลากกรอบให้ครอบตัวเลข 7 หลักพอดี (ลากมุมขวาล่างเพื่อปรับขนาด) แล้วกดอ่านค่าใหม่', hmOcrAgain: 'อ่านค่าในกรอบนี้', hmOcrPhoto: 'ดูรูปและกรอบที่อ่าน', hmOcrAuto: 'หาตำแหน่งอัตโนมัติ', hmOcrTapFix: 'ล้อที่เป็นสีส้มคือระบบไม่มั่นใจ ตรวจกับหน้าปัดจริง แตะ ▲▼ เพื่อแก้ ถ้ากรอบไม่ตรงให้เปิด "ดูรูปและกรอบที่อ่าน" แล้วลากกรอบใหม่', hmLitresU: 'ลิตร', hmIn: 'ใน', hmDays: 'วัน', hmPerDay: 'เฉลี่ยต่อวัน', hmMonthEst: 'คาดการณ์ 30 วัน', hmCostEst: 'ค่าน้ำช่วงนี้ (ประมาณ)', hmOcrLower: 'ค่าน้อยกว่าครั้งก่อน ตรวจตัวเลขอีกครั้ง (หรือเปลี่ยนมาตรใหม่)', hmOcrReseed: 'ค่าน้อยกว่าประวัติจำลอง: เมื่อบันทึก ระบบจะลบประวัติจำลองทิ้ง แล้วเริ่มเก็บประวัติจริงจากมาตรของคุณ (การอ่านครั้งถัดไปจะคำนวณปริมาณที่ใช้ให้)', hmOcrJump: 'ใช้น้ำมากผิดปกติ (> 150 ม³) ตรวจตัวเลขอีกครั้ง', hmReal: 'อ่านจริง', hmNeedTwo: 'อ่านมาตรอย่างน้อย 2 ครั้งเพื่อดูปริมาณน้ำที่ใช้', tabPower: 'พลังงาน', pwTitle: 'จำลองพลังงานโรงชุบและโรงรีดทองเหลือง', pwSub: 'P · Q · D · S · cos φ · THD · ข้อมูลจำลอง', pwExec: 'ภาพรวมสำหรับผู้บริหาร: ก่อน → หลังปรับปรุง', pwExecSub: 'ค่าเฉลี่ยตลอดรอบการผลิต เปิด/ปิดมาตรการด้านล่างเพื่อดูผล', pwP0: 'ก่อนปรับปรุง', pwP1: 'ระยะที่ 1: แก้ PF (คาปาซิเตอร์ + เตาอบ + มอเตอร์)', pwP2: 'ครบทุกมาตรการ', pwPF: 'PF จริง', pwCur: 'กระแสรวม', pwLoss: 'สูญเสียหม้อแปลง/สาย', pwKW: 'กำลังจริง', pwBill: 'ค่าไฟประมาณการ/เดือน', pwFrom: 'จาก', pwPFch: 'ค่าปรับเพาเวอร์แฟกเตอร์/เดือน', pwSaveM: 'ประหยัดได้/เดือน', pwInvest: 'เงินลงทุน', pwPay: 'คืนทุน', pwYear: 'ปี', pwMonth: 'เดือน', pwSave: 'ประหยัด', pwRelease: 'คืนพิกัดหม้อแปลง', pwTr: 'โหลด TR', pwScene: 'โรงงานเสมือน · การไหลของกำลังไฟฟ้า', pwSceneHint: 'แตะเครื่องจักรเพื่อดูรูปคลื่นและฮาร์มอนิก · เส้นเขียว = P เส้นส้ม = Q', pwRegen: 'คืนพลังงาน', pwFixes: 'แนวทางปรับปรุงเพาเวอร์แฟกเตอร์และคุณภาพไฟฟ้า', pwFixHint: 'ตัวเลขในการ์ด = ผลของมาตรการนั้นอย่างเดียว เทียบกับก่อนปรับปรุง', pwDetuned: 'มีรีแอคเตอร์ 7% (แนะนำ)', pwPlain: 'คาปาซิเตอร์ธรรมดา', pwResonance: 'เกิดเรโซแนนซ์กับฮาร์มอนิกลำดับ 5–7: THD พุ่งสูง คาปาซิเตอร์ร้อน ฟิวส์ขาด อายุสั้น — โรงงานที่มีเรกติไฟเออร์/VFD ต้องใช้แบบมีรีแอคเตอร์', pwCostNote: 'ราคาลงทุนเป็นตัวเลขประมาณการเพื่อเปรียบเทียบเท่านั้น ควรขอใบเสนอราคาและวัดค่าจริงด้วย Power Analyzer ก่อนตัดสินใจ', pwTable: 'การใช้พลังงานรายเครื่อง', pwTableHint: 'เรียงตาม kvar มากไปน้อย = ตัวการที่ควรแก้ก่อน · แตะแถวเพื่อดูรูปคลื่น', pwMach: 'เครื่องจักร', pwShareQ: 'สัดส่วน kvar', pwWhy: 'สาเหตุตามหลัก Power Electronics', pwTotal: 'รวมที่แผงเมน', pwSumNote: 'รวมผลคาปาซิเตอร์/ฟิลเตอร์ที่แผงเมนแล้ว', pwTheory: 'หลักวิชาแบบเข้าใจง่าย', pwThP: 'กำลังจริง (kW)', pwThPd: 'พลังงานที่ทำงานจริง: ความร้อน แรงบิด ไฟฟ้าเคมี — คิดเงินเป็น kWh', pwThQ: 'กำลังรีแอกทีฟ (kvar)', pwThQd: 'พลังงานที่วิ่งไป-กลับระหว่างสนามแม่เหล็ก/การหน่วงมุม SCR กับแหล่งจ่าย ไม่ได้ทำงาน แต่ทำให้กระแสสูง แก้ด้วยคาปาซิเตอร์', pwThD: 'กำลังบิดเบือน (kVA)', pwThDd: 'จากกระแสฮาร์มอนิกของเรกติไฟเออร์/อินเวอร์เตอร์ คาปาซิเตอร์แก้ไม่ได้ ต้องใช้ฟิลเตอร์หรืออุปกรณ์ที่สะอาดกว่า', pwThS: 'กำลังปรากฏ (kVA)', pwThPF: 'คาปาซิเตอร์แก้ได้แค่ cos φ ส่วน THD ต้องใช้ฟิลเตอร์', pwThGoal: 'เป้าหมาย', pwThGoald: '“เพิ่ม” PF ให้เข้าใกล้ 1 = ลด kvar และฮาร์มอนิก → กระแสลด สายเย็นลง หม้อแปลงรับโหลดเพิ่มได้ ไม่โดนค่าปรับ', pwTariff: 'อัตราค่าไฟที่ใช้คำนวณ (แก้ไขได้)', pwTE: 'ค่าพลังงานเฉลี่ยรวม Ft', pwTD: 'ค่าความต้องการพลังไฟฟ้า', pwTP: 'ค่าเพาเวอร์แฟกเตอร์', pwTH: 'ชั่วโมงทำงาน/เดือน', pwTariffNote: 'ค่าเริ่มต้นอ้างอิงตารางอัตรา กฟภ. (กิจการขนาดใหญ่ TOU แรงดันต่ำกว่า 22 kV และค่าเพาเวอร์แฟกเตอร์ 56.07 บาท/kvar ส่วนที่เกิน 61.97% ของ kW) ค่าพลังงานเฉลี่ยเป็นค่าสมมติ ควรใส่ตามบิลจริง', pdfHint: 'เปิดแอปเต็มหน้าจอ (ไม่ใช่ในกรอบ) เพื่อบันทึก PDF', s1: 'เลือกรุ่นมาตรที่จะทดสอบ', s1h: 'ทั้ง 3 ตำแหน่งบนแท่นเป็นรุ่นเดียวกัน ต่ออนุกรม ทดสอบพร้อมกัน', s2: 'ตั้งสเปกตามใบรับรองมาตร', s2h: 'ดู Q3 และ R บนหน้าปัดมาตร ระบบคำนวณอัตราไหล Q1–Q4 ให้เอง', s3: 'เลือกจุดทดสอบ (เลือกได้หลายจุด)', s3h: 'ระบบจะทดสอบทุกจุดที่ติ๊ก ✓ เรียงจากไหลน้อยไปมาก', s4: 'กดเริ่ม ระบบทำให้อัตโนมัติจนจบ', presetStd: 'มาตรฐาน Q1 + Q2 + Q3', presetAll: 'ทุกจุด Q1–Q4', startAuto: 'เริ่มทดสอบอัตโนมัติ', summary: 'จะทดสอบมาตร {m} ตัว ที่ {p} · ใช้น้ำ {w} L · ใช้เวลาจริงประมาณ {t}', startNote: 'ระบบจะ ระบายถัง → เปิดน้ำ → ปิดเมื่อถึงเซนเซอร์ → อ่านค่า → คำนวณผ่าน/ไม่ผ่าน ทีละจุดเอง ไม่ต้องกดอะไรเพิ่ม', selectPoint: 'เลือกจุดทดสอบอย่างน้อย 1 จุด', nowTesting: 'กำลังทดสอบ', pointOf: 'จุดที่ {a} จาก {b}', filled: 'น้ำในถัง', pointTime: 'เวลาจุดนี้', how1: 'เลือกรุ่นมาตร', how2: 'ตั้งสเปก Q3 / R', how3: 'ติ๊กจุดทดสอบ', how4: 'กดปุ่มเขียว ▶ เริ่มทดสอบ แล้วรอผล', manualSub: 'สำหรับช่างตรวจเช็กอุปกรณ์ · ไม่บันทึกผล', mValves: 'แตะวาล์วเพื่อเปิด/ปิด', mFlows: 'เปิดน้ำเข้าถังที่อัตราไหล (ใช้ไล่อากาศ / ตรวจเซนเซอร์)',
     blkTitle: 'ระบบป้องกันบล็อกคำสั่งนี้', blkNow: 'ตอนนี้', blkRule: 'เงื่อนไขบล็อก', blkFix: 'แก้ไขแล้วสั่งต่อ', blkFixHint: 'กดแก้ไข แล้วแอปจะเด้งคำสั่งเดิมให้ยืนยันทันทีที่ปลดล็อก', blkWait: 'รอปลดล็อกแล้วสั่งให้อัตโนมัติ', blkBypass: 'ข้ามระบบป้องกันชั่วคราว (วิศวกรขึ้นไป)', blkReason: 'เหตุผล (บันทึกใน Audit log)', blkReasonPh: 'เช่น ทดสอบปั๊มหลังซ่อม มีช่างเฝ้าหน้างาน', blkDo: 'ข้ามระบบป้องกัน', blkMin: 'นาที', blkNeedRole: 'บัญชีนี้เป็นผู้ควบคุม ต้องให้วิศวกรหรือผู้ดูแลระบบเป็นผู้ข้ามระบบป้องกัน', blkNoBypass: 'ระบบป้องกันนี้ข้ามไม่ได้ เพราะเป็นการป้องกันขั้นสุดท้าย (เทียบเท่าสวิตช์กันล้นแบบต่อสายตรง) ต้องแก้สาเหตุก่อน', blkReasonShort: 'กรุณาใส่เหตุผลอย่างน้อย 5 ตัวอักษร', close2: 'ปิด', waiting: 'รอปลดล็อก', cancelWait: 'ยกเลิก', ready: 'ปลดล็อกแล้ว', byp: 'ข้ามระบบป้องกันอยู่', bypLeft: 'เหลือ', bypBy: 'โดย', restore: 'คืนค่าป้องกัน', bypassed: 'ข้ามระบบป้องกันแล้ว · ', restored: 'คืนค่าระบบป้องกันแล้ว'
   },
   en: {
@@ -65,7 +67,7 @@ const L = {
     closeIn: 'Close inlet V-101', drainOpen: 'Drain V-103', o50: 'Open 50%', o100: 'Open 100%', closePanel: 'Close', nothingToDo: 'Everything is already in that state',
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     twin: '3D control room', pid: 'P&ID diagram', twinTitle: 'Virtual control room', auto: 'Auto', day: 'Day', night: 'Night', labels: 'Labels', zoomIn: 'Zoom in', zoomOut: 'Zoom out', twinHint: 'Tap a machine, valve or light to control it', zoneA: 'ZONE A · PRODUCTION', zoneB: 'ZONE B · MOLDING', zoneU: 'UTILITY · WATER & COOLING', twinAria: 'Live plant scene', lux: 'Brightness', on: 'On', off: 'Off', kwNowL: 'Power', pf: 'Power factor', energy: 'Energy meter', moldT: 'Mold temperature', coolBy: 'Cooled by', moldNote: 'Alarm above 60 °C',
-    bench: 'Meter test', benchTitle: 'Water-meter test bench (proving tank)', benchStd: 'Volumetric method · ISO 4064 / OIML R 49 · simulated data', setup: 'Test setup', meterUnder: 'Meters under test (in series)', spec: 'Meter rating (per certificate)', testPoint: 'Test point', volume: 'Test volume', autoVol: 'Auto', speed: 'Simulation speed', runOne: 'Run', runSet: 'Run full set Q1 · Q2 · Q3', stopRun: 'Stop', fault: 'Simulate a worn meter', live: 'Live status', flowNow: 'Flow (FT-01)', simTime: 'Simulated time', eta: 'Time left', stepNow: 'Step', manual: 'Technician mode: manual valves', manualHint: 'Check valves, purge air or watch the sensors. Fill until full and the LSHH overflow sensor trips by itself. For test results use ▶ Start automatic test.', fillAt: 'Fill at', closeAll: 'Close all', results: 'Test results', colMeter: 'Meter', colPoint: 'Point', colQ: 'Flow', colVref: 'Reference vol.', colVm: 'Meter vol.', colE: 'Error', colMpe: 'MPE', colRes: 'Result', pass: 'Pass', failR: 'Fail', clear: 'Clear', noResults: 'No results yet — press ▶ Start automatic test in step 4', curve: 'Error curve vs MPE (dashed = ±5% / ±2% limits)', guide: 'Sensor and instrument placement', gSensor: 'Device', gWhere: 'Location', gWhy: 'Purpose', gType: 'Recommended type', neckTitle: 'Why the volume sensors sit in the narrow neck', neckText: 'A Ø50 mm neck holds 1.96 mL per mm; a Ø650 mm body holds 332 mL per mm. A ±1 mm sensor error is ±0.002 L in the neck but ±0.33 L in the body (over 170× more).', planTitle: 'Recommended volumes and times', tankUsed: 'Tank', alarmOv: 'Overflow protection tripped', reportBench: 'Water-meter test report', benchNote: '* Errors on the drawing are live simulated values; results use the reference volume read from the tank neck, corrected to 20 °C.', minutes: 'min', selectMeter: 'Select at least one meter', faultOn: 'worn', s1pos: 'Positions on the bench (tap to include/exclude) · serial numbers are editable', dialTitle: 'Meter dials · start / end readings', dialHint: 'Each point is read at the start and at the end with the water at rest', colStart: 'Start (L)', colEnd: 'End (L)', sumTitle: 'Test summary', rpPreview: 'Preview report', rpPdf: 'Save PDF / Print', doneTitle: 'Test complete', donePass: '{a} of {b} passed', savedX: 'Saved · ', tabPower: 'Energy', pwTitle: 'Plating & brass rolling power simulation', pwSub: 'P · Q · D · S · cos φ · THD · simulated data', pwExec: 'Management view: before → after', pwExecSub: 'Averages over the production cycle. Switch the measures below to see the effect', pwP0: 'As is', pwP1: 'Phase 1: fix PF (capacitors + furnace + motors)', pwP2: 'All measures', pwPF: 'True PF', pwCur: 'Total current', pwLoss: 'Transformer/cable loss', pwKW: 'Active power', pwBill: 'Estimated bill / month', pwFrom: 'from', pwPFch: 'Power factor charge / month', pwSaveM: 'Saving / month', pwInvest: 'Investment', pwPay: 'Payback', pwYear: 'yr', pwMonth: 'mo', pwSave: 'Saves', pwRelease: 'Transformer capacity freed', pwTr: 'TR load', pwScene: 'Virtual plant · power flow', pwSceneHint: 'Tap a machine for its waveform and harmonics · green = P, orange = Q', pwRegen: 'regenerating', pwFixes: 'Power factor and power quality measures', pwFixHint: 'Figures on each card = that measure alone, against the as-is plant', pwDetuned: 'With 7 % reactors (recommended)', pwPlain: 'Plain capacitors', pwResonance: 'Resonates with the 5th–7th harmonics: THD soars, capacitors overheat, fuses blow — plants with rectifiers/VFDs need detuned banks', pwCostNote: 'Investment figures are rough, for comparison only. Get quotations and measure with a power analyser before deciding.', pwTable: 'Power by machine', pwTableHint: 'Sorted by kvar = fix these first · tap a row for its waveform', pwMach: 'Machine', pwShareQ: 'kvar share', pwWhy: 'Cause (power electronics)', pwTotal: 'Total at the MDB', pwSumNote: 'includes capacitors/filters at the main board', pwTheory: 'The theory, simply', pwThP: 'Active power (kW)', pwThPd: 'Does real work — heat, torque, electro-chemistry — billed as kWh', pwThQ: 'Reactive power (kvar)', pwThQd: 'Swings back and forth (magnetic fields, SCR firing delay); does no work but raises current. Capacitors fix it', pwThD: 'Distortion power (kVA)', pwThDd: 'From rectifier/inverter harmonic currents. Capacitors cannot fix it: filters or cleaner converters can', pwThS: 'Apparent power (kVA)', pwThPF: 'capacitors fix cos φ only; THD needs filters', pwThGoal: 'Goal', pwThGoald: 'RAISE PF towards 1 = less kvar and harmonics → lower current, cooler cables, more transformer headroom, no penalty', pwTariff: 'Tariff used (editable)', pwTE: 'Average energy incl. Ft', pwTD: 'Demand charge', pwTP: 'Power factor charge', pwTH: 'Operating hours / month', pwTariffNote: 'Defaults from the PEA tariff table (large general service TOU < 22 kV; PF charge 56.07 THB/kvar above 61.97 % of kW). The average energy price is an assumption — use your bill.', pdfHint: 'Open the app full screen (not in a frame) to save a PDF', s1: 'Choose the meter model', s1h: 'All three bench positions carry the same model, in series, tested together', s2: 'Set the rating from the meter certificate', s2h: 'Read Q3 and R on the meter dial; Q1–Q4 are calculated for you', s3: 'Choose test points (several allowed)', s3h: 'Every ticked ✓ point runs, lowest flow first', s4: 'Press start; the bench runs by itself', presetStd: 'Standard Q1 + Q2 + Q3', presetAll: 'All points Q1–Q4', startAuto: 'Start automatic test', summary: 'Tests {m} meter(s) at {p} · uses {w} L of water · about {t} in real time', startNote: 'The bench drains → fills → closes at the sensor → reads → passes/fails each point on its own. Nothing else to press.', selectPoint: 'Select at least one test point', nowTesting: 'Testing', pointOf: 'Point {a} of {b}', filled: 'Water in tank', pointTime: 'Time on this point', how1: 'Pick the model', how2: 'Set Q3 / R', how3: 'Tick test points', how4: 'Press the green ▶ Start button and wait', manualSub: 'For technicians checking equipment · results not saved', mValves: 'Tap a valve to open/close', mFlows: 'Fill the tank at a flow rate (purge air / check sensors)',
+    bench: 'Meter test', benchTitle: 'Water-meter test bench (proving tank)', benchStd: 'Volumetric method · ISO 4064 / OIML R 49 · simulated data', setup: 'Test setup', meterUnder: 'Meters under test (in series)', spec: 'Meter rating (per certificate)', testPoint: 'Test point', volume: 'Test volume', autoVol: 'Auto', speed: 'Simulation speed', runOne: 'Run', runSet: 'Run full set Q1 · Q2 · Q3', stopRun: 'Stop', fault: 'Simulate a worn meter', live: 'Live status', flowNow: 'Flow (FT-01)', simTime: 'Simulated time', eta: 'Time left', stepNow: 'Step', manual: 'Technician mode: manual valves', manualHint: 'Check valves, purge air or watch the sensors. Fill until full and the LSHH overflow sensor trips by itself. For test results use ▶ Start automatic test.', fillAt: 'Fill at', closeAll: 'Close all', results: 'Test results', colMeter: 'Meter', colPoint: 'Point', colQ: 'Flow', colVref: 'Reference vol.', colVm: 'Meter vol.', colE: 'Error', colMpe: 'MPE', colRes: 'Result', pass: 'Pass', failR: 'Fail', clear: 'Clear', noResults: 'No results yet — press ▶ Start automatic test in step 4', curve: 'Error curve vs MPE (dashed = ±5% / ±2% limits)', guide: 'Sensor and instrument placement', gSensor: 'Device', gWhere: 'Location', gWhy: 'Purpose', gType: 'Recommended type', neckTitle: 'Why the volume sensors sit in the narrow neck', neckText: 'A Ø50 mm neck holds 1.96 mL per mm; a Ø650 mm body holds 332 mL per mm. A ±1 mm sensor error is ±0.002 L in the neck but ±0.33 L in the body (over 170× more).', planTitle: 'Recommended volumes and times', tankUsed: 'Tank', alarmOv: 'Overflow protection tripped', reportBench: 'Water-meter test report', benchNote: '* Errors on the drawing are live simulated values; results use the reference volume read from the tank neck, corrected to 20 °C.', minutes: 'min', selectMeter: 'Select at least one meter', faultOn: 'worn', s1pos: 'Positions on the bench (tap to include/exclude) · serial numbers are editable', dialTitle: 'Meter dials · start / end readings', dialHint: 'Each point is read at the start and at the end with the water at rest', colStart: 'Start (L)', colEnd: 'End (L)', sumTitle: 'Test summary', rpPreview: 'Preview report', rpPdf: 'Save PDF / Print', doneTitle: 'Test complete', donePass: '{a} of {b} passed', savedX: 'Saved · ', tabHouse: 'Home', hmTitle: 'Residence', hmSub: 'Smart home · simulated', hmOverview: 'Overview', hmMeter: 'Water meter', hmCam: 'CCTV', hmLight: 'Lights & power', hmValve: 'Water valves', hmHouseName: 'House 88/8 · Sample village', hmTapHint: 'Tap a lamp, camera, meter or tank in the picture', hmLightHint: 'Tap a yellow circle to switch that lamp', hmValveHint: 'Moving blue lines show water flowing in the pipes', hmAuto: 'Auto', hmDay: 'Day', hmNight: 'Night', hmPowerNow: 'Power now', hmToday: 'today', hmLightsOn: 'Lights on', hmWaterNow: 'Water flowing', hmMeterLast: 'Last meter reading', hmCams: 'CCTV', hmRec: 'Recording 24 h', hmMainValve: 'Main valve', hmOpen: 'Open', hmClosed: 'Closed', hmOpening: 'Opening…', hmClosing: 'Closing…', hmTank: 'Water tank', hmScHome: 'Arrive home', hmScNight: 'Bedtime', hmScAway: 'Away', hmScOff: 'All lights off', hmSceneDone: 'Scene applied', hmOffS: 'off', hmLightsW: 'Lighting total', hmHouseW: 'Whole house now', hmKwhToday: 'Energy today', hmCostToday: 'Cost today (est.)', hmLightList: 'Light points', hmLoads: 'Main appliances', hmPriceNote: 'About 4.18 THB/kWh (assumed) · a real system reads a smart meter / smart switches', hmFlow: 'Flow rate', hmWaterToday: 'Water used today', hmMeterNow: 'Meter now', hmValveList: 'Remote valve control', hmLastCmd: 'Last command', hmDoOpen: 'Open valve', hmDoClose: 'Close valve', hmConfOpen: 'The valve opens over 3 seconds and reports when fully open', hmConfClose: 'The valve closes over 3 seconds; water stops at this point', hmConfirm: 'Confirm', hmSent: 'Command sent', hmLeak: 'Leak detected: water keeps flowing with nothing in use', hmLeakSub: 'Meter still turning at 0.6 L/min (≈ 860 L/day)', hmCutMain: 'Close the main valve now', hmLeakOn: 'Simulate a leak', hmLeakOff: 'Stop leak simulation', hmCamTitle: '4 CCTV cameras', hmCamHint: 'Tap for full screen · switches to infrared at night', hmCamNote: 'Simulated pictures · real cameras connect through an NVR/IP cameras (RTSP → WebRTC) at the gateway', hmSnap: 'Snapshot', hmSnapDone: 'Snapshot saved', hmMeterPick: 'Water meter of this house', hmMeterPickHint: 'Pick the model; the app uses the matching reading method', hmReadNow: 'Read water meter', hmLastRead: 'Last reading', hmReadAt: 'Read at', hmUsedSince: 'Used since previous', hmNowSince: 'Used since last reading', hmUsage: 'Monthly water use (m³)', hmHistory: 'Reading history', hmDate: 'Date', hmTime: 'Time', hmReadingM3: 'Reading (m³)', hmUsedM3: 'Used (m³)', hmCost: 'Water cost', hmMethod: 'Method', hmMech: 'mechanical', hmSimTag: 'simulated', hmWaterNote: 'About 12 THB/m³ (assumed) · history is kept on this device', hmNoCam: 'Camera unavailable — using a simulated view', hmNfcTap: 'Tap the phone on the SMCV4 meter', hmNfcWait: 'Reading the meter…', hmNfcReal: 'This phone supports Web NFC: tap and the meter tag is read', hmNfcSim: 'This device has no Web NFC (Chrome on Android has it) — showing a simulated read', hmStartNfc: 'Start NFC read', hmCapture: 'Capture and read', hmReading: 'Reading…', hmOpenCam: 'Open camera', hmVolume: 'Volume', hmLitres: 'Litres', hmMeterId: 'Meter ID', hmBattery: 'Battery', hmCheck: 'Check the digits read (edit before saving)', hmAgain: 'Read again', hmSave: 'Save reading', hmSaved: 'Meter reading saved', hmGuide: 'Fit the 7 digits inside the frame', hmOcrHow: 'Read a mechanical meter from a photo', hmOcr1: 'Shoot straight on, digits sharp, no glare', hmOcr2: 'The app finds the 7-drum row (black = m³, red = litres) and reads each drum', hmOcr3: 'Check the digits, tap ▲▼ to fix, then save', hmPickPhoto: 'Take/choose photo', hmOcrDemo: 'Try a sample photo', hmOcrNote: 'Digits are read on this device with Tesseract.js (the photo is not uploaded) · first use downloads about 7 MB', hmOcrFind: 'Finding the digit row…', hmOcrRead: 'Reading each drum…', hmOcrFail: 'Could not read the photo — try a sharper shot', hmAdjust: 'Drag the box over the 7 digits (drag the bottom-right corner to resize), then read again', hmOcrAgain: 'Read inside this box', hmOcrPhoto: 'Photo and reading box', hmOcrAuto: 'found automatically', hmOcrTapFix: 'Orange drums are uncertain — compare with the meter and tap ▲▼ to fix. If the box is off, open "Photo and reading box" and drag it', hmLitresU: 'L', hmIn: 'in', hmDays: 'days', hmPerDay: 'Average per day', hmMonthEst: '30-day estimate', hmCostEst: 'Water cost (est.)', hmOcrLower: 'Lower than the previous reading — check the digits (or a new meter)', hmOcrReseed: 'Lower than the simulated history: saving clears it and starts your real history (the next reading calculates the use)', hmOcrJump: 'Unusually high use (> 150 m³) — check the digits', hmReal: 'real', hmNeedTwo: 'Read the meter at least twice to see the water used', tabPower: 'Energy', pwTitle: 'Plating & brass rolling power simulation', pwSub: 'P · Q · D · S · cos φ · THD · simulated data', pwExec: 'Management view: before → after', pwExecSub: 'Averages over the production cycle. Switch the measures below to see the effect', pwP0: 'As is', pwP1: 'Phase 1: fix PF (capacitors + furnace + motors)', pwP2: 'All measures', pwPF: 'True PF', pwCur: 'Total current', pwLoss: 'Transformer/cable loss', pwKW: 'Active power', pwBill: 'Estimated bill / month', pwFrom: 'from', pwPFch: 'Power factor charge / month', pwSaveM: 'Saving / month', pwInvest: 'Investment', pwPay: 'Payback', pwYear: 'yr', pwMonth: 'mo', pwSave: 'Saves', pwRelease: 'Transformer capacity freed', pwTr: 'TR load', pwScene: 'Virtual plant · power flow', pwSceneHint: 'Tap a machine for its waveform and harmonics · green = P, orange = Q', pwRegen: 'regenerating', pwFixes: 'Power factor and power quality measures', pwFixHint: 'Figures on each card = that measure alone, against the as-is plant', pwDetuned: 'With 7 % reactors (recommended)', pwPlain: 'Plain capacitors', pwResonance: 'Resonates with the 5th–7th harmonics: THD soars, capacitors overheat, fuses blow — plants with rectifiers/VFDs need detuned banks', pwCostNote: 'Investment figures are rough, for comparison only. Get quotations and measure with a power analyser before deciding.', pwTable: 'Power by machine', pwTableHint: 'Sorted by kvar = fix these first · tap a row for its waveform', pwMach: 'Machine', pwShareQ: 'kvar share', pwWhy: 'Cause (power electronics)', pwTotal: 'Total at the MDB', pwSumNote: 'includes capacitors/filters at the main board', pwTheory: 'The theory, simply', pwThP: 'Active power (kW)', pwThPd: 'Does real work — heat, torque, electro-chemistry — billed as kWh', pwThQ: 'Reactive power (kvar)', pwThQd: 'Swings back and forth (magnetic fields, SCR firing delay); does no work but raises current. Capacitors fix it', pwThD: 'Distortion power (kVA)', pwThDd: 'From rectifier/inverter harmonic currents. Capacitors cannot fix it: filters or cleaner converters can', pwThS: 'Apparent power (kVA)', pwThPF: 'capacitors fix cos φ only; THD needs filters', pwThGoal: 'Goal', pwThGoald: 'RAISE PF towards 1 = less kvar and harmonics → lower current, cooler cables, more transformer headroom, no penalty', pwTariff: 'Tariff used (editable)', pwTE: 'Average energy incl. Ft', pwTD: 'Demand charge', pwTP: 'Power factor charge', pwTH: 'Operating hours / month', pwTariffNote: 'Defaults from the PEA tariff table (large general service TOU < 22 kV; PF charge 56.07 THB/kvar above 61.97 % of kW). The average energy price is an assumption — use your bill.', pdfHint: 'Open the app full screen (not in a frame) to save a PDF', s1: 'Choose the meter model', s1h: 'All three bench positions carry the same model, in series, tested together', s2: 'Set the rating from the meter certificate', s2h: 'Read Q3 and R on the meter dial; Q1–Q4 are calculated for you', s3: 'Choose test points (several allowed)', s3h: 'Every ticked ✓ point runs, lowest flow first', s4: 'Press start; the bench runs by itself', presetStd: 'Standard Q1 + Q2 + Q3', presetAll: 'All points Q1–Q4', startAuto: 'Start automatic test', summary: 'Tests {m} meter(s) at {p} · uses {w} L of water · about {t} in real time', startNote: 'The bench drains → fills → closes at the sensor → reads → passes/fails each point on its own. Nothing else to press.', selectPoint: 'Select at least one test point', nowTesting: 'Testing', pointOf: 'Point {a} of {b}', filled: 'Water in tank', pointTime: 'Time on this point', how1: 'Pick the model', how2: 'Set Q3 / R', how3: 'Tick test points', how4: 'Press the green ▶ Start button and wait', manualSub: 'For technicians checking equipment · results not saved', mValves: 'Tap a valve to open/close', mFlows: 'Fill the tank at a flow rate (purge air / check sensors)',
     blkTitle: 'A safety interlock blocked this command', blkNow: 'Now', blkRule: 'Blocks when', blkFix: 'Fix it and continue', blkFixHint: 'Pick a fix; the app brings your command back for confirmation as soon as it is unblocked', blkWait: 'Wait until unblocked, then ask me', blkBypass: 'Temporary bypass (engineer or admin)', blkReason: 'Reason (saved in the audit log)', blkReasonPh: 'e.g. pump test after repair, technician on site', blkDo: 'Bypass interlock', blkMin: 'min', blkNeedRole: 'This account is an operator; an engineer or admin must bypass an interlock', blkNoBypass: 'This interlock cannot be bypassed: it is the last line of defence (like a hard-wired overflow switch). Fix the cause first.', blkReasonShort: 'Please enter a reason of at least 5 characters', close2: 'Close', waiting: 'Waiting to unblock', cancelWait: 'Cancel', ready: 'Unblocked', byp: 'Interlock bypassed', bypLeft: 'left', bypBy: 'by', restore: 'Restore', bypassed: 'Interlock bypassed · ', restored: 'Interlock restored'
   }
 };
@@ -315,7 +317,7 @@ function badge(w, h) {
   return `<span class="cdt" role="img" aria-label="CoreDash Technology" style="width:${w}px;height:${h}px;--ph:${ph.toFixed(2)}s"><img class="a" src="icons/logo-green.webp" alt=""><img class="b" src="icons/logo-red.webp" alt=""><span class="s"></span></span>`;
 }
 const ICON = {
-  home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', bolt: 'M13 2L4 14h7l-1 8 9-12h-7z', scada: 'M4 6h5v5H4zM15 13h5v5h-5zM9 8.5h4v7h2', control: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
+  home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', house: 'M3 10.5L12 3l9 7.5M5 9v11h14V9M9.5 20v-6h5v6M15.5 6.5V4h2v4', bolt: 'M13 2L4 14h7l-1 8 9-12h-7z', scada: 'M4 6h5v5H4zM15 13h5v5h-5zM9 8.5h4v7h2', control: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
   alerts: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0', report: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
   bench: 'M9 3h6M10 3v6L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9V3M7 15h10',
@@ -553,6 +555,298 @@ function printReport() {
   setTimeout(() => { try { window.print(); } catch (_) { toast(t().pdfHint, true); } setTimeout(done, 1500); }, 250);
 }
 
+// ---------------------------------------------------------------- residential home
+const HM_METERS = {
+  'SMCV4': { how: 'nfc', label: B('อ่านผ่าน NFC', 'Read over NFC'), hint: B('แตะด้านหลังมือถือที่หน้ามาตร ระบบอ่านปริมาตร วันที่ เวลา และแบตเตอรี่จากมาตรโดยตรง', 'Tap the back of the phone on the meter face: volume, date, time and battery come straight from the meter') },
+  'GMCV3-V3.5': { how: 'lcd', label: B('อ่านจากจอ LCD ด้วยกล้อง', 'Read the LCD with the camera'), hint: B('เล็งกล้องให้จอ LCD อยู่ในกรอบ ระบบอ่านตัวเลข 7 ส่วนจากภาพ แล้วให้ตรวจสอบก่อนบันทึก', 'Frame the LCD; the 7-segment digits are read from the image, then you confirm') },
+  'ASAHI GMK': { how: 'mech', label: B('อ่านหน้าปัดแมคคานิคด้วยกล้อง', 'Read the mechanical dial with the camera'), hint: B('เล็งกล้องให้ล้อตัวเลขอยู่ในกรอบ ระบบอ่านล้อดำ (ม³) ล้อแดง (ลิตร) และเข็ม ×0.0001', 'Frame the drums; black drums (m³), red drums (litres) and the ×0.0001 pointer are read') }
+};
+const hm = { sim: new HomeSim(), view: null, cams: null, big: null, model: 'ASAHI GMK', hist: [], stream: null, price: { water: 12, power: 4.18 } };
+(() => {
+  const s = hm.sim; if (s.reading < 100000) s.reading = 182450.0;
+  try { const h = JSON.parse(localStorage.getItem('cd-home-hist3') || 'null'); if (Array.isArray(h)) hm.hist = h; const m = localStorage.getItem('cd-home-model'); if (m) hm.model = m; } catch (_) { /* storage unavailable */ }
+  if (!hm.hist.length) hm.hist = seedHistory(s.reading - 9200);
+})();
+// simulated past readings (monthly, on the 1st) ending at `endL` litres; usage scales down for a new meter
+function seedHistory(endL) {
+  const now = new Date(), out = []; let r = endL;
+  const typical = 20000, k = Math.min(1, endL / (typical * 7));
+  for (let i = 1; i <= 6; i++) { const d = new Date(now.getFullYear(), now.getMonth() - i + 1, 1, 8, 30); if (d.getTime() > Date.now()) continue; out.push({ ts: d.getTime(), L: Math.max(0, Math.round(r)), how: 'mech', model: 'ASAHI GMK', src: 'seed' }); r -= (17000 + (i * 2300) % 7000) * k; }
+  return out;
+}
+function saveHist() { try { localStorage.setItem('cd-home-hist3', JSON.stringify(hm.hist.slice(0, 60))); localStorage.setItem('cd-home-model', hm.model); } catch (_) { /* ignore */ } }
+function mountHouse() {
+  const slot = root.querySelector('#hm-slot');
+  if (slot) {
+    if (!hm.view) hm.view = createHomeView(hm.sim, { lang: () => S.lang, showHot: () => S.hsec === 'light', onPick: (k, a) => {
+      if (k === 'light') { hm.sim.light[a] = !hm.sim.light[a]; }
+      else if (k === 'cam') { S.camBig = a; }
+      else if (k === 'meter') S.hsec = 'meter';
+      else if (k === 'valves') S.hsec = 'valve';
+      schedule();
+    } });
+    slot.appendChild(hm.view.el);
+  }
+  const cs = root.querySelector('#cam-slot');
+  if (cs) {
+    if (!hm.cams) {
+      hm.cams = document.createElement('div'); hm.cams.className = 'cam-grid';
+      hm.cams.innerHTML = CAMS.map((c) => `<figure class="cam" data-act="cam-big" data-arg="${c.id}"><canvas width="480" height="270" data-cam="${c.id}"></canvas><figcaption><span class="dotS pulse" style="background:#22C55E"></span><b>${c.id}</b><span class="cam-n" data-cn="${c.id}"></span></figcaption></figure>`).join('');
+      camLoop();
+    }
+    hm.cams.querySelectorAll('[data-cn]').forEach((e) => { const c = CAMS.find((q) => q.id === e.dataset.cn); e.textContent = tr(c.name); });
+    cs.appendChild(hm.cams);
+  }
+  const bs = root.querySelector('#camb-slot');
+  if (bs) { if (!hm.big) { hm.big = document.createElement('canvas'); hm.big.width = 1280; hm.big.height = 720; hm.big.className = 'cam-bigc'; camLoop(); } bs.appendChild(hm.big); }
+  const vs = root.querySelector('#mr-video');
+  if (vs && hm.stream && vs.srcObject !== hm.stream) { vs.srcObject = hm.stream; vs.play().catch(() => {}); }
+}
+let camRaf = 0;
+const camState = () => { const s = hm.sim; return { carLight: s.light['L-CAR'], gardenLight: s.light['L-GDN'], livLight: s.light['L-LIV'], sprinkler: s.valve['V-GDN'].pos * s.valve['V-MAIN'].pos > 0.3 }; };
+function camLoop() {
+  if (camRaf) return;
+  const step = (now) => {
+    camRaf = requestAnimationFrame(step);
+    if (step.last && now - step.last < 80) return; step.last = now;
+    const night = hm.sim.isNight(), t = now / 1000;
+    if (hm.cams && hm.cams.isConnected) hm.cams.querySelectorAll('canvas').forEach((cv) => drawCam(cv.getContext('2d'), CAMS.find((c) => c.id === cv.dataset.cam), t, night, S.lang, camState()));
+    if (hm.big && hm.big.isConnected && S.camBig) drawCam(hm.big.getContext('2d'), CAMS.find((c) => c.id === S.camBig), t, night, S.lang, camState());
+  };
+  camRaf = requestAnimationFrame(step);
+}
+function stopCamera() { if (hm.stream) { hm.stream.getTracks().forEach((tk) => tk.stop()); hm.stream = null; } }
+async function startCamera() {
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no camera');
+    hm.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    S.mread.cam = 'live';
+  } catch (_) { S.mread.cam = 'sim'; toast(t().hmNoCam, true); }
+  schedule();
+}
+
+// ---------- real reading of a mechanical meter from a photo (on-device OCR)
+const ocr = { src: null, work: null, url: '' };
+async function ocrSetImage(srcCanvasOrImg, rotateDeg = 0) {
+  const W = srcCanvasOrImg.naturalWidth || srcCanvasOrImg.width, H = srcCanvasOrImg.naturalHeight || srcCanvasOrImg.height;
+  const sc = Math.min(1, 1800 / Math.max(W, H));
+  const c = document.createElement('canvas'); c.width = Math.round(W * sc); c.height = Math.round(H * sc);
+  const g = c.getContext('2d'); g.fillStyle = '#E5E5E5'; g.fillRect(0, 0, c.width, c.height);
+  g.translate(c.width / 2, c.height / 2); g.rotate(rotateDeg * Math.PI / 180); g.drawImage(srcCanvasOrImg, -c.width / 2, -c.height / 2, c.width, c.height);
+  ocr.work = c; ocr.url = c.toDataURL('image/jpeg', 0.9);
+}
+const ocrProgress = (st, p) => { if (S.mread && S.mread.step === 'ocr') { S.mread.prog = st === 'recognizing text' ? null : `${st} ${Math.round(p * 100)}%`; schedule(200); } };
+async function ocrFromImage(img) {
+  const m = S.mread; ocr.src = img; m.rot = 0;
+  m.step = 'ocr'; m.prog = t().hmOcrFind; schedule();
+  try {
+    const loc = await locateRegister(img, ocrProgress);
+    if (loc) { ocr.work = loc.image; ocr.url = loc.image.toDataURL('image/jpeg', 0.9); m.box = loc.box; m.auto = true; }
+    else { await ocrSetImage(img); m.box = { x: 0.15, y: 0.42, w: 0.6, h: 0.1 }; m.auto = false; }
+  } catch (e) { m.step = 'ready'; toast(t().hmOcrFail, true); schedule(); return; }
+  await ocrRead();
+}
+async function ocrRead() {
+  const m = S.mread; if (!m || !ocr.work) return;
+  m.step = 'ocr'; m.prog = t().hmOcrRead; schedule();
+  try {
+    const r = await readRegister(ocr.work, m.box, { onProgress: ocrProgress });
+    Object.assign(m, { step: 'check', digits: r.digits.map((d) => (d === '?' ? '0' : d)), conf: r.conf, cells: r.cells, ts: Date.now(), src: 'ocr' });
+  } catch (e) { m.step = 'adjust'; toast(t().hmOcrFail, true); }
+  schedule();
+}
+function ocrValue(m) { const s = m.digits.join(''); return Number(s.slice(0, 4) + '.' + s.slice(4)); }
+async function ocrFromCamera() {
+  const v = root.querySelector('#mr-video'), guide = root.querySelector('.vf-guide'); if (!v || !v.videoWidth || !guide) return;
+  const vr = v.getBoundingClientRect(), gr = guide.getBoundingClientRect();
+  const sc = Math.max(vr.width / v.videoWidth, vr.height / v.videoHeight), ox = (vr.width - v.videoWidth * sc) / 2, oy = (vr.height - v.videoHeight * sc) / 2;
+  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+  const box = { x: (gr.left - vr.left - ox) / sc / c.width, y: (gr.top - vr.top - oy) / sc / c.height, w: gr.width / sc / c.width, h: gr.height / sc / c.height };
+  stopCamera();
+  ocr.src = c; ocr.work = c; ocr.url = c.toDataURL('image/jpeg', 0.9);
+  S.mread.box = box; S.mread.rot = 0; S.mread.auto = false;
+  await ocrRead();
+}
+async function ocrDemo() {
+  // a rendered photo of the meter at the current (simulated) reading, slightly tilted
+  const L = hm.sim.reading, svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60 -60 320 320" width="1100" height="1100"><rect x="-60" y="-60" width="320" height="320" fill="#D9D6CE"/>${dialSvg('ocrd', 'ASAHI GMK', { R: 80, serial: 'AG-25110388', reading: L })}</svg>`;
+  const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); await im.decode();
+  const c = document.createElement('canvas'); c.width = 1100; c.height = 1100; const g = c.getContext('2d'); g.translate(550, 550); g.rotate(0.07); g.drawImage(im, -550, -550);
+  await ocrFromImage(c);
+}
+function cropDrag(ev) {
+  const h = ev.target.closest('[data-crop]'); if (!h || !S.mread || !S.mread.box) return;
+  const wrap = h.closest('.crop-wrap'), r = wrap.getBoundingClientRect(), b0 = { ...S.mread.box }, x0 = ev.clientX, y0 = ev.clientY, mode = h.dataset.crop, boxEl = wrap.querySelector('.crop-box');
+  interacting = true; h.setPointerCapture && h.setPointerCapture(ev.pointerId); ev.preventDefault();
+  const move = (e) => {
+    const dx = (e.clientX - x0) / r.width, dy = (e.clientY - y0) / r.height, b = S.mread.box;
+    if (mode === 'move') { b.x = Math.min(1 - b0.w, Math.max(0, b0.x + dx)); b.y = Math.min(1 - b0.h, Math.max(0, b0.y + dy)); }
+    else { b.w = Math.min(1 - b0.x, Math.max(0.08, b0.w + dx)); b.h = Math.min(1 - b0.y, Math.max(0.03, b0.h + dy)); }
+    Object.assign(boxEl.style, { left: b.x * 100 + '%', top: b.y * 100 + '%', width: b.w * 100 + '%', height: b.h * 100 + '%' });
+  };
+  const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); interacting = false; schedule(); };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+}
+const hmQuant = (L, model) => { const r = model === 'ASAHI GMK' ? 0.05 : 0.01; return Math.round(L / r) * r; };
+async function readMeter() {
+  const m = S.mread; if (!m) return;
+  m.step = 'scan'; schedule();
+  const sim = () => ({ L: hmQuant(hm.sim.reading, m.model), src: 'sim' });
+  let got = null;
+  if (m.how === 'nfc' && 'NDEFReader' in window) {
+    try {
+      const reader = new window.NDEFReader();
+      const ctl = new AbortController();
+      await reader.scan({ signal: ctl.signal });
+      got = await new Promise((res) => {
+        const tm = setTimeout(() => { ctl.abort(); res(null); }, 12000);
+        reader.onreading = (ev) => {
+          for (const rec of ev.message.records) {
+            if (rec.recordType === 'text') { const txt = new TextDecoder(rec.encoding || 'utf-8').decode(rec.data); const n = parseFloat((txt.match(/[\d.]+/) || [])[0]); if (Number.isFinite(n)) { clearTimeout(tm); ctl.abort(); res({ L: n < 100000 && /m3|m³/i.test(txt) ? n * 1000 : n, src: 'nfc', raw: txt }); return; } }
+          }
+        };
+      });
+    } catch (_) { got = null; }
+  } else await new Promise((r) => setTimeout(r, 2200));
+  if (!got) got = sim();
+  const now = Date.now(), prev = hm.hist[0];
+  Object.assign(m, { step: 'done', L: got.L, src: got.src, ts: now, used: prev ? got.L - prev.L : null, edit: got.L / 1000 });
+  stopCamera(); schedule();
+}
+function hmKpis() {
+  const x = t(), s = hm.sim, on = HL.filter((l) => s.light[l.id]).length;
+  const k = (ico, lab, v, sub, c) => `<div class="hk"><span class="hk-i" style="background:${c}">${ico}</span><div><small>${lab}</small><b>${v}</b>${sub ? `<span>${sub}</span>` : ''}</div></div>`;
+  const last = hm.hist[0];
+  return `<div class="hkpis">
+    ${k('⚡', x.hmPowerNow, `${(s.power() / 1000).toFixed(2)} kW`, `${s.kwh.toFixed(1)} kWh ${x.hmToday} · ≈ ฿${Math.round(s.kwh * hm.price.power)}`, '#F59E0B')}
+    ${k('💡', x.hmLightsOn, `${on}/${HL.length}`, `${s.lightsW()} W`, '#FACC15')}
+    ${k('💧', x.hmWaterNow, `${s.flow.toFixed(1)} L/min`, `${Math.round(s.waterToday)} L ${x.hmToday}`, '#38BDF8')}
+    ${k('🔢', x.hmMeterLast, last ? `${(last.L / 1000).toFixed(3)} m³` : '—', last ? new Date(last.ts).toLocaleDateString(S.lang === 'th' ? 'th-TH' : 'en-GB') : '', '#6366F1')}
+    ${k('🎥', x.hmCams, `${CAMS.length}/${CAMS.length} online`, x.hmRec, '#EF4444')}
+    ${k('🚰', x.hmMainValve, s.valve['V-MAIN'].open ? x.hmOpen : x.hmClosed, `${x.hmTank} ${Math.round(s.tank * 100)}%`, s.valve['V-MAIN'].open ? '#22C55E' : '#EF4444')}
+  </div>`;
+}
+function hmScenes() {
+  const x = t();
+  return `<div class="hscenes">${[['home', '🏠', x.hmScHome], ['night', '🌙', x.hmScNight], ['away', '🔒', x.hmScAway], ['off', '⏻', x.hmScOff]].map(([id, i, l]) => `<button class="hscene" data-act="hm-scene" data-arg="${id}"><span>${i}</span>${l}</button>`).join('')}</div>`;
+}
+function viewHouse() {
+  const x = t(), s = hm.sim, sec = S.hsec || 'overview';
+  const tabs = [['overview', '🏠', x.hmOverview], ['meter', '🔢', x.hmMeter], ['cam', '🎥', x.hmCam], ['light', '💡', x.hmLight], ['valve', '🚰', x.hmValve]]
+    .map(([id, i, l]) => `<button class="hsec ${sec === id ? 'on' : ''}" data-act="hm-sec" data-arg="${id}" aria-pressed="${sec === id}"><span>${i}</span>${l}</button>`).join('');
+  const dn = `<div class="seg">${[['auto', x.hmAuto], ['day', x.hmDay], ['night', x.hmNight]].map(([k, l]) => `<button class="chip ${(s.night == null ? 'auto' : s.night ? 'night' : 'day') === k ? 'on' : ''}" data-act="hm-dn" data-arg="${k}">${l}</button>`).join('')}</div>`;
+  const scene = (hint) => `<section class="card hm-card"><div class="row" style="flex-wrap:wrap;gap:8px"><h2>${x.hmHouseName}</h2><span class="muted" style="font-size:12px">${hint}</span><span style="margin-left:auto">${dn}</span></div><div id="hm-slot"></div></section>`;
+  const leak = s.leak && s.valve['V-MAIN'].pos > 0.5 ? `<div class="status warn" style="margin-bottom:12px"><span class="dotS pulse" style="width:14px;height:14px;background:#EF4444"></span><div><b style="color:var(--tx)">${x.hmLeak}</b><div class="muted">${x.hmLeakSub}</div></div><button class="btn warn" style="margin-left:auto" data-act="hm-valve" data-arg="V-MAIN" data-val="0">${x.hmCutMain}</button></div>` : '';
+  let body = '';
+  if (sec === 'overview') body = `${scene(x.hmTapHint)}${hmScenes()}${hmKpis()}`;
+  else if (sec === 'light') {
+    const cards = HL.map((l) => { const on = s.light[l.id]; return `<div class="hl ${on ? 'on' : ''}"><button class="pw-sw" data-act="hm-light" data-arg="${l.id}" aria-pressed="${on}"><span class="knob"></span></button><div><b>${esc(tr(l.name))}</b><small>${esc(tr(l.zone))} · ${l.w} W</small></div><span class="hl-w">${on ? l.w + ' W' : x.hmOffS}</span></div>`; }).join('');
+    const loads = HLOADS.map((l) => { const on = s.load[l.id]; return `<div class="hl ${on ? 'on' : ''}"><button class="pw-sw" data-act="hm-load" data-arg="${l.id}" aria-pressed="${on}"><span class="knob"></span></button><div><b>${esc(tr(l.name))}</b><small>${(l.w / 1000).toFixed(2)} kW</small></div></div>`; }).join('');
+    const pw = s.power();
+    body = `${scene(x.hmLightHint)}${hmScenes()}
+      <div class="grid2" style="margin:12px 0"><div class="stat"><small>${x.hmLightsW}</small><b>${s.lightsW()} W</b></div><div class="stat"><small>${x.hmHouseW}</small><b>${(pw / 1000).toFixed(2)} kW</b></div><div class="stat"><small>${x.hmKwhToday}</small><b>${s.kwh.toFixed(2)} kWh</b></div><div class="stat"><small>${x.hmCostToday}</small><b>฿${(s.kwh * hm.price.power).toFixed(0)}</b></div></div>
+      <section class="card col"><h2>${x.hmLightList}</h2><div class="hls">${cards}</div></section>
+      <section class="card col" style="margin-top:14px"><h2>${x.hmLoads}</h2><div class="hls">${loads}</div><div class="muted" style="font-size:12px">${x.hmPriceNote}</div></section>`;
+  } else if (sec === 'valve') {
+    const cards = HV.map((v) => { const st = s.valve[v.id], p = st.pos, state = p > 0.97 ? x.hmOpen : p < 0.03 ? x.hmClosed : st.open ? x.hmOpening : x.hmClosing, col = p > 0.97 ? '#22C55E' : p < 0.03 ? '#EF4444' : '#F59E0B';
+      return `<div class="hv"><div class="row" style="gap:10px"><span class="hv-ic" style="background:${col}">🚰</span><div style="flex:1"><b>${esc(tr(v.name))}</b><small class="muted" style="display:block">${esc(tr(v.desc))}</small></div><span class="pill" style="background:${col}22;color:${col}">${state}</span></div>
+      <div class="pbar"><i style="width:${Math.round(p * 100)}%;background:${col}"></i></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:12px">${st.by ? `${x.hmLastCmd}: ${esc(st.by)} · ${new Date(st.at).toLocaleTimeString(S.lang === 'th' ? 'th-TH' : 'en-GB')}` : ''}</span><span style="margin-left:auto;display:flex;gap:8px"><button class="btn primary" data-act="hm-valve" data-arg="${v.id}" data-val="1" ${st.open ? 'disabled' : ''}>${x.hmDoOpen}</button><button class="btn" data-act="hm-valve" data-arg="${v.id}" data-val="0" ${!st.open ? 'disabled' : ''}>${x.hmDoClose}</button></span></div></div>`; }).join('');
+    body = `${leak}${scene(x.hmValveHint)}
+      <div class="grid2" style="margin:12px 0"><div class="stat"><small>${x.hmFlow}</small><b>${s.flow.toFixed(1)} L/min</b></div><div class="stat"><small>${x.hmWaterToday}</small><b>${Math.round(s.waterToday)} L</b></div><div class="stat"><small>${x.hmTank}</small><b>${Math.round(s.tank * 100)} %</b></div><div class="stat"><small>${x.hmMeterNow}</small><b>${(s.reading / 1000).toFixed(3)} m³</b></div></div>
+      <section class="card col"><h2>${x.hmValveList}</h2><div class="hvs">${cards}</div>
+      <button class="btn" data-act="hm-leak">${s.leak ? x.hmLeakOff : x.hmLeakOn}</button></section>`;
+  } else if (sec === 'cam') {
+    body = `<section class="card col"><div class="row" style="flex-wrap:wrap"><h2>${x.hmCamTitle}</h2><span class="muted" style="font-size:12px">${x.hmCamHint}</span></div><div id="cam-slot"></div><div class="muted" style="font-size:12px">${x.hmCamNote}</div></section>`;
+  } else {
+    const mods = Object.keys(HM_METERS).map((n) => { const on = hm.model === n, M = HM_METERS[n]; return `<button class="modcard ${on ? 'on' : ''}" data-act="hm-model" data-arg="${esc(n)}" aria-pressed="${on}"><span class="tick">${on ? '✓' : ''}</span><svg viewBox="0 0 200 200" class="mini-dial" aria-hidden="true">${dialSvg('hmm' + n.slice(0, 2), n, { q3: 2.5, R: 160, serial: n === 'SMCV4' ? '69100004' : n === 'ASAHI GMK' ? 'AG-25110388' : '71250012', reading: hm.sim.reading })}</svg><b>${esc(n)}</b><small>${M.how === 'nfc' ? '📶 ' : '📷 '}${esc(tr(M.label))}</small></button>`; }).join('');
+    const last = hm.hist[0], prev = hm.hist[1];
+    const fmtD = (ts) => new Date(ts).toLocaleDateString(S.lang === 'th' ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const fmtT = (ts) => new Date(ts).toLocaleTimeString(S.lang === 'th' ? 'th-TH' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+    const how = (h) => (h === 'nfc' ? '📶 NFC' : h === 'lcd' ? '📷 LCD' : '📷 ' + x.hmMech);
+    const rows = hm.hist.slice(0, 12).map((h, i) => { const nx = hm.hist[i + 1]; const used = nx ? (h.L - nx.L) / 1000 : null; return `<tr><td>${fmtD(h.ts)}<div class="muted" style="font-size:11px">${fmtT(h.ts)}</div></td><td class="num"><b>${(h.L / 1000).toFixed(3)}</b></td><td class="num">${used != null ? used.toFixed(2) : '—'}</td><td class="num">${used != null ? '฿' + Math.round(used * hm.price.water) : '—'}</td><td>${how(h.how)}${h.src === 'sim' || h.src === 'seed' ? ` <span class="muted" style="font-size:11px">(${x.hmSimTag})</span>` : h.src === 'ocr' ? ` <span class="pill run" style="font-size:10px;padding:1px 6px">${x.hmReal}</span>` : ''}</td></tr>`; }).join('');
+    const bars = hm.hist.slice(0, 7).reverse(), usage = bars.map((h, i) => (i ? (h.L - bars[i - 1].L) / 1000 : null)).slice(1), mx = Math.max(1, ...usage);
+    const chart = `<svg viewBox="0 0 520 190" class="hm-chart">${usage.map((u, i) => { const bw = 480 / usage.length, h = u / mx * 130, xx = 30 + i * bw; return `<rect x="${(xx + 8).toFixed(1)}" y="${(160 - h).toFixed(1)}" width="${(bw - 16).toFixed(1)}" height="${h.toFixed(1)}" rx="6" fill="#38BDF8"/><text x="${(xx + bw / 2).toFixed(1)}" y="${(152 - h).toFixed(1)}" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">${u.toFixed(1)}</text><text x="${(xx + bw / 2).toFixed(1)}" y="178" font-size="11" text-anchor="middle" fill="currentColor" opacity="0.7">${new Date(bars[i + 1].ts).toLocaleDateString(S.lang === 'th' ? 'th-TH' : 'en-GB', { month: 'short' })}</text>`; }).join('')}<line x1="30" x2="510" y1="160" y2="160" stroke="currentColor" opacity="0.2"/></svg>`;
+    body = `<section class="card col"><div class="row" style="flex-wrap:wrap"><h2>${x.hmMeterPick}</h2><span class="muted" style="font-size:12px">${x.hmMeterPickHint}</span></div><div class="modgrid">${mods}</div>
+      <div class="hm-how"><b>${HM_METERS[hm.model].how === 'nfc' ? '📶' : '📷'} ${esc(tr(HM_METERS[hm.model].label))}</b><span class="muted">${esc(tr(HM_METERS[hm.model].hint))}</span></div>
+      <button class="btn go" data-act="hm-read">${HM_METERS[hm.model].how === 'nfc' ? '📶' : '📷'} ${x.hmReadNow}</button></section>
+      <div class="grid2" style="margin:14px 0"><div class="stat"><small>${x.hmLastRead}</small><b>${last ? (last.L / 1000).toFixed(3) + ' m³' : '—'}</b></div><div class="stat"><small>${x.hmReadAt}</small><b>${last ? fmtD(last.ts) + ' ' + fmtT(last.ts) : '—'}</b></div><div class="stat"><small>${x.hmUsedSince}</small><b>${last && prev ? ((last.L - prev.L) / 1000).toFixed(2) + ' m³' : '—'}</b></div><div class="stat"><small>${x.hmNowSince}</small><b>${last ? ((hm.sim.reading - last.L) / 1000).toFixed(3) + ' m³' : '—'}</b></div></div>
+      <section class="card col"><h2>${x.hmUsage}</h2>${usage.length ? chart : `<div class="muted">${x.hmNeedTwo}</div>`}</section>
+      <section class="card col" style="margin-top:14px"><h2>${x.hmHistory}</h2><div class="tscroll"><table class="rtable"><thead><tr><th>${x.hmDate}</th><th>${x.hmReadingM3}</th><th>${x.hmUsedM3}</th><th>${x.hmCost}</th><th>${x.hmMethod}</th></tr></thead><tbody>${rows}</tbody></table></div><div class="muted" style="font-size:12px">${x.hmWaterNote}</div></section>`;
+  }
+  return `<div class="row" style="flex-wrap:wrap"><h2>${x.hmTitle}</h2><span class="pill run">${x.hmSub}</span></div>
+    <div class="hsecs">${tabs}</div>${sec !== 'valve' ? leak : ''}${body}`;
+}
+function viewHouseModals() {
+  const x = t();
+  let o = '';
+  if (S.camBig) {
+    const c = CAMS.find((q) => q.id === S.camBig);
+    o += `<div class="scrim center" data-act="cam-close"><div class="dialog cam-dlg" role="dialog" aria-label="${c.id}"><div class="row"><b>${c.id} · ${esc(tr(c.name))}</b><span class="pill run" style="margin-left:auto">LIVE</span></div><div id="camb-slot"></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${CAMS.map((q) => `<button class="chip ${q.id === c.id ? 'on' : ''}" data-act="cam-big" data-arg="${q.id}">${q.id}</button>`).join('')}<span style="margin-left:auto;display:flex;gap:8px"><button class="btn" data-act="cam-snap">📸 ${x.hmSnap}</button><button class="btn" data-act="cam-close">${x.close2}</button></span></div></div></div>`;
+  }
+  if (S.hconfirm) {
+    const v = HV.find((q) => q.id === S.hconfirm.id), open = S.hconfirm.open;
+    o += `<div class="scrim center"><div class="dialog" role="alertdialog"><h3>${open ? x.hmDoOpen : x.hmDoClose}: ${esc(tr(v.name))}</h3><p class="muted">${open ? x.hmConfOpen : x.hmConfClose}</p><div class="row" style="gap:8px"><button class="btn" data-act="hm-conf" data-arg="0">${x.cancel || 'ยกเลิก'}</button><button class="btn ${open ? 'primary' : 'warn'}" style="flex:1" data-act="hm-conf" data-arg="1">${x.hmConfirm}</button></div></div></div>`;
+  }
+  if (S.mread) {
+    const m = S.mread, M = HM_METERS[m.model];
+    let inner = '';
+    if (m.how === 'mech' && m.step !== 'done') {
+      if (m.step === 'ready') {
+        inner = m.cam === 'live'
+          ? `<div class="vf"><video id="mr-video" playsinline muted autoplay></video><div class="vf-guide"><span>${x.hmGuide}</span></div></div><button class="btn go" data-act="ocr-snap">📸 ${x.hmCapture}</button>`
+          : `<div class="ocr-intro"><svg viewBox="0 0 200 200" class="ocr-ill">${dialSvg('ocri', m.model, { R: 80, serial: 'AG-25110388', reading: hm.sim.reading })}<rect x="22" y="52" width="150" height="34" rx="4" fill="none" stroke="#22C55E" stroke-width="3" stroke-dasharray="7 4"/></svg>
+             <div><b>${x.hmOcrHow}</b><ol class="ocr-steps"><li>${x.hmOcr1}</li><li>${x.hmOcr2}</li><li>${x.hmOcr3}</li></ol></div></div>
+             <div class="ocr-btns"><button class="btn primary" data-act="hm-cam-on">📷 ${x.hmOpenCam}</button><label class="btn">🖼️ ${x.hmPickPhoto}<input type="file" accept="image/*" capture="environment" data-ocr-file="1" hidden></label><button class="btn" data-act="ocr-demo">🧪 ${x.hmOcrDemo}</button></div>
+             <div class="muted" style="font-size:12px">${x.hmOcrNote}</div>`;
+      } else if (m.step === 'ocr') {
+        inner = `<div class="ocr-busy">${ocr.url ? `<img src="${ocr.url}" alt="">` : ''}<div class="vf-line on"></div></div><div class="row" style="gap:10px"><span class="spin"></span><b>${esc(m.prog || x.hmOcrRead)}</b></div>`;
+      } else if (m.step === 'adjust' || m.step === 'check') {
+        const b = m.box;
+        const crop = `<div class="crop-wrap"><img src="${ocr.url}" alt=""><div class="crop-box" data-crop="move" style="left:${b.x * 100}%;top:${b.y * 100}%;width:${b.w * 100}%;height:${b.h * 100}%">${Array.from({ length: 6 }, (_, i) => `<i style="left:${((i + 1) / 7 * 100).toFixed(2)}%"></i>`).join('')}<span class="crop-h" data-crop="size"></span></div></div>`;
+        if (m.step === 'adjust') inner = `${crop}<div class="muted" style="font-size:12px">${x.hmAdjust}</div><button class="btn go" data-act="ocr-read">🔍 ${x.hmOcrAgain}</button>`;
+        else {
+          const v = ocrValue(m), last = hm.hist[0], used0 = last ? v - last.L / 1000 : null, used = used0 != null && used0 >= 0 ? used0 : null;
+          const days = last ? Math.max(0.01, (m.ts - last.ts) / 86400000) : null;
+          const warn = used0 != null && used0 < 0 ? (hm.hist.every((h) => h.src === 'seed') ? x.hmOcrReseed : x.hmOcrLower) : used != null && used > 150 ? x.hmOcrJump : '';
+          const drums = m.digits.map((d, i) => `<div class="drum ${i >= 4 ? 'red' : ''} ${m.conf[i] < 70 ? 'low' : ''}"><img src="${m.cells[i]}" alt=""><button data-act="ocr-dig" data-arg="${i}" data-val="-1" aria-label="-">▲</button><b>${d}</b><button data-act="ocr-dig" data-arg="${i}" data-val="1" aria-label="+">▼</button><small>${m.conf[i]}%</small></div>`).join('');
+          inner = `<details class="ocr-photo"><summary>${x.hmOcrPhoto}${m.auto ? ' · ' + x.hmOcrAuto : ''}</summary>${crop}<button class="btn" data-act="ocr-read">🔍 ${x.hmOcrAgain}</button></details>
+            <div class="drums">${drums.slice(0)}</div>
+            <div class="muted" style="font-size:12px">${x.hmOcrTapFix}</div>
+            <div class="ocr-val"><div><small>${x.hmVolume}</small><b>${v.toFixed(3)} m³</b><span>${(v * 1000).toFixed(0)} ${x.hmLitresU}</span></div>
+              <div><small>${x.hmUsedSince}</small><b>${used != null ? used.toFixed(3) + ' m³' : '—'}</b><span>${used != null ? Math.round(used * 1000) + ' ' + x.hmLitresU + ' · ' + x.hmIn + ' ' + days.toFixed(1) + ' ' + x.hmDays : ''}</span></div>
+              <div><small>${x.hmPerDay}</small><b>${used != null && used >= 0 ? Math.round(used * 1000 / days) + ' L' : '—'}</b><span>${x.hmMonthEst} ${used != null && used >= 0 ? (used / days * 30).toFixed(1) + ' m³' : '—'}</span></div>
+              <div><small>${x.hmCostEst}</small><b>${used != null && used >= 0 ? '฿' + Math.round(used * hm.price.water) : '—'}</b><span>${x.hmMonthEst} ${used != null && used >= 0 ? '฿' + Math.round(used / days * 30 * hm.price.water) : '—'}</span></div></div>
+            ${warn ? `<div class="pw-warn">⚠ ${warn}</div>` : ''}
+            <div class="muted" style="font-size:12px">${x.hmDate}: ${new Date(m.ts).toLocaleString(S.lang === 'th' ? 'th-TH' : 'en-GB')}</div>
+            <div class="row" style="gap:8px"><button class="btn" data-act="hm-reread">${x.hmAgain}</button><button class="btn primary" style="flex:1" data-act="ocr-save">💾 ${x.hmSave}</button></div>`;
+        }
+      }
+    } else if (m.step === 'ready' || m.step === 'scan') {
+      const scanning = m.step === 'scan';
+      if (m.how === 'nfc') inner = `<div class="nfc ${scanning ? 'on' : ''}"><svg viewBox="0 0 320 220" class="nfc-svg"><g transform="translate(40,20) scale(0.9)">${dialSvg('nfcd', m.model, { serial: '69100004', reading: hm.sim.reading })}</g>
+          <g class="nfc-phone"><rect x="200" y="40" width="96" height="170" rx="16" fill="#0F172A" stroke="#64748B" stroke-width="3"/><rect x="208" y="54" width="80" height="140" rx="6" fill="#1E293B"/><text x="248" y="120" font-size="26" text-anchor="middle">📶</text><text x="248" y="150" font-size="10" fill="#E2E8F0" text-anchor="middle">NFC</text></g>
+          ${[0, 1, 2].map((i) => `<path class="nfc-w" style="animation-delay:${i * 0.3}s" d="M${178 - i * 12},${100 - i * 12} q ${-14 - i * 6},${20 + i * 12} 0,${40 + i * 24}" fill="none" stroke="#38BDF8" stroke-width="4" stroke-linecap="round"/>`).join('')}</svg>
+          <b>${scanning ? x.hmNfcWait : x.hmNfcTap}</b><span class="muted">${'NDEFReader' in window ? x.hmNfcReal : x.hmNfcSim}</span></div>`;
+      else inner = `<div class="vf ${scanning ? 'on' : ''}">${m.cam === 'live' ? '<video id="mr-video" playsinline muted autoplay></video>' : `<svg viewBox="0 0 200 200" class="vf-sim">${dialSvg('vfd', m.model, { serial: m.model === 'ASAHI GMK' ? 'AG-25110388' : '71250012', reading: hm.sim.reading })}</svg>`}
+          <div class="vf-frame"><i></i><i></i><i></i><i></i><span class="vf-line"></span></div></div>
+          <div class="row" style="gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:12px;flex:1">${tr(M.hint)}</span>${m.cam !== 'live' ? `<button class="btn" data-act="hm-cam-on">📷 ${x.hmOpenCam}</button>` : ''}</div>`;
+      inner += `<button class="btn go" data-act="hm-scan" ${scanning ? 'disabled' : ''}>${scanning ? x.hmReading : m.how === 'nfc' ? '📶 ' + x.hmStartNfc : '📸 ' + x.hmCapture}</button>`;
+    } else {
+      const d = new Date(m.ts), id = m.model === 'SMCV4' ? '69100004' : m.model === 'ASAHI GMK' ? 'AG-25110388' : '71250012';
+      inner = `<div class="mres"><svg viewBox="0 0 200 200" class="mres-d">${dialSvg('mrd', m.model, { serial: id, reading: m.L })}</svg>
+        <dl class="dread big"><dt>${x.hmVolume}</dt><dd><b>${(m.L / 1000).toFixed(m.model === 'ASAHI GMK' ? 4 : 5)} m³</b></dd><dt>${x.hmLitres}</dt><dd>${m.L.toFixed(2)} L</dd><dt>${x.hmDate}</dt><dd>${d.toLocaleDateString(S.lang === 'th' ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</dd><dt>${x.hmTime}</dt><dd>${d.toLocaleTimeString(S.lang === 'th' ? 'th-TH' : 'en-GB')}</dd>
+        <dt>${x.hmMeterId}</dt><dd>${id}</dd><dt>${x.hmMethod}</dt><dd>${m.how === 'nfc' ? '📶 NFC' : m.how === 'lcd' ? '📷 LCD OCR' : '📷 ' + x.hmMech}${m.src === 'sim' ? ` (${x.hmSimTag})` : ''}</dd>${m.how === 'nfc' ? `<dt>${x.hmBattery}</dt><dd>3.14 V · 92%</dd>` : ''}
+        <dt>${x.hmUsedSince}</dt><dd>${m.used != null ? (m.used / 1000).toFixed(3) + ' m³' : '—'}</dd></dl></div>
+        ${m.how !== 'nfc' ? `<label class="hm-edit"><small>${x.hmCheck}</small><input type="number" step="0.001" data-mread="1" value="${(m.edit).toFixed(3)}"><i>m³</i></label>` : ''}
+        <div class="row" style="gap:8px"><button class="btn" data-act="hm-reread">${x.hmAgain}</button><button class="btn primary" style="flex:1" data-act="hm-save">💾 ${x.hmSave}</button></div>`;
+    }
+    o += `<div class="scrim center"><div class="dialog mr-dlg" role="dialog"><div class="row"><b>${x.hmReadNow} · ${esc(m.model)}</b><button class="chip" style="margin-left:auto" data-act="hm-mclose">✕</button></div>${inner}</div></div>`;
+  }
+  return o;
+}
+
 // ---------------------------------------------------------------- plant power (plating + brass rolling)
 const pw = { sim: new PowerSim(), view: null, tariff: { ...TARIFF_DEFAULT }, cost: Object.fromEntries(FIXES.map((f) => [f.id, f.cost])), avg: {} };
 function pwAvg(fx) { const k = fixKey(fx) + JSON.stringify(pw.tariff); return pw.avg[k] || (pw.avg[k] = averages(fx, pw.tariff)); }
@@ -659,7 +953,7 @@ function langButtons() {
 
 function header() {
   const x = t(), open = src.activeAlarms().filter((a) => !a.acked).length;
-  const titles = { home: isDesk() ? x.overview : 'CoreDash Nexus', scada: 'SCADA', power: isDesk() ? x.pwTitle : x.tabPower, bench: isDesk() ? x.benchTitle : x.bench, control: x.control, alerts: x.alerts, report: x.report };
+  const titles = { home: isDesk() ? x.overview : 'CoreDash Nexus', scada: 'SCADA', power: isDesk() ? x.pwTitle : x.tabPower, house: x.hmTitle, bench: isDesk() ? x.benchTitle : x.bench, control: x.control, alerts: x.alerts, report: x.report };
   const conn = src.connected ? '#3B82F6' : '#F59E0B';
   return `<header class="hdr">
     ${badge(34, 41)}
@@ -672,10 +966,10 @@ function header() {
 function tabs() {
   const x = t(), open = src.activeAlarms().some((a) => !a.acked);
   const desk = isDesk();
-  const label = (k) => (k === 'scada' ? 'SCADA' : k === 'home' && desk ? x.overview : k === 'power' ? x.tabPower : x[k]);
+  const label = (k) => (k === 'scada' ? 'SCADA' : k === 'home' && desk ? x.overview : k === 'power' ? x.tabPower : k === 'house' ? (desk ? x.hmTitle : x.tabHouse) : x[k]);
   const brand = desk ? `<div class="side-brand">${badge(40, 48)}<div><b>CoreDash Nexus</b><span>${x.site}</span></div></div>` : '';
   const foot = desk ? `<div class="side-foot"><button data-act="settings">${svg(ICON.gear, 22)}<span>${x.settings}</span></button><div class="devcard side-dev">${badge(96, 117)}<small>${x.devBy}</small><b>${x.devName}</b></div></div>` : '';
-  return `<nav class="tabs" aria-label="tabs">${brand}${['home', 'scada', 'power', 'bench', 'control', 'alerts', 'report'].map((k) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k ? 'page' : 'false'}">${svg(ICON[k === 'power' ? 'bolt' : k], 24)}<span>${label(k)}</span>${k === 'alerts' && open ? '<span class="dot"></span>' : ''}</button>`).join('')}${foot}</nav>`;
+  return `<nav class="tabs" aria-label="tabs">${brand}${['home', 'house', 'scada', 'power', 'bench', 'control', 'alerts', 'report'].map((k) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k ? 'page' : 'false'}">${svg(ICON[k === 'power' ? 'bolt' : k], 24)}<span>${label(k)}</span>${k === 'alerts' && open ? '<span class="dot"></span>' : ''}</button>`).join('')}${foot}</nav>`;
 }
 
 function viewHome() {
@@ -970,12 +1264,12 @@ function render() {
   if (benchView) { const sc = benchView.el.querySelector('.bench-scroll'); if (sc && benchView.el.isConnected) sc.dataset.left = sc.scrollLeft; }
   const scroll = prevMain ? prevMain.scrollTop : 0;
   const prevRp = root.querySelector('.rp-scrim'), rpScroll = prevRp ? prevRp.scrollTop : 0;
-  const views = { home: viewHome, scada: viewScadaTab, power: viewPower, bench: viewBench, control: viewControl, alerts: viewAlerts, report: viewReport };
+  const views = { home: viewHome, house: viewHouse, scada: viewScadaTab, power: viewPower, bench: viewBench, control: viewControl, alerts: viewAlerts, report: viewReport };
   const body = isDesk() && S.tab === 'home'
     ? `<div class="overview"><section class="twin-hero"><div class="row"><h2>${t().twinTitle}</h2></div>${twinBlock()}</section><div class="dgrid"><section class="col">${viewHome()}</section><section class="col">${viewScada()}</section><section class="col">${viewAlerts()}</section></div></div>`
     : `<div class="wrap wrap-${S.tab}">${views[S.tab]()}</div>`;
   root.classList.toggle('desk', isDesk());
-  const html = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() + viewPreview() +
+  const html = header() + `<main>${bypassBanner()}${body}</main>` + tabs() + viewSheet() + viewSettings() + viewBlocked() + viewConfirm() + viewPreview() + viewHouseModals() +
     (S.toast ? `<div class="toast ${S.toast.bad ? 'bad' : ''}" role="status">${esc(S.toast.text)}</div>` : '');
   // update the page in place (no wholesale innerHTML swap): scrolling, focus and animations keep going
   if (!root.querySelector('main')) root.innerHTML = html;
@@ -983,6 +1277,7 @@ function render() {
   mountTwin();
   mountBench();
   mountPower();
+  mountHouse();
   const rp = root.querySelector('.rp-scrim'); if (rp) rp.scrollTop = rpScroll;
   const main = root.querySelector('main');
   if (main && !S.keepScroll) { main.scrollTop = 0; window.scrollTo(0, 0); }
@@ -1135,6 +1430,36 @@ root.addEventListener('click', async (ev) => {
     case 'bench-manual': BS.manual = !BS.manual; break;
     case 'bench-model': bench.setModel(arg); if (bench.fault) bench.injectFault(null); break;
     case 'rp-open': S.preview = true; break;
+    case 'hm-sec': S.hsec = arg; break;
+    case 'hm-dn': hm.sim.night = arg === 'auto' ? null : arg === 'night'; break;
+    case 'hm-light': hm.sim.light[arg] = !hm.sim.light[arg]; break;
+    case 'hm-load': hm.sim.load[arg] = !hm.sim.load[arg]; break;
+    case 'hm-scene': { const L = hm.sim.light, set = (ids, v) => ids.forEach((i) => { L[i] = v; });
+      if (arg === 'home') { set(['L-GATE', 'L-CAR', 'L-EAVE', 'L-LIV', 'L-GDN'], true); }
+      else if (arg === 'night') { set(Object.keys(L), false); set(['L-GATE', 'L-EAVE', 'L-MBR'], true); hm.sim.load['AC-1'] = true; }
+      else if (arg === 'away') { set(Object.keys(L), false); set(['L-GATE', 'L-EAVE', 'L-CAR'], true); hm.sim.load['AC-1'] = false; hm.sim.load['AC-2'] = false; }
+      else set(Object.keys(L), false);
+      toast(t().hmSceneDone); break; }
+    case 'hm-valve': S.hconfirm = { id: arg, open: el.dataset.val === '1' }; break;
+    case 'hm-conf': if (arg === '1' && S.hconfirm) { hm.sim.setValve(S.hconfirm.id, S.hconfirm.open, (src && src.user && src.user.name) || 'App'); toast(t().hmSent); } S.hconfirm = null; break;
+    case 'hm-leak': hm.sim.leak = !hm.sim.leak; if (hm.sim.leak) { for (const id of ['V-GDN', 'V-TANK']) hm.sim.setValve(id, false, 'App'); } break;
+    case 'cam-big': S.camBig = arg; break;
+    case 'cam-close': if (ev.target === el || el.tagName === 'BUTTON') S.camBig = null; break;
+    case 'cam-snap': if (hm.big) { const a = document.createElement('a'); a.href = hm.big.toDataURL('image/jpeg', 0.9); a.download = `${S.camBig}-${Date.now()}.jpg`; document.body.appendChild(a); a.click(); a.remove(); toast(t().hmSnapDone); } break;
+    case 'ocr-demo': await ocrDemo(); break;
+    case 'ocr-snap': await ocrFromCamera(); break;
+    case 'ocr-read': await ocrRead(); break;
+    case 'ocr-dig': { const m = S.mread, i = Number(arg); m.digits[i] = String((Number(m.digits[i]) + Number(el.dataset.val) + 10) % 10); m.conf[i] = 100; break; }
+    case 'ocr-save': { const m = S.mread, L = Math.round(ocrValue(m) * 1000 * 100) / 100;
+      if (hm.hist.length && L < hm.hist[0].L && hm.hist.every((h) => h.src === 'seed')) hm.hist = []; // first real reading: drop the simulated history
+      hm.hist.unshift({ ts: m.ts, L, how: 'mech', model: m.model, src: 'ocr' }); hm.sim.reading = L; saveHist(); stopCamera(); S.mread = null; S.hsec = 'meter'; toast(t().hmSaved); break; }
+    case 'hm-model': hm.model = arg; saveHist(); break;
+    case 'hm-read': S.mread = { model: hm.model, how: HM_METERS[hm.model].how, step: 'ready', cam: 'sim' }; break;
+    case 'hm-cam-on': await startCamera(); break;
+    case 'hm-scan': readMeter(); break;
+    case 'hm-reread': S.mread.step = 'ready'; S.mread.cam = 'sim'; break;
+    case 'hm-mclose': stopCamera(); S.mread = null; break;
+    case 'hm-save': { const m = S.mread; const L = m.how === 'nfc' ? m.L : Math.round((Number(m.edit) || m.L / 1000) * 1000 * 100) / 100; hm.hist.unshift({ ts: m.ts, L, how: m.how, model: m.model, src: m.src }); saveHist(); S.mread = null; S.hsec = 'meter'; toast(t().hmSaved); break; }
     case 'pw-fix': pw.sim.fx = { ...pw.sim.fx, [arg]: !pw.sim.fx[arg] }; break;
     case 'pw-capplain': pw.sim.fx = { ...pw.sim.fx, capPlain: arg === '1' }; break;
     case 'pw-sel': pw.sim.selected = pw.sim.selected === arg ? 'PLANT' : arg; break;
@@ -1175,10 +1500,15 @@ root.addEventListener('change', (ev) => {
   const el = ev.target;
   if (el.dataset && el.dataset.range) { interacting = false; quickSet(el.dataset.range, Number(el.value)); schedule(); }
 });
-root.addEventListener('pointerdown', (ev) => { if (ev.target.type === 'range') interacting = true; });
-root.addEventListener('input', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) S.bypassReason = ev.target.value; if (ev.target.dataset && ev.target.dataset.serial) bench.serials[ev.target.dataset.serial] = ev.target.value.trim(); if (ev.target.dataset && ev.target.dataset.tariff) { const v = Number(ev.target.value); if (Number.isFinite(v) && v >= 0) pw.tariff[ev.target.dataset.tariff] = v; } });
-root.addEventListener('focusin', (ev) => { if (ev.target.dataset && (ev.target.dataset.reason || ev.target.dataset.serial || ev.target.dataset.tariff)) interacting = true; });
-root.addEventListener('focusout', (ev) => { if (ev.target.dataset && (ev.target.dataset.reason || ev.target.dataset.serial || ev.target.dataset.tariff)) { interacting = false; schedule(300); } });
+root.addEventListener('pointerdown', (ev) => { if (ev.target.type === 'range') interacting = true; if (ev.target.closest && ev.target.closest('[data-crop]')) cropDrag(ev); });
+root.addEventListener('change', async (ev) => {
+  if (!(ev.target.dataset && ev.target.dataset.ocrFile) || !ev.target.files || !ev.target.files[0] || !S.mread) return;
+  const url = URL.createObjectURL(ev.target.files[0]);
+  try { const im = await ocrLoadImage(url); await ocrFromImage(im); } catch (_) { toast(t().hmOcrFail, true); } finally { setTimeout(() => URL.revokeObjectURL(url), 30000); }
+});
+root.addEventListener('input', (ev) => { if (ev.target.dataset && ev.target.dataset.reason) S.bypassReason = ev.target.value; if (ev.target.dataset && ev.target.dataset.serial) bench.serials[ev.target.dataset.serial] = ev.target.value.trim(); if (ev.target.dataset && ev.target.dataset.mread && S.mread) S.mread.edit = Number(ev.target.value); if (ev.target.dataset && ev.target.dataset.tariff) { const v = Number(ev.target.value); if (Number.isFinite(v) && v >= 0) pw.tariff[ev.target.dataset.tariff] = v; } });
+root.addEventListener('focusin', (ev) => { if (ev.target.dataset && (ev.target.dataset.reason || ev.target.dataset.serial || ev.target.dataset.tariff || ev.target.dataset.mread)) interacting = true; });
+root.addEventListener('focusout', (ev) => { if (ev.target.dataset && (ev.target.dataset.reason || ev.target.dataset.serial || ev.target.dataset.tariff || ev.target.dataset.mread)) { interacting = false; schedule(300); } });
 window.addEventListener('pointerup', () => { if (interacting) { setTimeout(() => { interacting = false; schedule(); }, 300); } });
 let lastDesk = null; window.addEventListener('resize', () => { if (isDesk() !== lastDesk) { lastDesk = isDesk(); schedule(); } });
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; schedule(); });
@@ -1203,6 +1533,7 @@ function attach(source) {
   if (S.tab === 'report') loadHistory();
   setInterval(() => { if (S.tab === 'report') loadHistory(); }, 60000);
   setInterval(() => { if (S.tab === 'bench') schedule(); }, 500);
+  setInterval(() => { if (S.tab === 'house' && !S.mread) schedule(); }, 1000);
   setInterval(() => { retryDeferred(); if (src && src.interlocks && src.interlocks().some((il) => il.bypass)) schedule(); }, 2000);
   schedule();
 }
