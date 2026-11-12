@@ -36,6 +36,10 @@ function canvasOf(img, sx, sy, sw, sh, dw, dh) {
   const g = c.getContext('2d', { willReadFrequently: true }); g.imageSmoothingQuality = 'high'; g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height); return c;
 }
 // dark ink (black or red) on light drums → black on white, Otsu threshold
+function padWhite(c, pad = 0.18) {
+  const p = Math.round(c.height * pad), o = document.createElement('canvas'); o.width = c.width + 2 * p; o.height = c.height + 2 * p;
+  const og = o.getContext('2d'); og.fillStyle = '#FFFFFF'; og.fillRect(0, 0, o.width, o.height); og.drawImage(c, p, p); return o;
+}
 function clean(c, pad = 0.18) {
   const g = c.getContext('2d', { willReadFrequently: true }), im = g.getImageData(0, 0, c.width, c.height), d = im.data, n = c.width * c.height;
   const v = new Uint8Array(n), hist = new Array(256).fill(0);
@@ -45,6 +49,7 @@ function clean(c, pad = 0.18) {
   for (let i = 0; i < 256; i++) { wB += hist[i]; if (!wB) continue; const wF = n - wB; if (!wF) break; sB += i * hist[i]; const mB = sB / wB, mF = (sum - sB) / wF, b = wB * wF * (mB - mF) ** 2; if (b > best) { best = b; th = i; } }
   for (let i = 0; i < n; i++) { const o = v[i] <= th ? 0 : 255; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = o; d[i * 4 + 3] = 255; }
   g.putImageData(im, 0, 0);
+  if (!pad) return c;
   // white border so the character does not touch the edge
   const p = Math.round(c.height * pad), o = document.createElement('canvas'); o.width = c.width + 2 * p; o.height = c.height + 2 * p;
   const og = o.getContext('2d'); og.fillStyle = '#FFFFFF'; og.fillRect(0, 0, o.width, o.height); og.drawImage(c, p, p); return o;
@@ -52,6 +57,10 @@ function clean(c, pad = 0.18) {
 // keep only the biggest dark blob near the centre of a drum cell (removes drum edges and half-rolled neighbours)
 function isolate(c) {
   const g = c.getContext('2d', { willReadFrequently: true }), W = c.width, H = c.height, im = g.getImageData(0, 0, W, H), d = im.data;
+  const blk = (x, y) => d[(y * W + x) * 4] < 128;
+  // erase near-full-height columns close to the sides and near-full-width rows close to top/bottom (drum edges, frame)
+  for (let x = 0; x < W; x++) { if (x > W * 0.22 && x < W * 0.78) continue; let n = 0; for (let y = 0; y < H; y++) if (blk(x, y)) n++; if (n > H * 0.62) for (let y = 0; y < H; y++) { const i = (y * W + x) * 4; d[i] = d[i + 1] = d[i + 2] = 255; } }
+  for (let y = 0; y < H; y++) { if (y > H * 0.25 && y < H * 0.75) continue; let n = 0; for (let x = 0; x < W; x++) if (blk(x, y)) n++; if (n > W * 0.55) for (let x = 0; x < W; x++) { const i = (y * W + x) * 4; d[i] = d[i + 1] = d[i + 2] = 255; } }
   const lab = new Int32Array(W * H).fill(-1), blobs = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x; if (lab[i] !== -1 || d[i * 4] > 128) continue;
@@ -126,7 +135,7 @@ function classify(c) {
   const best = new Array(10).fill(-1);
   for (const t of templates()) { const sc = corr(gv.v, t.v) - (t.font ? 0.03 : 0) - Math.abs(Math.log((gv.aspect + 0.05) / (t.aspect + 0.05))) * 0.25; if (sc > best[t.d]) best[t.d] = sc; }
   const order = best.map((s, d) => [s, d]).sort((p, q) => q[0] - p[0]);
-  return { d: String(order[0][1]), score: order[0][0], margin: order[0][0] - order[1][0], all: best.map((v) => +v.toFixed(2)), aspect: +gv.aspect.toFixed(2) };
+  return { d: String(order[0][1]), score: order[0][0], margin: order[0][0] - order[1][0], all: best, aspect: +gv.aspect.toFixed(2) };
 }
 
 // Locate the register: OCR the whole photo for digits, keep the straightest row of large, evenly spaced digits,
@@ -187,7 +196,119 @@ function bestRow(syms) {
   }
   return best;
 }
+// ---------- locate by colour: the 3 red litre drums are the most distinctive thing on a mechanical meter
+function components(mask, W, H) {
+  const lab = new Int32Array(W * H).fill(-1), out = [];
+  for (let i = 0; i < W * H; i++) {
+    if (!mask[i] || lab[i] !== -1) continue;
+    const id = out.length, st = [i]; lab[i] = id; let n = 0, sx = 0, sy = 0, x0 = W, x1 = 0, y0 = H, y1 = 0;
+    while (st.length) { const j = st.pop(), x = j % W, y = (j / W) | 0; n++; sx += x; sy += y; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      if (x > 0 && mask[j - 1] && lab[j - 1] === -1) { lab[j - 1] = id; st.push(j - 1); }
+      if (x < W - 1 && mask[j + 1] && lab[j + 1] === -1) { lab[j + 1] = id; st.push(j + 1); }
+      if (y > 0 && mask[j - W] && lab[j - W] === -1) { lab[j - W] = id; st.push(j - W); }
+      if (y < H - 1 && mask[j + W] && lab[j + W] === -1) { lab[j + W] = id; st.push(j + W); } }
+    out.push({ n, cx: sx / n, cy: sy / n, x0, x1, y0, y1, w: x1 - x0 + 1, h: y1 - y0 + 1 });
+  }
+  return out;
+}
+function redDigits(c) {
+  const W = c.width, H = c.height, d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data, m = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) { const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2]; m[i] = r > 70 && r - Math.max(g, b) > 38 && r > Math.max(g, b) * 1.45 ? 1 : 0; }
+  const md = Math.min(W, H);
+  return components(m, W, H).filter((q) => q.h > md * 0.018 && q.h < md * 0.13 && q.h / q.w > 1.05 && q.h / q.w < 6 && q.n / (q.w * q.h) > 0.1 && q.n / (q.w * q.h) < 0.75);
+}
+function redRow(cands) {
+  let best = null;
+  for (const a of cands) for (const b of cands) {
+    if (a === b || b.cx <= a.cx) continue;
+    const h = Math.max(a.h, b.h), dx = b.cx - a.cx, dy = b.cy - a.cy;
+    if (Math.min(a.h, b.h) < h * 0.55 || Math.abs(dy) > h * 0.45 || dx < h * 0.45 || dx > h * 1.5) continue;
+    const row = [a, b];
+    // a third red drum at the same pitch?
+    const c3 = cands.find((q) => q !== a && q !== b && Math.abs(q.cx - (b.cx + dx)) < dx * 0.25 && Math.abs(q.cy - (b.cy + dy)) < h * 0.5);
+    const c0 = cands.find((q) => q !== a && q !== b && Math.abs(q.cx - (a.cx - dx)) < dx * 0.25 && Math.abs(q.cy - (a.cy - dy)) < h * 0.5);
+    if (c0) row.unshift(c0); if (c3) row.push(c3);
+    const score = row.length * 10 + h / 100 - Math.abs(a.h - b.h) / h;
+    if (!best || score > best.score) best = { row, score };
+  }
+  return best && best.row;
+}
+function rotated(c, ang) {
+  const r = document.createElement('canvas'); r.width = c.width; r.height = c.height;
+  const g = r.getContext('2d'); g.fillStyle = '#E5E5E5'; g.fillRect(0, 0, r.width, r.height);
+  g.translate(r.width / 2, r.height / 2); g.rotate(-ang); g.drawImage(c, -c.width / 2, -c.height / 2); return r;
+}
+// ink in a cell: dark or red pixels, used to decide where the black drums are
+function inkStats(c, x0, y0, w, h) {
+  if (x0 < 0 || y0 < 0 || x0 + w > c.width || y0 + h > c.height) return { dark: 0, red: 0, light: 0 };
+  const d = c.getContext('2d', { willReadFrequently: true }).getImageData(Math.round(x0), Math.round(y0), Math.max(1, Math.round(w)), Math.max(1, Math.round(h))).data;
+  let dark = 0, red = 0, light = 0; const n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2], mn = Math.min(r, g, b); if (r - Math.max(g, b) > 50) red++; else if (mn < 90) dark++; else if (mn > 150) light++; }
+  return { dark: dark / n, red: red / n, light: light / n };
+}
+function darkAt(d, W, H, x, y) { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= W || y >= H) return 0; const i = (y * W + x) * 4; return Math.max(d[i], d[i + 1], d[i + 2]) < 80 ? 1 : 0; }
+// the register's black frame has long straight edges: pick the tilt at which a line through the frame is darkest
+function frameAngle(c, cx, cy, span, h, a0) {
+  const W = c.width, H = c.height, d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data;
+  let best = { s: -1, a: a0 };
+  for (let a = a0 - 0.2; a <= a0 + 0.2001; a += 0.006) {
+    const cs = Math.cos(a), sn = Math.sin(a);
+    let top = 0;
+    for (let v = -h * 2.2; v <= h * 2.2; v += 1) {
+      let n = 0;
+      for (let k = 0; k <= 80; k++) { const u = -span / 2 + span * k / 80; n += darkAt(d, W, H, cx + u * cs - v * sn, cy + u * sn + v * cs); }
+      if (n > top) top = n;
+    }
+    if (top > best.s) best = { s: top, a };
+  }
+  return best.a;
+}
+export async function locateByColour(img) {
+  const W0 = img.naturalWidth || img.width, H0 = img.naturalHeight || img.height, sc = 1400 / Math.max(W0, H0);
+  let c = canvasOf(img, 0, 0, W0, H0, W0 * sc, H0 * sc);
+  let row = redRow(redDigits(c));
+  // phone held sideways: try the photo turned a quarter both ways
+  for (const q of [Math.PI / 2, -Math.PI / 2]) {
+    if (row) break;
+    const t2 = document.createElement('canvas'); t2.width = c.height; t2.height = c.width;
+    const g2 = t2.getContext('2d'); g2.translate(t2.width / 2, t2.height / 2); g2.rotate(q); g2.drawImage(c, -c.width / 2, -c.height / 2);
+    const r3 = redRow(redDigits(t2)); if (r3) { c = t2; row = r3; }
+  }
+  if (!row) return null;
+  const h0 = row.reduce((t, q) => t + q.h, 0) / row.length, p0 = row.length > 1 ? (row[row.length - 1].cx - row[0].cx) / (row.length - 1) : h0 * 0.9;
+  const rough = Math.atan2(row[row.length - 1].y0 - row[0].y0, row[row.length - 1].cx - row[0].cx);
+  // centre of the register ≈ 2 drums left of the first red drum
+  const mx = row[0].cx - p0 * 2.5 * Math.cos(rough), my = row[0].cy - p0 * 2.5 * Math.sin(rough);
+  const ang = frameAngle(c, mx, my, p0 * 7.4, h0, rough);
+  const rc = Math.abs(ang) > 0.004 ? rotated(c, ang) : c;
+  const r2 = redRow(redDigits(rc)); if (r2) row = r2;
+  const pitch = row.length > 1 ? (row[row.length - 1].cx - row[0].cx) / (row.length - 1) : p0;
+  const h = Math.max(...row.map((q) => q.h).sort((p, q) => p - q).slice(0, 2));
+  const cyR = row.map((q) => q.cy).sort((p, q) => p - q)[row.length >> 1];
+  // which drums are the red ones found? keep the placement where the 4 cells to the left look like black drums
+  let best = null;
+  for (let first = 4; first <= 6 - (row.length - 1); first++) {
+    const L = row[0].cx - (first + 0.5) * pitch;
+    let s2 = 0;
+    for (let k = 0; k < 4; k++) { const st = inkStats(rc, L + k * pitch + pitch * 0.15, cyR - h * 0.45, pitch * 0.7, h * 0.9); s2 += st.light * 0.5 + Math.min(st.dark, 0.35) - st.red * 2; }
+    if (!best || s2 > best.s) best = { s: s2, L };
+  }
+  const L = best.L, R = L + 7 * pitch;
+  // vertical extent of the drum window: nearest dark frame rows above and below the digits
+  const W = rc.width, H = rc.height, d = rc.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data;
+  const rowDark = (y, x0, x1) => { let n = 0, t = 0; for (let x = x0; x <= x1; x += 2) { n += darkAt(d, W, H, x, y); t++; } return n / t; };
+  let top = null, bot = null;
+  for (let y = Math.round(cyR - h * 0.3); y > cyR - h * 1.6; y--) if (rowDark(y, L + pitch * 0.2, R - pitch * 0.2) > 0.6) { top = y; break; }
+  for (let y = Math.round(cyR + h * 0.3); y < cyR + h * 1.6; y++) if (rowDark(y, L + pitch * 0.2, L + pitch * 3.8) > 0.6) { bot = y; break; }
+  if (top == null) top = cyR - h * 0.85; if (bot == null) bot = cyR + h * 0.85;
+  const box = { x: Math.max(0, L / W), y: Math.max(0, (top + 1) / H), w: (R - L) / W, h: (bot - top - 2) / H };
+  box.w = Math.min(box.w, 1 - box.x);
+  return { image: rc, box, angle: ang * 180 / Math.PI, found: 'red' + row.length, pitch, digitH: h };
+}
+
 export async function locateRegister(img, onProgress) {
+  const byColour = await locateByColour(img);
+  if (byColour) return byColour;
   const w = await getWorker(onProgress);
   const W0 = img.naturalWidth || img.width, H0 = img.naturalHeight || img.height;
   const scale = 1600 / Math.max(W0, H0);
@@ -236,31 +357,45 @@ export async function locateRegister(img, onProgress) {
 }
 
 // Read the 7 drums inside box (fractions of the image). Returns { digits, conf[], m3, litres, cells[] (data URLs for display) }
+async function cellOpinion(w, img, sx, sy, sw, sh) {
+  const cell = canvasOf(img, sx, sy, sw, sh, 64, 64 * sh / sw);
+  const cl = padWhite(isolate(clean(cell, 0)));
+  const big = document.createElement('canvas'); big.width = cl.width * 2; big.height = cl.height * 2; const bg = big.getContext('2d'); bg.imageSmoothingEnabled = false; bg.drawImage(cl, 0, 0, big.width, big.height);
+  const tm = classify(cl);
+  let t = '', cf = 0;
+  for (const psm of ['10', '8']) {
+    await w.setParameters({ tessedit_pageseg_mode: psm });
+    const { data } = await w.recognize(big);
+    t = (data.text || '').replace(/\D/g, '');
+    if (t) { cf = Math.round(data.confidence); t = t[0]; break; }
+  }
+  // fuse: template similarity per digit + a bonus for Tesseract's choice weighted by its confidence
+  const sc = tm ? tm.all.slice() : new Array(10).fill(0);
+  if (t) sc[Number(t)] += 0.35 * Math.max(0, cf) / 100;
+  return { sc, cl, any: !!(tm || t) };
+}
+// Read the drums inside box (fractions of the image). Each drum is read from 5 slightly shifted crops and the
+// votes are combined, so one bad crop (glare, frame edge, rolling digit) does not decide the result.
+// Returns { digits, conf[] (share of crops agreeing, %), m3, litres, cells[] (data URLs for display) }
 export async function readRegister(img, box, opts = {}) {
   const n = opts.drums || 7, w = await getWorker(opts.onProgress);
   const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
   const bx = box.x * W, by = box.y * H, bw = box.w * W, bh = box.h * H, cw = bw / n;
+  const VAR = opts.fast ? [[0, 0]] : [[0, 0], [-0.06, 0], [0.06, 0], [0, -0.07], [0, 0.07]];
   const digits = [], conf = [], cells = [];
   for (let k = 0; k < n; k++) {
-    const mx = cw * 0.1;
-    const cell = canvasOf(img, bx + k * cw + mx, by, cw - 2 * mx, bh, 64, 64 * bh / (cw - 2 * mx));
-    const cl = isolate(clean(cell));
-    const big = document.createElement('canvas'); big.width = cl.width * 2; big.height = cl.height * 2; const bg = big.getContext('2d'); bg.imageSmoothingEnabled = false; bg.drawImage(cl, 0, 0, big.width, big.height);
-    // 1) template matching, 2) Tesseract as a second opinion; agreement → high confidence
-    const tm = classify(cl);
-    let t = '', cf = 0;
-    for (const psm of ['10', '8']) {
-      await w.setParameters({ tessedit_pageseg_mode: psm });
-      const { data } = await w.recognize(big);
-      t = (data.text || '').replace(/\D/g, '');
-      if (t) { cf = Math.round(data.confidence); t = t[0]; break; }
+    const mx = cw * 0.13, tot = new Array(10).fill(0), votes = new Array(10).fill(0);
+    let shown = null, any = false;
+    for (const [dx, dy] of VAR) {
+      const o = await cellOpinion(w, img, bx + k * cw + mx + dx * cw, by + dy * bh, cw - 2 * mx, bh);
+      if (!shown) shown = o.cl;
+      if (!o.any) continue; any = true;
+      o.sc.forEach((v, i) => { tot[i] += v; });
+      votes[o.sc.indexOf(Math.max(...o.sc))]++;
     }
-    let dg = '?', c2 = 0;
-    if (tm && t && tm.d === t) { dg = t; c2 = Math.min(99, Math.max(cf, 85)); }
-    else if (tm && (tm.margin > 0.06 || !t || cf < 60)) { dg = tm.d; c2 = Math.round(Math.min(90, 40 + tm.margin * 300)); }
-    else if (t) { dg = t; c2 = Math.min(80, cf); }
-    digits.push(dg); conf.push(c2); cells.push(cl.toDataURL('image/png'));
-    if (opts.debug) opts.debug.push({ tm: tm && { d: tm.d, all: tm.all, a: tm.aspect }, t, cf });
+    const best = tot.indexOf(Math.max(...tot)), nv = votes.reduce((a2, b2) => a2 + b2, 0) || 1;
+    digits.push(any ? String(best) : '?'); conf.push(any ? Math.round(votes[best] / nv * 100) : 0); cells.push(shown.toDataURL('image/png'));
+    if (opts.onCell) opts.onCell(k + 1, n);
   }
   const s = digits.join('');
   const ok = !s.includes('?');

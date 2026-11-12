@@ -597,3 +597,10 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 .ocr-val { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ocr-val > div { background: var(--sb); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; }
 .ocr-val small { font-size: 11px; color: var(--mu); } .ocr-val b { font-family: 'Space Grotesk', sans-serif; font-size: 19px; color: var(--tx); } .ocr-val span { font-size: 11px; color: var(--t2); }
+.ocr-main { width: 100%; display: flex; align-items: center; justify-content: center; min-height: 60px; cursor: pointer; }
+.cam-err { display: flex; flex-direction: column; gap: 6px; } .cam-err b { color: var(--tx); } .cam-err .btn { align-self: flex-start; min-height: 40px; padding: 8px 14px; text-decoration: none; }
+.vf { aspect-ratio: 3 / 4; }
+.vf-guide { top: 43%; height: 14%; left: 6%; right: 6%; transition: border-color .2s; border-color: #F59E0B; }
+.vf-guide.ok { border-color: #22C55E; }
+.scan-msg { background: rgba(0,0,0,.6); padding: 4px 10px; border-radius: 999px; transform: translateY(160%) !important; white-space: nowrap; }
+.scan-msg.ok { background: #16A34A; }
