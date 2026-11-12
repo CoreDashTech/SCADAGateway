@@ -20,6 +20,13 @@ const T = {
   s4: B('ดูจากนอกบ้าน: ใช้ Tailscale หรือ Cloudflare Tunnel — ห้ามเปิดพอร์ตกล้องออกอินเทอร์เน็ต', 'From outside: use Tailscale or Cloudflare Tunnel — never port-forward the cameras'),
   https: B('หน้านี้เปิดแบบ https แต่เกตเวย์เป็น http เบราว์เซอร์จะบล็อกภาพ — เปิดแอปจากเกตเวย์โดยตรง หรือใช้ Tailscale (https)', 'This page is https but the gateway is http, so the browser will block the video — open the app from the gateway itself, or use Tailscale (https)'),
   noPin: B('เกตเวย์ยังไม่ได้ตั้งรหัสผ่านเจ้าของบ้าน (CAM_OWNER_PASSWORD)', 'The gateway has no owner password yet (CAM_OWNER_PASSWORD)'),
+  v3T: B('กล้องบ้านเลขที่ 555', 'Cameras · House No. 555'),
+  v3Tap: B('แตะเพื่อเปิดดูภาพสด', 'tap to watch live'),
+  v3Open: B('เปิดแอป V380 Pro', 'Open the V380 Pro app'),
+  v3Sub: B('ภาพสด · หมุนกล้อง · พูดผ่านกล้อง · ย้อนดูบันทึก', 'Live view · pan/tilt · talk · playback'),
+  v3Desk: B('เปิดจากมือถือที่ติดตั้งแอป V380 Pro', 'Open this on a phone with V380 Pro installed'),
+  v3Note: B('แอปจะเปิดที่รายการกล้อง แล้วแตะกล้องที่ต้องการ · ถ้ายังไม่มีแอปจะพาไปหน้าดาวน์โหลด · ถ้าเปิดจาก LINE/Facebook ให้เปิดหน้านี้ใน Chrome ก่อน', 'The app opens on its camera list; tap the camera you want · without the app you go to the store · from LINE/Facebook, open this page in Chrome first'),
+  v3Rtsp: B('อนาคต: ดูภาพในแอป CoreDash โดยตรง (ต้องใช้กล้องที่เปิด RTSP)', 'Later: video inside CoreDash (needs an RTSP camera)'),
   demoOk: B('รหัสผ่านถูกต้อง · โหมดสาธิตยังไม่มีกล้องจริงให้แสดง', 'Password accepted · demo mode has no real cameras to show')
 };
 // Demo mode only gates the setup guide (there is no video without the gateway); the real check is on the gateway.
@@ -61,7 +68,7 @@ export function createRealCamView({ lang = () => 'th', live = () => null, onToas
         if (r.ok) { st.session = { token: j.token, exp: j.exp }; st.cams = j.cameras || []; }
         else if (j.error === 'LOCKED') fail(x('locked'));
         else if (j.error === 'BAD_PIN') fail(`${x('bad')} · ${x('left')} ${j.left}`);
-        else if (j.error === 'NO_PIN') fail(x('noPin'));
+        else if (j.error === 'NO_PIN') { if (await pbkdf2(st.pin) === DEMO_PW.hash) st.demoOk = true; else fail(x('bad')); }
         else fail(j.message || 'HTTP ' + r.status);
       }
     } catch (e) { fail(e.message); }
@@ -78,15 +85,27 @@ export function createRealCamView({ lang = () => 'th', live = () => null, onToas
       <button type="submit" class="btn primary rc-go" ${st.busy ? 'disabled' : ''}>🔓 ${x('unlock')}</button>
     </form>`;
   }
+  // V380 Pro opens the owner's own app (the cameras' cloud protocol is closed, so video stays in that app)
+  const V380 = { android: 'com.macrovideo.v380pro', ios: 'https://apps.apple.com/app/id1388988209', play: 'https://play.google.com/store/apps/details?id=com.macrovideo.v380pro' };
+  const platform = () => { const u = navigator.userAgent || ''; return /Android/i.test(u) ? 'android' : /iPhone|iPad|iPod/i.test(u) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : 'desktop'; };
+  const v380Href = () => (platform() === 'android' ? `intent://#Intent;package=${V380.android};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;S.browser_fallback_url=${encodeURIComponent(V380.play)};end` : platform() === 'ios' ? V380.ios : V380.play);
   function guide() {
     const mixed = live() && location.protocol === 'https:' && live().base.startsWith('http:');
+    const pf = platform();
+    const cams = [['โรงรถ', 'Garage', '🚗'], ['ข้างบ้าน', 'Side of the house', '🏡']];
     return `<div class="rc-guide">
-      ${st.demoOk ? `<div class="rc-ok">✓ ${x('demoOk')}</div>` : ''}
+      <div class="rc-v3">
+        <div class="rc-v3-h"><span class="rc-rec"></span><b>${x('v3T')}</b><button class="btn" data-rc="lock">🔒 ${x('lockNow')}</button></div>
+        <div class="rc-v3-cams">${cams.map(([th, en, ic]) => `<a class="rc-v3-cam" href="${v380Href()}" rel="noopener" data-rc-v380><span class="rc-v3-ic">${ic}</span><span><b>${L() === 'th' ? th : en}</b><small>V380 · ${x('v3Tap')}</small></span><span class="rc-v3-go">▶</span></a>`).join('')}</div>
+        <a class="rc-v3-btn" href="${v380Href()}" rel="noopener" data-rc-v380><span class="rc-v3-logo">V380</span><span><b>${x('v3Open')}</b><small>${pf === 'desktop' ? x('v3Desk') : x('v3Sub')}</small></span><span>↗</span></a>
+        ${pf === 'desktop' ? `<div class="rc-v3-stores"><a href="${V380.play}" target="_blank" rel="noopener">Google Play</a><a href="${V380.ios}" target="_blank" rel="noopener">App Store</a></div>` : ''}
+        <small class="muted">${x('v3Note')}</small>
+      </div>
       ${mixed ? `<div class="rc-warn">⚠ ${x('https')}</div>` : ''}
-      <b>📡 ${x('noGw')}</b><p>${x('noGwD')}</p>
-      <div class="rc-flow"><span>📷 V380 ×2</span><em>RTSP</em><span>📶 Wi-Fi Router</span><em>LAN</em><span class="gold">CoreDash Gateway</span><em>MJPEG</em><span>📱 ${L() === 'th' ? 'แอปนี้' : 'this app'}</span></div>
-      <b>${x('steps')}</b><ol><li>${x('s1')}</li><li>${x('s2')}</li><li>${x('s3')}</li><li>${x('s4')}</li></ol>
-      <button class="btn" data-rc="lock">🔒 ${x('lockNow')}</button></div>`;
+      <details class="rc-more"><summary>📡 ${x('v3Rtsp')}</summary>
+        <p>${x('noGwD')}</p>
+        <div class="rc-flow"><span>📷 V380 ×2</span><em>RTSP</em><span>📶 Wi-Fi Router</span><em>LAN</em><span class="gold">CoreDash Gateway</span><em>MJPEG</em><span>📱 ${L() === 'th' ? 'แอปนี้' : 'this app'}</span></div>
+        <ol><li>${x('s1')}</li><li>${x('s2')}</li><li>${x('s3')}</li><li>${x('s4')}</li></ol></details></div>`;
   }
   const remain = () => { const s = Math.max(0, Math.round((st.session.exp - Date.now()) / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   function camTile(c) {

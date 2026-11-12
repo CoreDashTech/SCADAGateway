@@ -777,3 +777,17 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 .rc-pwbox input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: #F8FAFC; font: 600 18px 'Space Grotesk', sans-serif; letter-spacing: 1.5px; padding: 10px 0; }
 .rc-pwbox input::placeholder { color: #64748B; letter-spacing: 0; font-weight: 400; font-size: 15px; }
 .rc-eye { border: 0; background: transparent; font-size: 18px; cursor: pointer; padding: 6px; border-radius: 10px; } .rc-eye:hover { background: rgba(212,176,106,.12); }
+.rc-v3 { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid rgba(212,176,106,.5); color: #E2E8F0;
+  background: radial-gradient(120% 100% at 0% 0%, rgba(212,176,106,.16), transparent 55%), linear-gradient(160deg, #0E1530, #070A14); }
+.rc-v3-h { display: flex; align-items: center; gap: 8px; } .rc-v3-h b { flex: 1; color: #F8E7B0; font-size: 16px; }
+.rc-v3-cams { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.rc-v3-cam { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; text-decoration: none; color: inherit; background: rgba(255,255,255,.04); border: 1px solid rgba(148,163,184,.2); transition: border-color .15s, transform .1s; }
+.rc-v3-cam:hover { border-color: #D4B06A; } .rc-v3-cam:active { transform: scale(.98); }
+.rc-v3-cam b { display: block; font-size: 15px; } .rc-v3-cam small { color: #94A3B8; font-size: 12px; } .rc-v3-cam > span:nth-child(2) { flex: 1; }
+.rc-v3-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; background: #0B1226; border: 1px solid rgba(212,176,106,.4); }
+.rc-v3-go { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #F3D99A, #B48B3E); color: #1A1206; font-size: 13px; }
+.rc-v3-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; text-decoration: none; color: #1A1206; background: linear-gradient(180deg, #F8E7B0, #C99B45); box-shadow: 0 8px 22px rgba(212,176,106,.25); font-size: 15px; }
+.rc-v3-btn > span:nth-child(2) { flex: 1; } .rc-v3-btn b { display: block; font-size: 16px; } .rc-v3-btn small { font-size: 12px; opacity: .8; }
+.rc-v3-logo { font: 800 13px 'Space Grotesk', sans-serif; letter-spacing: .5px; color: #F8FAFC; background: linear-gradient(135deg, #2F6BFF, #1EC8FF); border-radius: 12px; padding: 12px 8px; }
+.rc-v3-stores { display: flex; gap: 10px; } .rc-v3-stores a { color: #F3D99A; font-size: 13px; }
+.rc-more { margin-top: 6px; } .rc-more summary { cursor: pointer; font-weight: 600; font-size: 13px; padding: 6px 0; } .rc-more[open] { display: flex; flex-direction: column; gap: 8px; }

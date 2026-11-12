@@ -1,6 +1,6 @@
 // CoreDash Nexus service worker: caches the app shell so the app opens instantly and offline.
 // Live data (/api, /ws) always goes to the network.
-const CACHE = 'coredash-app-v19';
+const CACHE = 'coredash-app-v20';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './coredash-client.mjs', './manifest.webmanifest', './twin.js', './bench.js', './report.js', './power.js', './power-sim.js', './home.js', './meter-ocr.js', './pq.js', './pq-model.js', './realcam.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png',
