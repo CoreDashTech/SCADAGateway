@@ -10,9 +10,12 @@
  *     ระบบจะสร้างแผ่นงาน "บันทึกมาตร", "สรุปรายเดือน", "แดชบอร์ด" พร้อมกราฟ
  *  5. ทำให้ใช้งานได้ (Deploy) → การทำให้ใช้งานได้รายการใหม่ → ประเภท "เว็บแอป"
  *     เรียกใช้ในฐานะ: ฉัน · ผู้มีสิทธิ์เข้าถึง: ทุกคน → ทำให้ใช้งานได้ → คัดลอก URL (ลงท้าย /exec)
- *  6. ในแอป: บ้านพักอาศัย → มาตรน้ำ → Google Sheets → วาง URL และรหัสลับ → ทดสอบการเชื่อมต่อ
+ *  6. กลับมาที่ชีต → เมนู CoreDash → เชื่อมต่อแอปมือถือ → ส่งลิงก์เข้าอีเมล/คัดลอก แล้วเปิดลิงก์บนมือถือ
+ *     แอปจะตั้งค่าเองทั้งหมด (หรือวาง URL และรหัสลับในแอปเองที่ บ้านพักอาศัย → มาตรน้ำ → Google Sheets)
  */
 const API_KEY = 'เปลี่ยนเป็นรหัสลับของคุณ';
+// ที่อยู่แอป CoreDash Nexus (ใช้สร้างลิงก์ "เชื่อมต่อแอปมือถือ" — แก้ถ้าติดตั้งแอปไว้ที่อื่น)
+const APP_URL = 'https://coredashtech.github.io/SCADAGateway/app/';
 const LOG = 'บันทึกมาตร';
 const MONTH = 'สรุปรายเดือน';
 const DASH = 'แดชบอร์ด';
@@ -56,7 +59,7 @@ function setup() {
   dash.getRange('A1').setValue('CoreDash AquaLog · แดชบอร์ดการใช้น้ำ').setFontSize(18).setFontWeight('bold').setFontColor('#0B3954');
   const kpi = [
     ['ค่ามาตรล่าสุด (m³)', `=IFERROR(INDEX(SORT(FILTER('${LOG}'!H2:H,'${LOG}'!B2:B<>""),FILTER('${LOG}'!B2:B,'${LOG}'!B2:B<>""),FALSE),1),"-")`, '#,##0.000'],
-    ['อ่านล่าสุดเมื่อ', `=IFERROR(MAX('${LOG}'!B2:B),"-")`, 'd mmm yyyy hh:mm'],
+    ['อ่านล่าสุดเมื่อ', `=IF(COUNT('${LOG}'!B2:B)=0,"-",MAX('${LOG}'!B2:B))`, 'd mmm yyyy hh:mm'],
     ['ใช้น้ำเดือนนี้ (m³)', `=SUMIFS('${LOG}'!J2:J,'${LOG}'!C2:C,">="&EOMONTH(TODAY(),-1)+1)`, '#,##0.000'],
     ['เฉลี่ยต่อวัน 30 วันล่าสุด (ลิตร)', `=IFERROR(SUMIFS('${LOG}'!J2:J,'${LOG}'!C2:C,">="&TODAY()-30)*1000/30,0)`, '#,##0'],
     ['ค่าน้ำเดือนนี้ (บาท)', `=SUMIFS('${LOG}'!M2:M,'${LOG}'!C2:C,">="&EOMONTH(TODAY(),-1)+1)`, '#,##0'],
@@ -81,8 +84,42 @@ function setup() {
   dash.insertChart(dash.newChart().setChartType(Charts.ChartType.COLUMN)
     .addRange(mon.getRange('A1:A60')).addRange(mon.getRange('C1:C60')).setNumHeaders(1).setPosition(27, 5, 0, 0)
     .setOption('title', 'ค่าน้ำโดยประมาณรายเดือน (บาท)').setOption('legend', { position: 'none' }).setOption('colors', ['#F59E0B']).setOption('width', 620).setOption('height', 300).build());
+  dash.getRange('A8').setValue('กราฟจะแสดงเมื่อมีการบันทึกค่ามาตรจากแอปอย่างน้อย 2 ครั้ง').setFontColor('#94A3B8').setFontStyle('italic');
+  // remove the empty default sheet ("Sheet1" / "แผ่น1")
+  ss.getSheets().forEach((sh) => { if ([LOG, MONTH, DASH].indexOf(sh.getName()) < 0 && sh.getLastRow() === 0 && ss.getSheets().length > 3) ss.deleteSheet(sh); });
   ss.setActiveSheet(dash);
   return 'ตั้งค่าเรียบร้อย';
+}
+
+// ---------- menu in the sheet: one-tap link that configures the phone app
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('CoreDash').addItem('เชื่อมต่อแอปมือถือ', 'showConnect').addItem('สร้างแผ่นงาน/กราฟใหม่ (setup)', 'setup').addToUi();
+}
+function connectLink_() {
+  const url = ScriptApp.getService().getUrl();
+  if (!url) return null;
+  const payload = Utilities.base64EncodeWebSafe(JSON.stringify({ u: url, k: API_KEY, n: SpreadsheetApp.getActiveSpreadsheet().getName() }), Utilities.Charset.UTF_8);
+  return APP_URL + '#aqualog=' + payload;
+}
+function showConnect() {
+  const ui = SpreadsheetApp.getUi();
+  if (!API_KEY || API_KEY.length < 8 || API_KEY.indexOf('เปลี่ยน') === 0) { ui.alert('ตั้งค่า API_KEY ในสคริปต์ก่อน (อย่างน้อย 8 ตัวอักษร)'); return; }
+  const link = connectLink_();
+  if (!link) { ui.alert('ยังไม่ได้ทำให้ใช้งานได้ (Deploy) เป็นเว็บแอป\n\nApps Script → ทำให้ใช้งานได้ → การทำให้ใช้งานได้รายการใหม่ → เว็บแอป\nเรียกใช้ในฐานะ: ฉัน · ผู้มีสิทธิ์เข้าถึง: ทุกคน'); return; }
+  const t = HtmlService.createTemplate(`<div style="font-family:Sarabun,Arial,sans-serif;font-size:14px;line-height:1.6">
+    <p><b>เปิดลิงก์นี้บนมือถือ</b> แอป CoreDash Nexus จะเชื่อมกับชีตนี้ให้อัตโนมัติ (ไม่ต้องกรอกอะไร)</p>
+    <textarea id="l" readonly style="width:100%;height:84px;font-size:12px"><?= link ?></textarea>
+    <p><button onclick="document.getElementById('l').select();document.execCommand('copy');this.textContent='คัดลอกแล้ว ✓'">คัดลอกลิงก์</button>
+    <button onclick="this.disabled=true;google.script.run.withSuccessHandler(function(m){document.getElementById('s').textContent=m}).mailLink()">ส่งลิงก์เข้าอีเมลของฉัน</button>
+    <a href="<?= link ?>" target="_blank">เปิดแอป</a></p><p id="s" style="color:#15803D"></p>
+    <p style="color:#B45309;font-size:12px">ลิงก์มีรหัสลับอยู่ข้างใน อย่าแชร์ให้คนอื่น</p></div>`);
+  t.link = link;
+  ui.showModalDialog(t.evaluate().setWidth(480).setHeight(330), 'เชื่อมต่อแอปมือถือ');
+}
+function mailLink() {
+  const to = Session.getEffectiveUser().getEmail(), link = connectLink_();
+  MailApp.sendEmail(to, 'ลิงก์เชื่อมต่อ CoreDash AquaLog', 'เปิดลิงก์นี้บนมือถือเพื่อเชื่อมแอปกับชีตบันทึกมาตรน้ำ:\n\n' + link + '\n\nลิงก์มีรหัสลับ อย่าส่งต่อ');
+  return 'ส่งไปที่ ' + to + ' แล้ว';
 }
 
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }

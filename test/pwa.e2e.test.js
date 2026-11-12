@@ -202,6 +202,26 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     await shot('07d-power');
     await click('[data-act="pw-preset"][data-arg="none"]');
 
+    // power quality: three PW3198 cards live, APF switch changes grid THD-I, CSV import plots
+    await click('[data-act="tab"][data-arg="pq"]');
+    await page.waitForSelector('.pq-card');
+    assert.strictEqual(await page.$$eval('.pq-card', (c) => c.length), 3);
+    assert.ok(await until(async () => (await page.$eval('[data-b="PQ-MAIN.P"]', (e) => e.textContent)) !== '—'), 'MAIN GRID shows kW');
+    const thdI = async () => parseFloat(await page.$eval('[data-b="PQ-MAIN.Ithd"]', (e) => e.textContent));
+    assert.ok((await thdI()) < 8, 'APF on: grid THD-I low');
+    await page.$eval('[data-pq="apf"]', (e) => e.click());
+    assert.ok(await until(async () => (await thdI()) > 20), 'APF off: grid THD-I rises to the load level');
+    await page.$eval('[data-pq="apf"]', (e) => e.click());
+    for (const tb of ['wave', 'harm', 'trend', 'events']) { await page.$eval(`[data-pq="tab"][data-arg="${tb}"]`, (e) => e.click()); await page.waitForSelector(`[data-cv]`); }
+    await page.$eval('[data-pq="tab"][data-arg="files"]', (e) => e.click());
+    await page.waitForSelector('[data-pq-file]');
+    const csv = path.join(require('os').tmpdir(), 'pq-import.csv');
+    fs.writeFileSync(csv, 'Date,Time,P_sum[kW],PF_sum,Ithd_max[%]\n' + Array.from({ length: 60 }, (_, i) => `2026-11-12,10:${String(i).padStart(2, '0')}:00,${400 + i},0.9${i % 10},${30 - i / 10}`).join('\n'));
+    const inp = await page.$('[data-pq-file]'); await inp.uploadFile(csv);
+    await page.waitForSelector('[data-cv="file"]');
+    assert.ok((await page.$eval('.pq-fv', (e) => e.textContent)).includes('60'), 'imported 60 rows');
+    await shot('07f-pq');
+
     // report
     await click('[data-act="tab"][data-arg="report"]');
     await page.waitForSelector('.devcard.gold');

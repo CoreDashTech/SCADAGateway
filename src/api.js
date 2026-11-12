@@ -1,4 +1,5 @@
 'use strict';
+const path = require('path');
 // REST + WebSocket API used by the CoreDash Nexus web SCADA and mobile app.
 //
 // REST (Authorization: Bearer <token>)
@@ -89,8 +90,22 @@ function createServer(gw) {
     res.json(s);
   });
 
+  // ---- Power quality (Hioki PW3198 over LAN: live via communication commands, files via FTP) ----
+  app.get('/api/pq', auth(), (req, res) => res.json(gw.pq.summary()));
+  app.get('/api/pq/history', auth(), (req, res) => res.json(gw.pq.history(Math.min(72, Number(req.query.hours) || 24))));
+  app.post('/api/pq/apf', auth('engineer'), wrap((req) => { const r = gw.pq.setApf(req.body.on, req.body.reactive); audit.append({ action: 'pq-apf', user: req.user.id, on: r.on }); return r; }));
+  app.get('/api/pq/:id/files', auth(), wrap((req) => gw.pq.files(req.params.id, String(req.query.dir || '/'))));
+  app.get('/api/pq/:id/file', auth(), async (req, res) => {
+    try {
+      const p = String(req.query.path || '');
+      if (!p || p.includes('..')) return res.status(400).json({ error: 'BAD_PATH' });
+      const buf = await gw.pq.file(req.params.id, p);
+      res.set('Content-Disposition', `attachment; filename="${path.basename(p).replace(/"/g, '')}"`);
+      res.type(p.toLowerCase().endsWith('.csv') ? 'text/csv' : 'application/octet-stream').send(buf);
+    } catch (e) { res.status(e.status || 502).json({ error: e.code || 'FTP_ERROR', message: e.message }); }
+  });
+
   // ---- Installable mobile web app (PWA) ---------------------------------------
-  const path = require('path');
   const appDir = path.join(__dirname, '..', 'app');
   app.get('/', (req, res) => res.redirect('/app/'));
   app.get('/app/sw.js', (req, res) => { res.set('Service-Worker-Allowed', '/app/'); res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(appDir, 'sw.js')); });

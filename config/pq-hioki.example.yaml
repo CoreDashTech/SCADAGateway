@@ -1,0 +1,49 @@
+# CoreDash Nexus — Hioki PW3198 power-quality analysers on the LAN (add this "pq:" block to your site YAML).
+#
+# Wiring (no USB, no SD-card swapping):
+#   PW3198 #2 MAIN GRID ─┐
+#   PW3198 #3 LOAD ──────┼── LAN switch ── CoreDash Gateway (mini-PC / Raspberry Pi) ── Wi-Fi / 4G ── phones, tablets, PCs
+#   PW3198 #6 APF ───────┘
+#
+# On each analyser: SYSTEM → Interface → LAN: set a fixed IP, subnet mask and gateway; turn FTP/HTTP authentication ON
+# (user + password) so nobody else on the network can delete files. Recording carries on while the gateway reads.
+#
+#   live values   → "communication commands" over TCP (commandPort)  — every pollMs
+#   recorded data → the analyser's FTP server (internal memory / SD)  — browse + download from the app
+#   remote screen → http://<ip>/  (the analyser's own HTTP server; open from a device on the same LAN)
+#
+# IMPORTANT: the command strings and port below are PLACEHOLDERS. Copy the exact query commands and the
+# communication port for your model and firmware from Hioki's "Communication Command Instruction Manual".
+# Each query returns a comma-separated list; "fields" names the values in order (U1..U3, I1..I4, P1..P3, P, Q, S,
+# PF, DPF, F, UTHD1..3, ITHD1..3, KF, UUNB, WP …). Responses with header+value pairs are mapped automatically.
+pq:
+  instruments:
+    - id: PQ-MAIN
+      no: 2
+      role: grid
+      name: MAIN GRID
+      host: 192.168.10.62
+      commandPort: 3390          # check the manual / instrument LAN screen
+      pollMs: 1000
+      ftp: { user: coredash, passwordEnv: PQ_FTP_PASSWORD }
+      queries:
+        - cmd: ':MEASure? U1,U2,U3,I1,I2,I3,I4'          # PLACEHOLDER
+          fields: [U1, U2, U3, I1, I2, I3, I4]
+        - cmd: ':MEASure? P1,P2,P3,P,Q,S,PF,DPF,F'        # PLACEHOLDER
+          fields: [P1, P2, P3, P, Q, S, PF, DPF, F]
+        - cmd: ':MEASure? UTHD1,UTHD2,UTHD3,ITHD1,ITHD2,ITHD3,KF,UUNB'   # PLACEHOLDER
+          fields: [UTHD1, UTHD2, UTHD3, ITHD1, ITHD2, ITHD3, KF, UUNB]
+    - id: PQ-LOAD
+      no: 3
+      role: load
+      name: LOAD
+      host: 192.168.10.63
+      commandPort: 3390
+      queries: []                # same as above
+    - id: PQ-APF
+      no: 6
+      role: apf
+      name: APF
+      host: 192.168.10.66
+      commandPort: 3390
+      queries: []                # same as above

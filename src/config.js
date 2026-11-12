@@ -66,6 +66,7 @@ function normalizeConfig(raw, { env = process.env, baseDir = process.cwd() } = {
     ch.id = id;
   }
   for (const d of cfg.devices) if (d.passwordEnv) d.password = env[d.passwordEnv];
+  for (const i of (cfg.pq && cfg.pq.instruments) || []) if (i.ftp && i.ftp.passwordEnv) i.ftp.password = env[i.ftp.passwordEnv];
 
   // SIMULATE=1: every device is served by the built-in plant simulator.
   cfg.simulate = env.SIMULATE === '1' || cfg.simulate === true;
