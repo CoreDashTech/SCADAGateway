@@ -1,0 +1,31 @@
+# CoreDash Nexus — real cameras for the house page (add this "cameras:" block to the home gateway's YAML).
+#
+#   V380 camera ×2 ── Wi-Fi ──► home router ◄── LAN/Wi-Fi ── CoreDash Gateway (Raspberry Pi / mini PC / laptop)
+#                                                              └─ ffmpeg: RTSP → MJPEG for the web app
+#
+# 1) In each V380 camera turn on RTSP/ONVIF (V380 Pro app → camera settings → ONVIF, or ceshi.ini on the SD card)
+#    and set a camera password. Reserve the camera IPs in the router.
+# 2) Test in VLC first:  rtsp://admin:<camera-password>@192.168.1.31:554/live/ch00_1   (ch00_0 = small stream)
+# 3) Secrets go in the gateway's environment (.env), never in this file or the web app:
+#       CAM_OWNER_PASSWORD='<your-password>'  # owner password for the "Real cameras" screen (quote it if it has / or spaces)
+#       CAM_GARAGE_RTSP=rtsp://admin:xxxx@192.168.1.31:554/live/ch00_1
+#       CAM_SIDE_RTSP=rtsp://admin:xxxx@192.168.1.32:554/live/ch00_1
+#       CAM_ONVIF_USER=admin
+#       CAM_ONVIF_PASSWORD=xxxx
+# 4) The gateway needs ffmpeg (Raspberry Pi OS / Ubuntu: sudo apt install ffmpeg; Docker image: apk add ffmpeg).
+# 5) From outside the house use Tailscale or a Cloudflare Tunnel. Do NOT port-forward the cameras or the gateway.
+cameras:
+  - id: CAM-GARAGE
+    name: โรงรถ
+    nameEn: Garage
+    rtspEnv: CAM_GARAGE_RTSP
+    fps: 10            # frames per second sent to phones
+    width: 1280        # down-scale wider streams
+    onvif: { host: 192.168.1.31, port: 8899, userEnv: CAM_ONVIF_USER, passwordEnv: CAM_ONVIF_PASSWORD }   # pan/tilt (delete if the camera has no PTZ)
+  - id: CAM-SIDE
+    name: ข้างบ้าน
+    nameEn: Side of the house
+    rtspEnv: CAM_SIDE_RTSP
+    fps: 10
+    width: 1280
+    onvif: { host: 192.168.1.32, port: 8899, userEnv: CAM_ONVIF_USER, passwordEnv: CAM_ONVIF_PASSWORD }

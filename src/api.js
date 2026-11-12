@@ -90,6 +90,27 @@ function createServer(gw) {
     res.json(s);
   });
 
+  // ---- Real CCTV (house page): owner PIN → short session token → MJPEG / snapshot / ONVIF PTZ ----
+  const camErr = (res, e) => res.status(e.status || 500).json({ error: e.code || 'CAM_ERROR', message: e.message, left: e.left, retryAfter: e.retryAfter });
+  app.get('/api/cams', auth(), (req, res) => res.json(gw.cams.status()));
+  app.post('/api/cams/unlock', auth(), (req, res) => {
+    try { const r = gw.cams.unlock(req.body && (req.body.password ?? req.body.pin), req.user.id + '@' + req.ip); audit.append({ action: 'cam-unlock', user: req.user.id }); res.json(r); }
+    catch (e) { if (e.code === 'BAD_PIN' || e.code === 'LOCKED') audit.append({ action: 'cam-unlock-fail', user: req.user.id, code: e.code }); camErr(res, e); }
+  });
+  // <img> cannot send an Authorization header, so streams carry the short-lived camera token (?t=) instead
+  app.get('/api/cams/:id/stream', (req, res) => { try { gw.cams.check(req.query.t); gw.cams.cam(req.params.id).stream.attach(res); } catch (e) { camErr(res, e); } });
+  app.get('/api/cams/:id/snapshot', async (req, res) => {
+    try { gw.cams.check(req.query.t); const jpg = await gw.cams.cam(req.params.id).stream.snapshot(); res.set('Cache-Control', 'no-store').type('image/jpeg').send(jpg); } catch (e) { camErr(res, e); }
+  });
+  app.post('/api/cams/:id/ptz', async (req, res) => {
+    try {
+      gw.cams.check(req.body && req.body.t);
+      const c = gw.cams.cam(req.params.id);
+      if (!c.ptz) return res.status(409).json({ error: 'NO_PTZ', message: 'this camera has no ONVIF PTZ configured' });
+      await c.ptz.move(String(req.body.dir), Number(req.body.speed) || 0.5); res.json({ ok: true });
+    } catch (e) { camErr(res, e); }
+  });
+
   // ---- Power quality (Hioki PW3198 over LAN: live via communication commands, files via FTP) ----
   app.get('/api/pq', auth(), (req, res) => res.json(gw.pq.summary()));
   app.get('/api/pq/history', auth(), (req, res) => res.json(gw.pq.history(Math.min(72, Number(req.query.hours) || 24))));

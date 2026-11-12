@@ -13,6 +13,7 @@ const { Scheduler } = require('./engine/scheduler');
 const { Notifier } = require('./notify');
 const { createServer } = require('./api');
 const { PqService } = require('./pq/service');
+const { CamService } = require('./cams/service');
 
 function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
   const store = new TagStore(cfg.tags);
@@ -56,7 +57,8 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
   }));
 
   const pq = new PqService(cfg.pq || {}, { simulate: cfg.simulate, log });
-  const gw = { cfg, pq, store, drivers, sim, audit, commands, interlocks, alarms, historian, scheduler, notifier, devices, log };
+  const cams = new CamService(cfg.cameras || [], { log });
+  const gw = { cfg, pq, cams, store, drivers, sim, audit, commands, interlocks, alarms, historian, scheduler, notifier, devices, log };
   gw.server = createServer(gw);
 
   gw.start = async () => {
@@ -72,7 +74,7 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
   gw.stop = async () => {
     const stopped = new Set();
     for (const { driver } of deviceDrivers) if (!stopped.has(driver)) { stopped.add(driver); driver.stop(); }
-    pq.stop(); alarms.stop(); historian.stop(); scheduler.stop(); interlocks.stop();
+    cams.stop(); pq.stop(); alarms.stop(); historian.stop(); scheduler.stop(); interlocks.stop();
     await gw.server.close();
   };
   return gw;

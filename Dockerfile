@@ -2,6 +2,7 @@ FROM node:22-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
+RUN apk add --no-cache ffmpeg
 COPY src ./src
 COPY client ./client
 COPY app ./app
