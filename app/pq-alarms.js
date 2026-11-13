@@ -144,9 +144,10 @@ export class PqAlarmEngine {
   // call every second with the instruments that did not answer
   offline(dev, ts = Date.now(), meta = {}) {
     const key = dev + '|comm', s = (this.state[key] ||= { ev: null });
+    if (this.lastSeen[dev] == null) this.lastSeen[dev] = ts; // never answered: count from the first failure
     const last = this.lastSeen[dev];
-    if (!s.ev && last != null && ts - last >= COMM.after * 1000) {
-      s.ev = this.open({ ...COMM, std: '', unit: 's', why: B('สาย LAN หลุด เครื่องวัดปิด/ดับ IP เปลี่ยน', 'LAN cable unplugged, analyser off, IP changed'), act: B('ตรวจสาย LAN ไฟเลี้ยงเครื่องวัด และ IP', 'Check the LAN cable, the analyser power and its IP') }, dev, 'alarm', Math.round((ts - last) / 1000), last, meta);
+    if (!s.ev && ts - last >= COMM.after * 1000) {
+      s.ev = this.open({ ...COMM, std: '', unit: 's', why: meta.error ? B(meta.error, meta.error) : B('สาย LAN หลุด เครื่องวัดปิด/ดับ IP เปลี่ยน', 'LAN cable unplugged, analyser off, IP changed'), act: B('ตรวจสาย LAN ไฟเลี้ยงเครื่องวัด และ IP', 'Check the LAN cable, the analyser power and its IP') }, dev, 'alarm', Math.round((ts - last) / 1000), last, meta);
     }
   }
   clearComm(dev, ts, meta) { const s = this.state[dev + '|comm']; if (s && s.ev) { this.close(s.ev, ts); s.ev = null; } }

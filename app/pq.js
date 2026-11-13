@@ -20,7 +20,7 @@ const T = {
   stReal: B('ข้อมูลจริงจากเครื่องวัด', 'Real data from the analyser'), stUpd: B('อัปเดต', 'updated'),
   stWait: B('ยังไม่ได้รับข้อมูลจริง — บนโน้ตบุ๊กที่ต่อ LAN กับเครื่องวัด ให้ดับเบิลคลิก CoreDash-PW3198-LIVE.bat (หรือ LIVE-MULTI.bat) แล้วเปิดหน้านี้จากเบราว์เซอร์ที่เครื่องมือเปิดให้', 'No real data yet — on the notebook wired to the analyser, double-click CoreDash-PW3198-LIVE.bat (or LIVE-MULTI.bat) and use the browser window it opens'),
   stFile: B('ข้อมูลจากไฟล์ที่นำเข้า — ไม่ใช่ค่าสด', 'Data from an imported file — not live'),
-  chipSim: B('จำลอง', 'SIM'), chipOff: B('ไม่มีข้อมูล', 'no data'),
+  chipSim: B('จำลอง', 'SIM'), chipOff: B('ไม่มีข้อมูล', 'no data'), chipDown: B('ติดต่อไม่ได้', 'unreachable'),
   live: B('สด', 'LIVE'), offline: B('ออฟไลน์', 'OFFLINE'), sim: B('จำลอง', 'SIM'),
   guideT: B('ดึงข้อมูลจากเครื่องวัดทางไหนดี — ไม่ต้องถอดเสียบ USB / SD', 'Best way to pull the data — no USB or SD swapping'),
   guideHide: B('ซ่อน', 'Hide'), guideShow: B('ช่องทางเชื่อมต่อ', 'Connection options'),
@@ -121,7 +121,8 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     if (gw) {
       const inst = {}, online = {}, meta = {};
       for (const i of s.instruments) {
-        const d = i.data || (i.raw ? pw3198Record(i.id, parsePw3198(i.raw)) : null);
+        // an unreachable instrument shows no numbers at all (never its last, stale reading)
+        const d = i.online === false ? null : i.data || (i.raw ? pw3198Record(i.id, parsePw3198(i.raw)) : null);
         inst[i.id] = d; online[i.id] = !!i.online && !!d; meta[i.id] = i;
       }
       return { ts: Date.now(), apf: s.apf, inst, online, meta, events: s.events || [], mode: s.mode, alarms: s.alarms || null };
@@ -169,8 +170,10 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     if (st.src === 'file') return `<span class="pq-st file">📁 ${x('stFile')}${st.file ? ' · ' + esc(st.file.name) : ''}</span>`;
     if (!live()) return `<span class="pq-st off">⚠ ${x('gwNeed')}</span>`;
     if (st.gwErr || st.snap.empty) return `<span class="pq-st off">⚠ ${x('stWait')}</span>`;
-    const hosts = ROLES.map((r) => st.snap.meta[r.id]).filter((m) => m && m.host).map((m) => `#${m.no} ${esc(m.host)} ${st.snap.online[m.id] ? '●' : '○'}`).join(' · ');
-    return `<span class="pq-st real">📡 ${x('stReal')} · ${hosts || '—'} · ${x('stUpd')} ${t}</span>`;
+    const ms = ROLES.map((r) => st.snap.meta[r.id]).filter((m) => m && m.host);
+    const up = ms.filter((m) => st.snap.online[m.id]), dn = ms.filter((m) => !st.snap.online[m.id]);
+    return (up.length ? `<span class="pq-st real">📡 ${x('stReal')} · ${up.map((m) => `#${m.no} ${esc(m.host)} ●`).join(' · ')} · ${x('stUpd')} ${t}</span>` : '') +
+      dn.map((m) => `<span class="pq-st off">✖ #${m.no} ${esc(m.name || '')} ${esc(m.host)} ${x('chipDown')}${m.error ? ' — ' + esc(m.error) : ''}</span>`).join('');
   }
   function alarmsHtml() {
     const A = st.alarms; if (!A) return '';
@@ -345,7 +348,11 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     for (const r of ROLES) {
       const d = s.inst[r.id], on = s.online[r.id] && d;
       const led = el.querySelector(`[data-b="${r.id}.led"]`); if (led) led.className = 'pq-led ' + (on ? (s.mode === 'live' ? 'live' : 'sim') : 'off');
-      if (!d) { set(r.id + '.P', '—'); continue; }
+      if (!d) {
+        for (const k of ['P', 'S', 'I', 'Ithd', 'Uthd', 'pfTxt']) set(r.id + '.' + k, '—');
+        set(r.id + '.f', '— Hz'); const nd = el.querySelector(`[data-needle="${r.id}"]`); if (nd) nd.style.transform = 'rotate(-120deg)';
+        continue;
+      }
       const Iavg = d.ph && d.ph.every((p) => p.I != null) ? (d.ph[0].I + d.ph[1].I + d.ph[2].I) / 3 : null;
       set(r.id + '.P', r.role === 'apf' ? fmt(d.Q != null ? -d.Q : null, 0) : fmtN(d.P, 0));
       if (r.role === 'apf') { const big = el.querySelector(`[data-b="${r.id}.P"]`); if (big) big.nextElementSibling.textContent = 'kvar'; }
@@ -369,8 +376,11 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     for (const r of ROLES) {
       const chip = el.querySelector(`[data-b="${r.id}.chip"]`); if (!chip) continue;
       const host = s.meta && s.meta[r.id] && s.meta[r.id].host, real = st.src === 'gw' && live() && !st.gwErr;
-      const txt = st.src === 'demo' ? x('chipSim') : st.src === 'file' ? x('srcFile') : real && host && s.online[r.id] ? '● ' + host : host ? host + ' · ' + x('chipOff') : x('chipOff');
-      const cls = 'pq-chip ' + (st.src === 'demo' ? 'sim' : st.src === 'file' ? 'file' : real && s.online[r.id] ? 'real' : 'off');
+      const down = st.src === 'gw' && real && host && !s.online[r.id];
+      const txt = st.src === 'demo' ? x('chipSim') : st.src === 'file' ? x('srcFile') : real && host && s.online[r.id] ? '● ' + host : down ? '✖ ' + x('chipDown') + ' · ' + host : x('chipOff');
+      const cls = 'pq-chip ' + (st.src === 'demo' ? 'sim' : st.src === 'file' ? 'file' : real && s.online[r.id] ? 'real' : down ? 'down' : 'off');
+      const card = chip.closest('.pq-card'); if (card) card.classList.toggle('down', !!down);
+      if (down) { set(r.id + '.f', '✖ ' + (s.meta[r.id].error || x('chipDown'))); set(r.id + '.host', host); }
       if (chip.textContent !== txt) chip.textContent = txt; if (chip.className !== cls) chip.className = cls;
     }
     region('notice', nv ? `<div class="pq-notice bad">${x('noVolt')}</div>` : '');

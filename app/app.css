@@ -918,3 +918,7 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 .pq .muted, .pq-alarms .muted { color: #94A3B8; }
 .pq-alarms .btn { background: #0B1222; color: #F3D99A; border: 1px solid rgba(212,176,106,.55); }
 .pq-real { color: #86EFAC; font-weight: 700; }
+.pq-chip.down { color: #FCA5A5; border-color: rgba(239,68,68,.6); background: rgba(239,68,68,.14); }
+.pq-card.down { border-color: rgba(239,68,68,.55) !important; opacity: .92; }
+.pq-card.down [data-b$=".f"] { color: #FCA5A5; white-space: normal; }
+.pq-srcst { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
