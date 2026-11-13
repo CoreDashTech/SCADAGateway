@@ -8,6 +8,9 @@ const B = (th, en) => ({ th, en });
 const T = {
   title: B('ศูนย์คุณภาพไฟฟ้า', 'Power Quality Center'),
   sub: B('Hioki PW3198 × 3 · IEC 61000-4-30 Class A', 'Hioki PW3198 × 3 · IEC 61000-4-30 Class A'),
+  impFolder: B('เลือกทั้งโฟลเดอร์', 'Choose a folder'), impFiles: B('เลือกไฟล์ (หลายไฟล์ได้)', 'Choose files (several OK)'), impDrop: B('หรือลากไฟล์/โฟลเดอร์ที่ดึงจาก PW3198 มาวางตรงนี้', 'or drag the files/folder dumped from the PW3198 here'),
+  impDone: B('นำเข้าแล้ว', 'Imported'), impSkip: B('ไฟล์ดิบของ Hioki (ต้องแปลงด้วย PQ ONE ก่อน)', 'raw Hioki files (convert with PQ ONE first)'), impMerged: B('รวม', 'merged'), impFrom: B('จากเครื่องมือ PW3198 (เมนู 4)', 'from the PW3198 tool (menu 4)'),
+  impWait: B('กำลังรับข้อมูลจากเครื่องมือ PW3198…', 'Receiving data from the PW3198 tool…'), impFail: B('รับข้อมูลจากเครื่องมือไม่ได้ — กดอนุญาต "เข้าถึงเครือข่ายภายใน" ถ้าเบราว์เซอร์ถาม หรือลากโฟลเดอร์มาวางที่ช่องนำเข้าแทน', 'Could not receive data from the tool — allow "local network access" if the browser asks, or drag the folder onto the import box instead'),
   mLive: B('มอนิเตอร์', 'Monitor'), mAudit: B('วิเคราะห์ความคุ้มค่า ฿', 'Savings analysis ฿'), why: B('ที่มาของตัวเลข →', 'Where it comes from →'), net: B('ผลสุทธิต่อบิล', 'Net bill effect'),
   srcDemo: B('สาธิต', 'Demo'), srcGw: B('เกตเวย์ LAN', 'LAN gateway'), srcFile: B('ไฟล์', 'File'),
   live: B('สด', 'LIVE'), offline: B('ออฟไลน์', 'OFFLINE'), sim: B('จำลอง', 'SIM'),
@@ -76,6 +79,7 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
   const x = (k) => T[k][L()];
   const model = new PqModel();
   const st = {
+    imports: [], importSkipped: 0, importFrom: false,
     mode: 'live', src: 'demo', sel: 'PQ-MAIN', tab: 'meas', hk: 'I', hp: 0, guide: true,
     snap: null, hist: null, histTs: 0, spark: {}, gwErr: null, gwMode: null, files: null, file: null, fileCols: [], hover: null,
     apfFromDemo: Date.now() - 6 * 3600e3
@@ -212,7 +216,10 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
     const g = live() && st.src === 'gw';
     const rows = (st.files || []).map((f) => `<tr><td>${f.dir ? '📁' : '📄'} ${esc(f.name)}</td><td class="num">${f.dir ? '' : (f.size / 1e6).toFixed(2) + ' MB'}</td><td class="muted">${esc(f.date || '')}</td><td>${f.dir ? '' : `<button class="btn sm" data-pq="fplot" data-arg="${esc(f.path)}">📈 ${x('plot')}</button> <button class="btn sm" data-pq="fdl" data-arg="${esc(f.path)}">⬇</button>`}</td></tr>`).join('');
     return `<div class="pq-files">
-      <label class="pq-drop"><input type="file" accept=".csv,.txt,.CSV,.TXT,text/csv,text/plain" data-pq-file hidden><b>▤ ${x('imp')}</b><small>${x('impHint')}</small></label>
+      <div class="pq-drop" data-pq-drop><b>▤ ${x('imp')}</b><small>${x('impHint')}</small>
+        <div class="pq-drop-btns"><label class="btn sm"><input type="file" multiple accept=".csv,.txt,.CSV,.TXT,text/csv,text/plain" data-pq-file hidden>📄 ${x('impFiles')}</label><label class="btn sm"><input type="file" webkitdirectory directory multiple data-pq-file hidden>📁 ${x('impFolder')}</label></div>
+        <small>${x('impDrop')}</small></div>
+      ${st.imports.length ? `<div class="pq-imps"><small class="muted">${x('impDone')}${st.importFrom ? ' · ' + x('impFrom') : ''}${st.importSkipped ? ` · ${st.importSkipped} ${x('impSkip')}` : ''}</small><div class="pq-chips">${st.imports.map((f, i) => `<button class="chip ${st.file === f ? 'on' : ''}" data-pq="fpick" data-arg="${i}">${esc(f.name)} · ${f.n.toLocaleString()}</button>`).join('')}</div></div>` : ''}
       <small class="muted">ⓘ ${x('binNote')}</small>
       <div class="pq-ftp"><div class="row"><b>${x('ftpT')} · #${roleOf(st.sel).no} ${roleOf(st.sel).name}</b>${g ? '' : `<span class="pill">${x('sim')}</span>`}</div>
         <table class="rtable"><tbody>${rows || `<tr><td class="muted">…</td></tr>`}</tbody></table></div>
@@ -356,6 +363,61 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
     st.file = f; st.fileCols = f.cols.filter((h) => /P_?sum|^P\b|PF|THD|Ithd/i.test(h)).slice(0, 3);
     if (!st.fileCols.length) st.fileCols = f.cols.slice(0, 2);
     st.tab = 'files'; rebuild(true);
+  }
+  // several files at once: CSV/TXT are parsed, files with the same columns are joined in time order, raw binaries are counted
+  const decode = (buf) => { let t = new TextDecoder('utf-8').decode(buf); if (t.includes('\uFFFD')) t = new TextDecoder('windows-874').decode(buf); return t; };
+  function useTexts(list, fromTool) {
+    const parsed = [], groups = new Map(); let skipped = 0;
+    for (const { name, text } of list) {
+      if (!/\.(csv|txt)$/i.test(name)) { skipped++; continue; }
+      const f = parseCsv(text, name); if (!f) { skipped++; continue; }
+      const key = f.cols.join('|'); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(f);
+    }
+    for (const g of groups.values()) {
+      if (g.length === 1) { parsed.push(g[0]); continue; }
+      const rows = [];
+      for (const f of g) for (let i = 0; i < f.n; i++) rows.push([f.ts[i], ...f.cols.map((c) => f.vals[c][i])]);
+      rows.sort((a, b) => a[0] - b[0]);
+      const cols = g[0].cols;
+      parsed.push({ name: `${x('impMerged')} ${g.length} · ${g[0].name}…`, ts: rows.map((r) => r[0]), vals: Object.fromEntries(cols.map((c, k) => [c, rows.map((r) => r[k + 1])])), cols, n: rows.length, timeAxis: g.every((f) => f.timeAxis) });
+    }
+    st.importSkipped = skipped; st.importFrom = !!fromTool;
+    if (!parsed.length) { onToast(skipped ? `${skipped} ${x('impSkip')}` : x('fileBad'), true); st.imports = []; st.mode = 'live'; st.tab = 'files'; rebuild(true); return; }
+    st.imports = parsed; st.mode = 'live'; st.src = 'file';
+    useParsed(parsed[0]);
+  }
+  function useParsed(f) {
+    st.file = f; st.fileCols = f.cols.filter((h) => /P_?sum|^P\b|PF|THD|Ithd/i.test(h)).slice(0, 3);
+    if (!st.fileCols.length) st.fileCols = f.cols.slice(0, 2);
+    st.tab = 'files'; rebuild(true);
+  }
+  async function readEntries(items) {
+    const out = [];
+    const walk = async (entry, path) => {
+      if (!entry) return;
+      if (entry.isFile) { const file = await new Promise((res, rej) => entry.file(res, rej)); out.push({ name: path + file.name, file }); }
+      else if (entry.isDirectory) { const r = entry.createReader(); let batch; do { batch = await new Promise((res, rej) => r.readEntries(res, rej)); for (const e of batch) await walk(e, path + entry.name + '/'); } while (batch.length); }
+    };
+    for (const it of items) await walk(it.webkitGetAsEntry && it.webkitGetAsEntry(), '');
+    return out;
+  }
+  async function importFiles(files, fromTool) {
+    const list = [];
+    for (const { name, file } of files.slice(0, 200)) list.push({ name, text: /\.(csv|txt)$/i.test(name) && file.size < 60e6 ? decode(await file.arrayBuffer()) : '' });
+    useTexts(list, fromTool);
+  }
+  // hand-off from the PW3198 LAN tool (menu 4): it serves the dump folder on http://127.0.0.1:<port>
+  async function importFromTool(base) {
+    onToast(x('impWait'));
+    try {
+      const idx = await (await fetch(base + '/files.json', { targetAddressSpace: 'loopback' })).json();
+      const list = [];
+      for (const f of idx.files.slice(0, 200)) {
+        if (!/\.(csv|txt)$/i.test(f.name)) { list.push({ name: f.name, text: '' }); continue; }
+        list.push({ name: f.name, text: decode(await (await fetch(`${base}/f/${f.i}`, { targetAddressSpace: 'loopback' })).arrayBuffer()) });
+      }
+      useTexts(list, true);
+    } catch (e) { st.mode = 'live'; st.tab = 'files'; rebuild(true); onToast(x('impFail'), true); }
   }
   function saveBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
   function exportNow() {
@@ -567,19 +629,30 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
       await pull(); bindAll(); redraw(); return;
     } else if (k === 'fplot') { plotRemote(arg, false); return; }
     else if (k === 'fdl') { plotRemote(arg, true); return; }
+    else if (k === 'fpick') { useParsed(st.imports[Number(arg)]); return; }
     else if (k === 'fcol') { st.fileCols = st.fileCols.includes(arg) ? st.fileCols.filter((c) => c !== arg) : [...st.fileCols, arg]; bindAll(); redraw(); return; }
     else if (k === 'export') { exportNow(); return; }
     rebuild();
   });
   el.addEventListener('change', async (e) => {
     if (e.target.matches('[data-pq-react]')) { if (st.src === 'gw' && live() && st.snap.mode === 'sim') { try { await api('/api/pq/apf', { method: 'POST', body: JSON.stringify({ on: st.snap.apf.on, reactive: e.target.checked }) }); } catch {} } else model.apfReactive = e.target.checked; st.histTs = 0; await pull(); bindAll(); redraw(); }
-    if (e.target.matches('[data-pq-file]')) { const f = e.target.files[0]; if (!f) return; const buf = await f.arrayBuffer(); let text = new TextDecoder('utf-8').decode(buf); if (text.includes('�')) text = new TextDecoder('windows-874').decode(buf); useFile(text, f.name); }
+    if (e.target.matches('[data-pq-file]')) { const fs = [...e.target.files]; if (!fs.length) return; await importFiles(fs.map((f) => ({ name: f.webkitRelativePath || f.name, file: f }))); }
+  });
+  el.addEventListener('dragover', (e) => { const d = e.target.closest('[data-pq-drop]'); if (d) { e.preventDefault(); d.classList.add('over'); } });
+  el.addEventListener('dragleave', (e) => { const d = e.target.closest('[data-pq-drop]'); if (d) d.classList.remove('over'); });
+  el.addEventListener('drop', async (e) => {
+    const d = e.target.closest('[data-pq-drop]'); if (!d) return; e.preventDefault(); d.classList.remove('over');
+    const items = [...(e.dataTransfer.items || [])];
+    const files = items.length && items[0].webkitGetAsEntry ? await readEntries(items) : [...e.dataTransfer.files].map((f) => ({ name: f.name, file: f }));
+    await importFiles(files);
   });
   const hov = (e) => { const c = e.target.closest('[data-cv="trend"]'); if (!c) return; const r = c.getBoundingClientRect(); st.hover = (e.touches ? e.touches[0].clientX : e.clientX) - r.left; redraw(); };
   el.addEventListener('pointermove', hov); el.addEventListener('pointerdown', hov);
   el.addEventListener('pointerleave', () => { st.hover = null; redraw(); });
   window.addEventListener('resize', () => redraw());
 
+  { const m = /[?&#]import=([^&]+)/.exec(location.hash || '');
+    if (m) { const base = decodeURIComponent(m[1]); if (/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) { history.replaceState(null, '', location.pathname + location.search + '#pq'); st.tab = 'files'; setTimeout(() => importFromTool(base), 300); } } }
   return {
     el,
     async show() {

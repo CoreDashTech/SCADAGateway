@@ -875,3 +875,6 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 .au-money p { grid-column: 1 / -1; margin: 0; font-size: 12px; color: #CBD5E1; } .au-money p b { font-size: 12px; color: #F3D99A; }
 .au-lab { font-size: 10px; }
 .au-scroll { overflow-x: auto; } @media (max-width: 720px) { .au-scroll > .au-svg { min-width: 600px; } }
+.pq-drop.over { border-color: #F3D99A; background: rgba(212,176,106,.16); }
+.pq-drop-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 6px 0 2px; } .pq-drop-btns .btn { cursor: pointer; }
+.pq-imps { display: flex; flex-direction: column; gap: 6px; }

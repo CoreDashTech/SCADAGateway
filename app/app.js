@@ -294,7 +294,7 @@ function fmtVal(v, lang) {
 
 // ---------------------------------------------------------------- app state
 const S = {
-  view: 'boot', tab: (location.hash || '#home').slice(1), seg: 'machines', sheet: null, settings: false,
+  view: 'boot', tab: (location.hash || '#home').slice(1).split(/[?&]/)[0], seg: 'machines', sheet: null, settings: false,
   pending: null, toast: null, lang: store.get('lang', 'th'), theme: store.get('theme', 'navy'),
   gw: null, loginErr: '', hist: null, installEvt: null, busy: false,
   scadaMode: 'twin', blocked: null, deferred: null, bypassMin: 15, bypassReason: '', dayNight: store.get('dayNight', 'auto'), labels: true, zoom: null
