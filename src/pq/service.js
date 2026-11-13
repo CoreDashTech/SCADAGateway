@@ -20,23 +20,46 @@ class PqService {
     this.clients = {};
   }
   async start() {
+    const al = await import(pathToFileURL(path.join(__dirname, '..', '..', 'app', 'pq-alarms.js')).href);
+    this.alarmText = al.alarmText;
+    this.alarms = new al.PqAlarmEngine({ unom: this.cfg.unom || 230, onEvent: (kind, ev) => { try { this.onAlarm && this.onAlarm(kind, ev); } catch (e) { this.log.warn && this.log.warn('[pq-alarm] ' + e.message); } } });
+    const metaOf = (i) => ({ name: `#${i.no} ${i.name}`, host: i.host || null });
+    this.feedAlarm = (inst, rec, ts) => this.alarms.feed(inst.id, rec, ts, metaOf(inst));
+    this.offAlarm = (inst, ts, error) => this.alarms.offline(inst.id, ts, { ...metaOf(inst), error });
     if (this.simulate) {
       const mod = await import(pathToFileURL(path.join(__dirname, '..', '..', 'app', 'pq-model.js')).href);
       this.model = new mod.PqModel();
       const tick = () => {
         const s = this.model.snapshot(Date.now());
-        for (const i of this.instruments) { const r = s.instruments[i.id]; if (r) { this.latest[i.id] = { ts: s.ts, ...r }; this.status[i.id] = { online: true, ts: s.ts }; } }
+        for (const i of this.instruments) { const r = s.instruments[i.id]; if (r) { this.latest[i.id] = { ts: s.ts, ...r }; this.status[i.id] = { online: true, ts: s.ts }; this.feedAlarm(i, r, s.ts); } }
         this.pushRing(s.ts);
       };
       tick(); this.timers.push(setInterval(tick, this.tickMs));
       return;
     }
+    const pw = await import(pathToFileURL(path.join(__dirname, '..', '..', 'app', 'pw3198.js')).href);
+    const meters = await import(pathToFileURL(path.join(__dirname, '..', '..', 'app', 'pq-meters.js')).href);
     for (const inst of this.instruments) {
+      if (inst.driver === 'modbus' || inst.profile || (inst.registers && inst.registers.length)) { this.startModbus(inst, meters); continue; }
       if (!inst.host) continue;
-      const c = new HiokiCmdClient({ host: inst.host, port: inst.commandPort || 3390, timeoutMs: inst.timeoutMs || 3000 }, this.log);
+      // PW3198 preset: verified command set (app/pw3198.js) unless the YAML gives its own queries
+      const preset = !(inst.queries && inst.queries.length) && (inst.protocol || inst.model || 'pw3198').toLowerCase().includes('3198');
+      const c = new HiokiCmdClient({ host: inst.host, port: inst.commandPort || pw.PW3198.port, timeoutMs: inst.timeoutMs || 3000 }, this.log);
       this.clients[inst.id] = c;
       const poll = async () => {
         try {
+          if (preset) {
+            if (!c.ready) { for (const cmd of pw.PW3198.init) await c.send(cmd); c.ready = true; }
+            const line = await c.query(pw.PW3198.query);
+            const named = pw.parsePw3198(line);
+            if (!('FREQ' in named) && !('U1RMS' in named)) { c.ready = false; throw new Error('unexpected reply: ' + line.slice(0, 60)); }
+            const ts = Date.now();
+            this.latest[inst.id] = { ts, ...pw.pw3198Record(inst.id, named), raw: named };
+            this.status[inst.id] = { online: true, ts };
+            this.feedAlarm(inst, this.latest[inst.id], ts);
+            this.pushRing(ts);
+            return;
+          }
           const f = {};
           for (const q of inst.queries || []) {
             const r = parseResponse(await c.query(q.cmd));
@@ -46,14 +69,41 @@ class PqService {
           const ts = Date.now();
           this.latest[inst.id] = { ts, ...toRecord(inst.id, f), raw: f };
           this.status[inst.id] = { online: true, ts };
+          this.feedAlarm(inst, this.latest[inst.id], ts);
           this.pushRing(ts);
         } catch (e) {
           this.status[inst.id] = { online: false, ts: Date.now(), error: e.message };
+          this.offAlarm(inst, Date.now(), e.message);
           c.close();
         }
       };
-      poll(); this.timers.push(setInterval(poll, inst.pollMs));
+      let busy = false;
+      const tick = async () => { if (busy) return; busy = true; try { await poll(); } finally { busy = false; } };
+      tick(); this.timers.push(setInterval(tick, inst.pollMs));
     }
+  }
+  // Modbus panel meter → same record shape as a PW3198 → same alarms / diagnosis
+  startModbus(inst, meters) {
+    const { ModbusMeterClient, profileOf } = require('./modbus-meter');
+    const c = new ModbusMeterClient(inst, profileOf(inst, meters.MODBUS), this.log);
+    this.clients[inst.id] = c;
+    let busy = false;
+    const tick = async () => {
+      if (busy) return; busy = true;
+      try {
+        const named = await c.read(meters);
+        const ts = Date.now();
+        this.latest[inst.id] = { ts, ...meters.toRecord(inst.id, named, { via: 'modbus', meter: inst.profile || 'custom' }), raw: named };
+        this.status[inst.id] = { online: true, ts };
+        this.feedAlarm(inst, this.latest[inst.id], ts);
+        this.pushRing(ts);
+      } catch (e) {
+        this.status[inst.id] = { online: false, ts: Date.now(), error: e.message };
+        this.offAlarm(inst, Date.now(), e.message);
+        c.close();
+      } finally { busy = false; }
+    };
+    tick(); this.timers.push(setInterval(tick, inst.pollMs));
   }
   stop() { for (const t of this.timers) clearInterval(t); this.timers = []; for (const c of Object.values(this.clients)) c.close(); }
 
@@ -63,7 +113,7 @@ class PqService {
     if (last && ts - last.ts < 10000) return;
     const g = this.latest['PQ-MAIN'] || {}, l = this.latest['PQ-LOAD'] || {}, a = this.latest['PQ-APF'] || {};
     const ph = (r) => (r.ph && r.ph[0]) || {};
-    this.ring.push({ ts, apf: this.model ? this.model.apfOn : (ph(a).I || 0) > 5, gP: g.P, gS: g.S, gPF: g.PF, gIthd: g.Ithd, gUthd: g.Uthd, gI: ph(g).I, lP: l.P, lS: l.S, lPF: l.PF, lIthd: l.Ithd, lI: ph(l).I, aI: ph(a).I });
+    this.ring.push({ ts, apf: this.model ? this.model.apfOn : (ph(a).I || 0) > 5, gP: g.P, gS: g.S, gPF: g.PF, gIthd: g.Ithd, gUthd: g.Uthd, gI: ph(g).I, gQ: g.Q, lQ: l.Q, lP: l.P, lS: l.S, lPF: l.PF, lIthd: l.Ithd, lI: ph(l).I, aI: ph(a).I });
     if (this.ring.length > 8640) this.ring.shift();
   }
 
@@ -72,10 +122,11 @@ class PqService {
       mode: this.simulate ? 'sim' : 'live',
       apf: this.model ? { on: this.model.apfOn, reactive: this.model.apfReactive, ratingA: this.model.apfA } : null,
       instruments: this.instruments.map((i) => ({
-        id: i.id, no: i.no, role: i.role, name: i.name, host: i.host || null,
-        remoteScreen: i.host ? `http://${i.host}/` : null, ...this.status[i.id], data: this.latest[i.id] || null
+        id: i.id, no: i.no, role: i.role, name: i.name, host: i.host || i.path || null, model: i.profile || i.model || null,
+        remoteScreen: i.host && !i.profile ? `http://${i.host}/` : null, ...this.status[i.id], data: this.latest[i.id] || null
       })),
-      events: this.model ? this.model.events : []
+      events: (this.model ? this.model.events : []).concat(this.alarms ? this.alarms.iticEvents() : []),
+      alarms: this.alarms ? { unom: this.alarms.unom, push: Boolean(this.cfg.notify && this.cfg.notify.length), log: this.alarms.log.slice(0, 150) } : null
     };
   }
   history(hours = 24) {

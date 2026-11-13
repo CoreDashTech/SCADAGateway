@@ -231,10 +231,10 @@ test('PWA: install metadata, sign-in, live values, confirmed commands, interlock
     await click('[data-act="settings"]');
     await click('[data-act="lang"][data-arg="en"]');
     // the language switch re-renders the sheet; click the theme until it takes
-    assert.ok(await until(async () => { await click('[data-act="theme"][data-arg="light"]'); await sleep(150); return (await page.evaluate(() => document.documentElement.dataset.theme)) === 'light'; }), 'light theme applied');
+    assert.ok(await until(async () => { await click('[data-act="theme"][data-arg="soft"]'); await sleep(150); return (await page.evaluate(() => document.documentElement.dataset.theme)) === 'soft'; }), 'soft theme applied');
     await shot('09-settings-en-light');
     await click('[data-act="close-settings"]');
-    assert.strictEqual(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
+    assert.strictEqual(await page.evaluate(() => document.documentElement.dataset.theme), 'soft');
     assert.ok(/Energy report/.test(await text()));
     await page.reload({ waitUntil: 'networkidle0' });
     await page.waitForSelector('.hdr');

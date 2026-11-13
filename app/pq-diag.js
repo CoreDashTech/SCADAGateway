@@ -7,6 +7,7 @@
 import { diagnose, LAB_CASE, POINTS, PRICES, harmonicOrders, LAB_HARMONICS, IEEE519_I } from './pq-diagnose.js';
 import { FIRE_GUIDE, FIRE_KIT, SCENARIOS } from './pq-risk.js';
 import { TERMS, CATS, findTerm } from './pq-glossary.js';
+import { METERS, MODBUS, INGEST, CANON_LABEL, meterById, parseCsv, csvNamed, toRecord, gatewayYaml } from './pq-meters.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const B = (th, en) => ({ th, en });
@@ -14,7 +15,7 @@ const T = {
   title: B('วินิจฉัยอัจฉริยะ · ชี้จุด · บอกวิธีแก้', 'Smart diagnosis · where · how to fix'),
   sub: B('ตรวจการต่อสาย → วิเคราะห์คุณภาพไฟ → แยก PF รีแอกทีฟ/ฮาร์มอนิก → ประเมิน APF → แนะนำสิ่งที่ต้องซื้อ', 'Check wiring → analyse power quality → split reactive/harmonic PF → judge the APF → what to buy'),
   tHarm: B('〰 ฮาร์มอนิกรายลำดับ', '〰 Harmonics by order'), tRisk: B('🔥 เตือนก่อนไฟไหม้/ลัดวงจร', '🔥 Fire / short-circuit early warning'),
-  tDiag: B('🧠 ผลวินิจฉัย', '🧠 Diagnosis'), tGuide: B('🧰 คู่มือต่อสาย (มือใหม่)', '🧰 Wiring guide (beginner)'), tManual: B('✍ ป้อนค่าจากหน้าจอ', '✍ Enter screen values'),
+  tDiag: B('🧠 ผลวินิจฉัย', '🧠 Diagnosis'), tMeters: B('🔌 เลือกเครื่องมือวัด', '🔌 Choose instrument'), tGuide: B('🧰 คู่มือต่อสาย (มือใหม่)', '🧰 Wiring guide (beginner)'), tManual: B('✍ ป้อนค่าจากหน้าจอ', '✍ Enter screen values'),
   srcLive: B('📡 ค่าปัจจุบัน', '📡 Current data'), srcLab: B('🧪 เคส Lab 13 พ.ย.', '🧪 Lab case 13 Nov'),
   crit: B('ต้องแก้', 'Fix now'), warn: B('ควรแก้', 'Should fix'), info: B('ข้อสังเกต', 'Note'), ok: B('ผ่าน', 'OK'),
   evid: B('หลักฐานจากค่าวัด', 'Evidence'), cause: B('สาเหตุ', 'Cause'), todo: B('ทำอย่างไร', 'What to do'), std: B('มาตรฐาน', 'Standard'),
@@ -38,7 +39,7 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
   const x = (k) => T[k][L()];
   const tr = (o) => (o ? o[L()] ?? o.th : '');
   const ls = { get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-  const st = { q: '', focus: '', harm: ls.get('coredash.diag.harm', { scr: 15, ilRatio: 1, txKva: '', txZ: 4, capKvar: '', paste: '' }), riskOpt: ls.get('coredash.risk.opt', { udin: 230, rating: { MAIN: '', LOAD: '', APF: '' }, ch4: 'neutral' }), tab: 'diag', src: ls.get('coredash.diag.src', 'lab'), step: 3, pt: null, open: new Set(), man: ls.get('coredash.diag.manual', { point: 'APF', running: true, rating: 50 }), prices: { ...PRICES, ...ls.get('coredash.diag.prices', {}) }, guide: 0 };
+  const st = { q: '', focus: '', harm: ls.get('coredash.diag.harm', { scr: 15, ilRatio: 1, txKva: '', txZ: 4, capKvar: '', paste: '' }), riskOpt: ls.get('coredash.risk.opt', { udin: 230, rating: { MAIN: '', LOAD: '', APF: '' }, ch4: 'neutral' }), tab: 'diag', src: ls.get('coredash.diag.src', 'lab'), step: 3, pt: null, open: new Set(), man: ls.get('coredash.diag.manual', { point: 'APF', running: true, rating: 50 }), prices: { ...PRICES, ...ls.get('coredash.diag.prices', {}) }, guide: 0, meter: ls.get('coredash.meter.sel', 'hioki-pw3198'), mf: 'all', assign: ls.get('coredash.meter.assign', { MAIN: 'hioki-pw3198', LOAD: 'hioki-pw3198', APF: 'hioki-pw3198' }), imp: ls.get('coredash.meter.import', {}), csv: null, yml: { point: 'MAIN', host: '192.168.1.70', unitId: 1, rtu: false, path: 'COM3' } };
   const el = document.createElement('div');
   el.className = 'dg';
 
@@ -62,10 +63,14 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
     }
     const snap = snapshot() || { inst: {} }, inst = snap.inst || {};
     const points = { MAIN: inst['PQ-MAIN'] || null, LOAD: inst['PQ-LOAD'] || null, APF: inst['PQ-APF'] || null };
+    // imported results replace simulated data; real live data from the same point still wins
+    const realLive = snap.mode === 'live';
+    const usedImp = [];
+    for (const k of Object.keys(points)) { const im = st.imp[k]; if (im && im.named && (!points[k] || !realLive)) { points[k] = toRecord('PQ-' + k, im.named, { via: 'csv', meter: im.meter }); usedImp.push(`#${POINTS[k].no} ${k} ← ${(meterById(im.meter) || {}).model || ''} ${im.file || ''}`.trim()); } }
     const mr = manualRecord();
     if (mr && st.man.point && !points[st.man.point]) points[st.man.point] = mr;
     const setup = mr && st.man.wiring ? { [st.man.point]: { wiring: st.man.wiring, rangeA: Number(st.man.rangeA) || null } } : {};
-    return { points, setup, apf: { rating: Number(st.man.rating) || 50, running: st.man.running ?? null, hmi: manualHmi() }, prices: st.prices, label: snap.mode === 'sim' || snap.mode === undefined ? (L() === 'th' ? 'ข้อมูลจำลอง/ค่าปัจจุบัน' : 'Simulated/current data') : (L() === 'th' ? 'ค่าสดจากเครื่องวัด' : 'Live analyser data') };
+    return { points, setup, apf: { rating: Number(st.man.rating) || 50, running: st.man.running ?? null, hmi: manualHmi() }, prices: st.prices, label: usedImp.length ? (L() === 'th' ? 'ไฟล์ผลวัดที่นำเข้า: ' : 'Imported results: ') + usedImp.join(' · ') + (Object.keys(points).some((k) => points[k] && !(st.imp[k] && st.imp[k].named)) ? (L() === 'th' ? ' + ค่าปัจจุบันจุดอื่น' : ' + current data elsewhere') : '') : snap.mode === 'sim' || snap.mode === undefined ? (L() === 'th' ? 'ข้อมูลจำลอง/ค่าปัจจุบัน' : 'Simulated/current data') : (L() === 'th' ? 'ค่าสดจากเครื่องวัด' : 'Live analyser data') };
   }
 
   // ---------------------------------------------------------------- pieces
@@ -78,7 +83,7 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
     const col = (k) => (has(k) ? SC[s[k]] : SC.none);
     const cnt = (k) => r.findings.filter((f) => f.point === k && (f.sev === 'crit' || f.sev === 'warn')).length;
     const meter = (k, cx, cy) => `<g class="dg-m ${st.pt === k ? 'sel' : ''}" data-dg="pt" data-arg="${k}" role="button" tabindex="0">
-      <circle cx="${cx}" cy="${cy}" r="25" fill="#0B1222" stroke="${col(k)}" stroke-width="4"/>
+      <circle cx="${cx}" cy="${cy}" r="25" fill="#0B1222" style="fill:var(--q-p1,#0B1222)" stroke="${col(k)}" stroke-width="4"/>
       <text x="${cx}" y="${cy - 2}" text-anchor="middle" class="dg-mn">#${POINTS[k].no}</text><text x="${cx}" y="${cy + 12}" text-anchor="middle" class="dg-ms">${k}</text>
       ${has(k) && cnt(k) ? `<circle cx="${cx + 20}" cy="${cy - 20}" r="11" fill="${col(k)}"/><text x="${cx + 20}" y="${cy - 16}" text-anchor="middle" class="dg-badge">${cnt(k)}</text>` : ''}
       ${!has(k) ? `<text x="${cx}" y="${cy + 42}" text-anchor="middle" class="dg-nd">${x('noData')}</text>` : ''}</g>`;
@@ -162,7 +167,7 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
     const fs = r.findings.filter((f) => !st.pt || f.point === st.pt);
     const top = r.findings.filter((f) => f.sev === 'crit').slice(0, 3);
     const labBar = st.src === 'lab' ? `<div class="dg-steps"><small>${x('step')}</small>${LAB_CASE.steps.map((s, i) => `<button class="${i === st.step ? 'on' : ''}" data-dg="step" data-arg="${i}"><b>${esc(s.t)}</b><span>${esc(tr(s))}</span></button>`).join('')}</div>
-      <p class="muted dg-small">ⓘ ${x('labNote')} · ${esc(LAB_CASE.apf.model)}${inp.note ? ' · ' + esc(tr(inp.note)) : ''}</p>` : '';
+      <p class="muted dg-small">ⓘ ${x('labNote')} · ${esc(LAB_CASE.apf.model)}${inp.note ? ' · ' + esc(tr(inp.note)) : ''}</p>` : `<p class="muted dg-small">ⓘ ${esc(inp.label)}</p>`;
     return `${labBar}
       <div class="dg-top"><div class="dg-sldw">${sld(r, inp)}</div>
         <div class="dg-sum"><h4>${top.length ? x('top') : x('verdictOk')}</h4>${top.length ? `<ol>${top.map((f) => `<li><span class="dg-pt">#${POINTS[f.point].no}</span> ${esc(tr(f.title))}</li>`).join('')}</ol>` : `<p class="dg-okmsg">✓ ${x('verdictOk')}</p>`}
@@ -338,7 +343,7 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
       <text x="20" y="20" class="dg-s2">S² = P² + Q1² + D² · PF = P/S · DPF = P/S1</text></svg>`;
     const tdd = `<svg viewBox="0 0 320 120" class="dg-ill" data-nogl><text x="0" y="14" class="dg-s2">${th ? 'ตอนโหลดน้อย 20 A (IL = 100 A), ฮาร์มอนิก 6 A' : 'Light load 20 A (IL = 100 A), 6 A of harmonics'}</text>
       <rect x="0" y="26" width="60" height="22" fill="#38BDF8"/><rect x="0" y="26" width="18" height="22" fill="#EF4444"/><text x="68" y="42" class="dg-s">THD-I = 6/20 = 30% ${th ? '(ดูน่ากลัว)' : '(looks bad)'}</text>
-      <rect x="0" y="64" width="300" height="22" fill="#1E293B"/><rect x="0" y="64" width="18" height="22" fill="#EF4444"/><text x="24" y="80" class="dg-s">TDD = 6/100 = 6% ${th ? '(ค่าที่ IEEE 519 ใช้)' : '(what IEEE 519 uses)'}</text>
+      <rect x="0" y="64" width="300" height="22" fill="#1E293B" style="fill:var(--q-p3,#1E293B)"/><rect x="0" y="64" width="18" height="22" fill="#EF4444"/><text x="24" y="80" class="dg-s">TDD = 6/100 = 6% ${th ? '(ค่าที่ IEEE 519 ใช้)' : '(what IEEE 519 uses)'}</text>
       <text x="0" y="110" class="dg-s2">${th ? 'กระแสฮาร์มอนิกเท่ากัน 6 A — ต่างกันแค่ตัวหาร' : 'Same 6 A of harmonics — only the divisor differs'}</text></svg>`;
     const concepts = [
       [th ? '1 · ทำไม PF ต่ำ แต่ติดคาปาซิเตอร์แล้วไม่หาย' : '1 · Why PF stays low after adding capacitors', tri, th ? 'กระแสที่สายต้องรับ (S) มี 3 ส่วน: P ทำงานจริง, Q1 รีแอกทีฟของมอเตอร์ (คาปาซิเตอร์แก้ได้) และ D จากฮาร์มอนิก (ต้อง APF/ตัวกรอง) เครื่อง Hioki รวม Q1 กับ D ไว้ใน Q ระบบจึงแยกให้ว่าเป็นส่วนไหน — ใน Lab D เป็นส่วนใหญ่ จึงต้องใช้ APF ไม่ใช่คาปาซิเตอร์' : 'The current a cable carries (S) has three parts: P real, Q1 motor reactive (capacitor-fixable) and D from harmonics (needs an APF/filter). Hioki puts Q1 and D together in Q, so the system splits them — in the Lab D dominates, so an APF, not capacitors'],
@@ -358,13 +363,98 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
       </section>`;
   }
 
+
+  // ---------------------------------------------------------------- instrument picker
+  const kindName = (m) => (m.kind === 'pqa' ? (L() === 'th' ? 'เครื่องวิเคราะห์คุณภาพไฟ (พกพา)' : 'PQ analyser (portable)') : (L() === 'th' ? 'มิเตอร์ติดตู้ (ถาวร)' : 'Panel meter (fixed)'));
+  function meterCard(m) {
+    return `<button class="mt-card ${st.meter === m.id ? 'on' : ''}" data-dg="meter" data-arg="${m.id}">
+      <span class="mt-brand">${esc(m.brand)}</span><b>${esc(m.model)}</b>
+      <span class="mt-tags"><i>${m.kind === 'pqa' ? '🧳' : '🗄'} ${esc(kindName(m))}</i>${m.cls && m.cls !== '—' ? `<i>Class ${esc(m.cls)}</i>` : ''}${m.harm ? `<i>h≤${m.harm}</i>` : ''}</span>
+      <span class="mt-ing">${m.ingest.map((g) => `<em class="mt-${g}">${esc(tr(INGEST[g]).split(' ')[0])}</em>`).join('')}</span></button>`;
+  }
+  function regTable(id) {
+    const p = MODBUS[id]; if (!p) return '';
+    return `<details class="mt-regs"><summary>${L() === 'th' ? 'ตารางรีจิสเตอร์ที่ใช้' : 'Registers used'} · FC0${p.fc} · ${p.regs.length} ${L() === 'th' ? 'ค่า' : 'values'}</summary><p class="muted">${esc(tr(p.note))}</p>
+      <table class="mt-tbl"><thead><tr><th>${L() === 'th' ? 'ค่า' : 'Value'}</th><th>${L() === 'th' ? 'ที่อยู่' : 'Address'}</th><th>×</th></tr></thead><tbody>${p.regs.map(([k, a, sc]) => `<tr><td>${esc(CANON_LABEL[k] || k)}</td><td>${a}</td><td>${sc || 1}</td></tr>`).join('')}</tbody></table></details>`;
+  }
+  function yamlBox(m) {
+    const y = st.yml;
+    const txt = gatewayYaml({ meter: m.id, id: 'PQ-' + y.point, no: POINTS[y.point].no, name: y.point, host: y.host, unitId: y.unitId, rtu: y.rtu, path: y.path });
+    return `<section class="dg-card"><h4>🔗 ${L() === 'th' ? 'ดึงค่าสดผ่าน Gateway (Modbus)' : 'Live through the gateway (Modbus)'}</h4>
+      <div class="dg-form"><label>${L() === 'th' ? 'จุดวัด' : 'Point'}<select data-dgy="point">${Object.keys(POINTS).map((k) => `<option value="${k}" ${y.point === k ? 'selected' : ''}>#${POINTS[k].no} ${k}</option>`).join('')}</select></label>
+        <label>${L() === 'th' ? 'ต่อแบบ' : 'Link'}<select data-dgy="rtu"><option value="">Modbus TCP</option><option value="1" ${y.rtu ? 'selected' : ''}>RS-485 RTU</option></select></label>
+        ${y.rtu ? `<label>COM / tty<input data-dgy="path" value="${esc(y.path)}"></label>` : `<label>IP<input data-dgy="host" value="${esc(y.host)}"></label>`}<label>Unit ID<input data-dgy="unitId" value="${esc(y.unitId)}" inputmode="numeric"></label></div>
+      <pre class="mt-yaml">${esc(txt)}</pre><div class="dg-row"><button class="btn sm" data-dg="ycopy">📋 ${L() === 'th' ? 'คัดลอก' : 'Copy'}</button><span class="muted">${L() === 'th' ? 'วางในไฟล์ config ของ Gateway แล้วรีสตาร์ต → การ์ดจุดวัดในแท็บ PQ จะขึ้นค่าจริงและเข้าระบบเตือนทันที' : 'Paste into the gateway config and restart → the point card in the PQ tab shows real values and feeds the alarms'}</span></div></section>`;
+  }
+  function csvBox(m) {
+    const c = st.csv;
+    let body = '';
+    if (c && c.parsed) {
+      const pr = c.parsed, map = c.map;
+      if (!pr.rows.length) body = `<p class="dg-bad">⚠ ${L() === 'th' ? 'ไม่พบแถวข้อมูลตัวเลขในไฟล์ — ตรวจว่า Export เป็นตาราง (trend) ไม่ใช่รายงาน PDF/รูป' : 'No numeric rows found — export the trend table, not a PDF/image report'}</p>`;
+      else {
+        const r = csvNamed(pr, { mode: c.mode, map });
+        const rec = r && toRecord('PQ-' + c.point, r.named, { via: 'csv', meter: m.id });
+        const f1 = (v, d = 1) => (v == null ? '—' : Number(v).toFixed(d));
+        const keys = Object.keys(CANON_LABEL);
+        body = `<p class="muted">${L() === 'th' ? `พบหัวตารางที่บรรทัด ${pr.headerLine + 1} · ${pr.rows.length} แถว · จับคอลัมน์ได้อัตโนมัติ ${Object.keys(pr.map).length} ค่า — แก้ได้ถ้าผิด` : `Header on line ${pr.headerLine + 1} · ${pr.rows.length} rows · ${Object.keys(pr.map).length} columns matched automatically — correct them if wrong`}</p>
+          <details class="mt-regs" ${c.openMap ? 'open' : ''} data-dgo="csvmap"><summary>${L() === 'th' ? 'จับคู่คอลัมน์' : 'Column mapping'}</summary><div class="mt-map">${keys.map((k) => `<label>${esc(CANON_LABEL[k])}<select data-dgc="${k}"><option value="">—</option>${pr.header.map((h, i) => `<option value="${i}" ${map[k] && map[k].col === i ? 'selected' : ''}>${esc(h.slice(0, 40))}</option>`).join('')}</select></label>`).join('')}</div></details>
+          ${rec ? `<table class="mt-tbl mt-prev"><thead><tr><th></th><th>L1</th><th>L2</th><th>L3</th><th>${L() === 'th' ? 'รวม' : 'Total'}</th></tr></thead><tbody>
+            <tr><td>U (V)</td>${rec.ph.map((p) => `<td>${f1(p.U)}</td>`).join('')}<td>—</td></tr>
+            <tr><td>I (A)</td>${rec.ph.map((p) => `<td>${f1(p.I, 2)}</td>`).join('')}<td>IN ${f1(rec.IN, 2)}</td></tr>
+            <tr><td>PF</td>${rec.ph.map((p) => `<td>${p.PF == null ? '—' : (p.pfSign < 0 ? '−' : '') + p.PF.toFixed(3)}</td>`).join('')}<td>${rec.PF == null ? '—' : (rec.pfSign < 0 ? '−' : '') + rec.PF.toFixed(3)}</td></tr>
+            <tr><td>THD-U %</td>${rec.ph.map((p) => `<td>${f1(p.Uthd)}</td>`).join('')}<td>${f1(rec.Uthd)}</td></tr>
+            <tr><td>THD-I %</td>${rec.ph.map((p) => `<td>${f1(p.Ithd)}</td>`).join('')}<td>${f1(rec.Ithd)}</td></tr>
+            <tr><td>P / S</td><td colspan="3">${f1(rec.P, 2)} kW · ${f1(rec.S, 2)} kVA · Q ${f1(rec.Q, 2)} kvar</td><td>f ${f1(rec.f, 2)}</td></tr></tbody></table>
+            <div class="dg-row"><button class="btn" data-dg="csvuse">✓ ${L() === 'th' ? `ใช้ค่านี้เป็นจุด #${POINTS[c.point].no} ${c.point} แล้ววิเคราะห์` : `Use as point #${POINTS[c.point].no} ${c.point} and diagnose`}</button><span class="muted">${r.rowsUsed}/${r.rowsTotal} ${L() === 'th' ? 'แถว' : 'rows'}</span></div>` : ''}`;
+      }
+    }
+    const imp = Object.entries(st.imp).filter(([, v]) => v && v.named);
+    return `<section class="dg-card"><h4>📁 ${L() === 'th' ? 'นำเข้าผลวัดจริง (CSV)' : 'Import real results (CSV)'}</h4>
+      <p class="muted">${L() === 'th' ? `Export จาก ${esc(m.sw)} เป็น CSV/TXT แล้วเลือกไฟล์ หรือวางข้อความ — ระบบหาหัวตาราง แยก , ; แท็บ และจับคอลัมน์ U/I/P/Q/S/PF/THD/f ให้อัตโนมัติ` : `Export CSV/TXT from ${esc(m.sw)}, then pick the file or paste the text — header, delimiter and U/I/P/Q/S/PF/THD/f columns are found automatically`}</p>
+      <div class="dg-form"><label>${L() === 'th' ? 'จุดวัด' : 'Point'}<select data-dgk="point">${Object.keys(POINTS).map((k) => `<option value="${k}" ${(c ? c.point : 'LOAD') === k ? 'selected' : ''}>#${POINTS[k].no} ${k}</option>`).join('')}</select></label>
+        <label>${L() === 'th' ? 'ใช้ค่า' : 'Use'}<select data-dgk="mode">${[['avg', L() === 'th' ? 'เฉลี่ยทุกแถว' : 'average of rows'], ['worst', L() === 'th' ? 'ช่วงโหลดสูงสุด' : 'peak-load row'], ['last', L() === 'th' ? 'แถวล่าสุด' : 'last row']].map(([v, l]) => `<option value="${v}" ${(c ? c.mode : 'avg') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label>${L() === 'th' ? 'ไฟล์' : 'File'}<input type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" data-dgf="1" class="mt-file"></label></div>
+      <textarea class="mt-paste" data-dgt="1" placeholder="${L() === 'th' ? 'หรือวางข้อความ CSV ที่นี่ แล้วกด อ่านข้อมูล' : 'or paste CSV text here, then press Read'}"></textarea>
+      <div class="dg-row"><button class="btn sm" data-dg="csvread">📥 ${L() === 'th' ? 'อ่านข้อมูล' : 'Read'}</button>${c && c.file ? `<span class="muted">📄 ${esc(c.file)}</span>` : ''}</div>${body}
+      ${imp.length ? `<div class="mt-imp">${imp.map(([k, v]) => `<span>✓ #${POINTS[k].no} ${k}: ${esc((meterById(v.meter) || {}).model || v.meter || '')} · ${esc(v.file || '')} <button class="btn sm" data-dg="impdel" data-arg="${k}">✕</button></span>`).join('')}</div>` : ''}</section>`;
+  }
+  function metersTab() {
+    const m = meterById(st.meter) || METERS[0];
+    const list = METERS.filter((x) => st.mf === 'all' || x.kind === st.mf);
+    const brands = new Set(METERS.filter((x) => x.id !== 'custom-modbus').map((x) => x.brand)).size;
+    return `<p class="muted">${L() === 'th' ? `${brands} ยี่ห้อที่นิยมในตลาด · เลือกรุ่นที่ใช้ → ดูวิธีต่อ/ตั้งค่า → ดึงค่าสด (LAN/Modbus) หรือนำเข้าไฟล์ผลวัด → ผลเข้าระบบวินิจฉัย เตือน และชี้จุดเดียวกับ PW3198` : `${brands} popular brands · pick the model → how to connect/set up → live (LAN/Modbus) or import the results file → the same diagnosis, alarms and fault location as the PW3198`}</p>
+      <section class="dg-card" data-nogl><h4>📍 ${L() === 'th' ? 'จุดวัดไหนใช้เครื่องอะไร' : 'Which instrument at which point'}</h4><div class="dg-form">${Object.keys(POINTS).map((k) => `<label>#${POINTS[k].no} ${k} · ${esc(tr(POINTS[k]))}<select data-dga="${k}" class="mt-sel">${METERS.map((x) => `<option value="${x.id}" ${st.assign[k] === x.id ? 'selected' : ''}>${esc(x.brand + ' ' + x.model)}</option>`).join('')}</select></label>`).join('')}</div></section>
+      <div class="dg-src mt-filter">${[['all', L() === 'th' ? 'ทั้งหมด' : 'All'], ['pqa', '🧳 ' + (L() === 'th' ? 'พกพา' : 'Portable')], ['panel', '🗄 ' + (L() === 'th' ? 'ติดตู้' : 'Panel')]].map(([v, l]) => `<button class="${st.mf === v ? 'on' : ''}" data-dg="mf" data-arg="${v}">${l}</button>`).join('')}</div>
+      <div class="mt-grid">${list.map(meterCard).join('')}</div>
+      <section class="dg-card mt-detail"><h4>${esc(m.brand)} · ${esc(m.model)}</h4>
+        <div class="mt-facts"><span>${esc(kindName(m))}</span><span>IEC 61000-4-30 / ${L() === 'th' ? 'ความแม่นยำ' : 'accuracy'}: <b>${esc(m.cls)}</b></span><span>${L() === 'th' ? 'ฮาร์มอนิก' : 'Harmonics'}: <b>${m.harm ? (L() === 'th' ? 'ถึงลำดับ ' : 'to order ') + m.harm : (L() === 'th' ? 'THD เท่านั้น' : 'THD only')}</b></span><span>${L() === 'th' ? 'การเชื่อมต่อ' : 'Interfaces'}: <b>${esc(m.io.join(' · '))}</b></span><span>${L() === 'th' ? 'ซอฟต์แวร์' : 'Software'}: <b>${esc(m.sw)}</b></span></div>
+        <p class="mt-ingl">${m.ingest.map((g) => `<em class="mt-${g}">${esc(tr(INGEST[g]))}</em>`).join('')}</p>
+        <ol class="mt-steps">${m.conn.map((x) => `<li>${esc(tr(x))}</li>`).join('')}</ol>
+        <p class="dg-ex">💡 ${esc(tr(m.note))}</p>
+        ${m.ingest.includes('live-hioki') ? `<p class="muted">${L() === 'th' ? 'ค่าสดจะขึ้นที่การ์ดจุดวัดในแท็บ PQ (📡 ข้อมูลจริง) และแท็บ 🧠 ผลวินิจฉัย → 📡 ค่าปัจจุบัน' : 'Live values appear on the point cards of the PQ tab (📡 Live) and in 🧠 Diagnosis → 📡 Current data'}</p>` : ''}
+        ${regTable(m.id)}
+        ${m.src.length ? `<p class="mt-src">${L() === 'th' ? 'อ้างอิง' : 'Sources'}: ${m.src.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener">[${i + 1}] ${esc(new URL(u).hostname.replace(/^www\./, ''))}</a>`).join(' ')}</p>` : ''}</section>
+      ${m.ingest.includes('modbus') ? yamlBox(m) : ''}
+      ${m.ingest.includes('csv') ? csvBox(m) : ''}
+      <section class="dg-card"><h4>📊 ${L() === 'th' ? 'เปรียบเทียบทุกรุ่น' : 'All models compared'}</h4><div class="mt-cmpw"><table class="mt-tbl mt-cmp"><thead><tr><th>${L() === 'th' ? 'รุ่น' : 'Model'}</th><th>${L() === 'th' ? 'ชนิด' : 'Type'}</th><th>Class</th><th>h</th><th>${L() === 'th' ? 'เชื่อมต่อ' : 'Interfaces'}</th><th>CoreDash</th></tr></thead>
+        <tbody>${METERS.map((x) => `<tr class="${x.id === m.id ? 'on' : ''}"><td><b>${esc(x.brand)}</b> ${esc(x.model)}</td><td>${x.kind === 'pqa' ? '🧳' : '🗄'}</td><td>${esc(x.cls)}</td><td>${x.harm || '—'}</td><td>${esc(x.io.join(', '))}</td><td>${x.ingest.map((g) => tr(INGEST[g]).split(' ')[0]).join(' ')}</td></tr>`).join('')}</tbody></table></div>
+        <p class="muted">${L() === 'th' ? 'Class A = วัดตามมาตรฐาน IEC 61000-4-30 แบบเข้ม ใช้เป็นหลักฐาน/รับรองได้ · Class S = สำรวจ/ไล่ปัญหา · มิเตอร์ติดตู้เหมาะเฝ้าดูตลอดเวลา แต่จับเหตุการณ์สั้น ๆ (spike, dip ครึ่งไซเคิล) ไม่ได้เท่าเครื่องพกพา' : 'Class A = strict IEC 61000-4-30, usable as evidence · Class S = surveys/troubleshooting · panel meters watch 24 h but miss short events (spikes, half-cycle dips) that portable analysers catch'}</p></section>`;
+  }
+
+  function loadCsv(text, file) {
+    const prev = st.csv || {};
+    const parsed = parseCsv(text);
+    st.csv = { parsed, map: { ...parsed.map }, file, point: prev.point || 'LOAD', mode: prev.mode || 'avg', openMap: !Object.keys(parsed.map).length };
+    render();
+  }
   // ---------------------------------------------------------------- shell
   function render() {
-    const tabs = [['learn', '📚 ' + (L() === 'th' ? 'เรียนรู้' : 'Learn')], ['diag', x('tDiag')], ['harm', x('tHarm')], ['risk', x('tRisk')], ['guide', x('tGuide')], ['manual', x('tManual')]];
+    const tabs = [['learn', '📚 ' + (L() === 'th' ? 'เรียนรู้' : 'Learn')], ['meters', x('tMeters')], ['diag', x('tDiag')], ['harm', x('tHarm')], ['risk', x('tRisk')], ['guide', x('tGuide')], ['manual', x('tManual')]];
     el.innerHTML = `<header class="dg-head"><div><h3>${x('title')}</h3><p class="muted">${x('sub')}</p></div>
       <div class="dg-src">${[['lab', x('srcLab')], ['live', x('srcLive')]].map(([k, l]) => `<button class="${st.src === k ? 'on' : ''}" data-dg="src" data-arg="${k}">${l}</button>`).join('')}</div></header>
       <nav class="au-tabs">${tabs.map(([k, l]) => `<button class="au-tab ${st.tab === k ? 'on' : ''}" data-dg="tab" data-arg="${k}">${l}</button>`).join('')}</nav>
-      <div class="dg-body">${st.tab === 'learn' ? learnTab() : st.tab === 'diag' ? diagTab() : st.tab === 'harm' ? harmTab() : st.tab === 'risk' ? riskTab() : st.tab === 'guide' ? guideTab() : manualTab()}</div>`;
+      <div class="dg-body">${st.tab === 'learn' ? learnTab() : st.tab === 'meters' ? metersTab() : st.tab === 'diag' ? diagTab() : st.tab === 'harm' ? harmTab() : st.tab === 'risk' ? riskTab() : st.tab === 'guide' ? guideTab() : manualTab()}</div>`;
   }
   el.addEventListener('toggle', (e) => { const d = e.target; if (d instanceof HTMLDetailsElement && d.dataset.dgo) { if (d.open) st.open.add(d.dataset.dgo); else st.open.delete(d.dataset.dgo); } }, true);
   el.addEventListener('click', (e) => {
@@ -382,6 +472,17 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
     }
     else if (k === 'sim') setRiskSim(a || null);
     else if (k === 'mansave') { el.querySelectorAll('[data-dgm]').forEach((i) => { st.man[i.dataset.dgm] = i.type === 'checkbox' ? i.checked : i.value; }); ls.set('coredash.diag.manual', st.man); st.tab = 'diag'; if (st.src === 'lab') st.src = 'live'; }
+    else if (k === 'meter') { st.meter = a; ls.set('coredash.meter.sel', a); }
+    else if (k === 'mf') st.mf = a;
+    else if (k === 'ycopy') { const t = el.querySelector('.mt-yaml'); if (t) { try { navigator.clipboard.writeText(t.textContent); b.textContent = '✓'; } catch {} } return; }
+    else if (k === 'csvread') { const t = el.querySelector('[data-dgt]'); if (t && t.value.trim()) loadCsv(t.value, L() === 'th' ? 'ข้อความที่วาง' : 'pasted text'); return; }
+    else if (k === 'csvuse') {
+      const c = st.csv; const r = c && csvNamed(c.parsed, { mode: c.mode, map: c.map }); if (!r) return;
+      st.imp[c.point] = { named: r.named, meter: st.meter, file: c.file, mode: c.mode, rows: r.rowsUsed, ts: Date.now() };
+      st.assign[c.point] = st.meter; ls.set('coredash.meter.assign', st.assign);
+      ls.set('coredash.meter.import', st.imp); st.tab = 'diag'; st.src = 'live'; ls.set('coredash.diag.src', 'live');
+    }
+    else if (k === 'impdel') { delete st.imp[a]; ls.set('coredash.meter.import', st.imp); }
     else if (k === 'manclear') { st.man = { point: 'APF', running: true, rating: 50 }; ls.set('coredash.diag.manual', st.man); }
     else return;
     render();
@@ -393,6 +494,17 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
     const n = el.querySelector('[data-dgq]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
   });
   el.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.dataset.dgf && t.files && t.files[0]) {
+      const f = t.files[0]; if (f.size > 20e6) return;
+      const rd = new FileReader();
+      rd.onload = () => { let txt = String(rd.result || ''); if (/\uFFFD/.test(txt.slice(0, 2000))) { const r2 = new FileReader(); r2.onload = () => loadCsv(String(r2.result || ''), f.name); r2.readAsText(f, 'windows-874'); return; } loadCsv(txt, f.name); };
+      rd.readAsText(f); return;
+    }
+    if (t.dataset.dga) { st.assign[t.dataset.dga] = t.value; ls.set('coredash.meter.assign', st.assign); st.meter = t.value; ls.set('coredash.meter.sel', t.value); render(); return; }
+    if (t.dataset.dgy) { const kk = t.dataset.dgy; st.yml[kk] = kk === 'rtu' ? Boolean(t.value) : kk === 'unitId' ? (Number(t.value) || 1) : t.value; render(); return; }
+    if (t.dataset.dgk) { st.csv = st.csv || { parsed: null, map: {}, point: 'LOAD', mode: 'avg' }; st.csv[t.dataset.dgk] = t.value; render(); return; }
+    if (t.dataset.dgc && st.csv) { const kk = t.dataset.dgc; if (t.value === '') delete st.csv.map[kk]; else st.csv.map[kk] = { col: Number(t.value), scale: (st.csv.parsed.map[kk] && st.csv.parsed.map[kk].col === Number(t.value)) ? st.csv.parsed.map[kk].scale : 1, stat: 'avg' }; st.csv.openMap = true; render(); return; }
     const hh = e.target.closest('[data-dgh]');
     if (hh && hh.dataset.dgh !== 'paste') { st.harm[hh.dataset.dgh] = hh.value; ls.set('coredash.diag.harm', st.harm); render(); return; }
     const i = e.target.closest('[data-dgp]'); if (!i) return;

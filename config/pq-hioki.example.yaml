@@ -5,45 +5,54 @@
 #   PW3198 #3 LOAD ──────┼── LAN switch ── CoreDash Gateway (mini-PC / Raspberry Pi) ── Wi-Fi / 4G ── phones, tablets, PCs
 #   PW3198 #6 APF ───────┘
 #
-# On each analyser: SYSTEM → Interface → LAN: set a fixed IP, subnet mask and gateway; turn FTP/HTTP authentication ON
-# (user + password) so nobody else on the network can delete files. Recording carries on while the gateway reads.
+# On each analyser: SYSTEM → Interface → LAN: set a fixed IP, subnet mask and gateway; set a 4-character web password (Password Setting page)
+# so nobody else on the LAN can press START/RESET on the remote screen. Recording carries on while the gateway reads.
 #
-#   live values   → "communication commands" over TCP (commandPort)  — every pollMs
-#   recorded data → the analyser's FTP server (internal memory / SD)  — browse + download from the app
+#   live values   → TCP port 3198 text commands — every pollMs
+#   recorded data → Hioki PQ ONE over LAN (PW3198 has no FTP) → Export CSV → import in the app
 #   remote screen → http://<ip>/  (the analyser's own HTTP server; open from a device on the same LAN)
 #
-# IMPORTANT: the command strings and port below are PLACEHOLDERS. Copy the exact query commands and the
-# communication port for your model and firmware from Hioki's "Communication Command Instruction Manual".
-# Each query returns a comma-separated list; "fields" names the values in order (U1..U3, I1..I4, P1..P3, P, Q, S,
-# PF, DPF, F, UTHD1..3, ITHD1..3, KF, UUNB, WP …). Responses with header+value pairs are mapped automatically.
+# Live values use the PW3198 preset (verified on a real PW3198, firmware 1.08): TCP port 3198,
+#   ":HEADer ON" + ":MEASure:ITEM:POWer 159,255,255" once per connection, then ":MEASure?" every pollMs.
+# Leave "queries" out to use the preset. PW3198 has no FTP server — recorded files come from PQ ONE (LAN download).
 pq:
   instruments:
     - id: PQ-MAIN
       no: 2
       role: grid
       name: MAIN GRID
-      host: 192.168.10.62
-      commandPort: 3390          # check the manual / instrument LAN screen
+      host: 192.168.1.62
+      model: PW3198
+      commandPort: 3198
       pollMs: 1000
-      ftp: { user: coredash, passwordEnv: PQ_FTP_PASSWORD }
-      queries:
-        - cmd: ':MEASure? U1,U2,U3,I1,I2,I3,I4'          # PLACEHOLDER
-          fields: [U1, U2, U3, I1, I2, I3, I4]
-        - cmd: ':MEASure? P1,P2,P3,P,Q,S,PF,DPF,F'        # PLACEHOLDER
-          fields: [P1, P2, P3, P, Q, S, PF, DPF, F]
-        - cmd: ':MEASure? UTHD1,UTHD2,UTHD3,ITHD1,ITHD2,ITHD3,KF,UUNB'   # PLACEHOLDER
-          fields: [UTHD1, UTHD2, UTHD3, ITHD1, ITHD2, ITHD3, KF, UUNB]
     - id: PQ-LOAD
       no: 3
       role: load
       name: LOAD
-      host: 192.168.10.63
-      commandPort: 3390
-      queries: []                # same as above
+      host: 192.168.1.63          # second analyser, if you have one
+      model: PW3198
     - id: PQ-APF
       no: 6
       role: apf
       name: APF
-      host: 192.168.10.66
-      commandPort: 3390
-      queries: []                # same as above
+      host: 192.168.1.66          # third analyser, if you have one
+      model: PW3198
+    # Panel meters over Modbus give the same live record (profiles in app/pq-meters.js):
+    #   eastron-sdm630 | schneider-pm5560 | siemens-pac3200 | janitza-umg96rm — or "registers: [[U1RMS, 0], [PSUM, 52, 1000], …]"
+    # - id: PQ-LOAD
+    #   no: 3
+    #   name: LOAD
+    #   driver: modbus
+    #   profile: schneider-pm5560
+    #   host: 192.168.1.70        # Modbus TCP (port 502) — or path: COM3 / /dev/ttyUSB0 + baudRate + parity for RS-485
+    #   unitId: 1
+    #   pollMs: 1000
+  # Power-quality alarms (app/pq-alarms.js): harmonics, HF noise, spikes, dips, swells, interruptions, unbalance,
+  # frequency, PF, neutral current, K-factor, lost connection. Udin = nominal phase voltage on the analyser.
+  unom: 230
+  notify: [phone]        # channel ids from the top-level "notify:" block; alarms always, "watch" level only with pushWarn
+  pushWarn: false
+
+# top-level (outside "pq:") — phone push through the free ntfy app (Android/iOS): subscribe to the same secret topic
+# notify:
+#   phone: { type: ntfy, topic: coredash-CHANGE-ME-to-a-long-random-name, server: https://ntfy.sh }

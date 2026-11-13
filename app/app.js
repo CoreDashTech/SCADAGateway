@@ -295,7 +295,7 @@ function fmtVal(v, lang) {
 // ---------------------------------------------------------------- app state
 const S = {
   view: 'boot', tab: (location.hash || '#home').slice(1).split(/[?&]/)[0], seg: 'machines', sheet: null, settings: false,
-  pending: null, toast: null, lang: store.get('lang', 'th'), theme: store.get('theme', 'navy'),
+  pending: null, toast: null, lang: store.get('lang', 'th'), theme: store.get('theme2', 'light'), themePop: false,
   gw: null, loginErr: '', hist: null, installEvt: null, busy: false,
   scadaMode: 'twin', blocked: null, deferred: null, bypassMin: 15, bypassReason: '', dayNight: store.get('dayNight', 'auto'), labels: true, zoom: null
 };
@@ -310,7 +310,12 @@ function applyPrefs() {
   document.documentElement.lang = S.lang;
   document.documentElement.dataset.theme = S.theme;
   const meta = document.querySelector('meta[name=theme-color]');
-  if (meta) meta.content = S.theme === 'light' ? '#FFFFFF' : S.theme === 'graphite' ? '#121418' : '#0A1230';
+  if (meta) meta.content = (THEMES.find((m) => m[0] === S.theme) || THEMES[0])[4];
+}
+// [key, Thai, English, swatch, browser bar colour] — light is the default; navy is the original instrument look
+const THEMES = [['light', 'สว่าง', 'Light', '#F3F5F9', '#FFFFFF'], ['soft', 'ครีมถนอมสายตา', 'Warm paper', '#F3EEE4', '#FBF8F2'], ['dim', 'มืดนุ่ม', 'Dim', '#2A313C', '#1E232C'], ['navy', 'กรมท่า', 'Navy', '#0E1733', '#0A1230'], ['graphite', 'กราไฟต์', 'Graphite', '#2A2F38', '#121418']];
+function themeSwatches(cls = 'th-sw') {
+  return THEMES.map(([k, th, en, c]) => `<button class="${cls} ${S.theme === k ? 'on' : ''}" data-act="theme" data-arg="${k}" aria-pressed="${S.theme === k}"><span style="background:${c}"></span>${S.lang === 'th' ? th : en}</button>`).join('');
 }
 
 // developer badge: keep the animation phase continuous across re-renders
@@ -322,6 +327,7 @@ const ICON = {
   wave: 'M2 12h3l2-6 3 12 3-14 3 16 2-8h4',
   home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', house: 'M3 10.5L12 3l9 7.5M5 9v11h14V9M9.5 20v-6h5v6M15.5 6.5V4h2v4', bolt: 'M13 2L4 14h7l-1 8 9-12h-7z', scada: 'M4 6h5v5H4zM15 13h5v5h-5zM9 8.5h4v7h2', control: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
   alerts: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0', report: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  theme: 'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z',
   gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
   bench: 'M9 3h6M10 3v6L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9V3M7 15h10',
   bulb: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z', warn: 'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',
@@ -1130,9 +1136,10 @@ function header() {
   return `<header class="hdr">
     ${badge(34, 41)}
     <div class="ttl"><b>${titles[S.tab]}</b><span><span class="conn" style="background:${conn}"></span>${x.site} · ${hhmm(Date.now())}</span></div>
-    <button class="ibtn" style="margin-left:auto" data-act="settings" aria-label="${x.settings}">${svg(ICON.gear)}</button>
+    <button class="ibtn th-btn" style="margin-left:auto" data-act="themepop" aria-label="${x.theme}" aria-expanded="${S.themePop}">${svg(ICON.theme)}</button>
+    <button class="ibtn" data-act="settings" aria-label="${x.settings}">${svg(ICON.gear)}</button>
     <button class="ibtn" data-act="tab" data-arg="alerts" aria-label="${x.alerts} ${open}">${svg(ICON.alerts)}${open ? `<span class="badge">${open}</span>` : ''}</button>
-  </header>${src.mode === 'demo' && S.tab !== 'pq' ? `<div class="banner">${x.demoBanner}</div>` : ''}${src.mode === 'live' && !src.connected ? `<div class="banner">${x.offline}</div>` : ''}`;
+  </header>${S.themePop ? `<div class="th-pop" role="dialog" aria-label="${x.theme}"><b>${x.theme}</b><div>${themeSwatches()}</div></div>` : ''}${src.mode === 'demo' && S.tab !== 'pq' ? `<div class="banner">${x.demoBanner}</div>` : ''}${src.mode === 'live' && !src.connected ? `<div class="banner">${x.offline}</div>` : ''}`;
 }
 
 function tabs() {
@@ -1362,14 +1369,14 @@ function viewSheet() {
 function viewSettings() {
   if (!S.settings) return '';
   const x = t(), u = src.user || {};
-  const themes = [['navy', 'Navy', '#0E1733'], ['graphite', 'Graphite', '#2A2F38'], ['light', 'Light', '#F3F5F9']].map(([k, l, c]) => `<button class="btn ${S.theme === k ? 'on' : ''}" data-act="theme" data-arg="${k}" aria-pressed="${S.theme === k}" style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:28px;height:28px;border-radius:50%;border:2px solid var(--ln2);background:${c}"></span>${l}</button>`).join('');
+  const themes = themeSwatches('th-sw big');
   const np = 'Notification' in window ? (Notification.permission === 'granted' ? `<span class="pill run">${x.notifOn}</span>` : `<button class="btn" style="min-height:40px;padding:8px 12px" data-act="notif">${x.notifAsk}</button>`) : `<span class="muted">${x.notifNo}</span>`;
   return `<div class="scrim"><button style="flex:1;background:transparent;border:0" data-act="close-settings" aria-label="${x.closePanel}"></button>
     <div class="sheet" role="dialog" aria-label="${x.settings}"><span class="handle"></span>
       <div class="row"><span style="width:48px;height:48px;border-radius:50%;background:#1F5FFF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px">${esc((u.name || '?').slice(0, 1))}</span>
         <div><div style="font-weight:700;color:var(--tx)">${esc(u.name || '')}</div><div class="muted">${x.role[u.role] || esc(u.role || '')}</div></div></div>
       <div><div class="muted" style="font-weight:600;margin-bottom:8px">${x.language}</div><div class="grid2">${langButtons()}</div></div>
-      <div><div class="muted" style="font-weight:600;margin-bottom:8px">${x.theme}</div><div class="grid3">${themes}</div></div>
+      <div><div class="muted" style="font-weight:600;margin-bottom:8px">${x.theme}</div><div class="th-grid">${themes}</div></div>
       <div class="row" style="justify-content:space-between"><span style="color:var(--tx)">${x.notif}</span>${np}</div>
       <div class="row" style="justify-content:space-between"><span style="color:var(--tx)">${x.connection}</span><span class="muted"><span class="conn" style="background:${src.connected ? '#3B82F6' : '#F59E0B'}"></span>${src.mode === 'demo' ? x.demo : src.connected ? x.live : x.offline}</span></div>
       ${installCard()}
@@ -1581,7 +1588,8 @@ root.addEventListener('click', async (ev) => {
     case 'settings': S.settings = true; S.sheet = null; break;
     case 'close-settings': S.settings = false; break;
     case 'lang': S.lang = arg; store.set('lang', arg); break;
-    case 'theme': S.theme = arg; store.set('theme', arg); break;
+    case 'theme': S.theme = arg; store.set('theme2', arg); S.themePop = false; break;
+    case 'themepop': S.themePop = !S.themePop; break;
     case 'set': { const v = el.dataset.val; await command([{ tag: arg, value: v === 'true' ? true : v === 'false' ? false : Number(v) }]); break; }
     case 'scene': { const sc = SCENES[arg]; await command(sc.steps.map(([tag, value]) => ({ tag, value })), sc.title); break; }
     case 'confirm': await confirmPending(); break;

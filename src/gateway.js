@@ -57,6 +57,17 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
   }));
 
   const pq = new PqService(cfg.pq || {}, { simulate: cfg.simulate, log });
+  // power-quality alarms → phones (pq.notify: [channel ids]; pq.pushWarn: true to include "watch" level)
+  const pqPush = {};
+  pq.onAlarm = (kind, ev) => {
+    const ch = (cfg.pq && cfg.pq.notify) || []; if (!ch.length || !pq.alarmText) return;
+    if (kind !== 'clear' && ev.sev !== 'alarm' && !(cfg.pq && cfg.pq.pushWarn)) return;
+    const key = ev.dev + '|' + ev.rule, now = Date.now();
+    if (kind !== 'clear' && pqPush[key] && now - pqPush[key] < 600e3) return;
+    if (kind === 'clear' && !pqPush[key]) return;
+    if (kind !== 'clear') pqPush[key] = now;
+    notifier.sendText(ch, pq.alarmText(ev, 'th', kind), { priority: kind === 'clear' ? 2 : ev.sev === 'alarm' ? 5 : 3 });
+  };
   const cams = new CamService(cfg.cameras || [], { log });
   const gw = { cfg, pq, cams, store, drivers, sim, audit, commands, interlocks, alarms, historian, scheduler, notifier, devices, log };
   gw.server = createServer(gw);

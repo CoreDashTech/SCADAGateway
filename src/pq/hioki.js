@@ -31,7 +31,7 @@ class HiokiCmdClient {
       });
     });
   }
-  drop(e) { this.sock = null; this.buf = ''; for (const w of this.waiters.splice(0)) w.reject(e); }
+  drop(e) { this.sock = null; this.buf = ''; this.ready = false; for (const w of this.waiters.splice(0)) w.reject(e); }
   onData(d) {
     this.buf += d.toString('latin1');
     let i;
@@ -55,6 +55,13 @@ class HiokiCmdClient {
     this.chain = p.catch(() => {});
     return p;
   }
+  // a setting command (no reply expected), serialised with the queries
+  send(cmd) {
+    const run = async () => { await this.connect(); this.sock.write(cmd + this.eol); await new Promise((r) => setTimeout(r, 60)); };
+    const p = this.chain.then(run, run);
+    this.chain = p.catch(() => {});
+    return p;
+  }
   close() { if (this.sock) this.sock.destroy(); this.sock = null; }
 }
 
@@ -63,8 +70,8 @@ function parseResponse(line) {
   const parts = String(line).split(/[;,]/).map((s) => s.trim()).filter(Boolean);
   const values = [], named = {};
   for (const p of parts) {
-    const m = p.match(/^(?::?[A-Z]+:)*([A-Za-z][\w]*)\s+([-+]?[\d.]+(?:E[-+]?\d+)?)$/i);
-    if (m) { named[m[1].toUpperCase()] = Number(m[2]); values.push(Number(m[2])); continue; }
+    const m = p.match(/^(?::?[A-Z]+:)*([A-Za-z][\w+\-]*)\s+([-+]?[\d.]+(?:E[-+]?\d+)?)$/i);
+    if (m) { const v = Number(m[2]), ok = Number.isFinite(v) && Math.abs(v) < 9e37 ? v : null; named[m[1].toUpperCase()] = ok; values.push(ok); continue; }
     const n = Number(p);
     values.push(Number.isFinite(n) && Math.abs(n) < 9e37 ? n : null); // Hioki returns ±9.9E+99 style for "no data"
   }
