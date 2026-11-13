@@ -3,6 +3,7 @@
 import { PqModel, ROLES, waveform, spectrumOf, ITIC_UPPER, ITIC_LOWER, iticVerdict } from './pq-model.js';
 import { apfCase, ASSUME, TARIFF } from './audit-engine.js';
 import { createAuditView } from './audit.js';
+import { parsePw3198, pw3198Record } from './pw3198.js';
 
 const B = (th, en) => ({ th, en });
 const T = {
@@ -52,6 +53,10 @@ const T = {
   cols: B('เลือกคอลัมน์ที่จะ plot', 'Columns to plot'), stat: B('สถิติ', 'Statistics'), rows: B('แถว', 'rows'),
   min: B('ต่ำสุด', 'Min'), avg: B('เฉลี่ย', 'Avg'), max: B('สูงสุด', 'Max'), p95: B('P95', 'P95'),
   exportCsv: B('ส่งออก CSV ค่าปัจจุบัน', 'Export current CSV'), remote: B('เปิดหน้าจอเครื่อง', 'Open remote screen'),
+  bridgeOn: B('● ค่าสดจาก PW3198 ผ่านเครื่องมือ CoreDash บนเครื่องนี้ ·', '● Live values from the PW3198 through the CoreDash tool on this PC ·'),
+  bridgeErr: B('เครื่องมือ CoreDash ปิดอยู่หรือหยุดส่งค่า — เปิด CoreDash-PW3198.bat แล้วกด 8 อีกครั้ง', 'The CoreDash tool is closed or stopped — run CoreDash-PW3198.bat and press 8 again'),
+  bridgeOnly: B('โหมดค่าสดจากเครื่องมือภาคสนามอ่านค่าได้อย่างเดียว', 'The field-tool live mode is read-only'),
+  noVolt: B('⚠ ยังไม่มีแรงดันเข้าเครื่องวัด (U ≈ 0 V) — ต่อสายวัดแรงดัน L1/L2/L3/N ก่อน ค่า P, PF, THD จึงจะขึ้น', '⚠ No voltage at the analyser (U ≈ 0 V) — connect the L1/L2/L3/N voltage leads; P, PF and THD need them'),
   gwNeed: B('โหมดเกตเวย์ใช้ได้เมื่อเข้าสู่ระบบด้วย CoreDash Gateway (ไม่ใช่โหมดสาธิต) · ตอนนี้แสดงข้อมูลสาธิต', 'Gateway mode needs a CoreDash Gateway sign-in (not demo) · showing demo data'),
   gwErr: B('อ่าน /api/pq จากเกตเวย์ไม่ได้ — ตรวจว่าเปิดบล็อก pq: ใน YAML แล้ว', 'Cannot read /api/pq from the gateway — check the pq: block in the YAML'),
   fileBad: B('อ่านไฟล์นี้ไม่ได้: ไม่พบคอลัมน์ตัวเลข', 'Cannot read this file: no numeric columns found'),
@@ -74,16 +79,18 @@ function limI(h) { const odd = h < 11 ? 7 : h < 17 ? 3.5 : h < 23 ? 2.5 : h < 35
 const LIMU = { 2: 2, 3: 5, 4: 1, 5: 6, 6: 0.5, 7: 5, 9: 1.5, 11: 3.5, 13: 3, 15: 0.4, 17: 2, 19: 1.5, 21: 0.3, 23: 1.5, 25: 1.5 };
 function limU(h) { if (LIMU[h] != null) return LIMU[h]; if (h % 2 === 0) return 0.5; if (h % 3 === 0) return 0.2; return h <= 50 ? Math.max(0.2, 2.27 * 17 / h - 0.27) : 0.2; }
 
-export function createPqView({ lang = () => 'th', live = () => null, onToast = () => {} } = {}) {
+export function createPqView({ lang = () => 'th', live: liveGw = () => null, onToast = () => {} } = {}) {
   const L = () => (lang() === 'en' ? 'en' : 'th');
   const x = (k) => T[k][L()];
   const model = new PqModel();
   const st = {
-    imports: [], importSkipped: 0, importFrom: false,
+    imports: [], importSkipped: 0, importFrom: false, bridge: null, bridgeRing: [],
     mode: 'live', src: 'demo', sel: 'PQ-MAIN', tab: 'meas', hk: 'I', hp: 0, guide: true,
     snap: null, hist: null, histTs: 0, spark: {}, gwErr: null, gwMode: null, files: null, file: null, fileCols: [], hover: null,
     apfFromDemo: Date.now() - 6 * 3600e3
   };
+  // live source: a CoreDash Gateway sign-in, or the field tool's local bridge (#pq?live=http://127.0.0.1:port)
+  const live = () => (st.bridge ? { base: st.bridge, bridge: true } : liveGw());
   const el = document.createElement('section');
   el.className = 'pq';
   let timer = null, raf = 0, built = '', visible = false, audit = null, auditTick = 0;
@@ -92,24 +99,43 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
   const normalize = (s, gw) => {
     if (gw) {
       const inst = {}, online = {}, meta = {};
-      for (const i of s.instruments) { inst[i.id] = i.data; online[i.id] = !!i.online; meta[i.id] = i; }
+      for (const i of s.instruments) {
+        const d = i.data || (i.raw ? pw3198Record(i.id, parsePw3198(i.raw)) : null);
+        inst[i.id] = d; online[i.id] = !!i.online && !!d; meta[i.id] = i;
+      }
       return { ts: Date.now(), apf: s.apf, inst, online, meta, events: s.events || [], mode: s.mode };
     }
     return { ts: s.ts, apf: s.apf, inst: s.instruments, online: { 'PQ-MAIN': true, 'PQ-LOAD': true, 'PQ-APF': true }, meta: {}, events: s.events, mode: 'demo' };
   };
   const api = async (p, opt = {}) => {
     const g = live(); if (!g) throw new Error('no gateway');
-    const r = await fetch(g.base + p, { ...opt, headers: { Authorization: 'Bearer ' + g.token, 'Content-Type': 'application/json', ...(opt.headers || {}) } });
+    if (g.bridge) {
+      if (p.startsWith('/api/pq/history')) return st.bridgeRing;
+      if (p.includes('/files')) return [];
+      if (p !== '/api/pq') throw new Error(x('bridgeOnly'));
+    }
+    const r = g.bridge ? await fetch(g.base + p, { cache: 'no-store', targetAddressSpace: 'loopback' })
+      : await fetch(g.base + p, { ...opt, headers: { Authorization: 'Bearer ' + g.token, 'Content-Type': 'application/json', ...(opt.headers || {}) } });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return p.includes('/file?') ? r : r.json();
   };
+  // the bridge only serves the latest values: keep a 10-s trend here (same row shape as the gateway ring)
+  function bridgeRow(ts) {
+    const R = st.bridgeRing, last = R[R.length - 1];
+    if (last && ts - last.ts < 10000) return;
+    const g = st.snap.inst['PQ-MAIN'] || {}, l = st.snap.inst['PQ-LOAD'] || {}, a = st.snap.inst['PQ-APF'] || {};
+    const p1 = (r) => (r.ph && r.ph[0]) || {};
+    R.push({ ts, apf: (p1(a).I || 0) > 5, gP: g.P, gS: g.S, gPF: g.PF, gIthd: g.Ithd, gUthd: g.Uthd, gI: p1(g).I, gQ: g.Q, lQ: l.Q, lP: l.P, lS: l.S, lPF: l.PF, lIthd: l.Ithd, lI: p1(l).I, aI: p1(a).I });
+    if (R.length > 8640) R.shift();
+  }
   async function pull() {
     const now = Date.now();
     if (st.src === 'gw' && live()) {
       try {
         st.snap = normalize(await api('/api/pq'), true); st.gwErr = null; st.gwMode = st.snap.mode;
+        if (st.bridge) bridgeRow(now);
         if (!st.hist || now - st.histTs > 60000) { st.hist = await api('/api/pq/history?hours=24'); st.histTs = now; }
-      } catch (e) { st.gwErr = x('gwErr'); }
+      } catch (e) { st.gwErr = x(st.bridge ? 'bridgeErr' : 'gwErr'); }
     }
     if (st.src !== 'gw' || !live() || st.gwErr) {
       st.snap = normalize(model.snapshot(now), false);
@@ -253,7 +279,9 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
       if (sp && a.length > 1) { const lo = Math.min(...a), hi = Math.max(...a), span = Math.max(1e-6, hi - lo); sp.setAttribute('d', a.map((v, k) => `${k ? 'L' : 'M'}${(k / 89 * 200).toFixed(1)} ${(27 - (v - lo) / span * 24).toFixed(1)}`).join('')); }
     }
     region('clock', `<span class="pq-led ${s.mode === 'live' ? 'live' : st.src === 'file' ? 'off' : 'sim'}"></span>${s.mode === 'live' ? x('live') : x('sim')} · ${new Date(s.ts).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB')}`);
-    region('notice', st.src === 'gw' && !live() ? `<div class="pq-notice">${x('gwNeed')}</div>` : st.gwErr ? `<div class="pq-notice bad">${st.gwErr}</div>` : '');
+    const nv = st.src === 'gw' && live() && !st.gwErr && Object.values(s.inst || {}).some((d) => d && d.live && d.noVoltage);
+    region('notice', st.src === 'gw' && !live() ? `<div class="pq-notice">${x('gwNeed')}</div>` : st.gwErr ? `<div class="pq-notice bad">${st.gwErr}</div>`
+      : (st.bridge && st.src === 'gw' ? `<div class="pq-notice">${x('bridgeOn')} ${esc(st.bridgeHost || '')}</div>` : '') + (nv ? `<div class="pq-notice bad">${x('noVolt')}</div>` : ''));
     region('exec', execHtml());
     if (st.tab === 'meas') region('meas', measHtml());
     if (st.tab === 'phasor') region('phtab', phasorTable());
@@ -651,6 +679,8 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
   el.addEventListener('pointerleave', () => { st.hover = null; redraw(); });
   window.addEventListener('resize', () => redraw());
 
+  { const m = /[?&#]live=([^&]+)/.exec(location.hash || '');
+    if (m) { const base = decodeURIComponent(m[1]); if (/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) { const h = /[?&#]host=([^&]+)/.exec(location.hash); st.bridge = base; st.bridgeHost = h ? decodeURIComponent(h[1]) : ''; st.src = 'gw'; st.guide = false; st.mode = 'live'; history.replaceState(null, '', location.pathname + location.search + '#pq'); } } }
   { const m = /[?&#]import=([^&]+)/.exec(location.hash || '');
     if (m) { const base = decodeURIComponent(m[1]); if (/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) { history.replaceState(null, '', location.pathname + location.search + '#pq'); st.tab = 'files'; setTimeout(() => importFromTool(base), 300); } } }
   return {

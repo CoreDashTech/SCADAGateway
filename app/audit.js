@@ -5,6 +5,7 @@ const B = (th, en) => ({ th, en });
 const T = {
   tApf: B('ที่มาของตัวเลข ฿', 'Where the ฿ comes from'), tSurvey: B('สำรวจเครื่องจักร', 'Machine survey'), tPilot: B('ทดลองนำร่อง (พิสูจน์ผล)', 'Pilot (prove it)'), tOwner: B('สรุปสำหรับเจ้าของ', 'Owner summary'),
   sim: B('ข้อมูลตัวอย่าง (จำลอง) — แทนที่ด้วยไฟล์จาก PW3198 ได้', 'Example data (simulated) — replace with PW3198 files'),
+  needTwo: B('การคำนวณ APF ต้องมีค่าจาก 2 จุดพร้อมกัน: #3 LOAD (หน้า APF) และ #2 MAIN GRID (ตู้เมน) — ตอนนี้ต่อเครื่องวัดอยู่ 1 เครื่อง ใช้แท็บ “ทดลองนำร่อง” แทน: วัดจุดเดิมก่อนแก้ 7 วัน แล้ววัดหลังแก้ 7 วัน (ไฟล์ CSV จากเมนู 8 ใช้ได้เลย)', 'The APF calculation needs two points measured together: #3 LOAD (upstream of the APF) and #2 MAIN GRID. Only one analyser is connected — use the Pilot tab instead: measure the same point 7 days before and 7 days after the fix (the CSV from menu 8 works).'),
   netApf: B('ผลต่อบิลค่าไฟสุทธิของ APF', 'Net bill effect of the APF'), perMonth: B('บาท/เดือน', 'THB/month'),
   apfQ: B('คำตอบสั้น ๆ: ตัวเลขนี้มาจากไหน', 'Short answer: where this number comes from'),
   apfA: B('เทียบเครื่องวัด #3 (ฝั่งโหลด = เหมือนไม่มี APF) กับ #2 (แผงเมน = หลัง APF ชดเชย) ณ ช่วงเวลาเดียวกัน แล้วแปลงความต่างเป็นเงินตามโครงสร้างค่าไฟ กฟภ. ทีละรายการด้านล่าง ไม่ได้แก้เครื่องจักรตัวใด — APF ตัวเดียวติดที่แผงเมนชดเชยให้ทั้งโรงงาน',
@@ -130,7 +131,7 @@ export function createAuditView({ lang = () => 'th', snapshot = () => null, hist
   }
   function tabApf() {
     const s = snapshot(), r = s && apfCase(s, history(), st.a, st.t);
-    if (!r) return `<div class="muted">—</div>`;
+    if (!r) return `<div class="au-verdict warn">${x('needTwo')}</div>`;
     const l = s.inst['PQ-LOAD'], g = s.inst['PQ-MAIN'];
     return `<section class="au-hero ${r.total < 0 ? 'neg' : ''}"><div><small>${x('netApf')}</small><b>${baht(r.total)}</b><span>${x('perMonth')}</span></div><p><b>${x('apfQ')}</b><br>${x('apfA')}</p></section>
       <h4>${x('waterfall')}</h4><div class="au-scroll">${waterfall(r.items, r.total)}</div>${itemCards(r)}
