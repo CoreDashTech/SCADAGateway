@@ -1,11 +1,14 @@
 // CoreDash Nexus — "Power Quality Center": live data from three Hioki PW3198 analysers (MAIN GRID · LOAD · APF)
 // Sources: demo model (this device) · CoreDash Gateway on the LAN (/api/pq) · a file (CSV from USB-OTG / SD / PQ ONE export)
 import { PqModel, ROLES, waveform, spectrumOf, ITIC_UPPER, ITIC_LOWER, iticVerdict } from './pq-model.js';
+import { apfCase, ASSUME, TARIFF } from './audit-engine.js';
+import { createAuditView } from './audit.js';
 
 const B = (th, en) => ({ th, en });
 const T = {
   title: B('ศูนย์คุณภาพไฟฟ้า', 'Power Quality Center'),
   sub: B('Hioki PW3198 × 3 · IEC 61000-4-30 Class A', 'Hioki PW3198 × 3 · IEC 61000-4-30 Class A'),
+  mLive: B('มอนิเตอร์', 'Monitor'), mAudit: B('วิเคราะห์ความคุ้มค่า ฿', 'Savings analysis ฿'), why: B('ที่มาของตัวเลข →', 'Where it comes from →'), net: B('ผลสุทธิต่อบิล', 'Net bill effect'),
   srcDemo: B('สาธิต', 'Demo'), srcGw: B('เกตเวย์ LAN', 'LAN gateway'), srcFile: B('ไฟล์', 'File'),
   live: B('สด', 'LIVE'), offline: B('ออฟไลน์', 'OFFLINE'), sim: B('จำลอง', 'SIM'),
   guideT: B('ดึงข้อมูลจากเครื่องวัดทางไหนดี — ไม่ต้องถอดเสียบ USB / SD', 'Best way to pull the data — no USB or SD swapping'),
@@ -29,7 +32,7 @@ const T = {
   hRed: B('ฮาร์มอนิกกระแสลดลง', 'Harmonic current cut'), kvaRel: B('คืนพิกัดหม้อแปลง', 'Transformer capacity freed'),
   curRed: B('กระแสสายเมนลดลง', 'Feeder current down'), lossRed: B('ความสูญเสียในสาย/หม้อแปลงลดลง', 'Cable/transformer losses down'),
   save: B('ประหยัดโดยประมาณ', 'Estimated saving'), perM: B('/เดือน', '/month'),
-  saveNote: B('ประมาณจากค่าปรับ PF ของ กฟภ. (56.07 บาท/kvar ส่วนที่เกิน 61.97% ของ kW) + ความสูญเสีย I²R ที่ลดลง (สมมติสูญเสีย 2% ที่โหลดเต็ม, 4.2 บาท/kWh, 500 ชม./เดือน)', 'Estimate from the PEA PF charge (56.07 THB/kvar above 61.97% of kW) + lower I²R losses (assumes 2% loss at full load, 4.2 THB/kWh, 500 h/month)'),
+  saveNote: B('ผลสุทธิ = ค่าปรับ PF ที่ลด + ค่าไฟจากความสูญเสียหม้อแปลง/สายที่ลด + ค่าดีมานด์ − ความสูญเสียของตัว APF เอง · แตะ "ที่มาของตัวเลข" เพื่อดูสูตรและแก้สมมติฐาน', 'Net = PF charge saved + transformer/cable loss energy saved + demand − the APF\'s own losses · tap "Where it comes from" for formulas and assumptions'),
   tMeas: B('ค่าวัด', 'Readings'), tWave: B('รูปคลื่น', 'Waveform'), tPhasor: B('เฟสเซอร์', 'Phasor'), tHarm: B('ฮาร์มอนิก', 'Harmonics'), tTrend: B('แนวโน้ม 24 ชม.', '24 h trend'), tEvents: B('เหตุการณ์', 'Events'), tFiles: B('ไฟล์ / นำเข้า', 'Files / import'),
   phase: B('เฟส', 'Phase'), hI: B('กระแส I', 'Current I'), hU: B('แรงดัน U', 'Voltage U'), total: B('รวม', 'Total'),
   limitI: B('เส้นประ = ขีดจำกัด IEEE 519-2014 (Isc/IL 20–50)', 'Dashed = IEEE 519-2014 limit (Isc/IL 20–50)'),
@@ -73,13 +76,13 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
   const x = (k) => T[k][L()];
   const model = new PqModel();
   const st = {
-    src: 'demo', sel: 'PQ-MAIN', tab: 'meas', hk: 'I', hp: 0, guide: true,
+    mode: 'live', src: 'demo', sel: 'PQ-MAIN', tab: 'meas', hk: 'I', hp: 0, guide: true,
     snap: null, hist: null, histTs: 0, spark: {}, gwErr: null, gwMode: null, files: null, file: null, fileCols: [], hover: null,
     apfFromDemo: Date.now() - 6 * 3600e3
   };
   const el = document.createElement('section');
   el.className = 'pq';
-  let timer = null, raf = 0, built = '', visible = false;
+  let timer = null, raf = 0, built = '', visible = false, audit = null, auditTick = 0;
 
   // ------------------------------------------------------------ data
   const normalize = (s, gw) => {
@@ -121,13 +124,16 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
   function skeleton() {
     const srcBtn = (k, ic) => `<button class="pq-src ${st.src === k ? 'on' : ''}" data-pq="src" data-arg="${k}">${ic} ${x('src' + k[0].toUpperCase() + k.slice(1))}</button>`;
     const tabs = ['meas', 'wave', 'phasor', 'harm', 'trend', 'events', 'files'].map((k) => `<button class="pq-tab ${st.tab === k ? 'on' : ''}" data-pq="tab" data-arg="${k}">${x('t' + k[0].toUpperCase() + k.slice(1))}</button>`).join('');
-    return `
-    <header class="pq-hero">
+    const modes = `<div class="pq-modes"><button class="${st.mode === 'live' ? 'on' : ''}" data-pq="mode" data-arg="live">📈 ${x('mLive')}</button><button class="${st.mode === 'audit' ? 'on' : ''}" data-pq="mode" data-arg="audit">${x('mAudit')}</button></div>`;
+    const hero = `<header class="pq-hero">
       <div class="pq-crest"><svg viewBox="0 0 48 48" width="44" height="44"><circle cx="24" cy="24" r="21" fill="none" stroke="${GOLD}" stroke-width="1.5"/><circle cx="24" cy="24" r="16" fill="none" stroke="${GOLD}" stroke-opacity=".45"/><path d="M5 24h6l3-9 5 18 5-22 5 26 4-13h10" fill="none" stroke="#7DD3FC" stroke-width="2" stroke-linejoin="round"/></svg></div>
       <div class="pq-ttl"><h2>${x('title')}</h2><small>${x('sub')}</small></div>
-      <div class="pq-srcs">${srcBtn('demo', '◉')}${srcBtn('gw', '⇄')}${srcBtn('file', '▤')}</div>
+      ${modes}
+      ${st.mode === 'live' ? `<div class="pq-srcs">${srcBtn('demo', '◉')}${srcBtn('gw', '⇄')}${srcBtn('file', '▤')}</div>` : ''}
       <div class="pq-clock" data-r="clock"></div>
-    </header>
+    </header>`;
+    if (st.mode === 'audit') return hero + `<div class="pq-audit-host"></div>`;
+    return `${hero}
     <div data-r="notice"></div>
     ${st.guide ? guideHtml() : `<button class="pq-guide-open" data-pq="guide">ⓘ ${x('guideShow')}</button>`}
     <div class="pq-insts" data-r="cards">${ROLES.map(cardShell).join('')}</div>
@@ -254,9 +260,8 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
     const Ig = g.ph.reduce((q, p) => q + p.I, 0) / 3, Il = l.ph.reduce((q, p) => q + p.I, 0) / 3;
     const ihG = g.ph.reduce((q, p) => q + p.I * (p.Ithd / 100) / Math.sqrt(1 + (p.Ithd / 100) ** 2), 0), ihL = l.ph.reduce((q, p) => q + p.I * (p.Ithd / 100) / Math.sqrt(1 + (p.Ithd / 100) ** 2), 0);
     const hRed = ihL > 0 ? (1 - ihG / ihL) * 100 : 0, curRed = Il > 0 ? (1 - Ig / Il) * 100 : 0, lossRed = Il > 0 ? (1 - (Ig / Il) ** 2) * 100 : 0;
-    const pen = (P, Q) => Math.max(0, Math.abs(Q) - 0.6197 * P) * 56.07;
-    const lossKw = (I) => 0.02 * l.P * (I / Math.max(1, Il)) ** 2;
-    const save = (pen(l.P, l.Q) - pen(g.P, g.Q)) + (lossKw(Il) - lossKw(Ig)) * 500 * 4.2;
+    const ac = apfCase(st.snap, st.hist, ASSUME, TARIFF);
+    const save = ac ? ac.total : 0;
     const cmp = (lab, va, vb, u, d, good) => { const better = good === 'down' ? vb < va : vb > va; return `<div class="pq-cmp"><small>${lab}</small><div><span class="was">${fmt(va, d)}</span><span class="arr">→</span><b class="${Math.abs(vb - va) < 1e-9 ? '' : better ? 'good' : 'bad'}">${fmt(vb, d)}</b><i>${u}</i></div></div>`; };
     const sim = s.mode !== 'live' && s.apf;
     return `<div class="pq-exec-h"><div><b>${x('exec')}</b><small>${x('execSub')}</small></div>
@@ -267,7 +272,7 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
         <div><small>${x('curRed')}</small><b>${fmt(curRed, 0)}%</b><span>${fmt(Il - Ig, 0)} A</span></div>
         <div><small>${x('kvaRel')}</small><b>${fmt(l.S - g.S, 0)} kVA</b></div>
         <div><small>${x('lossRed')}</small><b>${fmt(lossRed, 0)}%</b></div>
-        <div class="pq-hl"><small>${x('save')}</small><b class="good">฿${fmtN(Math.max(0, save), 0)}</b><span>${x('perM')}</span></div>
+        <div class="pq-hl ${save < 0 ? 'neg' : ''}"><small>${x('net')}</small><b class="${save < 0 ? 'bad' : 'good'}">${save < 0 ? '−' : ''}฿${fmtN(Math.abs(save), 0)}</b><span>${x('perM')}</span><button class="pq-why" data-pq="audit">${x('why')}</button></div>
       </div>
       <small class="pq-note">${x('saveNote')}${sim ? ' · ' + x('apfNote') : ''}${a ? '' : ''}</small>`;
   }
@@ -538,16 +543,19 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
 
   // ------------------------------------------------------------ build / events
   function rebuild(force) {
-    const key = [st.src, st.sel, st.tab, st.hk, st.hp, st.guide, L(), st.files ? st.files.length : -1, st.file ? st.file.name : ''].join('|');
+    const key = [st.mode, st.src, st.sel, st.tab, st.hk, st.hp, st.guide, L(), st.files ? st.files.length : -1, st.file ? st.file.name : ''].join('|');
     if (!force && key === built) return;
     built = key; el.innerHTML = skeleton();
+    if (st.mode === 'audit') { audit ||= createAuditView({ lang: () => L(), snapshot: () => st.snap, history: () => st.hist, parseCsv }); el.querySelector('.pq-audit-host').appendChild(audit.el); audit.show(); }
     bindAll(); redraw();
   }
   el.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-pq]'); if (!b || !el.contains(b)) return;
     e.stopPropagation();
     const k = b.dataset.pq, arg = b.dataset.arg;
-    if (k === 'src') { st.src = arg; st.hist = null; st.files = null; await pull(); if (st.tab === 'files') loadFiles(); }
+    if (k === 'mode') { st.mode = arg; }
+    else if (k === 'audit') { st.mode = 'audit'; if (audit) audit._state.tab = 'apf'; }
+    else if (k === 'src') { st.src = arg; st.hist = null; st.files = null; await pull(); if (st.tab === 'files') loadFiles(); }
     else if (k === 'tab') { st.tab = arg; if (arg === 'files' && !st.files) loadFiles(); }
     else if (k === 'sel') { st.sel = arg; st.files = null; if (st.tab === 'files') loadFiles(); el.querySelectorAll('.pq-card').forEach((c) => c.classList.toggle('sel', c.dataset.arg === arg)); }
     else if (k === 'guide') st.guide = !st.guide;
@@ -576,11 +584,11 @@ export function createPqView({ lang = () => 'th', live = () => null, onToast = (
     el,
     async show() {
       visible = true;
-      if (!timer) { await pull(); timer = setInterval(async () => { if (!visible) return; await pull(); bindAll(); redraw(); }, 1000); }
+      if (!timer) { await pull(); timer = setInterval(async () => { if (!visible) return; await pull(); bindAll(); redraw(); if (st.mode === 'audit' && audit && ++auditTick % 15 === 0) audit.refresh(); }, 1000); }
       rebuild(); bindAll(); redraw();
     },
     hide() { visible = false; if (timer) { clearInterval(timer); timer = null; } },
-    langChanged() { rebuild(true); },
+    langChanged() { rebuild(true); if (audit) audit.langChanged(); },
     _state: st, _model: model, _parseCsv: parseCsv
   };
 }

@@ -186,7 +186,7 @@ export class PqModel {
       if (apfFrom != null) this.apfOn = ms >= apfFrom;
       const s = this.snapshot(ms);
       const g = s.instruments['PQ-MAIN'], l = s.instruments['PQ-LOAD'], a = s.instruments['PQ-APF'];
-      rows.push({ ts: ms, apf: this.apfOn, gP: g.P, gS: g.S, gPF: g.PF, gIthd: g.Ithd, gUthd: g.Uthd, gI: g.ph[0].I, lP: l.P, lS: l.S, lPF: l.PF, lIthd: l.Ithd, lI: l.ph[0].I, aI: a.ph[0].I });
+      rows.push({ ts: ms, apf: this.apfOn, gP: g.P, gS: g.S, gPF: g.PF, gIthd: g.Ithd, gUthd: g.Uthd, gI: g.ph[0].I, gQ: g.Q, lQ: l.Q, lP: l.P, lS: l.S, lPF: l.PF, lIthd: l.Ithd, lI: l.ph[0].I, aI: a.ph[0].I });
     }
     [this.apfOn, this.wh] = keep;
     return rows;
