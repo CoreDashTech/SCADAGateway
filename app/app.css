@@ -917,3 +917,4 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 /* the power-quality page is an instrument panel: keep its own dark surfaces readable on the light theme too */
 .pq .muted, .pq-alarms .muted { color: #94A3B8; }
 .pq-alarms .btn { background: #0B1222; color: #F3D99A; border: 1px solid rgba(212,176,106,.55); }
+.pq-real { color: #86EFAC; font-weight: 700; }

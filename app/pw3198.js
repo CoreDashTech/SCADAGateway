@@ -51,7 +51,7 @@ export function pw3198Record(id, n) {
     id, ph, live: true, status: n.STATUS || null,
     P: kilo(g('PSUM')), Q: kilo(g('QSUM')), S: kilo(g('SSUM')),
     PF: PFs == null ? null : Math.abs(PFs), pfSign: PFs == null ? null : Math.sign(PFs), cos: null,
-    f: g('FREQ'), Uavg: g('UAVGRMS'), Iavg: g('IAVGRMS'),
+    f: g('FREQ'), Uavg: g('UAVGRMS'), Iavg: ph.every((p) => p.I != null) ? (ph[0].I + ph[1].I + ph[2].I) / 3 : g('IAVGRMS'),
     unb: g('UUNB'), Iunb: g('IUNB'), IN: g('I4RMS'), U4: g('U4RMS'),
     Ithd: max('Ithd'), Uthd: max('Uthd'), KF: max('KF'),
     noVoltage: [1, 2, 3].every((k) => !(g('U' + k + 'RMS') > 5))

@@ -67,6 +67,9 @@ const T = {
   alNoti: B('เปิดแจ้งเตือนบนอุปกรณ์นี้', 'Enable notifications on this device'), alNotiOn: B('แจ้งเตือนบนอุปกรณ์นี้เปิดอยู่', 'Notifications on for this device'),
   alPushOn: B('ส่งเข้ามือถือ (ntfy) เปิดอยู่', 'Phone push (ntfy) on'), alPushOff: B('ยังไม่ได้ตั้งส่งเข้ามือถือ', 'Phone push not set up'),
   alNote: B('ค่าสดอ่านทุก 1 วินาที จับเหตุที่นาน ≥ 1 วินาทีได้ครบ (ฮาร์มอนิก ไม่สมดุล PF ไฟตก/เกินต่อเนื่อง) — ไฟตกสั้นกว่า 1 วินาทีและทรานเซียนต์ระดับไมโครวินาที ดูจากหน้า EVENT ของ PW3198 ซึ่งบันทึกครบตามมาตรฐาน Class A', 'Live values are read every second, so conditions lasting ≥ 1 s are caught (harmonics, unbalance, PF, sustained sags/swells). Sub-second dips and µs transients are recorded completely by the PW3198 EVENT function (Class A).'),
+  rn_wave: B('ข้อมูลจริงตอนนี้มีค่า rms/peak/THD รายเฟส — รูปคลื่นในแท็บนี้วาดจาก Urms/Irms และมุมจาก PF จริงของแต่ละเฟส ยังไม่ใช่รูปคลื่นที่เครื่องสุ่มวัด', 'Real data currently gives per-phase rms/peak/THD — this waveform is drawn from the real Urms/Irms and per-phase PF, not the sampled waveform'),
+  rn_phasor: B('ขนาด U, I รายเฟสเป็นค่าจริง · มุมเฟสคำนวณจาก PF และทิศ Q จริงของแต่ละเฟส (มุมฮาร์มอนิกลำดับ 1 ต้องใช้คำสั่งฮาร์มอนิก — เมนู 9 ของเครื่องมือ)', 'Per-phase U and I magnitudes are real · angles are derived from each phase’s real PF and Q sign (fundamental angles need the harmonic command — tool menu 9)'),
+  rn_harm: B('ตอนนี้มีค่าจริงเป็น THD-U / THD-I / K-factor / สัญญาณรบกวน 2–80 kHz รายเฟส (ตาราง ค่าวัด) · กราฟแยกลำดับ 2–50 ต้องใช้คำสั่งฮาร์มอนิก — รันเมนู 9 ของเครื่องมือแล้วส่งผลให้ทีม CoreDash', 'Real per-phase THD-U / THD-I / K-factor / 2–80 kHz noise are in the Measurements table · the order 2–50 chart needs the harmonic command — run tool menu 9 and send the result to CoreDash'),
   bridgeOn: B('● ค่าสดจาก PW3198 ผ่านเครื่องมือ CoreDash บนเครื่องนี้ ·', '● Live values from the PW3198 through the CoreDash tool on this PC ·'),
   bridgeErr: B('เครื่องมือ CoreDash ปิดอยู่หรือหยุดส่งค่า — เปิด CoreDash-PW3198.bat แล้วกด 8 อีกครั้ง', 'The CoreDash tool is closed or stopped — run CoreDash-PW3198.bat and press 8 again'),
   bridgeOnly: B('โหมดค่าสดจากเครื่องมือภาคสนามอ่านค่าได้อย่างเดียว', 'The field-tool live mode is read-only'),
@@ -248,6 +251,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     <section class="pq-exec" data-r="exec"></section>
     <section class="pq-detail">
       <div class="pq-tabs">${tabs}</div>
+      <div data-r="realnote"></div>
       <div class="pq-body">${bodyShell()}</div>
     </section>`;
   }
@@ -360,6 +364,8 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const nv = st.src === 'gw' && live() && !st.gwErr && Object.values(s.inst || {}).some((d) => d && d.live && d.noVoltage);
     region('alarms', alarmsHtml());
     region('srcst', srcStatus());
+    { const d = s.inst && s.inst[st.sel], fake = d && d.live && !(d.ph && d.ph[0] && d.ph[0].uh);
+      region('realnote', fake && ['wave', 'phasor', 'harm'].includes(st.tab) ? `<div class="pq-notice">ⓘ ${x('rn_' + st.tab)}</div>` : ''); }
     for (const r of ROLES) {
       const chip = el.querySelector(`[data-b="${r.id}.chip"]`); if (!chip) continue;
       const host = s.meta && s.meta[r.id] && s.meta[r.id].host, real = st.src === 'gw' && live() && !st.gwErr;
@@ -400,11 +406,14 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   function measHtml() {
     const d = st.snap.inst[st.sel], r = roleOf(st.sel); if (!d) return `<div class="muted">—</div>`;
     const row = (lab, f, u, dg = 1, tot) => `<tr><th>${lab}</th>${d.ph.map((p) => `<td class="num">${fmt(f(p), dg)}</td>`).join('')}<td class="num tot">${tot == null ? '' : fmt(tot, dg)}</td><td class="u">${u}</td></tr>`;
-    return `<div class="pq-lcd"><div class="pq-lcd-h"><b>#${r.no} ${r.name}</b><span>3P4W · 230/400 V · 50 Hz</span><span>${new Date(st.snap.ts).toLocaleTimeString('en-GB')}</span></div>
+    const m = st.snap.meta && st.snap.meta[st.sel];
+    const head = d.live ? `<span class="pq-real">● ${L() === 'th' ? 'ค่าจริง' : 'REAL'} · PW3198 ${esc(m && m.host || '')}</span><span>f ${fmt(d.f, 3)} Hz · U avg ${fmt(d.Uavg, 1)} V</span>` : `<span>3P4W · 230/400 V · 50 Hz</span>`;
+    const extra = d.live ? `${row('U peak', (p) => p.Upk, 'V', 1)}${row('I peak', (p) => p.Ipk, 'A', 1)}${row(L() === 'th' ? 'U รบกวน 2–80 kHz' : 'U noise 2–80 kHz', (p) => p.Uhf, 'V', 2)}${row(L() === 'th' ? 'I รบกวน 2–80 kHz' : 'I noise 2–80 kHz', (p) => p.Ihf, 'A', 2)}` : '';
+    return `<div class="pq-lcd"><div class="pq-lcd-h"><b>#${r.no} ${r.name}</b>${head}<span>${new Date(st.snap.ts).toLocaleTimeString('en-GB')}</span></div>
       <table><thead><tr><th></th>${[1, 2, 3].map((k) => `<th style="color:${PH[k - 1]}">L${k}</th>`).join('')}<th>${x('total')}</th><th></th></tr></thead><tbody>
-      ${row('Urms', (p) => p.U, 'V', 2, d.Uavg)}${row('Irms', (p) => p.I, 'A', 1, d.IN != null ? null : null)}${row('P', (p) => p.P / 1000, 'kW', 2, d.P)}${row('Q', (p) => p.Q / 1000, 'kvar', 2, d.Q)}${row('S', (p) => p.S / 1000, 'kVA', 2, d.S)}${row('PF', (p) => p.PF, '', 3, d.PF)}${row('cos φ', (p) => p.cos, '', 3, d.cos)}${row('THD-U', (p) => p.Uthd, '%', 2, d.Uthd)}${row('THD-I', (p) => Math.min(p.Ithd, 999), '%', 1, d.Ithd)}${row('KF', (p) => p.KF, '', 2, d.KF)}
+      ${row('Urms', (p) => p.U, 'V', 2, d.Uavg)}${row('Irms', (p) => p.I, 'A', 1, d.live ? d.Iavg : null)}${row('P', (p) => p.P / 1000, 'kW', 2, d.P)}${row('Q', (p) => p.Q / 1000, 'kvar', 2, d.Q)}${row('S', (p) => p.S / 1000, 'kVA', 2, d.S)}${row('PF', (p) => p.PF, '', 3, d.PF)}${d.live ? '' : row('cos φ', (p) => p.cos, '', 3, d.cos)}${row('THD-U', (p) => p.Uthd, '%', 2, d.Uthd)}${row('THD-I', (p) => Math.min(p.Ithd, 999), '%', 1, d.Ithd)}${row('KF', (p) => p.KF, '', 2, d.KF)}${extra}
       </tbody></table>
-      <div class="pq-lcd-f"><span>${x('freq')} <b>${fmt(d.f, 3)}</b> Hz</span><span>${x('unb')} <b>${fmt(d.unb, 2)}</b> %</span><span>${x('neutral')} <b>${fmt(d.IN, 1)}</b> A</span><span>${x('wp')} <b>${fmtN(d.WP, 1)}</b> kWh</span></div></div>`;
+      <div class="pq-lcd-f"><span>${x('freq')} <b>${fmt(d.f, 3)}</b> Hz</span><span>${x('unb')} <b>${fmt(d.unb, 2)}</b> %</span><span>${x('neutral')} <b>${fmt(d.IN, 1)}</b> A</span>${d.live ? `<span>${L() === 'th' ? 'ไม่สมดุลกระแส' : 'Current unbalance'} <b>${fmt(d.Iunb, 2)}</b> %</span>` : `<span>${x('wp')} <b>${fmtN(d.WP, 1)}</b> kWh</span>`}</div></div>`;
   }
   function phasorTable() {
     const d = st.snap.inst[st.sel]; if (!d) return '';
