@@ -1,6 +1,6 @@
 // CoreDash Nexus service worker: caches the app shell so the app opens instantly and offline.
 // Live data (/api, /ws) always goes to the network.
-const CACHE = 'coredash-app-v22';
+const CACHE = 'coredash-app-v23';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './coredash-client.mjs', './manifest.webmanifest', './twin.js', './bench.js', './report.js', './power.js', './power-sim.js', './home.js', './meter-ocr.js', './pq.js', './pq-model.js', './realcam.js', './audit.js', './audit-engine.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png',
@@ -19,11 +19,15 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.pathname.startsWith('/api/') || url.pathname === '/ws') return;
   if (url.origin === location.origin) {
-    // stale-while-revalidate for the shell
+    // network-first: a new upload shows on the next reload; the cache is only the offline fallback
     e.respondWith(caches.open(CACHE).then(async (c) => {
-      const hit = await c.match(e.request);
-      const net = fetch(e.request).then((r) => { if (r.ok) c.put(e.request, r.clone()); return r; }).catch(() => hit);
-      return hit || net;
+      try {
+        const r = await fetch(e.request, { cache: 'no-cache' });
+        if (r.ok) c.put(e.request, r.clone());
+        return r;
+      } catch (_) {
+        return (await c.match(e.request)) || (await c.match('./index.html')) || Response.error();
+      }
     }));
   } else if (url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com')) {
     e.respondWith(caches.open(CACHE).then(async (c) => {
