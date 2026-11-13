@@ -67,6 +67,15 @@ const T = {
   alNoti: B('เปิดแจ้งเตือนบนอุปกรณ์นี้', 'Enable notifications on this device'), alNotiOn: B('แจ้งเตือนบนอุปกรณ์นี้เปิดอยู่', 'Notifications on for this device'),
   alPushOn: B('ส่งเข้ามือถือ (ntfy) เปิดอยู่', 'Phone push (ntfy) on'), alPushOff: B('ยังไม่ได้ตั้งส่งเข้ามือถือ', 'Phone push not set up'),
   alNote: B('ค่าสดอ่านทุก 1 วินาที จับเหตุที่นาน ≥ 1 วินาทีได้ครบ (ฮาร์มอนิก ไม่สมดุล PF ไฟตก/เกินต่อเนื่อง) — ไฟตกสั้นกว่า 1 วินาทีและทรานเซียนต์ระดับไมโครวินาที ดูจากหน้า EVENT ของ PW3198 ซึ่งบันทึกครบตามมาตรฐาน Class A', 'Live values are read every second, so conditions lasting ≥ 1 s are caught (harmonics, unbalance, PF, sustained sags/swells). Sub-second dips and µs transients are recorded completely by the PW3198 EVENT function (Class A).'),
+  bRetry: B('ลองเชื่อมต่อใหม่', 'Retry'), bRecon: B('เชื่อมต่อใหม่ทุกเครื่อง', 'Reconnect all'), bIps: B('ตั้ง IP เครื่องวัด', 'Analyser IPs'),
+  bSave: B('บันทึกและเชื่อมต่อ', 'Save & connect'), bNone: B('ว่าง = ไม่ใช้', 'blank = not used'),
+  bIpsHint: B('เครื่องมือบนโน้ตบุ๊กจะเชื่อมต่อใหม่ทันทีและจำ IP ไว้', 'The tool on the notebook reconnects at once and remembers these IPs'),
+  bAuto: B('เปิดเครื่องมือไว้เบื้องหลังอัตโนมัติ: ดับเบิลคลิก CoreDash-PW3198-AUTOSTART-ON.bat ครั้งเดียว — จากนั้นควบคุมจากหน้านี้ได้เลย', 'Run the tool in the background automatically: double-click CoreDash-PW3198-AUTOSTART-ON.bat once — then control everything from here'),
+  bAutoOn: B('เครื่องมือเปิดอัตโนมัติเมื่อเปิดโน้ตบุ๊ก', 'Tool starts automatically with the notebook'),
+  bDone: B('สั่งเชื่อมต่อใหม่แล้ว', 'Reconnect requested'), bSaved: B('บันทึก IP แล้ว กำลังเชื่อมต่อ', 'IPs saved — connecting'), bFail: B('สั่งเครื่องมือไม่ได้', 'Could not reach the tool'),
+  phNote: B('L1 · L2 · L3 = 3 เฟสของเครื่องวัด {n}{ip} เครื่องเดียว (ไม่ใช่เครื่องวัด #2 · #3 · #6)', 'L1 · L2 · L3 = the 3 phases of analyser {n}{ip} (not analysers #2 · #3 · #6)'),
+  phase: B('เฟส', 'Phase'),
+  lowI: B('กระแสต่ำมากเทียบกับช่วงวัดของแคลมป์ (เช่น 25 A บนช่วง 5 kA) — เครื่องวัดคำนวณ THD-I และ K-factor ไม่ได้ จึงไม่แสดง ลดช่วงกระแสในเครื่องวัด (SYSTEM → ช่วงกระแส/เซนเซอร์) ให้ใกล้กระแสจริง', 'Current is tiny compared with the clamp range (e.g. 25 A on a 5 kA range) — the analyser cannot compute THD-I or K-factor, so they are hidden. Lower the current range on the analyser to suit the real current'),
   rn_wave: B('ข้อมูลจริงตอนนี้มีค่า rms/peak/THD รายเฟส — รูปคลื่นในแท็บนี้วาดจาก Urms/Irms และมุมจาก PF จริงของแต่ละเฟส ยังไม่ใช่รูปคลื่นที่เครื่องสุ่มวัด', 'Real data currently gives per-phase rms/peak/THD — this waveform is drawn from the real Urms/Irms and per-phase PF, not the sampled waveform'),
   rn_phasor: B('ขนาด U, I รายเฟสเป็นค่าจริง · มุมเฟสคำนวณจาก PF และทิศ Q จริงของแต่ละเฟส (มุมฮาร์มอนิกลำดับ 1 ต้องใช้คำสั่งฮาร์มอนิก — เมนู 9 ของเครื่องมือ)', 'Per-phase U and I magnitudes are real · angles are derived from each phase’s real PF and Q sign (fundamental angles need the harmonic command — tool menu 9)'),
   rn_harm: B('ตอนนี้มีค่าจริงเป็น THD-U / THD-I / K-factor / สัญญาณรบกวน 2–80 kHz รายเฟส (ตาราง ค่าวัด) · กราฟแยกลำดับ 2–50 ต้องใช้คำสั่งฮาร์มอนิก — รันเมนู 9 ของเครื่องมือแล้วส่งผลให้ทีม CoreDash', 'Real per-phase THD-U / THD-I / K-factor / 2–80 kHz noise are in the Measurements table · the order 2–50 chart needs the harmonic command — run tool menu 9 and send the result to CoreDash'),
@@ -125,7 +134,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         const d = i.online === false ? null : i.data || (i.raw ? pw3198Record(i.id, parsePw3198(i.raw)) : null);
         inst[i.id] = d; online[i.id] = !!i.online && !!d; meta[i.id] = i;
       }
-      return { ts: Date.now(), apf: s.apf, inst, online, meta, events: s.events || [], mode: s.mode, alarms: s.alarms || null };
+      return { ts: Date.now(), apf: s.apf, inst, online, meta, events: s.events || [], mode: s.mode, alarms: s.alarms || null, bridge: s.bridge || null };
     }
     return { ts: s.ts, apf: s.apf, inst: s.instruments, online: { 'PQ-MAIN': true, 'PQ-LOAD': true, 'PQ-APF': true }, meta: {}, events: s.events, mode: 'demo' };
   };
@@ -164,16 +173,27 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         .catch(() => { try { new Notification(title, opt); } catch {} });
     }
   }
+  async function bridgePost(path) {
+    const r = await fetch(st.bridge + path, { method: 'POST', cache: 'no-store', targetAddressSpace: 'loopback' });
+    const j = await r.json().catch(() => ({})); if (!r.ok || j.ok === false) throw new Error(j.error || 'HTTP ' + r.status); return j;
+  }
+  function bformHtml() {
+    if (!st.bform) return '';
+    const ips = st.bform;
+    return `<div class="pq-bf"><b>⚙ ${x('bIps')}</b>${ROLES.map((r, k) => `<label>#${r.no} ${r.name}<input data-bip="${k}" value="${esc(ips[k] || '')}" placeholder="${k ? x('bNone') : '192.168.1.62'}" inputmode="decimal"></label>`).join('')}
+      <button class="btn sm" data-pq="bipsave">✓ ${x('bSave')}</button><button class="btn sm" data-pq="bips">✕</button><small class="muted">${x('bIpsHint')}</small></div>`;
+  }
   function srcStatus() {
     const t = new Date(st.snap.ts).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB');
     if (st.src === 'demo') return `<span class="pq-st sim">🧪 ${x('stDemo')}</span>`;
     if (st.src === 'file') return `<span class="pq-st file">📁 ${x('stFile')}${st.file ? ' · ' + esc(st.file.name) : ''}</span>`;
     if (!live()) return `<span class="pq-st off">⚠ ${x('gwNeed')}</span>`;
-    if (st.gwErr || st.snap.empty) return `<span class="pq-st off">⚠ ${x('stWait')}</span>`;
+    if (st.gwErr || st.snap.empty) return `<span class="pq-st off">⚠ ${x('stWait')}</span><div class="pq-bbtns"><button class="btn sm" data-pq="bretry">🔄 ${x('bRetry')}</button><small class="muted">${x('bAuto')}</small></div>`;
     const ms = ROLES.map((r) => st.snap.meta[r.id]).filter((m) => m && m.host);
     const up = ms.filter((m) => st.snap.online[m.id]), dn = ms.filter((m) => !st.snap.online[m.id]);
     return (up.length ? `<span class="pq-st real">📡 ${x('stReal')} · ${up.map((m) => `#${m.no} ${esc(m.host)} ●`).join(' · ')} · ${x('stUpd')} ${t}</span>` : '') +
-      dn.map((m) => `<span class="pq-st off">✖ #${m.no} ${esc(m.name || '')} ${esc(m.host)} ${x('chipDown')}${m.error ? ' — ' + esc(m.error) : ''}</span>`).join('');
+      dn.map((m) => `<span class="pq-st off">✖ #${m.no} ${esc(m.name || '')} ${esc(m.host)} ${x('chipDown')}${m.error ? ' — ' + esc(m.error) : ''}${st.snap.bridge ? ` <button class="btn sm" data-pq="brecon" data-arg="${esc(m.id)}">🔄 ${x('bRetry')}</button>` : ''}</span>`).join('') +
+      (st.snap.bridge ? `<div class="pq-bbtns"><button class="btn sm" data-pq="brecon" data-arg="">🔄 ${x('bRecon')}</button><button class="btn sm" data-pq="bips">⚙ ${x('bIps')}</button>${st.snap.bridge.autostart ? `<small class="muted">✓ ${x('bAutoOn')}</small>` : `<small class="muted">${x('bAuto')}</small>`}</div>` : '');
   }
   function alarmsHtml() {
     const A = st.alarms; if (!A) return '';
@@ -244,7 +264,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
       ${modes}
       <div class="pq-clock" data-r="clock"></div>
     </header>`;
-    const bar = `<section class="pq-srcbar"><span class="pq-srcl">${x('srcLabel')}</span><div class="pq-srcs">${srcBtn('demo', '🧪')}${srcBtn('gw', '📡')}${srcBtn('file', '📁')}</div><div class="pq-srcst" data-r="srcst"></div></section>`;
+    const bar = `<section class="pq-srcbar"><span class="pq-srcl">${x('srcLabel')}</span><div class="pq-srcs">${srcBtn('demo', '🧪')}${srcBtn('gw', '📡')}${srcBtn('file', '📁')}</div><div class="pq-srcst" data-r="srcst"></div><div class="pq-bform" data-r="bform"></div></section>`;
     if (st.mode === 'audit') return hero + bar + `<div class="pq-audit-host"></div>`;
     return `${hero}${bar}
     <div data-r="notice"></div>
@@ -371,6 +391,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const nv = st.src === 'gw' && live() && !st.gwErr && Object.values(s.inst || {}).some((d) => d && d.live && d.noVoltage);
     region('alarms', alarmsHtml());
     region('srcst', srcStatus());
+    region('bform', bformHtml());
     { const d = s.inst && s.inst[st.sel], fake = d && d.live && !(d.ph && d.ph[0] && d.ph[0].uh);
       region('realnote', fake && ['wave', 'phasor', 'harm'].includes(st.tab) ? `<div class="pq-notice">ⓘ ${x('rn_' + st.tab)}</div>` : ''); }
     for (const r of ROLES) {
@@ -420,7 +441,9 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const head = d.live ? `<span class="pq-real">● ${L() === 'th' ? 'ค่าจริง' : 'REAL'} · PW3198 ${esc(m && m.host || '')}</span><span>f ${fmt(d.f, 3)} Hz · U avg ${fmt(d.Uavg, 1)} V</span>` : `<span>3P4W · 230/400 V · 50 Hz</span>`;
     const extra = d.live ? `${row('U peak', (p) => p.Upk, 'V', 1)}${row('I peak', (p) => p.Ipk, 'A', 1)}${row(L() === 'th' ? 'U รบกวน 2–80 kHz' : 'U noise 2–80 kHz', (p) => p.Uhf, 'V', 2)}${row(L() === 'th' ? 'I รบกวน 2–80 kHz' : 'I noise 2–80 kHz', (p) => p.Ihf, 'A', 2)}` : '';
     return `<div class="pq-lcd"><div class="pq-lcd-h"><b>#${r.no} ${r.name}</b>${head}<span>${new Date(st.snap.ts).toLocaleTimeString('en-GB')}</span></div>
-      <table><thead><tr><th></th>${[1, 2, 3].map((k) => `<th style="color:${PH[k - 1]}">L${k}</th>`).join('')}<th>${x('total')}</th><th></th></tr></thead><tbody>
+      <div class="pq-lcd-ph">${x('phNote').replace('{n}', '#' + r.no + ' ' + r.name).replace('{ip}', m && m.host ? ' (' + esc(m.host) + ')' : '')}</div>
+      ${d.lowI ? `<div class="pq-notice">ⓘ ${x('lowI')}</div>` : ''}
+      <table><thead><tr><th></th>${[1, 2, 3].map((k) => `<th style="color:${PH[k - 1]}">${x('phase')} L${k}</th>`).join('')}<th>${x('total')}</th><th></th></tr></thead><tbody>
       ${row('Urms', (p) => p.U, 'V', 2, d.Uavg)}${row('Irms', (p) => p.I, 'A', 1, d.live ? d.Iavg : null)}${row('P', (p) => p.P / 1000, 'kW', 2, d.P)}${row('Q', (p) => p.Q / 1000, 'kvar', 2, d.Q)}${row('S', (p) => p.S / 1000, 'kVA', 2, d.S)}${row('PF', (p) => p.PF, '', 3, d.PF)}${d.live ? '' : row('cos φ', (p) => p.cos, '', 3, d.cos)}${row('THD-U', (p) => p.Uthd, '%', 2, d.Uthd)}${row('THD-I', (p) => Math.min(p.Ithd, 999), '%', 1, d.Ithd)}${row('KF', (p) => p.KF, '', 2, d.KF)}${extra}
       </tbody></table>
       <div class="pq-lcd-f"><span>${x('freq')} <b>${fmt(d.f, 3)}</b> Hz</span><span>${x('unb')} <b>${fmt(d.unb, 2)}</b> %</span><span>${x('neutral')} <b>${fmt(d.IN, 1)}</b> A</span>${d.live ? `<span>${L() === 'th' ? 'ไม่สมดุลกระแส' : 'Current unbalance'} <b>${fmt(d.Iunb, 2)}</b> %</span>` : `<span>${x('wp')} <b>${fmtN(d.WP, 1)}</b> kWh</span>`}</div></div>`;
@@ -756,6 +779,14 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const k = b.dataset.pq, arg = b.dataset.arg;
     if (k === 'mode') { st.mode = arg; }
     else if (k === 'audit') { st.mode = 'audit'; if (audit) audit._state.tab = 'apf'; }
+    else if (k === 'bretry') { st.gwErr = null; if (!st.bridge) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799'; await pull(); redraw(); }
+    else if (k === 'brecon') { try { await bridgePost('/api/reconnect' + (arg ? '?id=' + encodeURIComponent(arg) : '')); onToast(x('bDone')); } catch (er) { onToast(x('bFail') + ': ' + er.message, true); } }
+    else if (k === 'bips') { st.bform = st.bform ? null : ((st.snap.bridge && st.snap.bridge.ips) || []).slice(); region('bform', bformHtml()); }
+    else if (k === 'bipsave') {
+      const ips = [...el.querySelectorAll('[data-bip]')].map((i) => i.value.trim() || '-');
+      if (ips.some((v) => v !== '-' && !/^\d{1,3}(\.\d{1,3}){3}$/.test(v)) || ips.every((v) => v === '-')) { onToast('IP ?', true); return; }
+      try { await bridgePost('/api/devices?ips=' + encodeURIComponent(ips.join(','))); st.bform = null; region('bform', ''); onToast(x('bSaved')); } catch (er) { onToast(x('bFail') + ': ' + er.message, true); }
+    }
     else if (k === 'alnoti') { try { await Notification.requestPermission(); } catch {} region('alarms', alarmsHtml()); }
     else if (k === 'src') {
       if (arg === 'gw' && !liveGw() && !st.bridge) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799';

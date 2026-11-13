@@ -44,6 +44,9 @@ export function pw3198Record(id, n) {
       Uang: ANG[i], Iang: ANG[i] - lag
     };
   });
+  // current far below the clamp range: the analyser reports THD-I = 0 and a meaningless K-factor (seen: THD-I 0.0, KF 69
+  // at 25 A on a 5 kA range) — show neither, and say why
+  for (const p of ph) if (p.Ithd === 0 && p.KF != null && p.KF > 20) { p.Ithd = null; p.KF = null; p.lowI = true; }
   const kilo = (v) => (v == null ? null : v / 1000);
   const max = (key) => { const v = ph.map((p) => p[key]).filter((x) => x != null); return v.length ? Math.max(...v) : null; };
   const PFs = g('PFSUM');
@@ -54,6 +57,7 @@ export function pw3198Record(id, n) {
     f: g('FREQ'), Uavg: g('UAVGRMS'), Iavg: ph.every((p) => p.I != null) ? (ph[0].I + ph[1].I + ph[2].I) / 3 : g('IAVGRMS'),
     unb: g('UUNB'), Iunb: g('IUNB'), IN: g('I4RMS'), U4: g('U4RMS'),
     Ithd: max('Ithd'), Uthd: max('Uthd'), KF: max('KF'),
+    lowI: ph.some((p) => p.lowI),
     noVoltage: [1, 2, 3].every((k) => !(g('U' + k + 'RMS') > 5))
   };
 }

@@ -922,3 +922,11 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 .pq-card.down { border-color: rgba(239,68,68,.55) !important; opacity: .92; }
 .pq-card.down [data-b$=".f"] { color: #FCA5A5; white-space: normal; }
 .pq-srcst { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.pq-lcd-ph { font-size: 12.5px; color: #94A3B8; margin: 2px 0 6px; }
+.pq-bbtns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pq-srcbar .btn.sm, .pq-bf .btn.sm { background: #0B1222; color: #F3D99A; border: 1px solid rgba(212,176,106,.55); }
+.pq-bform { flex-basis: 100%; }
+.pq-bf { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; padding: 10px; border: 1px dashed rgba(212,176,106,.45); border-radius: 12px; }
+.pq-bf b { flex-basis: 100%; color: #F3D99A; font-size: 13px; }
+.pq-bf label { display: grid; gap: 4px; font-size: 12px; color: #94A3B8; }
+.pq-bf input { background: #050912; color: #E2E8F0; border: 1px solid rgba(148,163,184,.4); border-radius: 8px; padding: 7px 9px; width: 150px; font: 14px 'Space Grotesk', ui-monospace, monospace; }
