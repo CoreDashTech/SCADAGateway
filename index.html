@@ -3,14 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CoreDash Nexus – ทุกเครื่องจักร ทุกมิเตอร์ ในจอเดียว | CoreDash Technology</title>
-<meta name="description" content="CoreDash Nexus มอนิเตอร์ไฟฟ้า น้ำ แสงสว่าง โซลาร์ และเครื่องจักรแบบเรียลไทม์ เชื่อมต่อผ่าน Gateway, LAN, Modbus, MQTT โดย CoreDash Technology โทร 081-923-2380">
-
+<title>CoreDash Nexus — ระบบ SCADA อัจฉริยะ · CoreDash Technology</title>
+<meta name="description" content="มอนิเตอร์ไฟฟ้า น้ำ แสงสว่าง และเครื่องจักรแบบเรียลไทม์ พร้อมสั่งเปิด-ปิดวาล์ว หลอดไฟ และมอเตอร์ได้จากหน้าจอเดียว ทั้งบนเว็บและมือถือ">
+<meta name="theme-color" content="#0A1230">
+<link rel="icon" type="image/png" href="app/icons/favicon.png">
+<link rel="apple-touch-icon" href="app/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&amp;family=Sarabun:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
 <style>
-body{margin:0;background:#081640}
-a{color:#7FA2FF}a:hover{color:#B9CBFF}
+body{margin:0;background:#060B1A}
+a{color:#7FB0FF}a:hover{color:#B9D3FF}
+
+.cdt{position:relative;display:block;flex:0 0 auto}
+.cdt img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain}
+.cdt .a{animation:cdtA 9s ease-in-out infinite,cdtGlow 3s ease-in-out infinite}
+.cdt .b{opacity:0;animation:cdtB 9s ease-in-out infinite,cdtGlow 3s ease-in-out infinite}
+.cdt .s{position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(110deg,transparent 38%,rgba(255,240,200,0.65) 50%,transparent 62%);background-size:260% 100%;animation:cdtShine 4.5s ease-in-out infinite;-webkit-mask:url(app/icons/logo-green.webp) center/contain no-repeat;mask:url(app/icons/logo-green.webp) center/contain no-repeat;mix-blend-mode:screen;pointer-events:none}
+@keyframes cdtA{0%,42%{opacity:1;transform:scale(1)}50%,92%{opacity:0;transform:scale(0.97)}100%{opacity:1;transform:scale(1)}}
+@keyframes cdtB{0%,42%{opacity:0;transform:scale(0.97)}50%,92%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(0.97)}}
+@keyframes cdtGlow{0%,100%{filter:drop-shadow(0 0 3px rgba(255,200,110,0.45))}50%{filter:drop-shadow(0 0 10px rgba(255,200,110,0.95)) drop-shadow(0 0 24px rgba(255,160,60,0.45))}}
+@keyframes cdtShine{0%{background-position:160% 0}55%,100%{background-position:-60% 0}}
+@media (prefers-reduced-motion: reduce){.cdt .a,.cdt .b,.cdt .s{animation:none}.cdt .s{display:none}}
+</style>
+<style>html{scroll-behavior:smooth}</style>
+<style>
+html,body{overflow-x:clip}
+
+
+
 @keyframes sway{0%,100%{transform:rotateX(60deg) rotateZ(-45deg)}50%{transform:rotateX(57deg) rotateZ(-38deg)}}
 @keyframes unsway{0%,100%{transform:rotateZ(45deg) rotateX(-60deg)}50%{transform:rotateZ(38deg) rotateX(-57deg)}}
 .floor{animation:sway 16s ease-in-out infinite}
@@ -58,46 +78,53 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 .stage{height:440px !important}
 .charts-grid{grid-template-columns:minmax(0,1fr) !important}
 .span2{grid-column:auto !important}
-.navlinks{display:none !important}
+
 }
 @media (prefers-reduced-motion: reduce){*{animation-duration:0s !important;animation-iteration-count:1 !important}}
-</style>
 
-<style>:root{--sky: linear-gradient(180deg, #7FAEFF 0%, #BFD6FF 45%, #E6EFFF 100%);--floor: #F2F6FF;--grid: rgba(47,107,255,.16);--zone: rgba(47,107,255,.35);--top: #FFFFFF;--left: #D3DDF5;--right: #A7B7E2;--edge: rgba(11,29,81,.35);--win: #9DB9EE;--door: #7D8FC4;--bulb: #C9D2EA;--glow: 0;--card: rgba(255,255,255,.9);--cardBorder: rgba(47,107,255,.22);--cardShadow: rgba(11,29,81,.18);--text: #0B1D51;--muted: #3F4F80;--pv: #2457C9;--glint: .55;--chip: #FFFFFF;--chipText: #0B1D51;--hud: rgba(255,255,255,.78);--shadowOp: .22;--starsOp: 0;--sunOp: 1;--sunY: 0;--moonOp: 0;--cloudOp: 1;}</style>
+:root{--sky: linear-gradient(180deg, #7FAEFF 0%, #BFD6FF 45%, #E6EFFF 100%);--floor: #F2F6FF;--grid: rgba(47,107,255,.16);--zone: rgba(47,107,255,.35);--top: #FFFFFF;--left: #D3DDF5;--right: #A7B7E2;--edge: rgba(11,29,81,.35);--win: #9DB9EE;--door: #7D8FC4;--bulb: #C9D2EA;--glow: 0;--card: rgba(255,255,255,.9);--cardBorder: rgba(47,107,255,.22);--cardShadow: rgba(11,29,81,.18);--text: #0B1D51;--muted: #3F4F80;--pv: #2457C9;--glint: .55;--chip: #FFFFFF;--chipText: #0B1D51;--hud: rgba(255,255,255,.78);--shadowOp: .22;--starsOp: 0;--sunOp: 1;--sunY: 0;--moonOp: 0;--cloudOp: 1;}
+</style>
 </head>
 <body>
+<div lang="th" style="font-family: 'Sarabun', 'Space Grotesk', system-ui, sans-serif; color: #E7ECF7; background: #060B1A; min-width: 0">
 
-<div style="min-height: 100vh; background: radial-gradient(1200px 600px at 75% 10%, #12307F 0%, rgba(18,48,127,0) 60%), #081640; background-color: #081640; color: #EEF3FF; font-family: 'Space Grotesk', 'Anuphan', system-ui, sans-serif; background-image: radial-gradient(1200px 600px at 75% 10%, rgba(32,72,190,.55) 0%, rgba(32,72,190,0) 60%), linear-gradient(rgba(122,162,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(122,162,255,.05) 1px, transparent 1px); background-size: auto, 48px 48px, 48px 48px">
-
-<header style="background: #FFFFFF; border-bottom: 1px solid #E6EAF3">
-<div style="max-width: 1320px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap">
-<a href="#top" style="display: flex; align-items: center; gap: 14px; text-decoration: none">
-<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#2563FF"></rect><path d="M28 13 L41 20.5 V35.5 L28 43 L15 35.5 V20.5 Z" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"></path><path d="M28 21 L34.5 24.75 V32.25 L28 36 L21.5 32.25 V24.75 Z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"></path><circle cx="28" cy="28.5" r="2.4" fill="#FFFFFF"></circle></svg>
-<span style="display: flex; flex-direction: column; line-height: 1.1"><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 30px; color: #0B1430">CoreDash <span style="color: #2563FF">Nexus</span></span><span style="font-size: 12px; color: #5A6788">by CoreDash Technology</span></span>
-</a>
-<nav class="navlinks" aria-label="เมนูหลัก" style="display: flex; align-items: center; gap: 40px; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 18px; font-weight: 500">
-<a href="#connect" style="text-decoration: none; color: #0B1430">ผลิตภัณฑ์</a>
-<a href="#charts" style="text-decoration: none; color: #0B1430">โซลูชัน</a>
-<a href="#pricing" style="text-decoration: none; color: #0B1430">ราคา</a>
-<a href="#devices" style="text-decoration: none; color: #0B1430">บริการ</a>
-<a href="#partners" style="text-decoration: none; color: #0B1430">พาร์ทเนอร์</a>
-<a href="#contact" style="text-decoration: none; color: #0B1430">บริษัท</a>
-</nav>
-<div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap">
-<a href="tel:0819232380" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #0B1430; text-decoration: none; font-weight: 600; font-size: 15px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>081-923-2380</a>
-<a class="cta-primary" href="#trial" style="display: inline-flex; align-items: center; min-height: 60px; padding: 0 32px; border-radius: 8px; background: #2563FF; color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 18px">ทดลองใช้ฟรี</a>
-</div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #E3E7EF">
+<div style="max-width: 1240px; margin: 0 auto; padding: 8px 24px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 24px; font-size: 14px; color: #3A4256">
+<a href="#cta" style="color: #C2410C; text-decoration: none; font-weight: 600">CoreDash Nexus 1.0 พร้อมใช้งานแล้ว</a>
+<span>สำหรับผู้รับเหมา/SI</span>
+<span>ชุมชนผู้ใช้</span>
+<span role="group" aria-label="Language" style="display: flex; gap: 2px; border: 1px solid #C9D1E0; border-radius: 6px; padding: 2px">
+<a href="./" style="background:#1F5FFF;color:#FFFFFF;text-decoration:none;border-radius:4px;padding:4px 10px;font-size:13px;font-weight:700">TH</a><a href="en.html" style="color:#3A4256;text-decoration:none;border-radius:4px;padding:4px 10px;font-size:13px;font-weight:700">EN</a>
+</span>
+<span>เข้าสู่ระบบ</span>
 </div>
 </header>
 
+<nav style="background: #FFFFFF; border-bottom: 1px solid #E3E7EF">
+<div style="max-width: 1240px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px">
+<a href="#top" style="display: flex; align-items: center; gap: 10px; text-decoration: none">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #1F5FFF; border-radius: 10px">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"></path><circle cx="12" cy="12" r="3.2"></circle><path d="M12 8.8V5M15.2 12H19M12 15.2V19M8.8 12H5"></path></svg>
+</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -0.02em; color: #0B1430">CoreDash<span style="color: #1F5FFF"> Nexus</span></span>
+</a>
+<div style="display: flex; flex-wrap: wrap; gap: 32px; margin-left: auto; margin-right: 24px; font-weight: 600; font-size: 15px; color: #0B1430; letter-spacing: 0.02em">
+<span>ผลิตภัณฑ์</span><span>โซลูชัน</span><span>ราคา</span><span>บริการ</span><span>พาร์ทเนอร์</span><span>บริษัท</span>
+</div>
+<a href="tel:0819232380" style="display: inline-flex; align-items: center; gap: 6px; color: #0B1430; text-decoration: none; font-weight: 700; font-size: 15px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F5FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>081-923-2380</a>
+<a href="app/" style="background: #1F5FFF; color: #FFFFFF; text-decoration: none; font-weight: 700; padding: 13px 22px; border-radius: 6px; font-size: 15px">ทดลองใช้ฟรี</a>
+</div>
+</nav>
+
+<div style="background: radial-gradient(1200px 600px at 75% 10%, #12307F 0%, rgba(18,48,127,0) 60%), #081640; background-color: #081640; color: #EEF3FF; font-family: 'Sarabun', 'Space Grotesk', system-ui, sans-serif; background-image: radial-gradient(1200px 600px at 75% 10%, rgba(32,72,190,.55) 0%, rgba(32,72,190,0) 60%), linear-gradient(rgba(122,162,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(122,162,255,.05) 1px, transparent 1px); background-size: auto, 48px 48px, 48px 48px">
 <section id="top" style="max-width: 1320px; margin: 0 auto; padding: 24px 32px 56px; display: flex; flex-wrap: wrap; gap: 40px; align-items: center">
 <div style="flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 26px">
 <span style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.35); font-size: 14px; color: #C9D4F5"><span class="blink" style="width: 8px; height: 8px; border-radius: 50%; background: #34D3B5"></span>Smart Facility · IIoT · SCADA-lite</span>
-<h1 style="margin: 0; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 700; font-size: clamp(38px, 4.4vw, 68px); line-height: 1.2; letter-spacing: -0.5px; color: #FFFFFF"><span style="white-space: nowrap">CoreDash Nexus</span><br>ทุกเครื่องจักร<br>ทุกมิเตอร์<br>ในจอเดียว</h1>
+<h1 style="margin: 0; font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 700; font-size: clamp(38px, 4.4vw, 68px); line-height: 1.2; letter-spacing: -0.5px; color: #FFFFFF"><span style="white-space: nowrap">CoreDash Nexus</span><br>ทุกเครื่องจักร<br>ทุกมิเตอร์<br>ในจอเดียว</h1>
 <p style="margin: 0; font-size: 18px; line-height: 1.75; color: #C9D4F5; max-width: 560px">มอนิเตอร์ไฟฟ้า น้ำ แสงสว่าง และเครื่องจักรแบบเรียลไทม์ พร้อมสั่งเปิด-ปิดวาล์ว หลอดไฟ และมอเตอร์ได้จากหน้าจอเดียว ทั้งบนเว็บและมือถือ</p>
 <div style="display: flex; flex-wrap: wrap; gap: 14px">
-<a class="cta-primary" href="#trial" style="display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 28px; border-radius: 12px; background: #2F6BFF; color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px; box-shadow: 0 12px 30px rgba(47,107,255,.4)">ทดลองใช้ฟรี<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
-<a class="cta-ghost" href="#connect" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 26px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.8); color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px">ดูคอนโซลสด</a>
+<a class="cta-primary" href="app/" style="display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 28px; border-radius: 12px; background: #2F6BFF; color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 17px; box-shadow: 0 12px 30px rgba(47,107,255,.4)">ทดลองใช้ฟรี<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<a class="cta-ghost" href="app/#scada" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 26px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.8); color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 17px">ดูคอนโซลสด</a>
 </div>
 <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 6px">
 <span style="font-size: 13px; color: #A9B8E6">เชื่อมต่อผ่าน Gateway ตัวเดียว รองรับโปรโตคอลอุตสาหกรรม</span>
@@ -185,7 +212,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>โรงงาน A</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="plant"></span><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="plant"></span><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><rect x="51" y="2" width="8" height="22" stroke-width="0.8" style="fill: var(--right); stroke: var(--edge)"></rect><ellipse cx="55" cy="2" rx="4" ry="2" stroke-width="0.8" style="fill: var(--top); stroke: var(--edge)"></ellipse><circle class="smoke" cx="55" cy="-2" r="3.5" fill="#B9C6E6"></circle><circle class="smoke s2" cx="57" cy="-2" r="3" fill="#B9C6E6"></circle><polygon points="40,14 70,29.0 40,44 10,29.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--top); stroke: var(--edge)"></polygon><polygon points="10,29.0 40,44 40,68 10,53.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--left); stroke: var(--edge)"></polygon><polygon points="40,44 70,29.0 70,53.0 40,68" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--right); stroke: var(--edge)"></polygon><polygon points="18,24 40,13 44,15 22,26" fill="#2F6BFF" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><polygon points="26,29 48,18 52,20 30,31" fill="#2F6BFF" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><polygon points="14,37 20,40 20,46 14,43" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--win); stroke: var(--edge)"></polygon><polygon points="24,42 30,45 30,51 24,48" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--win); stroke: var(--edge)"></polygon><polygon points="33,46.5 37,48.5 37,54.5 33,52.5" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--win); stroke: var(--edge)"></polygon><polygon points="46,52 56,47 56,59 46,64" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--door); stroke: var(--edge)"></polygon><polygon points="60,45 66,42 66,48 60,51" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--win); stroke: var(--edge)"></polygon></svg>
 </div>
@@ -196,7 +223,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid #F5A524; display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #F5A524; display: inline-block"></span>ปั๊ม P-02 · วาล์ว V-101</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="pumpVal"></span><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #F5A524; margin-left: 6px">แจ้งเตือน</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="pumpVal"></span><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #F5A524; margin-left: 6px">แจ้งเตือน</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><rect x="20" y="40" width="30" height="16" stroke-width="0.8" style="fill: var(--left); stroke: var(--edge)"></rect><ellipse cx="35" cy="56" rx="15" ry="7" stroke-width="0.8" style="fill: var(--left); stroke: var(--edge)"></ellipse><rect x="20.4" y="40" width="29.2" height="16" style="fill: var(--left)"></rect><ellipse cx="35" cy="40" rx="15" ry="7" stroke-width="0.8" style="fill: var(--top); stroke: var(--edge)"></ellipse><line x1="50" y1="50" x2="72" y2="40" stroke="#3B6FD8" stroke-width="8" stroke-linecap="round"></line><line x1="35" y1="40" x2="35" y2="22" stroke-width="3" style="stroke: var(--right)"></line><g class="spin slow" style="transform-origin: 35px 20px"><ellipse cx="35" cy="20" rx="11" ry="5" fill="none" stroke="#F5A524" stroke-width="2.4"></ellipse><line x1="24" y1="20" x2="46" y2="20" stroke="#F5A524" stroke-width="1.5"></line><line x1="35" y1="15" x2="35" y2="25" stroke="#F5A524" stroke-width="1.5"></line></g><circle class="alertring" cx="35" cy="48" r="20" fill="none" stroke="#F5A524" stroke-width="1.5" style="transform-origin: 35px 48px"></circle></svg>
 </div>
@@ -207,7 +234,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>แผงโซลาร์ PV-01 · 120 kWp</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="pv"></span><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="pv"></span><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><line x1="20" y1="50" x2="20" y2="64" stroke-width="2.5" style="stroke: var(--right)"></line><line x1="58" y1="38" x2="58" y2="58" stroke-width="2.5" style="stroke: var(--right)"></line><line x1="40" y1="44" x2="40" y2="62" stroke-width="2.5" style="stroke: var(--right)"></line><polygon points="4,40 44,18 76,32 36,54" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--pv); stroke: var(--edge)"></polygon><line x1="12" y1="43.5" x2="52" y2="21.5" stroke="#9DBBFF" stroke-width=".7" opacity=".7"></line><line x1="20" y1="47" x2="60" y2="25" stroke="#9DBBFF" stroke-width=".7" opacity=".7"></line><line x1="28" y1="50.5" x2="68" y2="28.5" stroke="#9DBBFF" stroke-width=".7" opacity=".7"></line><line x1="14" y1="34.5" x2="46" y2="48.5" stroke="#9DBBFF" stroke-width=".7" opacity=".7"></line><line x1="24" y1="29" x2="56" y2="43" stroke="#9DBBFF" stroke-width=".7" opacity=".7"></line><line x1="34" y1="23.5" x2="66" y2="37.5" stroke="#9DBBFF" stroke-width=".7" opacity=".7"></line><polygon class="glint" points="26,30 34,26 54,35 46,39" fill="#FFFFFF" style="opacity: var(--glint)"></polygon></svg>
 </div>
@@ -218,7 +245,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>อินเวอร์เตอร์ INV-01</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="inv"></span><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="inv"></span><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><polygon points="40,10 57,18.5 40,27 23,18.5" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--top); stroke: var(--edge)"></polygon><polygon points="23,18.5 40,27 40,63 23,54.5" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--left); stroke: var(--edge)"></polygon><polygon points="40,27 57,18.5 57,54.5 40,63" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--right); stroke: var(--edge)"></polygon><polygon points="26,26 37,31.5 37,39.5 26,34" fill="#0E2A6B" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><path d="M27 31 q2 -4 4 0 t4 0" fill="none" stroke="#F5B53D" stroke-width="1.2" transform="skewY(26)" style="transform-origin: 27px 31px"></path><polygon points="28,44 31,45.5 31,48.5 28,47" fill="#34D3B5" stroke-width="0.8" stroke-linejoin="round" class="led" style="stroke: var(--edge)"></polygon><polygon points="33,46.5 36,48 36,51 33,49.5" fill="#F5B53D" stroke-width="0.8" stroke-linejoin="round" class="led l2" style="stroke: var(--edge)"></polygon><polygon points="45,40 53,36 53,52 45,56" fill="none" stroke-width="0.8" stroke-linejoin="round" stroke-dasharray="1.5 1.5" style="stroke: var(--edge)"></polygon></svg>
 </div>
@@ -229,7 +256,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>บ้าน / อาคารสำนักงาน</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="homeKw"></span> kW<span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="homeKw"></span> kW<span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><polygon points="40,26 62,37.0 40,48 18,37.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--top); stroke: var(--edge)"></polygon><polygon points="18,37.0 40,48 40,68 18,57.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--left); stroke: var(--edge)"></polygon><polygon points="40,48 62,37.0 62,57.0 40,68" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--right); stroke: var(--edge)"></polygon><polygon points="18,37 40,48 40,20" fill="#5B8CFF" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><polygon points="40,48 62,37 40,20" fill="#2F6BFF" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><polygon points="24,47 32,51 32,57 24,53" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--win); stroke: var(--edge)"></polygon><polygon points="46,56 52,53 52,63 46,66" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--door); stroke: var(--edge)"></polygon><polygon points="55,49 59,47 59,52 55,54" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--win); stroke: var(--edge)"></polygon></svg>
 </div>
@@ -240,7 +267,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>ไฟโซนผลิต · 6 ดวง</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="lightVal"></span><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="lightVal"></span><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><polygon points="54,20 34,66 74,66" fill="#FFD27A" style="opacity: var(--glow); transition: opacity .8s"></polygon><ellipse cx="54" cy="66" rx="20" ry="5" fill="#FFD27A" style="opacity: var(--glow); transition: opacity .8s"></ellipse><ellipse cx="30" cy="66" rx="8" ry="3" style="fill: var(--right)"></ellipse><line x1="30" y1="66" x2="30" y2="14" stroke-width="3.5" style="stroke: var(--left)"></line><line x1="30" y1="66" x2="30" y2="14" stroke-width="0.6" style="stroke: var(--edge)"></line><path d="M30 15 Q42 8 54 16" fill="none" stroke-width="3" style="stroke: var(--left)"></path><ellipse cx="54" cy="18" rx="8" ry="3.2" stroke-width="0.8" style="fill: var(--right); stroke: var(--edge)"></ellipse><ellipse cx="54" cy="20" rx="5" ry="1.6" style="fill: var(--bulb)"></ellipse></svg>
 </div>
@@ -251,7 +278,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>มิเตอร์น้ำ FM-02</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="flow"></span> m³/h<span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="flow"></span> m³/h<span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><line x1="8" y1="58" x2="72" y2="26" stroke="#3B6FD8" stroke-width="11" stroke-linecap="round"></line><line x1="8" y1="56" x2="72" y2="24" stroke="#7FB0FF" stroke-width="3" stroke-linecap="round"></line><line class="flowdash" x1="8" y1="58" x2="72" y2="26" stroke="#CFE6FF" stroke-width="2" stroke-dasharray="4 6" stroke-linecap="round"></line><rect x="27" y="22" width="26" height="16" stroke-width="0.8" style="fill: var(--right); stroke: var(--edge)"></rect><ellipse cx="40" cy="38" rx="13" ry="6.5" stroke-width="0.8" style="fill: var(--right); stroke: var(--edge)"></ellipse><rect x="27.4" y="22" width="25.2" height="16" style="fill: var(--right)"></rect><ellipse cx="40" cy="22" rx="13" ry="6.5" stroke-width="0.8" style="fill: var(--top); stroke: var(--edge)"></ellipse><ellipse cx="40" cy="22" rx="8.5" ry="4" fill="#FFFFFF" stroke="#14B8A6" stroke-width="1"></ellipse><line class="needle" x1="40" y1="22" x2="45" y2="21" stroke="#14B8A6" stroke-width="1.2" style="transform-origin: 40px 22px"></line></svg>
 </div>
@@ -262,7 +289,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>มิเตอร์ไฟฟ้า PM-01</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="kw"></span> kW<span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25"><span data-k="kw"></span> kW<span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><polygon points="40,10 58,19.0 40,28 22,19.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--top); stroke: var(--edge)"></polygon><polygon points="22,19.0 40,28 40,64 22,55.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--left); stroke: var(--edge)"></polygon><polygon points="40,28 58,19.0 58,55.0 40,64" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--right); stroke: var(--edge)"></polygon><polygon points="25,26 37,32 37,40 25,34" fill="#0E2A6B" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><text x="27" y="34" font-size="5" fill="#34D3B5" font-family="monospace" transform="skewY(26)" style="transform-origin: 27px 34px">kW</text><ellipse cx="31" cy="48" rx="4.5" ry="5" fill="#FFFFFF" stroke="#2F6BFF" stroke-width="1"></ellipse><line class="needle" x1="31" y1="48" x2="33" y2="45" stroke="#F5A524" stroke-width="1.2" style="transform-origin: 31px 48px"></line><polygon points="50,34 46,42 49,41.5 47,49 52,39.5 49,40" fill="#F5B53D" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon></svg>
 </div>
@@ -273,7 +300,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap">
 <div style="padding: 7px 11px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--cardBorder); display: flex; flex-direction: column; gap: 1px; transition: background .8s, border-color .8s">
 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 500"><span class="blink" style="width: 7px; height: 7px; border-radius: 50%; background: #34D3B5; display: inline-block"></span>เครื่องจักร CNC-03</div>
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25">เดินเครื่อง 7/8<span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25">เดินเครื่อง 7/8<span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 10px; font-weight: 500; color: #34D3B5; margin-left: 6px">ออนไลน์</span></div>
 </div>
 <svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><polygon points="40,20 68,34.0 40,48 12,34.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--top); stroke: var(--edge)"></polygon><polygon points="12,34.0 40,48 40,70 12,56.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--left); stroke: var(--edge)"></polygon><polygon points="40,48 68,34.0 68,56.0 40,70" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--right); stroke: var(--edge)"></polygon><polygon points="17,42 29,48 29,56 17,50" fill="#0E2A6B" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon><polyline points="19,47 22,46 24,50 27,49" fill="none" stroke="#34D3B5" stroke-width="1.2"></polyline><g class="spin" style="transform-origin: 54px 52px"><circle cx="54" cy="52" r="6" fill="none" stroke="#7FA2FF" stroke-width="2.4" stroke-dasharray="3 2"></circle></g><circle cx="54" cy="52" r="2" fill="#7FA2FF"></circle><circle class="beacon" cx="40" cy="30" r="3.2" fill="#34D3B5"></circle></svg>
 </div>
@@ -285,11 +312,11 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="position: absolute; left: 0; bottom: 4px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; white-space: nowrap">
 <div class="float" style="display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 14px; background: linear-gradient(135deg, #2F6BFF, #1B4FD8); color: #FFFFFF">
 <svg width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><path d="M8 18 H23 A6 6 0 0 0 23 6 A8 8 0 0 0 8 7 A5.5 5.5 0 0 0 8 18 Z" fill="#FFFFFF"></path></svg>
-<div style="display: flex; flex-direction: column"><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 14px">CoreDash Cloud</span><span style="font-size: 10.5px; opacity: .85">MQTT/TLS · 4G / LAN</span></div>
+<div style="display: flex; flex-direction: column"><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 14px">CoreDash Cloud</span><span style="font-size: 10.5px; opacity: .85">MQTT/TLS · 4G / LAN</span></div>
 </div>
 <div class="beam" style="width: 4px; height: 64px; border-radius: 2px; background-image: repeating-linear-gradient(180deg, #7FA2FF 0 6px, transparent 6px 14px); margin: 4px 0"></div>
 <div style="padding: 6px 12px; border-radius: 10px; background: var(--card); border: 1px solid #2F6BFF; text-align: center; transition: background .8s">
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-size: 13px; font-weight: 600; color: var(--text)">Edge Gateway GW-01</div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-size: 13px; font-weight: 600; color: var(--text)">Edge Gateway GW-01</div>
 <div style="font-size: 10.5px; color: var(--muted)">Modbus RTU/TCP · LAN · OPC UA</div>
 </div>
 <div style="transform: scale(1.25); transform-origin: 50% 100%; margin-top: 10px"><svg width="80" height="70" viewBox="0 0 80 70" aria-hidden="true" style="display: block; overflow: visible"><line x1="24" y1="34" x2="20" y2="8" stroke-width="2" style="stroke: var(--right)"></line><line x1="56" y1="34" x2="60" y2="8" stroke-width="2" style="stroke: var(--right)"></line><circle cx="20" cy="7" r="2.4" fill="#34D3B5"></circle><circle cx="60" cy="7" r="2.4" fill="#34D3B5"></circle><path class="sig" d="M14 4 Q20 -3 26 4" fill="none" stroke="#34D3B5" stroke-width="1.4"></path><path class="sig s2" d="M54 4 Q60 -3 66 4" fill="none" stroke="#34D3B5" stroke-width="1.4"></path><polygon points="40,26 70,41.0 40,56 10,41.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--top); stroke: var(--edge)"></polygon><polygon points="10,41.0 40,56 40,68 10,53.0" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--left); stroke: var(--edge)"></polygon><polygon points="40,56 70,41.0 70,53.0 40,68" stroke-width="0.8" stroke-linejoin="round" style="fill: var(--right); stroke: var(--edge)"></polygon><polygon points="16,44 19,45.5 19,48.5 16,47" fill="#34D3B5" stroke-width="0.8" stroke-linejoin="round" class="led" style="stroke: var(--edge)"></polygon><polygon points="22,47 25,48.5 25,51.5 22,50" fill="#2F6BFF" stroke-width="0.8" stroke-linejoin="round" class="led l2" style="stroke: var(--edge)"></polygon><polygon points="28,50 31,51.5 31,54.5 28,53" fill="#F5B53D" stroke-width="0.8" stroke-linejoin="round" class="led l3" style="stroke: var(--edge)"></polygon><polygon points="46,54 64,45 64,48 46,57" fill="#0E2A6B" stroke-width="0.8" stroke-linejoin="round" style="stroke: var(--edge)"></polygon></svg></div>
@@ -301,7 +328,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 
 <div style="position: absolute; left: 18px; top: 16px; right: 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap">
 <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-radius: 14px; background: var(--hud); border: 1px solid var(--cardBorder); backdrop-filter: blur(10px); transition: background .8s">
-<div style="display: flex; align-items: center; gap: 8px; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 15px; color: var(--text)"><span class="blink" style="width: 9px; height: 9px; border-radius: 50%; background: #2F6BFF"></span>โรงงาน A · แผนผังการเชื่อมต่อสด</div>
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 15px; color: var(--text)"><span class="blink" style="width: 9px; height: 9px; border-radius: 50%; background: #2F6BFF"></span>โรงงาน A · แผนผังการเชื่อมต่อสด</div>
 <div style="font-size: 12px; color: var(--muted)"><span data-k="modeLabel"></span> · อัปเดตทุก 1 วินาที</div>
 </div>
 <div role="group" aria-label="โหมดแสงสว่างของฉาก" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--hud); border: 1px solid var(--cardBorder); backdrop-filter: blur(10px)">
@@ -321,35 +348,93 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <div style="padding: 18px; display: flex; flex-wrap: wrap; gap: 12px; border-top: 1px solid rgba(160,185,255,.14)">
 <div style="flex: 1 1 140px; min-width: 0; padding: 14px 14px; border-radius: 14px; border: 1px solid rgba(160,185,255,.16); background: rgba(255,255,255,.03); display: flex; flex-direction: column; gap: 6px">
 <div style="font-size: 13px; color: #A9B8E6">กำลังไฟ</div>
-<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #FFFFFF"><span data-k="kw"></span><span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">kW</span></div><svg width="76" height="32" viewBox="0 0 110 32" preserveAspectRatio="none" aria-hidden="true"><path d="M0 20.5 L10 25.9 L20 21.7 L30 12.5 L40 9.0 L50 8.0 L60 13.2 L70 20.2 L80 20.8 L90 20.7 L100 21.3 L110 12.7" fill="none" stroke="#5B8CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #FFFFFF"><span data-k="kw"></span><span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">kW</span></div><svg width="76" height="32" viewBox="0 0 110 32" preserveAspectRatio="none" aria-hidden="true"><path d="M0 20.5 L10 25.9 L20 21.7 L30 12.5 L40 9.0 L50 8.0 L60 13.2 L70 20.2 L80 20.8 L90 20.7 L100 21.3 L110 12.7" fill="none" stroke="#5B8CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
 </div><div style="flex: 1 1 140px; min-width: 0; padding: 14px 14px; border-radius: 14px; border: 1px solid rgba(160,185,255,.16); background: rgba(255,255,255,.03); display: flex; flex-direction: column; gap: 6px">
 <div style="font-size: 13px; color: #A9B8E6">อัตราน้ำ</div>
-<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #FFFFFF"><span data-k="flow"></span><span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">m³/h</span></div><svg width="76" height="32" viewBox="0 0 110 32" preserveAspectRatio="none" aria-hidden="true"><path d="M0 26.0 L10 21.4 L20 9.8 L30 5.9 L40 10.9 L50 15.2 L60 21.0 L70 22.6 L80 23.5 L90 18.4 L100 12.1 L110 6.1" fill="none" stroke="#14B8A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #FFFFFF"><span data-k="flow"></span><span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">m³/h</span></div><svg width="76" height="32" viewBox="0 0 110 32" preserveAspectRatio="none" aria-hidden="true"><path d="M0 26.0 L10 21.4 L20 9.8 L30 5.9 L40 10.9 L50 15.2 L60 21.0 L70 22.6 L80 23.5 L90 18.4 L100 12.1 L110 6.1" fill="none" stroke="#14B8A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
 </div><div style="flex: 1 1 140px; min-width: 0; padding: 14px 14px; border-radius: 14px; border: 1px solid rgba(160,185,255,.16); background: rgba(255,255,255,.03); display: flex; flex-direction: column; gap: 6px">
 <div style="font-size: 13px; color: #A9B8E6">เครื่องเดิน</div>
-<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #FFFFFF">7<span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">/ 8</span></div><svg width="76" height="32" viewBox="0 0 110 32" preserveAspectRatio="none" aria-hidden="true"><path d="M0 15.6 L10 11.4 L20 7.3 L30 10.4 L40 16.1 L50 18.6 L60 21.1 L70 23.9 L80 14.8 L90 8.8 L100 11.0 L110 10.3" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #FFFFFF">7<span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">/ 8</span></div><svg width="76" height="32" viewBox="0 0 110 32" preserveAspectRatio="none" aria-hidden="true"><path d="M0 15.6 L10 11.4 L20 7.3 L30 10.4 L40 16.1 L50 18.6 L60 21.1 L70 23.9 L80 14.8 L90 8.8 L100 11.0 L110 10.3" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
 </div><div style="flex: 1 1 140px; min-width: 0; padding: 14px 14px; border-radius: 14px; border: 1px solid #F5B53D; background: rgba(245,181,61,.10); display: flex; flex-direction: column; gap: 6px">
 <div style="font-size: 13px; color: #F5C76A">แจ้งเตือน</div>
-<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #F5C76A">2<span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">รายการ</span></div></div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px"><div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; color: #F5C76A">2<span style="font-size: 13px; font-weight: 500; color: #A9B8E6; margin-left: 4px">รายการ</span></div></div>
 </div>
 </div>
 </div>
 </section>
+</div>
 
+<section style="background: #FFFFFF; color: #0B1430">
+<div style="max-width: 1240px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; color: #1F5FFF">6</div><div style="font-size: 16px; color: #3A4256">ระบบในแพลตฟอร์มเดียว</div></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; color: #1F5FFF">1 วินาที</div><div style="font-size: 16px; color: #3A4256">รอบอัปเดตข้อมูลสด</div></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; color: #1F5FFF">2 ทาง</div><div style="font-size: 16px; color: #3A4256">ทั้งอ่านค่าและสั่งการ</div></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; color: #1F5FFF">[จำนวนไซต์]</div><div style="font-size: 16px; color: #3A4256">ไซต์ที่ใช้งานจริง</div></div>
+</div>
+</section>
+
+<section id="features" style="background: #F4F6FB; color: #0B1430">
+<div style="max-width: 1240px; margin: 0 auto; padding: 96px 24px; display: flex; flex-direction: column; gap: 48px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<span style="font-size: 14px; font-weight: 700; color: #1F5FFF; letter-spacing: 0.08em">ความสามารถหลัก</span>
+<h2 style="margin: 0; font-size: 44px; line-height: 1.2; font-weight: 700">มองเห็นทุกอย่าง และสั่งได้ทันที</h2>
+<p style="margin: 0; font-size: 19px; line-height: 1.7; color: #3A4256">รวมข้อมูลจาก PLC มิเตอร์ และเซนเซอร์ทุกยี่ห้อ มาแสดงในแดชบอร์ดเดียว พร้อมปุ่มสั่งการที่มีการยืนยันสองชั้น</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+
+<div style="background: #FFFFFF; border: 1px solid #E3E7EF; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #E8EFFF"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F5FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>
+<h3 style="margin: 0; font-size: 22px">เครื่องจักร</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3A4256">สถานะเดิน/หยุด อุณหภูมิ รอบ ภาระงาน OEE และสั่ง Start/Stop ระยะไกล</p>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E7EF; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #E8EFFF"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F5FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"></path></svg></span>
+<h3 style="margin: 0; font-size: 22px">มิเตอร์ไฟฟ้า</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3A4256">kW, kWh, PF, แรงดัน 3 เฟส, Peak Demand และค่าไฟประมาณการรายวัน</p>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E7EF; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #E8EFFF"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F5FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.7S5 10.4 5 14.5A7 7 0 0 0 19 14.5C19 10.4 12 2.7 12 2.7z"></path></svg></span>
+<h3 style="margin: 0; font-size: 22px">มิเตอร์น้ำ</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3A4256">อัตราไหล ปริมาณสะสม ระดับถัง แรงดันท่อ และแจ้งเตือนน้ำรั่ว</p>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E7EF; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #FFF4DB"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"></path></svg></span>
+<h3 style="margin: 0; font-size: 22px">แสงสว่าง</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3A4256">เปิด-ปิด หรี่ไฟรายโซน ตั้งตารางเวลา และวัดค่าลักซ์จากเซนเซอร์แสง</p>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E7EF; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #E8EFFF"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F5FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8v8M21 8v8M3 12h6M15 12h6M9 7l6 10M15 7L9 17M12 3v4M9 3h6"></path></svg></span>
+<h3 style="margin: 0; font-size: 22px">วาล์ว &amp; ปั๊ม</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3A4256">สั่งเปิด-ปิด ปรับเปอร์เซ็นต์การเปิด ดูสถานะ Feedback และบันทึกทุกคำสั่ง</p>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E7EF; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: #FFF4DB"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+<h3 style="margin: 0; font-size: 22px">แจ้งเตือน &amp; AI</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3A4256">ส่งเข้า LINE / อีเมล ทันทีเมื่อค่าเกิน และวิเคราะห์แนวโน้มก่อนเครื่องเสีย</p>
+</div>
+
+</div>
+</div>
+</section>
+<div style="background: radial-gradient(1200px 600px at 75% 10%, #12307F 0%, rgba(18,48,127,0) 60%), #081640; background-color: #081640; color: #EEF3FF; font-family: 'Sarabun', 'Space Grotesk', system-ui, sans-serif; background-image: radial-gradient(1200px 600px at 75% 10%, rgba(32,72,190,.55) 0%, rgba(32,72,190,0) 60%), linear-gradient(rgba(122,162,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(122,162,255,.05) 1px, transparent 1px); background-size: auto, 48px 48px, 48px 48px; padding-top: 48px">
 <section id="connect" style="max-width: 1320px; margin: 0 auto; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center">
-<h2 style="margin: 0; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 26px; color: #FFFFFF">เชื่อมได้ทุกอุปกรณ์ ด้วยโปรโตคอลที่โรงงานใช้อยู่แล้ว</h2>
+<h2 style="margin: 0; font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 26px; color: #FFFFFF">เชื่อมได้ทุกอุปกรณ์ ด้วยโปรโตคอลที่โรงงานใช้อยู่แล้ว</h2>
 <p style="margin: 0; color: #A9B8E6; font-size: 16px; max-width: 760px; line-height: 1.7">มิเตอร์ไฟฟ้า มิเตอร์น้ำ (Wireless M-Bus) PLC เครื่องจักร ปั๊ม วาล์ว และระบบแสงสว่าง ทั้งในโรงงานและบ้าน/อาคาร ส่งข้อมูลเข้า Edge Gateway แล้วขึ้นคลาวด์อย่างปลอดภัย</p>
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center"><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #F5A524"></span>Modbus RTU · RS-485</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #F5A524"></span>Modbus TCP</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #F5A524"></span>SunSpec Modbus</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #2F6BFF"></span>LAN · Ethernet</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #8B5CF6"></span>OPC UA</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #14B8A6"></span>MQTT / TLS</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #2F6BFF"></span>BACnet/IP</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #14B8A6"></span>Wireless M-Bus</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #14B8A6"></span>LoRaWAN</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #14B8A6"></span>Zigbee</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #14B8A6"></span>Wi-Fi</span><span style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(160,185,255,.22); background: rgba(15,34,96,.6); color: #DCE6FF; font-size: 14px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 2px; background: #14B8A6"></span>4G / LTE</span></div>
 </section>
-
 <section id="charts" style="max-width: 1320px; margin: 0 auto; padding: 16px 32px 40px">
 <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px">
-<div><h2 style="margin: 0; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 26px; color: #FFFFFF">แดชบอร์ดพลังงาน</h2><p style="margin: 6px 0 0; color: #A9B8E6; font-size: 14px">ตัวอย่างหน้าจอ · ข้อมูลจำลองเพื่อการสาธิต</p></div>
+<div><h2 style="margin: 0; font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 26px; color: #FFFFFF">แดชบอร์ดพลังงาน</h2><p style="margin: 6px 0 0; color: #A9B8E6; font-size: 14px">ตัวอย่างหน้าจอ · ข้อมูลจำลองเพื่อการสาธิต</p></div>
 </div>
 <div class="charts-grid" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px">
 <div class="span2" style="grid-column: span 2; padding: 20px 22px 14px; border-radius: 20px; background: #0E215E; border: 1px solid rgba(160,185,255,.16)">
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px">
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px">ภาระไฟฟ้า 24 ชม. (kW)</div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 17px">ภาระไฟฟ้า 24 ชม. (kW)</div>
 <div style="display: flex; gap: 16px; font-size: 12.5px; color: #C9D4F5">
 <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 16px; height: 3px; background: #5B8CFF; border-radius: 2px"></span>วันนี้</span>
 <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 16px; border-top: 2px dashed #9FB0DE"></span>เมื่อวาน</span>
@@ -368,7 +453,7 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 </svg>
 </div>
 <div style="padding: 20px 22px; border-radius: 20px; background: #0E215E; border: 1px solid rgba(160,185,255,.16); display: flex; flex-direction: column; gap: 6px">
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px">กำลังไฟฟ้ารวม</div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 17px">กำลังไฟฟ้ารวม</div>
 <div style="font-size: 12.5px; color: #A9B8E6">เทียบพิกัดหม้อแปลง 600 kW</div>
 <svg viewBox="0 0 300 200" role="img" aria-label="มาตรวัดกำลังไฟฟ้าเทียบพิกัด 600 kW" style="width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto">
 <path d="M38.0 158.0 A112 112 0 0 1 262.0 158.0" fill="none" stroke="rgba(160,185,255,.12)" stroke-width="18"></path><path d="M38.0 158.0 A112 112 0 0 1 184.6 51.5" fill="none" stroke="#14B8A6" stroke-width="18"></path><path d="M186.5 52.1 A112 112 0 0 1 249.8 107.2" fill="none" stroke="#2F6BFF" stroke-width="18"></path><path d="M250.7 108.9 A112 112 0 0 1 262.0 158.0" fill="none" stroke="#F5A524" stroke-width="18"></path><line x1="54.0" y1="158.0" x2="66.0" y2="158.0" stroke="#9FB0DE" stroke-width="1.6"></line><text x="80.0" y="162.0" text-anchor="middle" font-size="10.5" fill="#9FB0DE">0</text><line x1="57.3" y1="133.2" x2="62.1" y2="134.4" stroke="#9FB0DE" stroke-width="1"></line><line x1="66.9" y1="110.0" x2="77.3" y2="116.0" stroke="#9FB0DE" stroke-width="1.6"></line><text x="89.4" y="127.0" text-anchor="middle" font-size="10.5" fill="#9FB0DE">100</text><line x1="82.1" y1="90.1" x2="85.7" y2="93.7" stroke="#9FB0DE" stroke-width="1"></line><line x1="102.0" y1="74.9" x2="108.0" y2="85.3" stroke="#9FB0DE" stroke-width="1.6"></line><text x="115.0" y="101.4" text-anchor="middle" font-size="10.5" fill="#9FB0DE">200</text><line x1="125.2" y1="65.3" x2="126.4" y2="70.1" stroke="#9FB0DE" stroke-width="1"></line><line x1="150.0" y1="62.0" x2="150.0" y2="74.0" stroke="#9FB0DE" stroke-width="1.6"></line><text x="150.0" y="92.0" text-anchor="middle" font-size="10.5" fill="#9FB0DE">300</text><line x1="174.8" y1="65.3" x2="173.6" y2="70.1" stroke="#9FB0DE" stroke-width="1"></line><line x1="198.0" y1="74.9" x2="192.0" y2="85.3" stroke="#9FB0DE" stroke-width="1.6"></line><text x="185.0" y="101.4" text-anchor="middle" font-size="10.5" fill="#9FB0DE">400</text><line x1="217.9" y1="90.1" x2="214.3" y2="93.7" stroke="#9FB0DE" stroke-width="1"></line><line x1="233.1" y1="110.0" x2="222.7" y2="116.0" stroke="#9FB0DE" stroke-width="1.6"></line><text x="210.6" y="127.0" text-anchor="middle" font-size="10.5" fill="#9FB0DE">500</text><line x1="242.7" y1="133.2" x2="237.9" y2="134.4" stroke="#9FB0DE" stroke-width="1"></line><line x1="246.0" y1="158.0" x2="234.0" y2="158.0" stroke="#9FB0DE" stroke-width="1.6"></line><text x="220.0" y="162.0" text-anchor="middle" font-size="10.5" fill="#9FB0DE">600</text>
@@ -376,19 +461,19 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 <polygon points="146,158 150,62 154,158" fill="#F5B53D"></polygon></g>
 <circle cx="150" cy="158" r="10" fill="#0F2260" stroke="#F5B53D" stroke-width="3"></circle>
 </svg>
-<div style="text-align: center; margin-top: -6px"><span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 700; font-size: 36px; color: #FFFFFF"><span data-k="kw"></span></span><span style="color: #A9B8E6; margin-left: 6px">kW · <span data-k="loadPct"></span>%</span></div>
+<div style="text-align: center; margin-top: -6px"><span style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 700; font-size: 36px; color: #FFFFFF"><span data-k="kw"></span></span><span style="color: #A9B8E6; margin-left: 6px">kW · <span data-k="loadPct"></span>%</span></div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px">
 <div style="padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.04)"><div style="font-size: 12px; color: #A9B8E6">Power Factor</div><div style="font-weight: 600; font-size: 18px">0.96</div></div>
 <div style="padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.04)"><div style="font-size: 12px; color: #A9B8E6">พีควันนี้</div><div style="font-weight: 600; font-size: 18px">438 kW</div></div>
 </div>
 </div>
 <div style="padding: 20px 22px; border-radius: 20px; background: #0E215E; border: 1px solid rgba(160,185,255,.16)">
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 4px">พลังงานแยกตามโซน</div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 4px">พลังงานแยกตามโซน</div>
 <div style="font-size: 12.5px; color: #A9B8E6; margin-bottom: 10px">วันนี้ · kWh</div>
 <svg viewBox="0 0 520 250" role="img" aria-label="พลังงานแยกตามโซน วันนี้ หน่วย kWh" style="width: 100%; height: auto; display: block"><text x="110" y="33" text-anchor="end" font-size="12" fill="#C9D4F5">ไลน์ผลิต 1</text><rect x="120" y="20" width="350" height="20" rx="4" fill="rgba(160,185,255,.07)"></rect><rect class="grow" x="120" y="20" width="299.6" height="20" rx="4" fill="#5B8CFF" style="animation-delay: 0.00s"></rect><text x="427.6" y="34" font-size="12" font-weight="600" fill="#EEF3FF">2,140</text><text x="110" y="71" text-anchor="end" font-size="12" fill="#C9D4F5">ไลน์ผลิต 2</text><rect x="120" y="58" width="350" height="20" rx="4" fill="rgba(160,185,255,.07)"></rect><rect class="grow" x="120" y="58" width="260.4" height="20" rx="4" fill="#5B8CFF" style="animation-delay: 0.08s"></rect><text x="388.4" y="72" font-size="12" font-weight="600" fill="#EEF3FF">1,860</text><text x="110" y="109" text-anchor="end" font-size="12" fill="#C9D4F5">ห้องคอมเพรสเซอร์</text><rect x="120" y="96" width="350" height="20" rx="4" fill="rgba(160,185,255,.07)"></rect><rect class="grow" x="120" y="96" width="184.8" height="20" rx="4" fill="#3A63C9" style="animation-delay: 0.16s"></rect><text x="312.8" y="110" font-size="12" font-weight="600" fill="#EEF3FF">1,320</text><text x="110" y="147" text-anchor="end" font-size="12" fill="#C9D4F5">ระบบปั๊มน้ำ</text><rect x="120" y="134" width="350" height="20" rx="4" fill="rgba(160,185,255,.07)"></rect><rect class="grow" x="120" y="134" width="106.4" height="20" rx="4" fill="#3A63C9" style="animation-delay: 0.24s"></rect><text x="234.4" y="148" font-size="12" font-weight="600" fill="#EEF3FF">760</text><text x="110" y="185" text-anchor="end" font-size="12" fill="#C9D4F5">แสงสว่าง</text><rect x="120" y="172" width="350" height="20" rx="4" fill="rgba(160,185,255,.07)"></rect><rect class="grow" x="120" y="172" width="58.8" height="20" rx="4" fill="#3A63C9" style="animation-delay: 0.32s"></rect><text x="186.8" y="186" font-size="12" font-weight="600" fill="#EEF3FF">420</text><text x="110" y="223" text-anchor="end" font-size="12" fill="#C9D4F5">สำนักงาน</text><rect x="120" y="210" width="350" height="20" rx="4" fill="rgba(160,185,255,.07)"></rect><rect class="grow" x="120" y="210" width="53.2" height="20" rx="4" fill="#3A63C9" style="animation-delay: 0.40s"></rect><text x="181.2" y="224" font-size="12" font-weight="600" fill="#EEF3FF">380</text></svg>
 </div>
 <div id="devices" class="span2" style="grid-column: span 2; padding: 20px 22px; border-radius: 20px; background: #0E215E; border: 1px solid rgba(160,185,255,.16)">
-<div style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 10px">สถานะอุปกรณ์และการเชื่อมต่อ</div>
+<div style="font-family: 'Space Grotesk', 'Sarabun', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 10px">สถานะอุปกรณ์และการเชื่อมต่อ</div>
 <div style="overflow-x: auto">
 <table style="width: 100%; border-collapse: collapse; font-size: 14px">
 <thead><tr style="text-align: left; color: #A9B8E6; font-size: 12.5px"><th style="padding: 8px 12px; font-weight: 500">อุปกรณ์</th><th style="padding: 8px 12px; font-weight: 500">โปรโตคอล</th><th style="padding: 8px 12px; font-weight: 500">ที่อยู่</th><th style="padding: 8px 12px; font-weight: 500">สถานะ</th><th style="padding: 8px 12px; font-weight: 500; text-align: right">ค่าล่าสุด</th></tr></thead>
@@ -452,19 +537,109 @@ a{color:#7FA2FF}a:hover{color:#B9CBFF}
 </div>
 </div>
 </section>
-
-<span id="trial"></span><span id="pricing"></span><span id="partners"></span>
-<footer id="contact" style="max-width: 1320px; margin: 0 auto; padding: 32px 32px 44px; scroll-margin-top: 20px; border-top: 1px solid rgba(160,185,255,.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px">
-<div style="display: flex; flex-direction: column; gap: 4px">
-<span style="font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 18px; color: #FFFFFF">CoreDash Technology</span>
-<span style="font-size: 14px; color: #A9B8E6">ผู้พัฒนา CoreDash Nexus · ระบบมอนิเตอร์โรงงาน พลังงาน และโซลาร์</span>
 </div>
-<a class="cta-primary" href="tel:0819232380" style="display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 24px; border-radius: 12px; background: #2F6BFF; color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>โทร 081-923-2380</a>
-<a href="#trial" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 24px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.8); color: #FFFFFF; text-decoration: none; font-family: 'Space Grotesk', 'Anuphan', sans-serif; font-weight: 600; font-size: 17px">ทดลองใช้ฟรี</a>
-<span style="width: 100%; font-size: 13px; color: #8193C7">© CoreDash Technology · สงวนลิขสิทธิ์</span>
+
+<section style="background: #FFFFFF; color: #0B1430">
+<div style="max-width: 1240px; margin: 0 auto; padding: 96px 24px; display: flex; flex-direction: column; gap: 48px">
+<h2 style="margin: 0; font-size: 44px; font-weight: 700">เริ่มได้ใน 3 ขั้นตอน</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 3px solid #1F5FFF">
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #1F5FFF">01</span>
+<h3 style="margin: 0; font-size: 24px">เชื่อมต่อ</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #3A4256">ต่อ Gateway เข้ากับ PLC มิเตอร์ และเซนเซอร์ ผ่าน Modbus, MQTT, OPC UA หรือ BACnet</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 3px solid #1F5FFF">
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #1F5FFF">02</span>
+<h3 style="margin: 0; font-size: 24px">มอนิเตอร์</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #3A4256">ลากวางวิดเจ็ตสร้างแดชบอร์ดเอง ดูค่าสด ย้อนดูกราฟ และออกรายงานพลังงาน</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 3px solid #1F5FFF">
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #1F5FFF">03</span>
+<h3 style="margin: 0; font-size: 24px">สั่งการ</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #3A4256">กดสั่งวาล์ว ไฟ และมอเตอร์ได้ทันที กำหนดสิทธิ์รายผู้ใช้ และเก็บ Audit log ทุกคำสั่ง</p>
+</div>
+</div>
+</div>
+</section>
+
+<section style="background: #0A1230">
+<div style="max-width: 1240px; margin: 0 auto; padding: 96px 24px; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<span style="font-size: 14px; font-weight: 700; color: #8FB8FF; letter-spacing: 0.08em">แพลตฟอร์มครบวงจร</span>
+<h2 style="margin: 0; font-size: 44px; line-height: 1.2; font-weight: 700; color: #FFFFFF">ตั้งแต่หน้างาน จนถึงมือถือผู้บริหาร</h2>
+<p style="margin: 0; font-size: 19px; line-height: 1.7; color: #D5DEF2">ตัวเชื่อม Gateway อ่านค่าจาก PLC และมิเตอร์ ส่งค่าสดเข้าเว็บ SCADA และแอปมือถือ พร้อมระบบสิทธิ์ผู้ใช้และ Audit log</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px">
+
+<a href="app/#scada" style="background: #0E1733; border: 1px solid #2A3A6E; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: #E7ECF7">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #132A5E"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8FB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h5v5H4zM15 13h5v5h-5zM9 8.5h4v7h2"></path></svg></span>
+<span style="font-size: 21px; font-weight: 700; color: #FFFFFF">เว็บ SCADA</span>
+<span style="font-size: 16px; line-height: 1.65; color: #C7D2EC">แผนผังกระบวนการแบบมีแอนิเมชัน Faceplate โหมด AUTO/MANUAL และ Interlock ป้องกันความเสียหาย</span>
+<span style="margin-top: auto; font-size: 15px; font-weight: 600; color: #8FB8FF">ดูหน้า SCADA →</span>
+</a>
+
+<a href="app/" style="background: #0E1733; border: 1px solid #2A3A6E; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: #E7ECF7">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #132A5E"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8FB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2"></path></svg></span>
+<span style="font-size: 21px; font-weight: 700; color: #FFFFFF">แอปมือถือ</span>
+<span style="font-size: 16px; line-height: 1.65; color: #C7D2EC">ดูค่า สั่งการ รับแจ้งเตือน และรันฉากสั่งงานด่วน ทุกคำสั่งยืนยัน 2 ชั้น</span>
+<span style="margin-top: auto; font-size: 15px; font-weight: 600; color: #8FB8FF">ดูแอปมือถือ →</span>
+</a>
+
+<a href="app/#control" style="background: #0E1733; border: 1px solid #2A3A6E; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: #E7ECF7">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #132A5E"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8FB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h20v14H2zM8 21h8M12 17v4"></path></svg></span>
+<span style="font-size: 21px; font-weight: 700; color: #FFFFFF">ระบบ &amp; ความปลอดภัย</span>
+<span style="font-size: 16px; line-height: 1.65; color: #C7D2EC">สถานะการสื่อสารอุปกรณ์ สิทธิ์ผู้ใช้ตามบทบาท ตารางเวลา และช่องทางแจ้งเตือน</span>
+<span style="margin-top: auto; font-size: 15px; font-weight: 600; color: #8FB8FF">ดูหน้าระบบ →</span>
+</a>
+
+<a href="app/" style="background: #0E1733; border: 1px solid #2A3A6E; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: #E7ECF7">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #132A5E"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8FB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"></path></svg></span>
+<span style="font-size: 21px; font-weight: 700; color: #FFFFFF">แดชบอร์ดพลังงาน</span>
+<span style="font-size: 16px; line-height: 1.65; color: #C7D2EC">ไฟฟ้า 3 เฟส Peak Demand ค่าไฟ น้ำ และสถานะเครื่องจักรทั้งโรงงาน</span>
+<span style="margin-top: auto; font-size: 15px; font-weight: 600; color: #8FB8FF">เปิดแดชบอร์ด →</span>
+</a>
+
+</div>
+</div>
+</section>
+
+<section id="cta" style="background: #071A55">
+<div style="max-width: 1240px; margin: 0 auto; padding: 88px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 32px">
+<div style="flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 42px; line-height: 1.2; color: #FFFFFF">พร้อมควบคุมทั้งโรงงานจากจอเดียวหรือยัง?</h2>
+<p style="margin: 0; font-size: 19px; color: #D5DEF2">ทดลองใช้ฟรีได้ทันที ไม่ต้องติดตั้ง</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<a href="app/" style="background: #1F5FFF; color: #FFFFFF; text-decoration: none; font-weight: 700; font-size: 18px; padding: 18px 36px; border-radius: 8px">ทดลองใช้ฟรี</a>
+<a href="tel:0819232380" style="border: 1.5px solid #FFFFFF; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 18px; padding: 17px 36px; border-radius: 8px">ติดต่อฝ่ายขาย 081-923-2380</a>
+</div>
+</div>
+</section>
+
+<section style="background: #060B1A; border-top: 1px solid #1C2850">
+<div style="max-width: 1240px; margin: 0 auto; padding: 88px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+<div style="flex: 0 0 auto; display: flex; justify-content: center; padding: 24px; border-radius: 50%; background: radial-gradient(circle, rgba(255,196,90,0.18) 0%, rgba(255,196,90,0) 70%)">
+<span class="cdt" role="img" aria-label="CoreDash Technology" style="width: 260px; height: 316px"><img class="a" src="app/icons/logo-green.webp" alt=""><img class="b" src="app/icons/logo-red.webp" alt=""><span class="s"></span></span>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 14px; font-weight: 700; color: #E8C27A; letter-spacing: 0.12em">ผู้พัฒนา</span>
+<h2 style="margin: 0; font-size: 42px; line-height: 1.2; color: #FFFFFF">พัฒนาโดย CoreDash Technology</h2>
+<p style="margin: 0; font-size: 19px; line-height: 1.7; color: #D5DEF2">ทีมวิศวกรระบบอัตโนมัติและซอฟต์แวร์ ผู้ออกแบบและดูแล CoreDash Nexus ตั้งแต่ Gateway หน้างาน จนถึงเว็บ SCADA และแอปมือถือ</p>
+</div>
+</div>
+</section>
+
+<footer style="background: #060B1A; color: #A9B6D6">
+<div style="max-width: 1240px; margin: 0 auto; padding: 32px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; font-size: 14px">
+<span class="cdt" role="img" aria-label="CoreDash Technology" style="width: 28px; height: 34px"><img class="a" src="app/icons/logo-green.webp" alt=""><img class="b" src="app/icons/logo-red.webp" alt=""><span class="s"></span></span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #FFFFFF">CoreDash Nexus</span>
+<span>พัฒนาโดย CoreDash Technology</span>
+<a href="tel:0819232380" style="color: #A9B6D6; text-decoration: none">โทร 081-923-2380</a>
+<span style="margin-left: auto">© 2026 CoreDash Technology</span>
+</div>
 </footer>
-</div>
 
+</div>
 <script>
 (function(){
   var DAY = {
