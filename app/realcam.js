@@ -25,7 +25,7 @@ const T = {
   v3Open: B('เปิดแอป V380 Pro', 'Open the V380 Pro app'),
   v3Sub: B('ภาพสด · หมุนกล้อง · พูดผ่านกล้อง · ย้อนดูบันทึก', 'Live view · pan/tilt · talk · playback'),
   v3Desk: B('เปิดจากมือถือที่ติดตั้งแอป V380 Pro', 'Open this on a phone with V380 Pro installed'),
-  v3Note: B('แอปจะเปิดที่รายการกล้อง แล้วแตะกล้องที่ต้องการ · ถ้ายังไม่มีแอปจะพาไปหน้าดาวน์โหลด · ถ้าเปิดจาก LINE/Facebook ให้เปิดหน้านี้ใน Chrome ก่อน', 'The app opens on its camera list; tap the camera you want · without the app you go to the store · from LINE/Facebook, open this page in Chrome first'),
+  v3Note: B('Android: ปุ่มจะเปิด V380 Pro ผ่าน Play Store — ถ้าขึ้นหน้าแอป ให้กดปุ่ม "เปิด" (ไม่ใช่ "ติดตั้ง") แล้วแตะกล้องที่ต้องการ · iPhone: กด "เปิด" ใน App Store · เปิดจาก LINE/Facebook ให้เปิดหน้านี้ใน Chrome ก่อน', 'Android: the button opens V380 Pro through the Play Store — if its page appears, tap "Open" (not "Install"), then pick the camera · iPhone: tap "Open" in the App Store · from LINE/Facebook, open this page in Chrome first'),
   v3Rtsp: B('อนาคต: ดูภาพในแอป CoreDash โดยตรง (ต้องใช้กล้องที่เปิด RTSP)', 'Later: video inside CoreDash (needs an RTSP camera)'),
   demoOk: B('รหัสผ่านถูกต้อง · โหมดสาธิตยังไม่มีกล้องจริงให้แสดง', 'Password accepted · demo mode has no real cameras to show')
 };
@@ -88,7 +88,9 @@ export function createRealCamView({ lang = () => 'th', live = () => null, onToas
   // V380 Pro opens the owner's own app (the cameras' cloud protocol is closed, so video stays in that app)
   const V380 = { android: 'com.macrovideo.v380pro', ios: 'https://apps.apple.com/app/id1388988209', play: 'https://play.google.com/store/apps/details?id=com.macrovideo.v380pro' };
   const platform = () => { const u = navigator.userAgent || ''; return /Android/i.test(u) ? 'android' : /iPhone|iPad|iPod/i.test(u) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : 'desktop'; };
-  const v380Href = () => (platform() === 'android' ? `intent://#Intent;package=${V380.android};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;S.browser_fallback_url=${encodeURIComponent(V380.play)};end` : platform() === 'ios' ? V380.ios : V380.play);
+  // Chrome only lets a web page open apps that publish a link scheme; V380 Pro publishes none, so on Android we open
+  // its page in the Play Store app (installed → a single "Open" button; launch=true lets Play open it straight away where supported).
+  const v380Href = () => (platform() === 'android' ? `intent://details?id=${V380.android}&launch=true#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=${encodeURIComponent(V380.play)};end` : platform() === 'ios' ? V380.ios : V380.play);
   function guide() {
     const mixed = live() && location.protocol === 'https:' && live().base.startsWith('http:');
     const pf = platform();
