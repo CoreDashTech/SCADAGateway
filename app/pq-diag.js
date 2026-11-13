@@ -365,11 +365,11 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null, risk 
 
 
   // ---------------------------------------------------------------- instrument picker
-  const kindName = (m) => (m.kind === 'pqa' ? (L() === 'th' ? 'เครื่องวิเคราะห์คุณภาพไฟ (พกพา)' : 'PQ analyser (portable)') : (L() === 'th' ? 'มิเตอร์ติดตู้ (ถาวร)' : 'Panel meter (fixed)'));
+  const kindName = (m, short) => (m.kind === 'pqa' ? (short ? (L() === 'th' ? 'พกพา' : 'Portable') : (L() === 'th' ? 'เครื่องวิเคราะห์คุณภาพไฟ (พกพา)' : 'PQ analyser (portable)')) : (short ? (L() === 'th' ? 'ติดตู้' : 'Panel') : (L() === 'th' ? 'มิเตอร์ติดตู้ (ถาวร)' : 'Panel meter (fixed)')));
   function meterCard(m) {
     return `<button class="mt-card ${st.meter === m.id ? 'on' : ''}" data-dg="meter" data-arg="${m.id}">
       <span class="mt-brand">${esc(m.brand)}</span><b>${esc(m.model)}</b>
-      <span class="mt-tags"><i>${m.kind === 'pqa' ? '🧳' : '🗄'} ${esc(kindName(m))}</i>${m.cls && m.cls !== '—' ? `<i>Class ${esc(m.cls)}</i>` : ''}${m.harm ? `<i>h≤${m.harm}</i>` : ''}</span>
+      <span class="mt-tags"><i>${m.kind === 'pqa' ? '🧳' : '🗄'} ${esc(kindName(m, true))}</i>${m.cls && m.cls !== '—' ? `<i>Class ${esc(m.cls)}</i>` : ''}${m.harm ? `<i>h≤${m.harm}</i>` : ''}</span>
       <span class="mt-ing">${m.ingest.map((g) => `<em class="mt-${g}">${esc(tr(INGEST[g]).split(' ')[0])}</em>`).join('')}</span></button>`;
   }
   function regTable(id) {

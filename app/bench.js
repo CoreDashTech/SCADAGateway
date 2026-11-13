@@ -361,7 +361,7 @@ export function dialSvg(p, modelName, info = {}) {
   }
   if (L.style === 'gmc') o += Array.from({ length: 6 }, (_, k) => { const a = k / 6 * Math.PI * 2 + 0.5; return `<circle cx="${r1(100 + Math.sin(a) * 95.5)}" cy="${r1(100 - Math.cos(a) * 95.5)}" r="2.6" fill="#E7D08A" stroke="#5C4410" stroke-width="0.8"/>`; }).join('');
   // unit marks above the register
-  o += `<text x="88" y="${L.style === 'asahi' ? 52 : 50}" font-size="${L.style === 'asahi' ? 15 : 12}" text-anchor="middle" fill="${L.ink}" font-family="'IBM Plex Sans Thai',sans-serif">ม.³ <tspan font-size="${L.style === 'asahi' ? 21 : 16}" font-weight="700" font-family="Arial,sans-serif">m³</tspan></text>`;
+  o += `<text x="88" y="${L.style === 'asahi' ? 52 : 50}" font-size="${L.style === 'asahi' ? 15 : 12}" text-anchor="middle" fill="${L.ink}" font-family="'Sarabun',sans-serif">ม.³ <tspan font-size="${L.style === 'asahi' ? 21 : 16}" font-weight="700" font-family="Arial,sans-serif">m³</tspan></text>`;
   if (L.style === 'asahi') o += `<path d="M131,49 L133,42 L135,49 Z" fill="#111"/>`;
   o += register(p, L, x0, 58, info.reading || 0);
   const spec = (x, y, anchor, lines, big) => lines.map((t, i) => `<text x="${x}" y="${y + i * 10.4}" font-size="${i === lines.length - 1 && big ? 9.6 : 7.4}" ${i === lines.length - 1 && big ? 'font-weight="800"' : ''} text-anchor="${anchor}" fill="${L.ink}" font-family="Arial,sans-serif">${t}</text>`).join('');

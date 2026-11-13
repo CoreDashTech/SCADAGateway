@@ -295,7 +295,7 @@ function fmtVal(v, lang) {
 // ---------------------------------------------------------------- app state
 const S = {
   view: 'boot', tab: (location.hash || '#home').slice(1).split(/[?&]/)[0], seg: 'machines', sheet: null, settings: false,
-  pending: null, toast: null, lang: store.get('lang', 'th'), theme: store.get('theme2', 'light'), themePop: false,
+  pending: null, toast: null, lang: store.get('lang', 'th'), theme: store.get('theme2', 'light'), fs: store.get('fs', 'l'), themePop: false,
   gw: null, loginErr: '', hist: null, installEvt: null, busy: false,
   scadaMode: 'twin', blocked: null, deferred: null, bypassMin: 15, bypassReason: '', dayNight: store.get('dayNight', 'auto'), labels: true, zoom: null
 };
@@ -309,11 +309,16 @@ const tr = (o) => (o == null ? '' : typeof o === 'string' ? o : o[S.lang] ?? o.e
 function applyPrefs() {
   document.documentElement.lang = S.lang;
   document.documentElement.dataset.theme = S.theme;
+  document.documentElement.dataset.fs = S.fs;
   const meta = document.querySelector('meta[name=theme-color]');
   if (meta) meta.content = (THEMES.find((m) => m[0] === S.theme) || THEMES[0])[4];
 }
 // [key, Thai, English, swatch, browser bar colour] — light is the default; navy is the original instrument look
 const THEMES = [['light', 'สว่าง', 'Light', '#F3F5F9', '#FFFFFF'], ['soft', 'ครีมถนอมสายตา', 'Warm paper', '#F3EEE4', '#FBF8F2'], ['dim', 'มืดนุ่ม', 'Dim', '#2A313C', '#1E232C'], ['navy', 'กรมท่า', 'Navy', '#0E1733', '#0A1230'], ['graphite', 'กราไฟต์', 'Graphite', '#2A2F38', '#121418']];
+const FSIZES = [['m', 'ปกติ', 'Normal', 15], ['l', 'ใหญ่', 'Large', 18], ['xl', 'ใหญ่มาก', 'Extra large', 21]];
+function sizeButtons() {
+  return FSIZES.map(([k, th, en, px]) => `<button class="th-sw fs-b ${S.fs === k ? 'on' : ''}" data-act="fsize" data-arg="${k}" aria-pressed="${S.fs === k}"><i style="font-size:${px}px">ก</i>${S.lang === 'th' ? th : en}</button>`).join('');
+}
 function themeSwatches(cls = 'th-sw') {
   return THEMES.map(([k, th, en, c]) => `<button class="${cls} ${S.theme === k ? 'on' : ''}" data-act="theme" data-arg="${k}" aria-pressed="${S.theme === k}"><span style="background:${c}"></span>${S.lang === 'th' ? th : en}</button>`).join('');
 }
@@ -1139,7 +1144,7 @@ function header() {
     <button class="ibtn th-btn" style="margin-left:auto" data-act="themepop" aria-label="${x.theme}" aria-expanded="${S.themePop}">${svg(ICON.theme)}</button>
     <button class="ibtn" data-act="settings" aria-label="${x.settings}">${svg(ICON.gear)}</button>
     <button class="ibtn" data-act="tab" data-arg="alerts" aria-label="${x.alerts} ${open}">${svg(ICON.alerts)}${open ? `<span class="badge">${open}</span>` : ''}</button>
-  </header>${S.themePop ? `<div class="th-pop" role="dialog" aria-label="${x.theme}"><b>${x.theme}</b><div>${themeSwatches()}</div></div>` : ''}${src.mode === 'demo' && S.tab !== 'pq' ? `<div class="banner">${x.demoBanner}</div>` : ''}${src.mode === 'live' && !src.connected ? `<div class="banner">${x.offline}</div>` : ''}`;
+  </header>${S.themePop ? `<div class="th-pop" role="dialog" aria-label="${x.theme}"><b>${x.theme}</b><div>${themeSwatches()}</div><b>${S.lang === 'th' ? 'ขนาดตัวอักษร' : 'Text size'}</b><div>${sizeButtons()}</div></div>` : ''}${src.mode === 'demo' && S.tab !== 'pq' ? `<div class="banner">${x.demoBanner}</div>` : ''}${src.mode === 'live' && !src.connected ? `<div class="banner">${x.offline}</div>` : ''}`;
 }
 
 function tabs() {
@@ -1377,6 +1382,7 @@ function viewSettings() {
         <div><div style="font-weight:700;color:var(--tx)">${esc(u.name || '')}</div><div class="muted">${x.role[u.role] || esc(u.role || '')}</div></div></div>
       <div><div class="muted" style="font-weight:600;margin-bottom:8px">${x.language}</div><div class="grid2">${langButtons()}</div></div>
       <div><div class="muted" style="font-weight:600;margin-bottom:8px">${x.theme}</div><div class="th-grid">${themes}</div></div>
+      <div><div class="muted" style="font-weight:600;margin-bottom:8px">${S.lang === 'th' ? 'ขนาดตัวอักษร' : 'Text size'}</div><div class="th-grid">${sizeButtons()}</div></div>
       <div class="row" style="justify-content:space-between"><span style="color:var(--tx)">${x.notif}</span>${np}</div>
       <div class="row" style="justify-content:space-between"><span style="color:var(--tx)">${x.connection}</span><span class="muted"><span class="conn" style="background:${src.connected ? '#3B82F6' : '#F59E0B'}"></span>${src.mode === 'demo' ? x.demo : src.connected ? x.live : x.offline}</span></div>
       ${installCard()}
@@ -1590,6 +1596,7 @@ root.addEventListener('click', async (ev) => {
     case 'lang': S.lang = arg; store.set('lang', arg); break;
     case 'theme': S.theme = arg; store.set('theme2', arg); S.themePop = false; break;
     case 'themepop': S.themePop = !S.themePop; break;
+    case 'fsize': S.fs = arg; store.set('fs', arg); break;
     case 'set': { const v = el.dataset.val; await command([{ tag: arg, value: v === 'true' ? true : v === 'false' ? false : Number(v) }]); break; }
     case 'scene': { const sc = SCENES[arg]; await command(sc.steps.map(([tag, value]) => ({ tag, value })), sc.title); break; }
     case 'confirm': await confirmPending(); break;

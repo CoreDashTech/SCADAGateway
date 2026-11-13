@@ -77,7 +77,7 @@ export function curveChart(results, pts, opt = {}) {
   }).join('');
   const legend = Object.keys(POS_COLORS).filter((id) => results.some((r) => r.meter === id)).map((id, i) => `<g transform="translate(${L + 8 + i * 70},${H - 8})"><rect width="14" height="4" y="-5" rx="2" fill="${POS_COLORS[id]}"/><text x="19" y="0" font-size="11" fill="${ink}">${id}</text></g>`).join('')
     + `<g transform="translate(${L + 230},${H - 8})"><line x1="0" x2="16" y1="-3" y2="-3" stroke="#F59E0B" stroke-width="2" stroke-dasharray="5 3"/><text x="21" y="0" font-size="11" fill="${ink}">MPE</text></g>`;
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="error curve" class="err-chart" font-family="'IBM Plex Sans Thai','Space Grotesk',sans-serif"><path d="${band}" fill="#16A34A" opacity="${light ? 0.07 : 0.1}"/>${ticks}${qs}<path d="${env(1)}" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6 4"/><path d="${env(-1)}" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6 4"/>${series}${legend}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="error curve" class="err-chart" font-family="'Sarabun','Space Grotesk',sans-serif"><path d="${band}" fill="#16A34A" opacity="${light ? 0.07 : 0.1}"/>${ticks}${qs}<path d="${env(1)}" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6 4"/><path d="${env(-1)}" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6 4"/>${series}${legend}</svg>`;
 }
 
 export function barChart(results, opt = {}) {
@@ -101,7 +101,7 @@ export function barChart(results, opt = {}) {
     return `${lines}${bars}<text x="${f1(L + gi * gw + gw / 2)}" y="${H - Bm + 18}" font-size="12" font-weight="700" fill="${ink}" text-anchor="middle">${k}</text>`;
   }).join('');
   const legend = ids.map((id, i) => `<g transform="translate(${L + 8 + i * 70},${H - 6})"><rect width="12" height="10" y="-9" rx="2" fill="${POS_COLORS[id]}"/><text x="17" y="0" font-size="11" fill="${ink}">${id}</text></g>`).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="error by point" class="err-chart" font-family="'IBM Plex Sans Thai','Space Grotesk',sans-serif">${ticks}${groups}${legend}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="error by point" class="err-chart" font-family="'Sarabun','Space Grotesk',sans-serif">${ticks}${groups}${legend}</svg>`;
 }
 
 // ---------------------------------------------------------------- A4 report page (HTML string)
