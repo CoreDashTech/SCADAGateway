@@ -4,6 +4,7 @@ import { PqModel, ROLES, waveform, spectrumOf, ITIC_UPPER, ITIC_LOWER, iticVerdi
 import { apfCase, ASSUME, TARIFF } from './audit-engine.js';
 import { createAuditView } from './audit.js';
 import { parsePw3198, pw3198Record } from './pw3198.js';
+import { PqAlarmEngine, alarmText } from './pq-alarms.js';
 
 const B = (th, en) => ({ th, en });
 const T = {
@@ -53,6 +54,13 @@ const T = {
   cols: B('เลือกคอลัมน์ที่จะ plot', 'Columns to plot'), stat: B('สถิติ', 'Statistics'), rows: B('แถว', 'rows'),
   min: B('ต่ำสุด', 'Min'), avg: B('เฉลี่ย', 'Avg'), max: B('สูงสุด', 'Max'), p95: B('P95', 'P95'),
   exportCsv: B('ส่งออก CSV ค่าปัจจุบัน', 'Export current CSV'), remote: B('เปิดหน้าจอเครื่อง', 'Open remote screen'),
+  alTitle: B('การแจ้งเตือนคุณภาพไฟ (วิเคราะห์ทุก 1 วินาที)', 'Power-quality alarms (checked every second)'),
+  alAlarm: B('แจ้งเตือน', 'alarm'), alWarn: B('เฝ้าระวัง', 'watch'), alSince: B('ตั้งแต่', 'since'),
+  alWhy: B('สาเหตุที่พบบ่อย · สิ่งที่ควรทำ · มาตรฐาน', 'Common causes · what to do · standard'), alCause: B('สาเหตุ:', 'Cause:'), alAct: B('ควรทำ:', 'Do:'),
+  alNone: B('ไม่มีเหตุผิดปกติตอนนี้', 'No abnormal condition right now'), alHist: B('ประวัติแจ้งเตือน', 'Alarm history'), alWorst: B('ค่าที่แย่ที่สุด', 'Worst value'),
+  alNoti: B('เปิดแจ้งเตือนบนอุปกรณ์นี้', 'Enable notifications on this device'), alNotiOn: B('แจ้งเตือนบนอุปกรณ์นี้เปิดอยู่', 'Notifications on for this device'),
+  alPushOn: B('ส่งเข้ามือถือ (ntfy) เปิดอยู่', 'Phone push (ntfy) on'), alPushOff: B('ยังไม่ได้ตั้งส่งเข้ามือถือ', 'Phone push not set up'),
+  alNote: B('ค่าสดอ่านทุก 1 วินาที จับเหตุที่นาน ≥ 1 วินาทีได้ครบ (ฮาร์มอนิก ไม่สมดุล PF ไฟตก/เกินต่อเนื่อง) — ไฟตกสั้นกว่า 1 วินาทีและทรานเซียนต์ระดับไมโครวินาที ดูจากหน้า EVENT ของ PW3198 ซึ่งบันทึกครบตามมาตรฐาน Class A', 'Live values are read every second, so conditions lasting ≥ 1 s are caught (harmonics, unbalance, PF, sustained sags/swells). Sub-second dips and µs transients are recorded completely by the PW3198 EVENT function (Class A).'),
   bridgeOn: B('● ค่าสดจาก PW3198 ผ่านเครื่องมือ CoreDash บนเครื่องนี้ ·', '● Live values from the PW3198 through the CoreDash tool on this PC ·'),
   bridgeErr: B('เครื่องมือ CoreDash ปิดอยู่หรือหยุดส่งค่า — เปิด CoreDash-PW3198.bat แล้วกด 8 อีกครั้ง', 'The CoreDash tool is closed or stopped — run CoreDash-PW3198.bat and press 8 again'),
   bridgeOnly: B('โหมดค่าสดจากเครื่องมือภาคสนามอ่านค่าได้อย่างเดียว', 'The field-tool live mode is read-only'),
@@ -85,6 +93,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   const model = new PqModel();
   const st = {
     imports: [], importSkipped: 0, importFrom: false, bridge: null, bridgeRing: [],
+    alarms: null, alSeen: new Set(), alHist: false, alOpen: new Set(), alEng: new PqAlarmEngine({ unom: 230 }),
     mode: 'live', src: 'demo', sel: 'PQ-MAIN', tab: 'meas', hk: 'I', hp: 0, guide: true,
     snap: null, hist: null, histTs: 0, spark: {}, gwErr: null, gwMode: null, files: null, file: null, fileCols: [], hover: null,
     apfFromDemo: Date.now() - 6 * 3600e3
@@ -103,7 +112,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         const d = i.data || (i.raw ? pw3198Record(i.id, parsePw3198(i.raw)) : null);
         inst[i.id] = d; online[i.id] = !!i.online && !!d; meta[i.id] = i;
       }
-      return { ts: Date.now(), apf: s.apf, inst, online, meta, events: s.events || [], mode: s.mode };
+      return { ts: Date.now(), apf: s.apf, inst, online, meta, events: s.events || [], mode: s.mode, alarms: s.alarms || null };
     }
     return { ts: s.ts, apf: s.apf, inst: s.instruments, online: { 'PQ-MAIN': true, 'PQ-LOAD': true, 'PQ-APF': true }, meta: {}, events: s.events, mode: 'demo' };
   };
@@ -128,6 +137,42 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     R.push({ ts, apf: (p1(a).I || 0) > 5, gP: g.P, gS: g.S, gPF: g.PF, gIthd: g.Ithd, gUthd: g.Uthd, gI: p1(g).I, gQ: g.Q, lQ: l.Q, lP: l.P, lS: l.S, lPF: l.PF, lIthd: l.Ithd, lI: p1(l).I, aI: p1(a).I });
     if (R.length > 8640) R.shift();
   }
+  // ------------------------------------------------------------ alarms
+  function notifyNew() {
+    const log = (st.alarms && st.alarms.log) || [];
+    for (const ev of log) {
+      if (st.alSeen.has(ev.id)) continue;
+      st.alSeen.add(ev.id);
+      if (ev.end != null || Date.now() - ev.start > 120e3 || st.alarms.demo && ev.sev !== 'alarm') continue;
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') continue;
+      const { title, body } = alarmText(ev, L());
+      const opt = { body, tag: ev.id, icon: './icons/icon-192.png', badge: './icons/icon-192.png', requireInteraction: ev.sev === 'alarm', vibrate: [200, 100, 200] };
+      (navigator.serviceWorker && navigator.serviceWorker.ready ? navigator.serviceWorker.ready.then((r) => r.showNotification(title, opt)) : Promise.reject())
+        .catch(() => { try { new Notification(title, opt); } catch {} });
+    }
+  }
+  function alarmsHtml() {
+    const A = st.alarms; if (!A) return '';
+    const log = A.log || [], act = log.filter((e) => e.end == null), done = log.filter((e) => e.end != null).slice(0, 25);
+    const nA = act.filter((e) => e.sev === 'alarm').length, nW = act.length - nA;
+    const t = (ms) => new Date(ms).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dur = (a, b) => { const s = Math.max(0, Math.round((b - a) / 1000)); return s < 60 ? s + ' s' : s < 3600 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : (s / 3600).toFixed(1) + ' h'; };
+    const n = (v) => (v == null ? '—' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2));
+    const perm = typeof Notification === 'undefined' ? 'na' : Notification.permission;
+    const card = (e) => `<div class="pq-al ${e.sev}"><div class="pq-al-h"><b>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</b><span>${esc(e.devName || e.dev)}</span></div>
+      <div class="pq-al-v"><b>${n(e.worst)}</b><i>${esc(e.unit || '')}</i><small>${x(e.sev === 'alarm' ? 'alAlarm' : 'alWarn')} ${esc(e.op)} ${n(e.limit)} · ${x('alSince')} ${t(e.start)} (${dur(e.start, Date.now())})</small></div>
+      <details data-al-id="${esc(e.id)}" ${st.alOpen.has(e.id) ? 'open' : ''}><summary>${x('alWhy')}</summary>${e.why ? `<p><b>${x('alCause')}</b> ${esc(e.why[L()])}</p>` : ''}${e.act ? `<p><b>${x('alAct')}</b> ${esc(e.act[L()])}</p>` : ''}${e.std ? `<p class="muted">📘 ${esc(e.std)}</p>` : ''}</details></div>`;
+    return `<section class="pq-alarms ${nA ? 'has-alarm' : nW ? 'has-warn' : 'ok'}">
+      <div class="pq-al-top"><b>🔔 ${x('alTitle')}</b>
+        <span class="pill ${nA ? 'bad' : ''}">${nA} ${x('alAlarm')}</span><span class="pill ${nW ? 'warn' : ''}">${nW} ${x('alWarn')}</span>
+        ${A.demo ? `<span class="pill">${x('sim')}</span>` : ''}
+        <span class="sp"></span>
+        ${perm === 'granted' ? `<small class="muted">✓ ${x('alNotiOn')}</small>` : perm === 'na' ? '' : `<button class="btn sm" data-pq="alnoti">🔔 ${x('alNoti')}</button>`}
+        <small class="muted">📱 ${A.push ? x('alPushOn') : x('alPushOff')}</small></div>
+      ${act.length ? `<div class="pq-al-list">${act.map(card).join('')}</div>` : `<div class="pq-al-ok">✓ ${x('alNone')}</div>`}
+      ${done.length ? `<details class="pq-al-hist" ${st.alHist ? 'open' : ''} data-pq-alhist><summary>${x('alHist')} (${done.length})</summary><div class="tscroll"><table class="rtable"><thead><tr><th>${x('evTime')}</th><th>${x('evInst')}</th><th>${x('evKind')}</th><th>${x('alWorst')}</th><th>${x('evDur')}</th></tr></thead><tbody>${done.map((e) => `<tr><td>${t(e.start)}</td><td>${esc(e.devName || e.dev)}</td><td>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</td><td class="num">${n(e.worst)} ${esc(e.unit || '')}</td><td class="num">${dur(e.start, e.end)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
+      <small class="muted">ⓘ ${x('alNote')}</small></section>`;
+  }
   async function pull() {
     const now = Date.now();
     if (st.src === 'gw' && live()) {
@@ -144,6 +189,13 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         st.hist._apf = model.apfOn; st.histTs = now;
       }
     }
+    // alarms: from the field tool / gateway when live, otherwise the same rules run here on the demo values
+    if (st.snap.alarms) st.alarms = st.snap.alarms;
+    else if (st.src !== 'file') {
+      for (const r of ROLES) { const d = st.snap.inst[r.id]; if (d) st.alEng.feed(r.id, d, now, { name: `#${r.no} ${r.name}` }); }
+      st.alarms = { log: st.alEng.log, push: false, demo: true };
+    }
+    notifyNew();
     for (const r of ROLES) {
       const d = st.snap.inst[r.id]; if (!d) continue;
       const a = (st.spark[r.id] ||= []); a.push(d.P ?? 0); if (a.length > 90) a.shift();
@@ -165,6 +217,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     if (st.mode === 'audit') return hero + `<div class="pq-audit-host"></div>`;
     return `${hero}
     <div data-r="notice"></div>
+    <div data-r="alarms"></div>
     ${st.guide ? guideHtml() : `<button class="pq-guide-open" data-pq="guide">ⓘ ${x('guideShow')}</button>`}
     <div class="pq-insts" data-r="cards">${ROLES.map(cardShell).join('')}</div>
     <section class="pq-exec" data-r="exec"></section>
@@ -280,6 +333,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     }
     region('clock', `<span class="pq-led ${s.mode === 'live' ? 'live' : st.src === 'file' ? 'off' : 'sim'}"></span>${s.mode === 'live' ? x('live') : x('sim')} · ${new Date(s.ts).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB')}`);
     const nv = st.src === 'gw' && live() && !st.gwErr && Object.values(s.inst || {}).some((d) => d && d.live && d.noVoltage);
+    region('alarms', alarmsHtml());
     region('notice', st.src === 'gw' && !live() ? `<div class="pq-notice">${x('gwNeed')}</div>` : st.gwErr ? `<div class="pq-notice bad">${st.gwErr}</div>`
       : (st.bridge && st.src === 'gw' ? `<div class="pq-notice">${x('bridgeOn')} ${esc(st.bridgeHost || '')}</div>` : '') + (nv ? `<div class="pq-notice bad">${x('noVolt')}</div>` : ''));
     region('exec', execHtml());
@@ -639,12 +693,19 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     if (st.mode === 'audit') { audit ||= createAuditView({ lang: () => L(), snapshot: () => st.snap, history: () => st.hist, parseCsv }); el.querySelector('.pq-audit-host').appendChild(audit.el); audit.show(); }
     bindAll(); redraw();
   }
+  // keep "why / history" panels open across the 1-s refresh
+  el.addEventListener('toggle', (e) => {
+    const d = e.target; if (!(d instanceof HTMLDetailsElement)) return;
+    if (d.dataset.alId) { if (d.open) st.alOpen.add(d.dataset.alId); else st.alOpen.delete(d.dataset.alId); }
+    else if (d.hasAttribute('data-pq-alhist')) st.alHist = d.open;
+  }, true);
   el.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-pq]'); if (!b || !el.contains(b)) return;
     e.stopPropagation();
     const k = b.dataset.pq, arg = b.dataset.arg;
     if (k === 'mode') { st.mode = arg; }
     else if (k === 'audit') { st.mode = 'audit'; if (audit) audit._state.tab = 'apf'; }
+    else if (k === 'alnoti') { try { await Notification.requestPermission(); } catch {} region('alarms', alarmsHtml()); }
     else if (k === 'src') { st.src = arg; st.hist = null; st.files = null; await pull(); if (st.tab === 'files') loadFiles(); }
     else if (k === 'tab') { st.tab = arg; if (arg === 'files' && !st.files) loadFiles(); }
     else if (k === 'sel') { st.sel = arg; st.files = null; if (st.tab === 'files') loadFiles(); el.querySelectorAll('.pq-card').forEach((c) => c.classList.toggle('sel', c.dataset.arg === arg)); }

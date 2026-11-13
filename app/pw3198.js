@@ -39,7 +39,8 @@ export function pw3198Record(id, n) {
       U: g('U' + k + 'RMS'), I: g('I' + k + 'RMS'), P: g('P' + k), Q, S: g('S' + k),
       PF: PF == null ? null : Math.abs(PF), pfSign: PF == null ? null : Math.sign(PF), cos: null,
       Uthd: g('U' + k + 'THD-F'), Ithd: g('I' + k + 'THD-F'), KF: g('I' + k + 'RMS') > 0 ? g('KF' + k) : null,
-      Upk: g('U' + k + 'PK+'), Ipk: g('I' + k + 'PK+'),
+      Upk: g('U' + k + 'PK+'), UpkN: g('U' + k + 'PK-'), Ipk: g('I' + k + 'PK+'),
+      Uhf: g('U' + k + 'HARMH'), Ihf: g('I' + k + 'HARMH'),
       Uang: ANG[i], Iang: ANG[i] - lag
     };
   });

@@ -632,6 +632,27 @@ h2 { margin: 0; font-size: 17px; color: var(--tx); }
 @keyframes pqpulse { 50% { opacity: .45; } }
 .pq-notice { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.35); color: #BAE6FD; padding: 9px 12px; border-radius: 12px; font-size: 13px; }
 .pq-notice.bad { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.4); color: #FECACA; }
+.pq-alarms { margin-top: 12px; border: 1px solid rgba(148,163,184,.22); border-radius: 16px; padding: 12px 14px; background: linear-gradient(180deg, rgba(15,23,42,.75), rgba(2,6,23,.6)); display: grid; gap: 10px; }
+.pq-alarms.has-alarm { border-color: rgba(239,68,68,.55); box-shadow: 0 0 0 1px rgba(239,68,68,.15), 0 0 24px rgba(239,68,68,.12); }
+.pq-alarms.has-warn { border-color: rgba(251,191,36,.45); }
+.pq-al-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pq-al-top .sp { flex: 1; }
+.pq-al-top .pill.bad { background: rgba(239,68,68,.18); color: #FCA5A5; border-color: rgba(239,68,68,.5); }
+.pq-al-top .pill.warn { background: rgba(251,191,36,.15); color: #FDE68A; border-color: rgba(251,191,36,.45); }
+.pq-al-list { align-items: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.pq-al { border-radius: 12px; padding: 10px 12px; border: 1px solid; display: grid; gap: 6px; }
+.pq-al.alarm { background: rgba(239,68,68,.09); border-color: rgba(239,68,68,.45); animation: pqAlPulse 2s ease-in-out infinite; }
+.pq-al.warn { background: rgba(251,191,36,.07); border-color: rgba(251,191,36,.4); }
+@keyframes pqAlPulse { 50% { box-shadow: 0 0 18px rgba(239,68,68,.35); } }
+.pq-al-h { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.pq-al-h span { font-size: 12px; color: #94A3B8; white-space: nowrap; }
+.pq-al-v { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.pq-al-v b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.pq-al-v i { font-style: normal; color: #94A3B8; font-size: 12px; }
+.pq-al-v small { flex-basis: 100%; color: #94A3B8; font-size: 12px; }
+.pq-al details summary, .pq-al-hist summary { cursor: pointer; font-size: 12px; color: #D4B06A; }
+.pq-al details p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; }
+.pq-al-ok { color: #86EFAC; font-size: 13px; }
 .pq-guide { border-radius: 18px; padding: 14px 16px; border: 1px solid rgba(212,176,106,.35); background: linear-gradient(180deg, #0C1222, #080C18); display: flex; flex-direction: column; gap: 10px; }
 .pq-guide-h { display: flex; align-items: center; gap: 10px; } .pq-guide-h b { flex: 1; color: #F8E7B0; font-size: 15px; }
 .pq-x, .pq-guide-open { border: 1px solid rgba(212,176,106,.4); background: rgba(212,176,106,.08); color: #F3D99A; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; }
