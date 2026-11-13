@@ -3,6 +3,8 @@
 import { PqModel, ROLES, waveform, spectrumOf, ITIC_UPPER, ITIC_LOWER, iticVerdict } from './pq-model.js';
 import { apfCase, ASSUME, TARIFF } from './audit-engine.js';
 import { createAuditView } from './audit.js';
+import { createDiagView } from './pq-diag.js';
+import { diagnose } from './pq-diagnose.js';
 import { parsePw3198, pw3198Record } from './pw3198.js';
 import { PqAlarmEngine, alarmText } from './pq-alarms.js';
 
@@ -13,7 +15,7 @@ const T = {
   impFolder: B('เลือกทั้งโฟลเดอร์', 'Choose a folder'), impFiles: B('เลือกไฟล์ (หลายไฟล์ได้)', 'Choose files (several OK)'), impDrop: B('หรือลากไฟล์/โฟลเดอร์ที่ดึงจาก PW3198 มาวางตรงนี้', 'or drag the files/folder dumped from the PW3198 here'),
   impDone: B('นำเข้าแล้ว', 'Imported'), impSkip: B('ไฟล์ดิบของ Hioki (ต้องแปลงด้วย PQ ONE ก่อน)', 'raw Hioki files (convert with PQ ONE first)'), impMerged: B('รวม', 'merged'), impFrom: B('จากเครื่องมือ PW3198 (เมนู 4)', 'from the PW3198 tool (menu 4)'),
   impWait: B('กำลังรับข้อมูลจากเครื่องมือ PW3198…', 'Receiving data from the PW3198 tool…'), impFail: B('รับข้อมูลจากเครื่องมือไม่ได้ — กดอนุญาต "เข้าถึงเครือข่ายภายใน" ถ้าเบราว์เซอร์ถาม หรือลากโฟลเดอร์มาวางที่ช่องนำเข้าแทน', 'Could not receive data from the tool — allow "local network access" if the browser asks, or drag the folder onto the import box instead'),
-  mLive: B('มอนิเตอร์', 'Monitor'), mAudit: B('วิเคราะห์ความคุ้มค่า ฿', 'Savings analysis ฿'), why: B('ที่มาของตัวเลข →', 'Where it comes from →'), net: B('ผลสุทธิต่อบิล', 'Net bill effect'),
+  mLive: B('มอนิเตอร์', 'Monitor'), mDiag: B('วินิจฉัย & แก้ไข', 'Diagnose & fix'), mAudit: B('วิเคราะห์ความคุ้มค่า ฿', 'Savings analysis ฿'), why: B('ที่มาของตัวเลข →', 'Where it comes from →'), net: B('ผลสุทธิต่อบิล', 'Net bill effect'),
   srcDemo: B('ข้อมูลจำลอง', 'Simulated data'), srcGw: B('ข้อมูลจริง · PW3198', 'Real data · PW3198'), srcFile: B('ไฟล์ย้อนหลัง', 'Recorded file'),
   srcLabel: B('แหล่งข้อมูล', 'Data source'),
   stDemo: B('ตัวเลขทั้งหมดเป็นข้อมูลจำลองจากแบบจำลองในเครื่อง — ไม่ใช่ค่าจากเครื่องวัด', 'All numbers are simulated on this device — not from an analyser'),
@@ -67,6 +69,8 @@ const T = {
   alNoti: B('เปิดแจ้งเตือนบนอุปกรณ์นี้', 'Enable notifications on this device'), alNotiOn: B('แจ้งเตือนบนอุปกรณ์นี้เปิดอยู่', 'Notifications on for this device'),
   alPushOn: B('ส่งเข้ามือถือ (ntfy) เปิดอยู่', 'Phone push (ntfy) on'), alPushOff: B('ยังไม่ได้ตั้งส่งเข้ามือถือ', 'Phone push not set up'),
   alNote: B('ค่าสดอ่านทุก 1 วินาที จับเหตุที่นาน ≥ 1 วินาทีได้ครบ (ฮาร์มอนิก ไม่สมดุล PF ไฟตก/เกินต่อเนื่อง) — ไฟตกสั้นกว่า 1 วินาทีและทรานเซียนต์ระดับไมโครวินาที ดูจากหน้า EVENT ของ PW3198 ซึ่งบันทึกครบตามมาตรฐาน Class A', 'Live values are read every second, so conditions lasting ≥ 1 s are caught (harmonics, unbalance, PF, sustained sags/swells). Sub-second dips and µs transients are recorded completely by the PW3198 EVENT function (Class A).'),
+  dgOk: B('วินิจฉัยอัจฉริยะ: การต่อสายและการชดเชยไม่พบปัญหา', 'Smart diagnosis: no wiring or compensation problem'),
+  dgFound: B('วินิจฉัยพบ {c} เรื่องต้องแก้ · {w} เรื่องควรแก้', 'Diagnosis: {c} to fix · {w} to improve'), dgOpen: B('ดูจุดและวิธีแก้', 'Where & how to fix'),
   bRetry: B('ลองเชื่อมต่อใหม่', 'Retry'), bRecon: B('เชื่อมต่อใหม่ทุกเครื่อง', 'Reconnect all'), bIps: B('ตั้ง IP เครื่องวัด', 'Analyser IPs'),
   bSave: B('บันทึกและเชื่อมต่อ', 'Save & connect'), bNone: B('ว่าง = ไม่ใช้', 'blank = not used'),
   bIpsHint: B('เครื่องมือบนโน้ตบุ๊กจะเชื่อมต่อใหม่ทันทีและจำ IP ไว้', 'The tool on the notebook reconnects at once and remembers these IPs'),
@@ -123,7 +127,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   { const last = lsGet('coredash.pq.src'); if (last === 'gw') { st.src = 'gw'; if (!liveGw()) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799'; } }
   const el = document.createElement('section');
   el.className = 'pq';
-  let timer = null, raf = 0, built = '', visible = false, audit = null, auditTick = 0;
+  let timer = null, raf = 0, built = '', visible = false, audit = null, auditTick = 0, diag = null, diagTick = 0;
 
   // ------------------------------------------------------------ data
   const normalize = (s, gw) => {
@@ -195,6 +199,16 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
       dn.map((m) => `<span class="pq-st off">✖ #${m.no} ${esc(m.name || '')} ${esc(m.host)} ${x('chipDown')}${m.error ? ' — ' + esc(m.error) : ''}${st.snap.bridge ? ` <button class="btn sm" data-pq="brecon" data-arg="${esc(m.id)}">🔄 ${x('bRetry')}</button>` : ''}</span>`).join('') +
       (st.snap.bridge ? `<div class="pq-bbtns"><button class="btn sm" data-pq="brecon" data-arg="">🔄 ${x('bRecon')}</button><button class="btn sm" data-pq="bips">⚙ ${x('bIps')}</button>${st.snap.bridge.autostart ? `<small class="muted">✓ ${x('bAutoOn')}</small>` : `<small class="muted">${x('bAuto')}</small>`}</div>` : '');
   }
+  // smart diagnosis on the same live values: wiring mistakes, APF not working, wrong PF fix …
+  function diagLine() {
+    if (!st.snap || !st.snap.inst) return '';
+    const i = st.snap.inst; if (!i['PQ-MAIN'] && !i['PQ-LOAD'] && !i['PQ-APF']) return '';
+    let r; try { r = diagnose({ points: { MAIN: i['PQ-MAIN'] || null, LOAD: i['PQ-LOAD'] || null, APF: i['PQ-APF'] || null } }); } catch { return ''; }
+    const c = r.findings.filter((f) => f.sev === 'crit'), w = r.findings.filter((f) => f.sev === 'warn');
+    if (!c.length && !w.length) return `<div class="pq-al-diag ok">🧠 ${x('dgOk')}</div>`;
+    const f = c[0] || w[0];
+    return `<div class="pq-al-diag ${c.length ? 'crit' : 'warn'}">🧠 ${x('dgFound').replace('{c}', c.length).replace('{w}', w.length)} — <b>#${{ MAIN: 2, LOAD: 3, APF: 6 }[f.point]} ${esc(f.title[L()])}</b> <button class="btn sm" data-pq="mode" data-arg="diag">${x('dgOpen')} →</button></div>`;
+  }
   function alarmsHtml() {
     const A = st.alarms; if (!A) return '';
     const log = A.log || [], act = log.filter((e) => e.end == null), done = log.filter((e) => e.end != null).slice(0, 25);
@@ -215,6 +229,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         <small class="muted">📱 ${A.push ? x('alPushOn') : x('alPushOff')}</small></div>
       ${act.length ? `<div class="pq-al-list">${act.map(card).join('')}</div>` : `<div class="pq-al-ok">✓ ${x('alNone')}</div>`}
       ${done.length ? `<details class="pq-al-hist" ${st.alHist ? 'open' : ''} data-pq-alhist><summary>${x('alHist')} (${done.length})</summary><div class="tscroll"><table class="rtable"><thead><tr><th>${x('evTime')}</th><th>${x('evInst')}</th><th>IP</th><th>${x('evKind')}</th><th>${x('alWorst')}</th><th>${x('evDur')}</th></tr></thead><tbody>${done.map((e) => `<tr><td>${t(e.start)}</td><td>${esc(e.devName || e.dev)}</td><td>${esc(e.host || (st.alarms.demo ? x('chipSim') : '—'))}</td><td>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</td><td class="num">${n(e.worst)} ${esc(e.unit || '')}</td><td class="num">${dur(e.start, e.end)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
+      ${diagLine()}
       <small class="muted">ⓘ ${x('alNote')}</small></section>`;
   }
   async function pull() {
@@ -257,7 +272,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   function skeleton() {
     const srcBtn = (k, ic) => `<button class="pq-src ${st.src === k ? 'on' : ''}" data-pq="src" data-arg="${k}">${ic} ${x('src' + k[0].toUpperCase() + k.slice(1))}</button>`;
     const tabs = ['meas', 'wave', 'phasor', 'harm', 'trend', 'events', 'files'].map((k) => `<button class="pq-tab ${st.tab === k ? 'on' : ''}" data-pq="tab" data-arg="${k}">${x('t' + k[0].toUpperCase() + k.slice(1))}</button>`).join('');
-    const modes = `<div class="pq-modes"><button class="${st.mode === 'live' ? 'on' : ''}" data-pq="mode" data-arg="live">📈 ${x('mLive')}</button><button class="${st.mode === 'audit' ? 'on' : ''}" data-pq="mode" data-arg="audit">${x('mAudit')}</button></div>`;
+    const modes = `<div class="pq-modes"><button class="${st.mode === 'live' ? 'on' : ''}" data-pq="mode" data-arg="live">📈 ${x('mLive')}</button><button class="${st.mode === 'diag' ? 'on' : ''}" data-pq="mode" data-arg="diag">🧠 ${x('mDiag')}</button><button class="${st.mode === 'audit' ? 'on' : ''}" data-pq="mode" data-arg="audit">${x('mAudit')}</button></div>`;
     const hero = `<header class="pq-hero">
       <div class="pq-crest"><svg viewBox="0 0 48 48" width="44" height="44"><circle cx="24" cy="24" r="21" fill="none" stroke="${GOLD}" stroke-width="1.5"/><circle cx="24" cy="24" r="16" fill="none" stroke="${GOLD}" stroke-opacity=".45"/><path d="M5 24h6l3-9 5 18 5-22 5 26 4-13h10" fill="none" stroke="#7DD3FC" stroke-width="2" stroke-linejoin="round"/></svg></div>
       <div class="pq-ttl"><h2>${x('title')}</h2><small>${x('sub')}</small></div>
@@ -266,6 +281,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     </header>`;
     const bar = `<section class="pq-srcbar"><span class="pq-srcl">${x('srcLabel')}</span><div class="pq-srcs">${srcBtn('demo', '🧪')}${srcBtn('gw', '📡')}${srcBtn('file', '📁')}</div><div class="pq-srcst" data-r="srcst"></div><div class="pq-bform" data-r="bform"></div></section>`;
     if (st.mode === 'audit') return hero + bar + `<div class="pq-audit-host"></div>`;
+    if (st.mode === 'diag') return hero + bar + `<div class="pq-diag-host"></div>`;
     return `${hero}${bar}
     <div data-r="notice"></div>
     <div data-r="alarms"></div>
@@ -764,6 +780,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const key = [st.mode, st.src, st.sel, st.tab, st.hk, st.hp, st.guide, L(), st.files ? st.files.length : -1, st.file ? st.file.name : ''].join('|');
     if (!force && key === built) return;
     built = key; el.innerHTML = skeleton();
+    if (st.mode === 'diag') { diag ||= createDiagView({ lang: () => L(), snapshot: () => st.snap }); el.querySelector('.pq-diag-host').appendChild(diag.el); diag.show(); }
     if (st.mode === 'audit') { audit ||= createAuditView({ lang: () => L(), snapshot: () => st.snap, history: () => st.hist, parseCsv }); el.querySelector('.pq-audit-host').appendChild(audit.el); audit.show(); }
     bindAll(); redraw();
   }
@@ -833,7 +850,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     el,
     async show() {
       visible = true;
-      if (!timer) { await pull(); timer = setInterval(async () => { if (!visible) return; await pull(); bindAll(); redraw(); if (st.mode === 'audit' && audit && ++auditTick % 15 === 0) audit.refresh(); }, 1000); }
+      if (!timer) { await pull(); timer = setInterval(async () => { if (!visible) return; await pull(); bindAll(); redraw(); if (st.mode === 'audit' && audit && ++auditTick % 15 === 0) audit.refresh(); if (st.mode === 'diag' && diag && ++diagTick % 3 === 0) diag.refresh(); }, 1000); }
       rebuild(); bindAll(); redraw();
     },
     hide() { visible = false; if (timer) { clearInterval(timer); timer = null; } },
