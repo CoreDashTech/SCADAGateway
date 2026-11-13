@@ -174,7 +174,7 @@ export function alarmText(ev, lang = 'th', kind = 'raise') {
   const head = kind === 'clear' ? '✅' : ev.sev === 'alarm' ? '🔴' : '🟡';
   const sev = kind === 'clear' ? (L === 'th' ? 'กลับสู่ปกติ' : 'cleared') : ev.sev === 'alarm' ? (L === 'th' ? 'แจ้งเตือน' : 'ALARM') : (L === 'th' ? 'เฝ้าระวัง' : 'WATCH');
   const n = (v) => (v == null ? '—' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2));
-  const title = `${head} ${sev}: ${ev[L]} · ${ev.devName}`;
+  const title = `${head} ${sev}: ${ev[L]} · ${ev.devName}${ev.host ? ' (' + ev.host + ')' : ''}`;
   const body = `${L === 'th' ? 'ค่า' : 'Value'} ${n(ev.worst)} ${ev.unit} (${ev.op} ${n(ev.limit)})` +
     (kind === 'clear' ? ` · ${L === 'th' ? 'นาน' : 'lasted'} ${Math.round((ev.end - ev.start) / 1000)} s` : '') +
     (ev.std ? `\n${ev.std}` : '') + (kind !== 'clear' && ev.act ? `\n→ ${ev.act[L]}` : '');

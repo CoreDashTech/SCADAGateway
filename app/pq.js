@@ -14,7 +14,13 @@ const T = {
   impDone: B('นำเข้าแล้ว', 'Imported'), impSkip: B('ไฟล์ดิบของ Hioki (ต้องแปลงด้วย PQ ONE ก่อน)', 'raw Hioki files (convert with PQ ONE first)'), impMerged: B('รวม', 'merged'), impFrom: B('จากเครื่องมือ PW3198 (เมนู 4)', 'from the PW3198 tool (menu 4)'),
   impWait: B('กำลังรับข้อมูลจากเครื่องมือ PW3198…', 'Receiving data from the PW3198 tool…'), impFail: B('รับข้อมูลจากเครื่องมือไม่ได้ — กดอนุญาต "เข้าถึงเครือข่ายภายใน" ถ้าเบราว์เซอร์ถาม หรือลากโฟลเดอร์มาวางที่ช่องนำเข้าแทน', 'Could not receive data from the tool — allow "local network access" if the browser asks, or drag the folder onto the import box instead'),
   mLive: B('มอนิเตอร์', 'Monitor'), mAudit: B('วิเคราะห์ความคุ้มค่า ฿', 'Savings analysis ฿'), why: B('ที่มาของตัวเลข →', 'Where it comes from →'), net: B('ผลสุทธิต่อบิล', 'Net bill effect'),
-  srcDemo: B('สาธิต', 'Demo'), srcGw: B('เกตเวย์ LAN', 'LAN gateway'), srcFile: B('ไฟล์', 'File'),
+  srcDemo: B('ข้อมูลจำลอง', 'Simulated data'), srcGw: B('ข้อมูลจริง · PW3198', 'Real data · PW3198'), srcFile: B('ไฟล์ย้อนหลัง', 'Recorded file'),
+  srcLabel: B('แหล่งข้อมูล', 'Data source'),
+  stDemo: B('ตัวเลขทั้งหมดเป็นข้อมูลจำลองจากแบบจำลองในเครื่อง — ไม่ใช่ค่าจากเครื่องวัด', 'All numbers are simulated on this device — not from an analyser'),
+  stReal: B('ข้อมูลจริงจากเครื่องวัด', 'Real data from the analyser'), stUpd: B('อัปเดต', 'updated'),
+  stWait: B('ยังไม่ได้รับข้อมูลจริง — บนโน้ตบุ๊กที่ต่อ LAN กับเครื่องวัด ให้ดับเบิลคลิก CoreDash-PW3198-LIVE.bat (หรือ LIVE-MULTI.bat) แล้วเปิดหน้านี้จากเบราว์เซอร์ที่เครื่องมือเปิดให้', 'No real data yet — on the notebook wired to the analyser, double-click CoreDash-PW3198-LIVE.bat (or LIVE-MULTI.bat) and use the browser window it opens'),
+  stFile: B('ข้อมูลจากไฟล์ที่นำเข้า — ไม่ใช่ค่าสด', 'Data from an imported file — not live'),
+  chipSim: B('จำลอง', 'SIM'), chipOff: B('ไม่มีข้อมูล', 'no data'),
   live: B('สด', 'LIVE'), offline: B('ออฟไลน์', 'OFFLINE'), sim: B('จำลอง', 'SIM'),
   guideT: B('ดึงข้อมูลจากเครื่องวัดทางไหนดี — ไม่ต้องถอดเสียบ USB / SD', 'Best way to pull the data — no USB or SD swapping'),
   guideHide: B('ซ่อน', 'Hide'), guideShow: B('ช่องทางเชื่อมต่อ', 'Connection options'),
@@ -100,6 +106,9 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   };
   // live source: a CoreDash Gateway sign-in, or the field tool's local bridge (#pq?live=http://127.0.0.1:port)
   const live = () => (st.bridge ? { base: st.bridge, bridge: true } : liveGw());
+  const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  { const last = lsGet('coredash.pq.src'); if (last === 'gw') { st.src = 'gw'; if (!liveGw()) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799'; } }
   const el = document.createElement('section');
   el.className = 'pq';
   let timer = null, raf = 0, built = '', visible = false, audit = null, auditTick = 0;
@@ -151,6 +160,15 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         .catch(() => { try { new Notification(title, opt); } catch {} });
     }
   }
+  function srcStatus() {
+    const t = new Date(st.snap.ts).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB');
+    if (st.src === 'demo') return `<span class="pq-st sim">🧪 ${x('stDemo')}</span>`;
+    if (st.src === 'file') return `<span class="pq-st file">📁 ${x('stFile')}${st.file ? ' · ' + esc(st.file.name) : ''}</span>`;
+    if (!live()) return `<span class="pq-st off">⚠ ${x('gwNeed')}</span>`;
+    if (st.gwErr || st.snap.empty) return `<span class="pq-st off">⚠ ${x('stWait')}</span>`;
+    const hosts = ROLES.map((r) => st.snap.meta[r.id]).filter((m) => m && m.host).map((m) => `#${m.no} ${esc(m.host)} ${st.snap.online[m.id] ? '●' : '○'}`).join(' · ');
+    return `<span class="pq-st real">📡 ${x('stReal')} · ${hosts || '—'} · ${x('stUpd')} ${t}</span>`;
+  }
   function alarmsHtml() {
     const A = st.alarms; if (!A) return '';
     const log = A.log || [], act = log.filter((e) => e.end == null), done = log.filter((e) => e.end != null).slice(0, 25);
@@ -159,7 +177,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const dur = (a, b) => { const s = Math.max(0, Math.round((b - a) / 1000)); return s < 60 ? s + ' s' : s < 3600 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : (s / 3600).toFixed(1) + ' h'; };
     const n = (v) => (v == null ? '—' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2));
     const perm = typeof Notification === 'undefined' ? 'na' : Notification.permission;
-    const card = (e) => `<div class="pq-al ${e.sev}"><div class="pq-al-h"><b>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</b><span>${esc(e.devName || e.dev)}</span></div>
+    const card = (e) => `<div class="pq-al ${e.sev}"><div class="pq-al-h"><b>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</b><span>${esc(e.devName || e.dev)}${e.host ? ' · ' + esc(e.host) : st.alarms.demo ? ' · ' + x('chipSim') : ''}</span></div>
       <div class="pq-al-v"><b>${n(e.worst)}</b><i>${esc(e.unit || '')}</i><small>${x(e.sev === 'alarm' ? 'alAlarm' : 'alWarn')} ${esc(e.op)} ${n(e.limit)} · ${x('alSince')} ${t(e.start)} (${dur(e.start, Date.now())})</small></div>
       <details data-al-id="${esc(e.id)}" ${st.alOpen.has(e.id) ? 'open' : ''}><summary>${x('alWhy')}</summary>${e.why ? `<p><b>${x('alCause')}</b> ${esc(e.why[L()])}</p>` : ''}${e.act ? `<p><b>${x('alAct')}</b> ${esc(e.act[L()])}</p>` : ''}${e.std ? `<p class="muted">📘 ${esc(e.std)}</p>` : ''}</details></div>`;
     return `<section class="pq-alarms ${nA ? 'has-alarm' : nW ? 'has-warn' : 'ok'}">
@@ -170,7 +188,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         ${perm === 'granted' ? `<small class="muted">✓ ${x('alNotiOn')}</small>` : perm === 'na' ? '' : `<button class="btn sm" data-pq="alnoti">🔔 ${x('alNoti')}</button>`}
         <small class="muted">📱 ${A.push ? x('alPushOn') : x('alPushOff')}</small></div>
       ${act.length ? `<div class="pq-al-list">${act.map(card).join('')}</div>` : `<div class="pq-al-ok">✓ ${x('alNone')}</div>`}
-      ${done.length ? `<details class="pq-al-hist" ${st.alHist ? 'open' : ''} data-pq-alhist><summary>${x('alHist')} (${done.length})</summary><div class="tscroll"><table class="rtable"><thead><tr><th>${x('evTime')}</th><th>${x('evInst')}</th><th>${x('evKind')}</th><th>${x('alWorst')}</th><th>${x('evDur')}</th></tr></thead><tbody>${done.map((e) => `<tr><td>${t(e.start)}</td><td>${esc(e.devName || e.dev)}</td><td>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</td><td class="num">${n(e.worst)} ${esc(e.unit || '')}</td><td class="num">${dur(e.start, e.end)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
+      ${done.length ? `<details class="pq-al-hist" ${st.alHist ? 'open' : ''} data-pq-alhist><summary>${x('alHist')} (${done.length})</summary><div class="tscroll"><table class="rtable"><thead><tr><th>${x('evTime')}</th><th>${x('evInst')}</th><th>IP</th><th>${x('evKind')}</th><th>${x('alWorst')}</th><th>${x('evDur')}</th></tr></thead><tbody>${done.map((e) => `<tr><td>${t(e.start)}</td><td>${esc(e.devName || e.dev)}</td><td>${esc(e.host || (st.alarms.demo ? x('chipSim') : '—'))}</td><td>${e.sev === 'alarm' ? '🔴' : '🟡'} ${esc(e[L()])}</td><td class="num">${n(e.worst)} ${esc(e.unit || '')}</td><td class="num">${dur(e.start, e.end)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
       <small class="muted">ⓘ ${x('alNote')}</small></section>`;
   }
   async function pull() {
@@ -180,9 +198,16 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
         st.snap = normalize(await api('/api/pq'), true); st.gwErr = null; st.gwMode = st.snap.mode;
         if (st.bridge) bridgeRow(now);
         if (!st.hist || now - st.histTs > 60000) { st.hist = await api('/api/pq/history?hours=24'); st.histTs = now; }
-      } catch (e) { st.gwErr = x(st.bridge ? 'bridgeErr' : 'gwErr'); }
+      } catch (e) {
+        st.gwErr = x(st.bridge ? 'bridgeErr' : 'gwErr');
+        // "real data" selected but nothing arrives: show empty cards, never the simulation
+        st.snap = { ts: now, apf: null, inst: {}, online: {}, meta: {}, events: [], mode: 'live', alarms: null, empty: true };
+        st.hist = st.bridgeRing; st.alarms = null;
+      }
     }
-    if (st.src !== 'gw' || !live() || st.gwErr) {
+    if (st.src === 'gw' && !live()) { st.snap = { ts: now, apf: null, inst: {}, online: {}, meta: {}, events: [], mode: 'live', alarms: null, empty: true }; st.hist = []; }
+    if (st.src === 'file') { st.snap = { ts: now, apf: null, inst: {}, online: {}, meta: {}, events: [], mode: 'file', alarms: null, empty: true }; st.alarms = null; }
+    if (st.src === 'demo') {
       st.snap = normalize(model.snapshot(now), false);
       if (!st.hist || now - st.histTs > 60000 || st.hist._apf !== model.apfOn) {
         st.hist = model.history(now, { hours: 24, stepMin: 5, apfFrom: model.apfOn ? st.apfFromDemo : Infinity });
@@ -191,7 +216,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     }
     // alarms: from the field tool / gateway when live, otherwise the same rules run here on the demo values
     if (st.snap.alarms) st.alarms = st.snap.alarms;
-    else if (st.src !== 'file') {
+    else if (st.src === 'demo') {
       for (const r of ROLES) { const d = st.snap.inst[r.id]; if (d) st.alEng.feed(r.id, d, now, { name: `#${r.no} ${r.name}` }); }
       st.alarms = { log: st.alEng.log, push: false, demo: true };
     }
@@ -211,11 +236,11 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
       <div class="pq-crest"><svg viewBox="0 0 48 48" width="44" height="44"><circle cx="24" cy="24" r="21" fill="none" stroke="${GOLD}" stroke-width="1.5"/><circle cx="24" cy="24" r="16" fill="none" stroke="${GOLD}" stroke-opacity=".45"/><path d="M5 24h6l3-9 5 18 5-22 5 26 4-13h10" fill="none" stroke="#7DD3FC" stroke-width="2" stroke-linejoin="round"/></svg></div>
       <div class="pq-ttl"><h2>${x('title')}</h2><small>${x('sub')}</small></div>
       ${modes}
-      ${st.mode === 'live' ? `<div class="pq-srcs">${srcBtn('demo', '◉')}${srcBtn('gw', '⇄')}${srcBtn('file', '▤')}</div>` : ''}
       <div class="pq-clock" data-r="clock"></div>
     </header>`;
-    if (st.mode === 'audit') return hero + `<div class="pq-audit-host"></div>`;
-    return `${hero}
+    const bar = `<section class="pq-srcbar"><span class="pq-srcl">${x('srcLabel')}</span><div class="pq-srcs">${srcBtn('demo', '🧪')}${srcBtn('gw', '📡')}${srcBtn('file', '📁')}</div><div class="pq-srcst" data-r="srcst"></div></section>`;
+    if (st.mode === 'audit') return hero + bar + `<div class="pq-audit-host"></div>`;
+    return `${hero}${bar}
     <div data-r="notice"></div>
     <div data-r="alarms"></div>
     ${st.guide ? guideHtml() : `<button class="pq-guide-open" data-pq="guide">ⓘ ${x('guideShow')}</button>`}
@@ -255,7 +280,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     // coloured zones on the dial: red < 0.85, amber 0.85–0.9, green ≥ 0.9  (scale position of a PF value: see pfAngle)
     const arc = (p0, p1, c) => { const a0 = pfAngle(p0) * Math.PI / 180, a1 = pfAngle(p1) * Math.PI / 180; return `<path d="M${50 + 41 * Math.sin(a0)} ${54 - 41 * Math.cos(a0)} A41 41 0 0 1 ${50 + 41 * Math.sin(a1)} ${54 - 41 * Math.cos(a1)}" stroke="${c}" stroke-width="3.2" fill="none"/>`; };
     return `<article class="pq-card ${st.sel === r.id ? 'sel' : ''}" data-pq="sel" data-arg="${r.id}" style="--rc:${r.color}">
-      <div class="pq-card-h"><span class="pq-led" data-b="${r.id}.led"></span><b>#${r.no} ${r.name}</b><span class="pq-model">PW3198</span></div>
+      <div class="pq-card-h"><span class="pq-led" data-b="${r.id}.led"></span><b>#${r.no} ${r.name}</b><span class="pq-chip" data-b="${r.id}.chip"></span></div>
       <small class="pq-card-sub">${esc(L() === 'th' ? r.nameTh : r.name)}</small>
       <div class="pq-card-b">
         <svg class="pq-gauge" viewBox="0 0 100 80"><defs><radialGradient id="ivory-${r.id}" cx="50%" cy="80%" r="80%"><stop offset="0" stop-color="#FFF8E6"/><stop offset="1" stop-color="#E8DCC0"/></radialGradient><linearGradient id="brass-${r.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3D99A"/><stop offset=".5" stop-color="#9C7A36"/><stop offset="1" stop-color="#E9C77E"/></linearGradient></defs>
@@ -334,8 +359,15 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     region('clock', `<span class="pq-led ${s.mode === 'live' ? 'live' : st.src === 'file' ? 'off' : 'sim'}"></span>${s.mode === 'live' ? x('live') : x('sim')} · ${new Date(s.ts).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB')}`);
     const nv = st.src === 'gw' && live() && !st.gwErr && Object.values(s.inst || {}).some((d) => d && d.live && d.noVoltage);
     region('alarms', alarmsHtml());
-    region('notice', st.src === 'gw' && !live() ? `<div class="pq-notice">${x('gwNeed')}</div>` : st.gwErr ? `<div class="pq-notice bad">${st.gwErr}</div>`
-      : (st.bridge && st.src === 'gw' ? `<div class="pq-notice">${x('bridgeOn')} ${esc(st.bridgeHost || '')}</div>` : '') + (nv ? `<div class="pq-notice bad">${x('noVolt')}</div>` : ''));
+    region('srcst', srcStatus());
+    for (const r of ROLES) {
+      const chip = el.querySelector(`[data-b="${r.id}.chip"]`); if (!chip) continue;
+      const host = s.meta && s.meta[r.id] && s.meta[r.id].host, real = st.src === 'gw' && live() && !st.gwErr;
+      const txt = st.src === 'demo' ? x('chipSim') : st.src === 'file' ? x('srcFile') : real && host && s.online[r.id] ? '● ' + host : host ? host + ' · ' + x('chipOff') : x('chipOff');
+      const cls = 'pq-chip ' + (st.src === 'demo' ? 'sim' : st.src === 'file' ? 'file' : real && s.online[r.id] ? 'real' : 'off');
+      if (chip.textContent !== txt) chip.textContent = txt; if (chip.className !== cls) chip.className = cls;
+    }
+    region('notice', nv ? `<div class="pq-notice bad">${x('noVolt')}</div>` : '');
     region('exec', execHtml());
     if (st.tab === 'meas') region('meas', measHtml());
     if (st.tab === 'phasor') region('phtab', phasorTable());
@@ -706,7 +738,10 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     if (k === 'mode') { st.mode = arg; }
     else if (k === 'audit') { st.mode = 'audit'; if (audit) audit._state.tab = 'apf'; }
     else if (k === 'alnoti') { try { await Notification.requestPermission(); } catch {} region('alarms', alarmsHtml()); }
-    else if (k === 'src') { st.src = arg; st.hist = null; st.files = null; await pull(); if (st.tab === 'files') loadFiles(); }
+    else if (k === 'src') {
+      if (arg === 'gw' && !liveGw() && !st.bridge) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799';
+      if (arg !== 'gw' && st.bridge && liveGw()) st.bridge = null;
+      lsSet('coredash.pq.src', arg); st.gwErr = null; st.alarms = null; st.src = arg; if (arg === 'file') st.tab = 'files'; st.hist = null; st.files = null; await pull(); if (st.tab === 'files') loadFiles(); }
     else if (k === 'tab') { st.tab = arg; if (arg === 'files' && !st.files) loadFiles(); }
     else if (k === 'sel') { st.sel = arg; st.files = null; if (st.tab === 'files') loadFiles(); el.querySelectorAll('.pq-card').forEach((c) => c.classList.toggle('sel', c.dataset.arg === arg)); }
     else if (k === 'guide') st.guide = !st.guide;
@@ -741,7 +776,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   window.addEventListener('resize', () => redraw());
 
   { const m = /[?&#]live=([^&]+)/.exec(location.hash || '');
-    if (m) { const base = decodeURIComponent(m[1]); if (/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) { const h = /[?&#]host=([^&]+)/.exec(location.hash); st.bridge = base; st.bridgeHost = h ? decodeURIComponent(h[1]) : ''; st.src = 'gw'; st.guide = false; st.mode = 'live'; history.replaceState(null, '', location.pathname + location.search + '#pq'); } } }
+    if (m) { const base = decodeURIComponent(m[1]); if (/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) { const h = /[?&#]host=([^&]+)/.exec(location.hash); st.bridge = base; lsSet('coredash.pq.bridge', base); lsSet('coredash.pq.src', 'gw'); st.bridgeHost = h ? decodeURIComponent(h[1]) : ''; st.src = 'gw'; st.guide = false; st.mode = 'live'; history.replaceState(null, '', location.pathname + location.search + '#pq'); } } }
   { const m = /[?&#]import=([^&]+)/.exec(location.hash || '');
     if (m) { const base = decodeURIComponent(m[1]); if (/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) { history.replaceState(null, '', location.pathname + location.search + '#pq'); st.tab = 'files'; setTimeout(() => importFromTool(base), 300); } } }
   return {

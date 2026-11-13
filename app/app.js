@@ -1132,7 +1132,7 @@ function header() {
     <div class="ttl"><b>${titles[S.tab]}</b><span><span class="conn" style="background:${conn}"></span>${x.site} · ${hhmm(Date.now())}</span></div>
     <button class="ibtn" style="margin-left:auto" data-act="settings" aria-label="${x.settings}">${svg(ICON.gear)}</button>
     <button class="ibtn" data-act="tab" data-arg="alerts" aria-label="${x.alerts} ${open}">${svg(ICON.alerts)}${open ? `<span class="badge">${open}</span>` : ''}</button>
-  </header>${src.mode === 'demo' ? `<div class="banner">${x.demoBanner}</div>` : ''}${src.mode === 'live' && !src.connected ? `<div class="banner">${x.offline}</div>` : ''}`;
+  </header>${src.mode === 'demo' && S.tab !== 'pq' ? `<div class="banner">${x.demoBanner}</div>` : ''}${src.mode === 'live' && !src.connected ? `<div class="banner">${x.offline}</div>` : ''}`;
 }
 
 function tabs() {
