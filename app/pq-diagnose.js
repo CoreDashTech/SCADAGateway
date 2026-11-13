@@ -354,3 +354,60 @@ export const LAB_CASE = {
       note: B('ค่า LOAD ใช้ค่าล่าสุดที่ถ่ายไว้ (11:33) — ตอน 12:12 ไม่มีภาพหน้าจอ LOAD', 'LOAD values are the latest photographed (11:33) — no LOAD screen at 12:12') }
   ]
 };
+
+// ------------------------------------------------------------------ per-order harmonics (which frequencies must be fixed)
+// Voltage, LV: IEC 61000-2-2 / 61000-2-4 class 2 compatibility levels (% of fundamental); IEEE 519-2022 ≤ 1 kV: 5 % each, THD 8 %.
+export function uLimitIEC(h) {
+  if (h % 2 === 1) {
+    if (h % 3 === 0) return ({ 3: 5, 9: 1.5, 15: 0.4, 21: 0.3 })[h] ?? 0.2;
+    return ({ 5: 6, 7: 5, 11: 3.5, 13: 3 })[h] ?? (h <= 49 ? 2.27 * 17 / h - 0.27 : 0.2);
+  }
+  return ({ 2: 2, 4: 1, 6: 0.5, 8: 0.5 })[h] ?? 0.25 * 10 / h + 0.25;
+}
+// Current: IEEE 519-2022 Table 2 (120 V–69 kV), % of IL (maximum demand current), by short-circuit ratio Isc/IL.
+// Even orders: h ≤ 6 → 50 % of the value, h > 6 → 100 % (2022 rule).
+export const IEEE519_I = [
+  { scr: 20, b: [4.0, 2.0, 1.5, 0.6, 0.3], tdd: 5 }, { scr: 50, b: [7.0, 3.5, 2.5, 1.0, 0.5], tdd: 8 },
+  { scr: 100, b: [10.0, 4.5, 4.0, 1.5, 0.7], tdd: 12 }, { scr: 1000, b: [12.0, 5.5, 5.0, 2.0, 1.0], tdd: 15 }, { scr: Infinity, b: [15.0, 7.0, 6.0, 2.5, 1.4], tdd: 20 }
+];
+export function iLimitIEEE(h, scr = 15) {
+  const row = IEEE519_I.find((r) => scr < r.scr) || IEEE519_I[IEEE519_I.length - 1];
+  const band = h < 11 ? 0 : h < 17 ? 1 : h < 23 ? 2 : h < 35 ? 3 : 4;
+  return row.b[band] * (h % 2 === 0 && h <= 6 ? 0.5 : 1);
+}
+const FAMILY = (h) => (h % 2 === 0 ? 'even' : h % 3 === 0 ? 'triplen' : (h % 6 === 1 || h % 6 === 5) ? (h <= 13 ? 'six' : h <= 25 ? 'high' : 'vhigh') : 'other');
+
+/**
+ * ih / uh: arrays indexed by order (0 = DC, 1 = fundamental = 100) in % of fundamental.
+ * opt: { scr (Isc/IL), ilRatio (I1/IL, 1 = at full demand), f0 (50), txKva, txZ (%), capKvar }
+ */
+export function harmonicOrders(ih = [], uh = [], opt = {}) {
+  const f0 = opt.f0 || 50, scr = opt.scr ?? 15, k = opt.ilRatio ?? 1;
+  const rows = [];
+  for (let h = 2; h <= 50; h++) {
+    const i = ih[h] ?? null, u = uh[h] ?? null;
+    const iL = i != null ? i * k : null, il = iLimitIEEE(h, scr), ul = uLimitIEC(h);
+    rows.push({ h, f: h * f0, fam: FAMILY(h), i, iL, il, iRatio: iL != null ? iL / il : null, u, ul, uRatio: u != null ? u / ul : null });
+  }
+  const thd = (arr) => { const v = arr.slice(2, 51).filter((x) => x != null); return v.length ? Math.sqrt(v.reduce((s, x) => s + x * x, 0)) : null; };
+  const THDI = thd(ih), THDU = thd(uh), TDD = THDI != null ? THDI * k : null;
+  const row = IEEE519_I.find((r) => scr < r.scr) || IEEE519_I[IEEE519_I.length - 1];
+  const over = rows.filter((r) => (r.iRatio != null && r.iRatio > 1) || (r.uRatio != null && r.uRatio > 1));
+  const fam = {}; for (const r of rows) if (r.i != null) fam[r.fam] = (fam[r.fam] || 0) + r.i * r.i;
+  const share = Object.fromEntries(Object.entries(fam).map(([a, v]) => [a, THDI ? v / (THDI * THDI) : 0]));
+  // capacitor resonance with the supply transformer: hr = √(Sk / Qc), Sk = S_tx / Z
+  let res = null;
+  if (opt.txKva && opt.txZ && opt.capKvar) {
+    const Sk = opt.txKva / (opt.txZ / 100), hr = Math.sqrt(Sk / opt.capKvar);
+    const near = rows.filter((r) => Math.abs(r.h - hr) <= 0.6 && ((r.i ?? 0) > 1 || (r.u ?? 0) > 0.5 || [5, 7, 11, 13].includes(r.h)));
+    res = { Sk, hr, fr: hr * f0, near: near.map((r) => r.h), danger: near.length > 0 || (hr > 4.2 && hr < 14) };
+  }
+  const dc = ih[0] ?? null;
+  return { rows, THDI, THDU, TDD, tddLimit: row.tdd, scr, over, worst: over.slice().sort((a, b) => Math.max(b.iRatio || 0, b.uRatio || 0) - Math.max(a.iRatio || 0, a.uRatio || 0)).slice(0, 6), share, res, dc, dcBad: dc != null && dc > 0.5 };
+}
+
+// Lab 13 Nov 2026, analyser #3 LOAD, current CH2, 11:20 (HARMONICS → LIST, % of fundamental; orders 34–35 hidden by glare)
+export const LAB_HARMONICS = {
+  t: '11:20', where: '#3 LOAD · I CH2 (L2)', I1: 9.8,
+  ih: [2.15, 100, 0.52, 3.13, 0.53, 15.55, 0.54, 7.23, 0.48, 2.60, 0.60, 8.93, 0.73, 5.31, 0.54, 6.05, 0.41, 6.80, 0.56, 5.26, 0.58, 4.03, 0.39, 2.05, 0.56, 7.94, 0.75, 3.24, 0.34, 5.63, 0.65, 5.82, 0.26, 3.21, null, null, 0.28, 3.15, 0.18, 1.99, 0.17, 0.88, 0.21, 1.30, 0.09, 1.87, 0.17, 1.21, 0.18, 1.04, 0.08]
+};

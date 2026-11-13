@@ -5,6 +5,8 @@ import { apfCase, ASSUME, TARIFF } from './audit-engine.js';
 import { createAuditView } from './audit.js';
 import { createDiagView } from './pq-diag.js';
 import { diagnose } from './pq-diagnose.js';
+import { PqRiskEngine, applyScenario } from './pq-risk.js';
+import { annotate, findTerm } from './pq-glossary.js';
 import { parsePw3198, pw3198Record } from './pw3198.js';
 import { PqAlarmEngine, alarmText } from './pq-alarms.js';
 
@@ -122,11 +124,43 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   };
   // live source: a CoreDash Gateway sign-in, or the field tool's local bridge (#pq?live=http://127.0.0.1:port)
   const live = () => (st.bridge ? { base: st.bridge, bridge: true } : liveGw());
+  // early-warning engine (fire / short-circuit precursors) — runs on every pull, pops up on new risks
+  let riskSim = null, riskTick = 0;
+  const riskOpt = (() => { try { return JSON.parse(localStorage.getItem('coredash.risk.opt')) || {}; } catch { return {}; } })();
+  const toRiskOpt = (o) => ({ udin: Number(o.udin) || 230, ch4: o.ch4 || 'neutral', rating: Object.fromEntries(Object.entries(o.rating || {}).map(([k, v]) => [k, Number(v) || null])) });
+  const riskEng = new PqRiskEngine({ ...toRiskOpt(riskOpt), onEvent: (kind, e) => { if (kind === 'raise') popRisk(e); } });
   const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
   { const last = lsGet('coredash.pq.src'); if (last === 'gw') { st.src = 'gw'; if (!liveGw()) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799'; } }
   const el = document.createElement('section');
   el.className = 'pq';
+  // ------------------------------------------------------------ glossary: every abbreviation explains itself (tap / hover)
+  let glT = 0;
+  const glObs = new MutationObserver(() => { clearTimeout(glT); glT = setTimeout(() => { glObs.disconnect(); try { annotate(el); } catch {} glObs.observe(el, { childList: true, subtree: true, characterData: true }); }, 250); });
+  glObs.observe(el, { childList: true, subtree: true, characterData: true });
+  function glShow(a) {
+    const t = findTerm(a.dataset.t); if (!t) return;
+    let pop = document.querySelector('.gl-pop');
+    if (!pop) { pop = document.body.appendChild(Object.assign(document.createElement('div'), { className: 'gl-pop', role: 'tooltip' })); }
+    pop.innerHTML = `<b>${esc(t.k)}</b><p>${esc(t.s[L()])}</p>${t.f ? `<code>${esc(t.f)}</code>` : ''}${t.lim ? `<small>📘 ${esc(t.lim[L()])}</small>` : ''}<button data-gl-more="${esc(t.k)}">📚 ${L() === 'th' ? 'อ่านเพิ่มในหน้าเรียนรู้' : 'More in Learn'}</button>`;
+    const r = a.getBoundingClientRect(), w = Math.min(320, innerWidth - 16);
+    pop.style.width = w + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+    pop.style.top = (r.bottom + 8 + 180 > innerHeight ? Math.max(8, r.top - 8 - pop.offsetHeight) : r.bottom + 8) + 'px';
+    pop.classList.add('on'); pop.__a = a;
+  }
+  const glHide = () => { const p = document.querySelector('.gl-pop'); if (p) p.classList.remove('on'); };
+  el.addEventListener('mouseover', (e) => { const a = e.target.closest('abbr.gl'); if (a && matchMedia('(hover: hover)').matches) glShow(a); });
+  el.addEventListener('mouseout', (e) => { const a = e.target.closest('abbr.gl'); if (a && matchMedia('(hover: hover)').matches && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.gl-pop'))) setTimeout(() => { const p = document.querySelector('.gl-pop'); if (p && !p.matches(':hover')) glHide(); }, 250); });
+  el.addEventListener('focusin', (e) => { const a = e.target.closest('abbr.gl'); if (a) glShow(a); });
+  document.addEventListener('click', (e) => {
+    const more = e.target.closest('[data-gl-more]');
+    if (more) { glHide(); openLearn(more.dataset.glMore); return; }
+    const a = e.target.closest('abbr.gl');
+    if (a && el.contains(a)) { e.preventDefault(); e.stopPropagation(); glShow(a); return; }
+    if (!e.target.closest('.gl-pop')) glHide();
+  }, true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') glHide(); });
+  function openLearn(term) { st.mode = 'diag'; rebuild(true); setTimeout(() => diag && diag.openLearn(term), 30); }
   let timer = null, raf = 0, built = '', visible = false, audit = null, auditTick = 0, diag = null, diagTick = 0;
 
   // ------------------------------------------------------------ data
@@ -199,6 +233,28 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
       dn.map((m) => `<span class="pq-st off">✖ #${m.no} ${esc(m.name || '')} ${esc(m.host)} ${x('chipDown')}${m.error ? ' — ' + esc(m.error) : ''}${st.snap.bridge ? ` <button class="btn sm" data-pq="brecon" data-arg="${esc(m.id)}">🔄 ${x('bRetry')}</button>` : ''}</span>`).join('') +
       (st.snap.bridge ? `<div class="pq-bbtns"><button class="btn sm" data-pq="brecon" data-arg="">🔄 ${x('bRecon')}</button><button class="btn sm" data-pq="bips">⚙ ${x('bIps')}</button>${st.snap.bridge.autostart ? `<small class="muted">✓ ${x('bAutoOn')}</small>` : `<small class="muted">${x('bAuto')}</small>`}</div>` : '');
   }
+  // ------------------------------------------------------------ pop-up for early warnings (in-app + device + phone)
+  function popRisk(e) {
+    const host = document.querySelector('.pq-pops') || document.body.appendChild(Object.assign(document.createElement('div'), { className: 'pq-pops', role: 'alert' }));
+    const box = document.createElement('div');
+    box.className = 'pq-pop ' + e.sev;
+    box.innerHTML = `<div class="pq-pop-h"><b>${e.sev === 'crit' ? '🔴' : e.sev === 'warn' ? '🟡' : '🔵'} ${esc(e.title[L()])}</b><button aria-label="close">✕</button></div>
+      <div class="pq-pop-w">📍 ${esc(e.where)}${riskSim ? ' · 🧪 ' + (L() === 'th' ? 'จำลอง' : 'training') : ''}</div>${e.evidence.length ? `<div class="pq-pop-e">${e.evidence.map(esc).join(' · ')}</div>` : ''}
+      <div class="pq-pop-c">${esc(e.steps[0] ? e.steps[0][L()] : '')}</div><button class="btn sm" data-go>${L() === 'th' ? 'ดูสาเหตุและวิธีแก้ →' : 'Cause & fix →'}</button>`;
+    box.querySelector('[aria-label="close"]').onclick = () => box.remove();
+    box.querySelector('[data-go]').onclick = () => { box.remove(); st.mode = 'diag'; rebuild(true); setTimeout(() => diag && diag.openRisk(), 50); };
+    host.prepend(box); while (host.children.length > 4) host.lastChild.remove();
+    if (e.sev !== 'crit') setTimeout(() => box.remove(), 20000);
+    try { navigator.vibrate && navigator.vibrate(e.sev === 'crit' ? [300, 120, 300] : 150); } catch {}
+    const title = (e.sev === 'crit' ? '🔴 ' : '🟡 ') + e.title[L()] + ' · ' + e.where, body = e.evidence.join(' · ') + (e.steps[0] ? '\n→ ' + e.steps[0][L()] : '');
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      const opt = { body, tag: e.key, requireInteraction: e.sev === 'crit', icon: './icons/icon-192.png' };
+      (navigator.serviceWorker && navigator.serviceWorker.ready ? navigator.serviceWorker.ready.then((r) => r.showNotification(title, opt)) : Promise.reject()).catch(() => { try { new Notification(title, opt); } catch {} });
+    }
+    // phone push through the field tool's ntfy topic (only critical, not for training scenarios)
+    const A = st.snap && st.snap.alarms;
+    if (!riskSim && e.sev === 'crit' && A && A.topic) fetch(A.server || 'https://ntfy.sh', { method: 'POST', body: JSON.stringify({ topic: A.topic, title, message: body, priority: 5, tags: ['fire'] }) }).catch(() => {});
+  }
   // smart diagnosis on the same live values: wiring mistakes, APF not working, wrong PF fix …
   function diagLine() {
     if (!st.snap || !st.snap.inst) return '';
@@ -262,6 +318,11 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
       st.alarms = { log: st.alEng.log, push: false, demo: true };
     }
     notifyNew();
+    if (st.snap && st.snap.inst && st.src !== 'file') {
+      const PT = { 'PQ-MAIN': 'MAIN', 'PQ-LOAD': 'LOAD', 'PQ-APF': 'APF' };
+      for (const [id, pt] of Object.entries(PT)) { const d = st.snap.inst[id]; if (d) riskEng.feed(pt, riskSim ? applyScenario(riskSim, pt, d, now, riskEng.o) : d, now); }
+      if (++riskTick % 2 === 0) riskEng.analyse(now);
+    }
     for (const r of ROLES) {
       const d = st.snap.inst[r.id]; if (!d) continue;
       const a = (st.spark[r.id] ||= []); a.push(d.P ?? 0); if (a.length > 90) a.shift();
@@ -272,7 +333,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
   function skeleton() {
     const srcBtn = (k, ic) => `<button class="pq-src ${st.src === k ? 'on' : ''}" data-pq="src" data-arg="${k}">${ic} ${x('src' + k[0].toUpperCase() + k.slice(1))}</button>`;
     const tabs = ['meas', 'wave', 'phasor', 'harm', 'trend', 'events', 'files'].map((k) => `<button class="pq-tab ${st.tab === k ? 'on' : ''}" data-pq="tab" data-arg="${k}">${x('t' + k[0].toUpperCase() + k.slice(1))}</button>`).join('');
-    const modes = `<div class="pq-modes"><button class="${st.mode === 'live' ? 'on' : ''}" data-pq="mode" data-arg="live">📈 ${x('mLive')}</button><button class="${st.mode === 'diag' ? 'on' : ''}" data-pq="mode" data-arg="diag">🧠 ${x('mDiag')}</button><button class="${st.mode === 'audit' ? 'on' : ''}" data-pq="mode" data-arg="audit">${x('mAudit')}</button></div>`;
+    const modes = `<div class="pq-modes"><button class="${st.mode === 'live' ? 'on' : ''}" data-pq="mode" data-arg="live">📈 ${x('mLive')}</button><button class="${st.mode === 'diag' ? 'on' : ''}" data-pq="mode" data-arg="diag">🧠 ${x('mDiag')}</button><button class="${st.mode === 'audit' ? 'on' : ''}" data-pq="mode" data-arg="audit">${x('mAudit')}</button><button data-pq="learn">📚 ${L() === 'th' ? 'เรียนรู้' : 'Learn'}</button></div>`;
     const hero = `<header class="pq-hero">
       <div class="pq-crest"><svg viewBox="0 0 48 48" width="44" height="44"><circle cx="24" cy="24" r="21" fill="none" stroke="${GOLD}" stroke-width="1.5"/><circle cx="24" cy="24" r="16" fill="none" stroke="${GOLD}" stroke-opacity=".45"/><path d="M5 24h6l3-9 5 18 5-22 5 26 4-13h10" fill="none" stroke="#7DD3FC" stroke-width="2" stroke-linejoin="round"/></svg></div>
       <div class="pq-ttl"><h2>${x('title')}</h2><small>${x('sub')}</small></div>
@@ -780,7 +841,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const key = [st.mode, st.src, st.sel, st.tab, st.hk, st.hp, st.guide, L(), st.files ? st.files.length : -1, st.file ? st.file.name : ''].join('|');
     if (!force && key === built) return;
     built = key; el.innerHTML = skeleton();
-    if (st.mode === 'diag') { diag ||= createDiagView({ lang: () => L(), snapshot: () => st.snap }); el.querySelector('.pq-diag-host').appendChild(diag.el); diag.show(); }
+    if (st.mode === 'diag') { diag ||= createDiagView({ lang: () => L(), snapshot: () => st.snap, risk: () => riskEng, riskSim: () => riskSim, setRiskSim: (v) => { riskSim = v; for (const k of Object.keys(riskEng.ring)) riskEng.ring[k] = []; }, onRiskOpts: (o) => riskEng.setOptions(toRiskOpt(o)) }); el.querySelector('.pq-diag-host').appendChild(diag.el); diag.show(); }
     if (st.mode === 'audit') { audit ||= createAuditView({ lang: () => L(), snapshot: () => st.snap, history: () => st.hist, parseCsv }); el.querySelector('.pq-audit-host').appendChild(audit.el); audit.show(); }
     bindAll(); redraw();
   }
@@ -796,6 +857,7 @@ export function createPqView({ lang = () => 'th', live: liveGw = () => null, onT
     const k = b.dataset.pq, arg = b.dataset.arg;
     if (k === 'mode') { st.mode = arg; }
     else if (k === 'audit') { st.mode = 'audit'; if (audit) audit._state.tab = 'apf'; }
+    else if (k === 'learn') { openLearn(''); return; }
     else if (k === 'bretry') { st.gwErr = null; if (!st.bridge) st.bridge = lsGet('coredash.pq.bridge') || 'http://127.0.0.1:8799'; await pull(); redraw(); }
     else if (k === 'brecon') { try { await bridgePost('/api/reconnect' + (arg ? '?id=' + encodeURIComponent(arg) : '')); onToast(x('bDone')); } catch (er) { onToast(x('bFail') + ': ' + er.message, true); } }
     else if (k === 'bips') { st.bform = st.bform ? null : ((st.snap.bridge && st.snap.bridge.ips) || []).slice(); region('bform', bformHtml()); }

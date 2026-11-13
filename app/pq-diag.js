@@ -4,13 +4,16 @@
 //   • findings with evidence → cause → what to do → standard
 //   • kVA split (real / reactive / harmonic), APF performance, what to buy (sized + budget)
 //   • beginner wiring guide with live wiring checks
-import { diagnose, LAB_CASE, POINTS, PRICES } from './pq-diagnose.js';
+import { diagnose, LAB_CASE, POINTS, PRICES, harmonicOrders, LAB_HARMONICS, IEEE519_I } from './pq-diagnose.js';
+import { FIRE_GUIDE, FIRE_KIT, SCENARIOS } from './pq-risk.js';
+import { TERMS, CATS, findTerm } from './pq-glossary.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const B = (th, en) => ({ th, en });
 const T = {
   title: B('วินิจฉัยอัจฉริยะ · ชี้จุด · บอกวิธีแก้', 'Smart diagnosis · where · how to fix'),
   sub: B('ตรวจการต่อสาย → วิเคราะห์คุณภาพไฟ → แยก PF รีแอกทีฟ/ฮาร์มอนิก → ประเมิน APF → แนะนำสิ่งที่ต้องซื้อ', 'Check wiring → analyse power quality → split reactive/harmonic PF → judge the APF → what to buy'),
+  tHarm: B('〰 ฮาร์มอนิกรายลำดับ', '〰 Harmonics by order'), tRisk: B('🔥 เตือนก่อนไฟไหม้/ลัดวงจร', '🔥 Fire / short-circuit early warning'),
   tDiag: B('🧠 ผลวินิจฉัย', '🧠 Diagnosis'), tGuide: B('🧰 คู่มือต่อสาย (มือใหม่)', '🧰 Wiring guide (beginner)'), tManual: B('✍ ป้อนค่าจากหน้าจอ', '✍ Enter screen values'),
   srcLive: B('📡 ค่าปัจจุบัน', '📡 Current data'), srcLab: B('🧪 เคส Lab 13 พ.ย.', '🧪 Lab case 13 Nov'),
   crit: B('ต้องแก้', 'Fix now'), warn: B('ควรแก้', 'Should fix'), info: B('ข้อสังเกต', 'Note'), ok: B('ผ่าน', 'OK'),
@@ -30,12 +33,12 @@ const T = {
   hintPF: B('Hioki แสดง Q = √(S²−P²) ซึ่งรวมฮาร์มอนิก — ระบบแยกให้ว่าส่วนไหนแก้ด้วยคาปาซิเตอร์ได้', 'Hioki shows Q = √(S²−P²), which includes harmonics — this splits what a capacitor can fix')
 };
 
-export function createDiagView({ lang = () => 'th', snapshot = () => null } = {}) {
+export function createDiagView({ lang = () => 'th', snapshot = () => null, risk = () => null, setRiskSim = () => {}, riskSim = () => null, onRiskOpts = () => {} } = {}) {
   const L = () => (lang() === 'en' ? 'en' : 'th');
   const x = (k) => T[k][L()];
   const tr = (o) => (o ? o[L()] ?? o.th : '');
   const ls = { get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-  const st = { tab: 'diag', src: ls.get('coredash.diag.src', 'lab'), step: 3, pt: null, open: new Set(), man: ls.get('coredash.diag.manual', { point: 'APF', running: true, rating: 50 }), prices: { ...PRICES, ...ls.get('coredash.diag.prices', {}) }, guide: 0 };
+  const st = { q: '', focus: '', harm: ls.get('coredash.diag.harm', { scr: 15, ilRatio: 1, txKva: '', txZ: 4, capKvar: '', paste: '' }), riskOpt: ls.get('coredash.risk.opt', { udin: 230, rating: { MAIN: '', LOAD: '', APF: '' }, ch4: 'neutral' }), tab: 'diag', src: ls.get('coredash.diag.src', 'lab'), step: 3, pt: null, open: new Set(), man: ls.get('coredash.diag.manual', { point: 'APF', running: true, rating: 50 }), prices: { ...PRICES, ...ls.get('coredash.diag.prices', {}) }, guide: 0 };
   const el = document.createElement('div');
   el.className = 'dg';
 
@@ -244,13 +247,124 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null } = {}
       <div class="dg-row">${st.guide > 0 ? `<button class="btn sm" data-dg="guide" data-arg="${st.guide - 1}">← ${L() === 'th' ? 'ก่อนหน้า' : 'Back'}</button>` : ''}${st.guide < GUIDE.length - 1 ? `<button class="btn" data-dg="guide" data-arg="${st.guide + 1}">${L() === 'th' ? 'ถัดไป' : 'Next'} →</button>` : ''}</div></section>`;
   }
 
+  // ---------------------------------------------------------------- harmonics by order
+  function parsePaste(txt) {
+    // "5:15.55 7:7.23 …" or 51 numbers (order 0…50) or one number per line starting at order 1
+    const ih = new Array(51).fill(null); ih[1] = 100;
+    const pairs = [...String(txt).matchAll(/(\d{1,2})\s*[:=]\s*(-?\d+(?:\.\d+)?)/g)];
+    if (pairs.length) { for (const [, h, v] of pairs) if (+h <= 50) ih[+h] = +v; return ih; }
+    const nums = String(txt).split(/[\s,;]+/).filter(Boolean).map(Number).filter(Number.isFinite);
+    if (nums.length >= 51) { for (let h = 0; h <= 50; h++) ih[h] = nums[h]; } else nums.forEach((v, j) => { if (j + 1 <= 50) ih[j + 1] = v; });
+    return ih;
+  }
+  function harmTab() {
+    const H = st.harm, n = (v) => (v === '' || v == null ? null : Number(v));
+    const src = H.paste && H.paste.trim() ? { ih: parsePaste(H.paste), where: L() === 'th' ? 'ค่าที่วาง' : 'pasted values', t: '' } : LAB_HARMONICS;
+    const r = harmonicOrders(src.ih, src.uh || [], { scr: Number(H.scr), ilRatio: n(H.ilRatio) ?? 1, txKva: n(H.txKva), txZ: n(H.txZ), capKvar: n(H.capKvar) });
+    const W = 760, Hh = 230, padL = 34, padB = 34, top = 12, bw = (W - padL - 8) / 49;
+    const vmax = Math.max(4, ...r.rows.map((x) => Math.max(x.iL || 0, x.il)));
+    const Y = (v) => top + (1 - Math.min(v, vmax) / vmax) * (Hh - top - padB);
+    const bars = r.rows.map((x, j) => {
+      const X = padL + j * bw, over = x.iRatio != null && x.iRatio > 1;
+      return `${x.iL != null ? `<rect x="${X + 1.5}" y="${Y(x.iL)}" width="${bw - 3}" height="${Y(0) - Y(x.iL)}" rx="2" class="${over ? 'hb-over' : 'hb-ok'}"><title>h${x.h} · ${x.f} Hz · ${x.i}% (limit ${x.il}%)</title></rect>` : ''}
+        <line x1="${X + 1}" x2="${X + bw - 1}" y1="${Y(x.il)}" y2="${Y(x.il)}" class="hb-lim"/>${x.h % 2 === 1 && (x.h <= 13 || x.h % 6 === 1) ? `<text x="${X + bw / 2}" y="${Hh - padB + 13}" text-anchor="middle" class="hb-x">${x.h}</text>` : ''}`;
+    }).join('');
+    const yt = [0, vmax / 2, vmax].map((v) => `<text x="${padL - 6}" y="${Y(v) + 4}" text-anchor="end" class="hb-x">${v.toFixed(0)}</text><line x1="${padL}" x2="${W - 8}" y1="${Y(v)}" y2="${Y(v)}" class="hb-grid"/>`).join('');
+    const famTxt = { six: B('6k±1 ลำดับ 5–13: เรกติไฟเออร์/VFD 6 พัลส์ — แก้ด้วยรีแอกเตอร์ 3–5%, ตัวกรองจูน 5th/7th, APF', '6k±1 orders 5–13: 6-pulse rectifiers / VFDs — 3–5 % reactors, 5th/7th tuned filters, APF'),
+      high: B('ลำดับ 17–25: VFD ไม่มีรีแอกเตอร์, active front end, เครื่องกำเนิดฮาร์มอนิก — ตัวกรองพาสซีฟไม่ได้ผล ใช้ APF', 'Orders 17–25: VFDs without reactors, active front ends, harmonic generator — passive filters are ineffective, use an APF'),
+      vhigh: B('ลำดับ > 25: การสวิตช์ PWM/อินเวอร์เตอร์ — APF ต้องชดเชยถึงลำดับ 50 และ/หรือฟิลเตอร์ EMC/sine filter', 'Orders > 25: PWM/inverter switching — APF covering up to the 50th and/or EMC / sine filters'),
+      triplen: B('ลำดับ 3, 9, 15…: โหลด 1 เฟส (คอม, LED, UPS) — รวมในสาย N, แก้ด้วย APF 4 สาย/ตัวกรองลำดับศูนย์ · คาปาซิเตอร์ detuned ต้องใช้ 14%', 'Triplen 3, 9, 15…: single-phase loads (PCs, LED, UPS) — add up in N; 4-wire APF / zero-sequence filter; detuned capacitors need 14 %'),
+      even: B('ลำดับคู่: วงจรเรียงกระแสเสีย/ไม่สมมาตร หรือ DC ไหลในระบบ', 'Even orders: faulty / asymmetric rectifiers or DC in the system') };
+    const fams = Object.entries(r.share).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]);
+    const scrOpts = [[15, '< 20'], [35, '20–50'], [75, '50–100'], [500, '100–1000'], [2000, '> 1000']];
+    return `<section class="dg-card"><h4>${L() === 'th' ? 'ต้องแก้ที่ความถี่ไหน — เทียบทุกลำดับกับเกณฑ์' : 'Which frequencies must be fixed — every order vs its limit'}</h4>
+      <p class="muted dg-small">${esc(src.where)} ${esc(src.t || '')} · ${L() === 'th' ? 'ลำดับ h = ความถี่ h × 50 Hz · เส้นทอง = เกณฑ์ IEEE 519-2022 (กระแส % ของ IL) · แท่งแดง = เกิน' : 'order h = h × 50 Hz · gold line = IEEE 519-2022 limit (current, % of IL) · red bar = over'}</p>
+      <svg viewBox="0 0 ${W} ${Hh}" class="dg-hb">${yt}${bars}<text x="${padL}" y="${Hh - 4}" class="hb-x">${L() === 'th' ? 'ลำดับฮาร์มอนิก →' : 'harmonic order →'}</text></svg>
+      <div class="dg-kpis"><div><small>THD-I</small><b>${n2(r.THDI, 1)}%</b><i>${L() === 'th' ? 'จากลำดับ 2–50' : 'orders 2–50'}</i></div>
+        <div><small>TDD</small><b style="color:${r.TDD > r.tddLimit ? SC.crit : SC.ok}">${n2(r.TDD, 1)}%</b><i>${L() === 'th' ? 'เกณฑ์' : 'limit'} ${r.tddLimit}% (Isc/IL ${scrOpts.find(([v]) => v === Number(H.scr))?.[1] || ''})</i></div>
+        <div><small>${L() === 'th' ? 'ลำดับที่เกิน' : 'Orders over'}</small><b style="color:${r.over.length ? SC.crit : SC.ok}">${r.over.length}</b><i>${r.over.slice(0, 8).map((o) => o.h).join(', ')}${r.over.length > 8 ? '…' : ''}</i></div>
+        <div><small>DC</small><b style="color:${r.dcBad ? SC.crit : SC.ok}">${n2(r.dc, 2)}%</b><i>${r.dcBad ? (L() === 'th' ? 'IEEE 519 ไม่อนุญาต DC offset' : 'IEEE 519: no DC offset allowed') : 'OK'}</i></div></div>
+      ${r.worst.length ? `<div class="tscroll"><table class="rtable dg-t"><thead><tr><th>h</th><th>${L() === 'th' ? 'ความถี่' : 'Freq.'}</th><th>${L() === 'th' ? 'วัดได้' : 'Measured'} (% IL)</th><th>${L() === 'th' ? 'เกณฑ์' : 'Limit'}</th><th>${L() === 'th' ? 'เกิน' : 'Over'}</th></tr></thead><tbody>
+        ${r.worst.map((w) => `<tr><td><b>${w.h}</b></td><td>${w.f} Hz</td><td>${n2(w.iL, 2)}</td><td>${w.il}</td><td style="color:${SC.crit}">×${n2(w.iRatio, 1)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+      <h4 style="margin-top:12px">${L() === 'th' ? 'ฮาร์มอนิกมาจากอะไร และแก้แบบไหน' : 'Where it comes from and how to fix it'}</h4>
+      <ul class="dg-fam">${fams.map(([k, v]) => `<li><b>${(v * 100).toFixed(0)}%</b> ${esc(tr(famTxt[k] || B(k, k)))}</li>`).join('')}</ul>
+      <p class="dg-small muted">${L() === 'th' ? 'สรุป: ต้องแก้ทุกลำดับที่แท่งเป็นสีแดง (เกินเกณฑ์ของลำดับนั้น) และเมื่อ TDD เกินเกณฑ์รวม — ไม่มีความถี่เดียวที่ตายตัว ในโรงงานทั่วไปตัวหลักคือ 250 Hz (5th) และ 350 Hz (7th) ส่วนเคส Lab ตัวกำเนิดฮาร์มอนิกปล่อยลำดับสูงถึง 1,550–2,450 Hz ด้วย' : 'Fix every red order (above its own limit) and whenever TDD is above the total limit — there is no single frequency. In typical plants the main ones are 250 Hz (5th) and 350 Hz (7th); the Lab generator also produced 1,550–2,450 Hz.'}</p>
+      <div class="dg-form"><label>Isc/IL<select data-dgh="scr">${scrOpts.map(([v, l]) => `<option value="${v}" ${Number(H.scr) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label>I1 / IL<input data-dgh="ilRatio" value="${esc(H.ilRatio)}" inputmode="decimal" title="I fundamental now ÷ max demand current"></label></div></section>
+    <section class="dg-card"><h4>${L() === 'th' ? 'เรโซแนนซ์กับคาปาซิเตอร์ (จะขยายฮาร์มอนิกที่ความถี่ไหน)' : 'Capacitor resonance (which frequency gets amplified)'}</h4>
+      <div class="dg-form"><label>${L() === 'th' ? 'หม้อแปลง kVA' : 'Transformer kVA'}<input data-dgh="txKva" value="${esc(H.txKva)}" placeholder="1000" inputmode="decimal"></label><label>Z %<input data-dgh="txZ" value="${esc(H.txZ)}" inputmode="decimal"></label><label>${L() === 'th' ? 'คาปาซิเตอร์ kvar' : 'Capacitor kvar'}<input data-dgh="capKvar" value="${esc(H.capKvar)}" placeholder="300" inputmode="decimal"></label></div>
+      ${r.res ? `<div class="au-verdict ${r.res.danger ? 'warn' : 'ok'}">h<sub>r</sub> = √(S<sub>k</sub>/Q<sub>c</sub>) = √(${n2(r.res.Sk, 0)} / ${H.capKvar}) = <b>${n2(r.res.hr, 2)}</b> → <b>${n2(r.res.fr, 0)} Hz</b>. ${r.res.danger ? (L() === 'th' ? `ใกล้ลำดับ ${r.res.near.join(', ') || '5–13'} ที่มีกระแสจริง — คาปาซิเตอร์ธรรมดาจะขยายฮาร์มอนิก (แรงดันเพี้ยน คาปาซิเตอร์ร้อน/ระเบิด) ใช้ detuned 7% (189 Hz) หรือ 14% (134 Hz) ถ้ามีลำดับ 3` : `Close to order ${r.res.near.join(', ') || '5–13'} that is present — a plain capacitor bank amplifies it (distortion, capacitor overheating/burst). Use detuned 7 % (189 Hz), or 14 % (134 Hz) with 3rd harmonic`) : (L() === 'th' ? 'ไม่ตรงกับลำดับที่มีอยู่ — ความเสี่ยงต่ำ' : 'Not on a present order — low risk')}</div>` : `<p class="muted dg-small">${L() === 'th' ? 'ใส่ขนาดหม้อแปลง, Z% (ป้ายหม้อแปลง ~4–6%) และ kvar ของตู้คาปาซิเตอร์' : 'Enter transformer kVA, Z % (nameplate ~4–6 %) and capacitor kvar'}</p>`}</section>
+    <section class="dg-card"><h4>${L() === 'th' ? 'วางค่าฮาร์มอนิกของคุณเอง' : 'Paste your own harmonic values'}</h4>
+      <p class="muted dg-small">${L() === 'th' ? 'จากหน้า HARMONICS → LIST ของ PW3198 (กระแส %ofFND) เช่น "3:3.1 5:15.5 7:7.2" หรือเรียงตัวเลขลำดับ 0–50 · เว้นว่าง = ใช้ค่าจาก Lab' : 'From the PW3198 HARMONICS → LIST (current %ofFND), e.g. "3:3.1 5:15.5 7:7.2" or 51 numbers (orders 0–50) · empty = Lab values'}</p>
+      <textarea data-dgh="paste" rows="3" class="dg-ta">${esc(H.paste || '')}</textarea>
+      <div class="dg-row"><button class="btn sm" data-dg="harmapply">✓ ${L() === 'th' ? 'คำนวณ' : 'Analyse'}</button></div></section>`;
+  }
+
+  // ---------------------------------------------------------------- fire / short-circuit early warning
+  function riskTab() {
+    const eng = risk(), O = st.riskOpt, sim = riskSim();
+    const act = eng ? [...eng.active.values()] : [], hist = eng ? eng.events.filter((e) => e.end).slice(0, 20) : [];
+    const loc = eng ? eng.locate() : null;
+    const t = (ms) => new Date(ms).toLocaleTimeString(L() === 'th' ? 'th-TH' : 'en-GB');
+    const card = (e) => `<article class="dg-f ${e.sev}"><div class="dg-fh"><span class="dg-sev">${x(e.sev)}</span><span class="dg-pt">📍 ${esc(e.where)}</span><b>${esc(tr(e.title))}</b></div>
+      ${e.evidence.length ? `<div class="dg-ev">${e.evidence.map((v) => `<code>${esc(v)}</code>`).join('')}</div>` : ''}
+      <details data-dgo="${esc(e.key)}" ${st.open.has(e.key) || e.sev === 'crit' ? 'open' : ''}><summary>${x('cause')} · ${x('todo')}</summary><p><b>${x('cause')}:</b> ${esc(tr(e.cause))}</p><ol>${e.steps.map((s2) => `<li>${esc(tr(s2))}</li>`).join('')}</ol>${e.std ? `<p class="muted">📘 ${esc(e.std)}</p>` : ''}</details>
+      <small class="muted">${L() === 'th' ? 'ตั้งแต่' : 'since'} ${t(e.start)}</small></article>`;
+    return `<section class="dg-card"><h4>${L() === 'th' ? 'สัญญาณเตือนล่วงหน้า (วิเคราะห์ค่าสดย้อนหลัง 10 นาที)' : 'Early warnings (live values, last 10 minutes)'}</h4>
+        ${sim ? `<div class="au-verdict warn">🧪 ${L() === 'th' ? 'กำลังจำลองฝึก' : 'Training scenario'}: <b>${esc(tr(SCENARIOS[sim]))}</b> <button class="btn sm" data-dg="sim" data-arg="">✕ ${L() === 'th' ? 'หยุดจำลอง' : 'stop'}</button></div>` : ''}
+        ${loc ? `<div class="au-verdict info">📍 ${esc(tr(loc))}</div>` : ''}
+        ${act.length ? `<div class="dg-fs">${act.map(card).join('')}</div>` : `<p class="dg-okmsg">✓ ${L() === 'th' ? 'ยังไม่พบสัญญาณเสี่ยง — ระบบจะเด้งเตือนทันทีที่พบ' : 'No risk signal yet — you get a pop-up the moment one appears'}</p>`}
+        ${hist.length ? `<details><summary>${L() === 'th' ? 'ประวัติ' : 'History'} (${hist.length})</summary><div class="tscroll"><table class="rtable"><tbody>${hist.map((e) => `<tr><td>${t(e.start)}</td><td>${esc(e.where)}</td><td>${esc(tr(e.title))}</td><td>${Math.round((e.end - e.start) / 1000)} s</td></tr>`).join('')}</tbody></table></div></details>` : ''}</section>
+      <section class="dg-card"><h4>${L() === 'th' ? 'ตั้งค่าที่ระบบต้องรู้' : 'What the system needs to know'}</h4>
+        <div class="dg-form"><label>Udin (V)<input data-dgr="udin" value="${esc(O.udin)}" inputmode="decimal"></label>
+          ${['MAIN', 'LOAD', 'APF'].map((k) => `<label>${L() === 'th' ? 'เบรกเกอร์' : 'Breaker'} #${POINTS[k].no} ${k} (A)<input data-dgr="rating.${k}" value="${esc(O.rating[k] ?? '')}" placeholder="${k === 'MAIN' ? '20' : ''}" inputmode="decimal"></label>`).join('')}
+          <label>CH4<select data-dgr="ch4"><option value="neutral" ${O.ch4 === 'neutral' ? 'selected' : ''}>${L() === 'th' ? 'สายนิวทรัล N' : 'Neutral N'}</option><option value="leak" ${O.ch4 === 'leak' ? 'selected' : ''}>${L() === 'th' ? 'กระแสรั่ว (คล้องรวม/PE)' : 'Leakage (residual / PE)'}</option></select></label></div>
+        <div class="dg-row"><button class="btn sm" data-dg="risksave">✓ ${x('save')}</button></div></section>
+      <section class="dg-card"><h4>${L() === 'th' ? 'ทดลองเหตุการณ์ (ฝึกดูการเตือน)' : 'Try an event (training)'}</h4><p class="muted dg-small">${L() === 'th' ? 'ใส่ความผิดปกติลงบนข้อมูลปัจจุบันชั่วคราว เพื่อดูว่าระบบเด้งเตือนอย่างไร (ไม่ได้ส่งเข้าเครื่องวัด)' : 'Temporarily adds a fault pattern on top of the current data to see the pop-ups (nothing is sent to the analysers)'}</p>
+        <div class="dg-row">${Object.entries(SCENARIOS).map(([k, v]) => `<button class="btn sm ${sim === k ? 'on' : ''}" data-dg="sim" data-arg="${k}">${esc(tr(v))}</button>`).join('')}</div></section>
+      <section class="dg-card"><h4>${L() === 'th' ? 'ลัดวงจร/ไฟไหม้เกิดจากอะไร — และระบบเห็นได้แค่ไหน' : 'What causes shorts / fires — and what the system can see'}</h4>
+        <div class="dg-buy">${FIRE_GUIDE.map((g) => `<div class="dg-opt"><div class="dg-opt-h"><b>${g.icon} ${esc(tr(g.t))}</b><span class="pill ${g.see === 'yes' ? 'ok' : ''}">${g.see === 'yes' ? (L() === 'th' ? 'ระบบเห็น' : 'seen') : g.see === 'partly' ? (L() === 'th' ? 'เห็นบางส่วน' : 'partly') : (L() === 'th' ? 'ต้องใช้เซนเซอร์เพิ่ม' : 'needs a sensor')}</span></div><p>${esc(tr(g.d))}</p></div>`).join('')}</div>
+        <h4 style="margin-top:12px">${L() === 'th' ? 'อุปกรณ์ที่ควรมีเพิ่มเพื่อกันไฟไหม้' : 'Add these to prevent fires'}</h4><ul class="dg-fam">${FIRE_KIT.map((k) => `<li>${esc(tr(k))}</li>`).join('')}</ul></section>`;
+  }
+
+  // ---------------------------------------------------------------- learning: concepts + searchable glossary
+  function learnTab() {
+    const th = L() === 'th', q = st.q.trim().toLowerCase();
+    const hit = (t) => !q || [t.k, ...(t.re || []), t.s.th, t.s.en].some((v) => String(v).toLowerCase().includes(q));
+    const tri = `<svg viewBox="0 0 300 170" class="dg-ill" data-nogl><line x1="20" y1="150" x2="200" y2="150" stroke="#22C55E" stroke-width="5"/><text x="90" y="166" class="dg-s">P ${th ? '(ทำงานจริง)' : '(real)'}</text>
+      <line x1="200" y1="150" x2="200" y2="95" stroke="#38BDF8" stroke-width="5"/><text x="208" y="128" class="dg-s">Q1</text>
+      <line x1="200" y1="95" x2="200" y2="40" stroke="#E879F9" stroke-width="5"/><text x="208" y="70" class="dg-s">D</text>
+      <line x1="20" y1="150" x2="200" y2="40" stroke="#F3D99A" stroke-width="3" stroke-dasharray="6 4"/><text x="60" y="84" class="dg-s">S ${th ? '(ที่สายต้องรับ)' : '(carried)'}</text>
+      <text x="20" y="20" class="dg-s2">S² = P² + Q1² + D² · PF = P/S · DPF = P/S1</text></svg>`;
+    const tdd = `<svg viewBox="0 0 320 120" class="dg-ill" data-nogl><text x="0" y="14" class="dg-s2">${th ? 'ตอนโหลดน้อย 20 A (IL = 100 A), ฮาร์มอนิก 6 A' : 'Light load 20 A (IL = 100 A), 6 A of harmonics'}</text>
+      <rect x="0" y="26" width="60" height="22" fill="#38BDF8"/><rect x="0" y="26" width="18" height="22" fill="#EF4444"/><text x="68" y="42" class="dg-s">THD-I = 6/20 = 30% ${th ? '(ดูน่ากลัว)' : '(looks bad)'}</text>
+      <rect x="0" y="64" width="300" height="22" fill="#1E293B"/><rect x="0" y="64" width="18" height="22" fill="#EF4444"/><text x="24" y="80" class="dg-s">TDD = 6/100 = 6% ${th ? '(ค่าที่ IEEE 519 ใช้)' : '(what IEEE 519 uses)'}</text>
+      <text x="0" y="110" class="dg-s2">${th ? 'กระแสฮาร์มอนิกเท่ากัน 6 A — ต่างกันแค่ตัวหาร' : 'Same 6 A of harmonics — only the divisor differs'}</text></svg>`;
+    const concepts = [
+      [th ? '1 · ทำไม PF ต่ำ แต่ติดคาปาซิเตอร์แล้วไม่หาย' : '1 · Why PF stays low after adding capacitors', tri, th ? 'กระแสที่สายต้องรับ (S) มี 3 ส่วน: P ทำงานจริง, Q1 รีแอกทีฟของมอเตอร์ (คาปาซิเตอร์แก้ได้) และ D จากฮาร์มอนิก (ต้อง APF/ตัวกรอง) เครื่อง Hioki รวม Q1 กับ D ไว้ใน Q ระบบจึงแยกให้ว่าเป็นส่วนไหน — ใน Lab D เป็นส่วนใหญ่ จึงต้องใช้ APF ไม่ใช่คาปาซิเตอร์' : 'The current a cable carries (S) has three parts: P real, Q1 motor reactive (capacitor-fixable) and D from harmonics (needs an APF/filter). Hioki puts Q1 and D together in Q, so the system splits them — in the Lab D dominates, so an APF, not capacitors'],
+      [th ? '2 · THD-I กับ TDD ต่างกันอย่างไร' : '2 · THD-I vs TDD', tdd, th ? 'THD-I หารด้วยกระแส "ตอนนี้" จึงสูงเกินจริงตอนโหลดน้อย ส่วน TDD หารด้วยกระแสสูงสุดของโรงงาน (IL) ซึ่ง IEEE 519 ใช้ตัดสิน ถ้าวัดตอนโหลดเต็ม (I1 = IL) ทั้งสองค่าเท่ากัน ในหน้าฮาร์มอนิกใส่ "I1/IL" เพื่อแปลง' : 'THD-I divides by the current NOW, so it is inflated at light load; TDD divides by the plant’s maximum demand current (IL), which IEEE 519 judges. At full load (I1 = IL) they are equal; set "I1/IL" on the harmonics page to convert'],
+      [th ? '3 · ลำดับฮาร์มอนิก = ความถี่อะไร มาจากไหน' : '3 · Harmonic orders, frequencies, sources', '', th ? 'h3 150 Hz · h5 250 Hz · h7 350 Hz · h11 550 Hz · h13 650 Hz · h25 1,250 Hz — 5, 7, 11, 13 มาจาก VFD/เรกติไฟเออร์ 6 พัลส์ (พบบ่อยที่สุดในโรงงาน) · 3, 9, 15 มาจากโหลด 1 เฟส (คอม LED UPS) และไปรวมในสายนิวทรัล · ลำดับสูงกว่า 25 มาจากการสวิตช์ของอินเวอร์เตอร์' : 'h3 150 Hz · h5 250 Hz · h7 350 Hz · h11 550 Hz · h13 650 Hz · h25 1,250 Hz — 5, 7, 11, 13 from 6-pulse VFDs/rectifiers (most common) · 3, 9, 15 from single-phase loads (PCs, LED, UPS), adding up in N · above 25 from inverter switching'],
+      [th ? '4 · K-factor บอกอะไร' : '4 · What the K-factor tells you', '', th ? 'ความร้อนสูญเสียในหม้อแปลงเพิ่มตามกำลังสองของลำดับ (h²) ฮาร์มอนิกลำดับ 25 จึงทำให้ร้อนกว่าลำดับ 5 ถึง 25 เท่า KF = 1 ไม่มีฮาร์มอนิก, > 4 ต้องใช้หม้อแปลง K-rated หรือลดพิกัด · Lab วัดได้ 38 เพราะเครื่องกำเนิดฮาร์มอนิกปล่อยลำดับสูงมาก' : 'Transformer eddy losses grow with h², so the 25th heats 25× more than the 5th. KF = 1 means none, > 4 needs a K-rated or derated transformer · the Lab read 38 because the generator produced very high orders'],
+      [th ? '5 · อ่านหน้าจอ PW3198' : '5 · Reading the PW3198 screen', '', th ? 'Urms แรงดัน · Irms กระแส · P kW · S kVA · Q kvar (ค่าลบ = นำหน้า) · PF (ค่าลบ = นำหน้า) · KF K-factor · WP+/WP− พลังงาน · Uthd-F/Ithd-F = THD เทียบความถี่หลัก · Uunb ไม่สมดุล · Upk ยอดคลื่น · UharmH สัญญาณรบกวน 2–80 kHz · 3P4W/3P3W3M การต่อสาย · Udin แรงดันอ้างอิง' : 'Urms voltage · Irms current · P kW · S kVA · Q kvar (negative = leading) · PF (negative = leading) · KF K-factor · WP+/WP− energy · Uthd-F/Ithd-F = THD vs fundamental · Uunb unbalance · Upk peak · UharmH 2–80 kHz noise · 3P4W/3P3W3M wiring · Udin reference voltage']
+    ];
+    const cats = Object.keys(CATS);
+    return `<section class="dg-card"><h4>${th ? 'เข้าใจใน 5 เรื่อง' : 'Understand it in 5 ideas'}</h4><div class="dg-learn">${concepts.map(([t, svg, d]) => `<details class="dg-lc" ${t.startsWith('1') ? 'open' : ''}><summary>${esc(t)}</summary>${svg}<p>${esc(d)}</p></details>`).join('')}</div></section>
+      <section class="dg-card"><h4>${th ? 'คำศัพท์และตัวย่อ' : 'Terms & abbreviations'} <small class="muted">(${TERMS.length})</small></h4>
+        <p class="muted dg-small">${th ? 'แตะ/ชี้ตัวย่อที่มีเส้นประใต้ในทุกหน้าเพื่อดูความหมายได้ทันที' : 'Tap / hover any dotted abbreviation on any page for its meaning'}</p>
+        <input class="dg-search" data-dgq placeholder="${th ? 'ค้นหา เช่น TDD, PF, ไฟตก' : 'Search e.g. TDD, PF, dip'}" value="${esc(st.q)}" data-nogl>
+        ${cats.map((c) => { const list = TERMS.filter((t) => t.c === c && hit(t)); return list.length ? `<h5 class="dg-cat">${esc(tr(CATS[c]))}</h5><div class="dg-terms">${list.map((t) => `<article class="dg-term ${st.focus && st.focus === t.k ? 'focus' : ''}" id="gl-${esc(t.k.replace(/[^\w-]/g, '_'))}" data-nogl>
+          <div class="dg-term-h"><b>${esc(t.k)}</b>${t.re && t.re.length ? `<span>${esc(t.re.slice(0, 3).join(' · '))}</span>` : ''}</div><p>${esc(tr(t.s))}</p>
+          ${t.f ? `<code>${esc(t.f)}</code>` : ''}${t.ex ? `<p class="dg-ex">🧪 ${esc(tr(t.ex))}</p>` : ''}${t.lim ? `<p class="dg-lim">📘 ${esc(tr(t.lim))}</p>` : ''}</article>`).join('')}</div>` : ''; }).join('')}
+      </section>`;
+  }
+
   // ---------------------------------------------------------------- shell
   function render() {
-    const tabs = [['diag', x('tDiag')], ['guide', x('tGuide')], ['manual', x('tManual')]];
+    const tabs = [['learn', '📚 ' + (L() === 'th' ? 'เรียนรู้' : 'Learn')], ['diag', x('tDiag')], ['harm', x('tHarm')], ['risk', x('tRisk')], ['guide', x('tGuide')], ['manual', x('tManual')]];
     el.innerHTML = `<header class="dg-head"><div><h3>${x('title')}</h3><p class="muted">${x('sub')}</p></div>
       <div class="dg-src">${[['lab', x('srcLab')], ['live', x('srcLive')]].map(([k, l]) => `<button class="${st.src === k ? 'on' : ''}" data-dg="src" data-arg="${k}">${l}</button>`).join('')}</div></header>
       <nav class="au-tabs">${tabs.map(([k, l]) => `<button class="au-tab ${st.tab === k ? 'on' : ''}" data-dg="tab" data-arg="${k}">${l}</button>`).join('')}</nav>
-      <div class="dg-body">${st.tab === 'diag' ? diagTab() : st.tab === 'guide' ? guideTab() : manualTab()}</div>`;
+      <div class="dg-body">${st.tab === 'learn' ? learnTab() : st.tab === 'diag' ? diagTab() : st.tab === 'harm' ? harmTab() : st.tab === 'risk' ? riskTab() : st.tab === 'guide' ? guideTab() : manualTab()}</div>`;
   }
   el.addEventListener('toggle', (e) => { const d = e.target; if (d instanceof HTMLDetailsElement && d.dataset.dgo) { if (d.open) st.open.add(d.dataset.dgo); else st.open.delete(d.dataset.dgo); } }, true);
   el.addEventListener('click', (e) => {
@@ -261,13 +375,26 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null } = {}
     else if (k === 'step') st.step = Number(a);
     else if (k === 'pt') st.pt = a && st.pt !== a ? a : null;
     else if (k === 'guide') st.guide = Number(a);
+    else if (k === 'harmapply') { el.querySelectorAll('[data-dgh]').forEach((i) => { st.harm[i.dataset.dgh] = i.value; }); ls.set('coredash.diag.harm', st.harm); }
+    else if (k === 'risksave') {
+      el.querySelectorAll('[data-dgr]').forEach((i) => { const [a, b] = i.dataset.dgr.split('.'); if (b) st.riskOpt[a][b] = i.value; else st.riskOpt[a] = i.value; });
+      ls.set('coredash.risk.opt', st.riskOpt); onRiskOpts(st.riskOpt);
+    }
+    else if (k === 'sim') setRiskSim(a || null);
     else if (k === 'mansave') { el.querySelectorAll('[data-dgm]').forEach((i) => { st.man[i.dataset.dgm] = i.type === 'checkbox' ? i.checked : i.value; }); ls.set('coredash.diag.manual', st.man); st.tab = 'diag'; if (st.src === 'lab') st.src = 'live'; }
     else if (k === 'manclear') { st.man = { point: 'APF', running: true, rating: 50 }; ls.set('coredash.diag.manual', st.man); }
     else return;
     render();
   });
   el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-dg="pt"]')) { e.preventDefault(); e.target.closest('[data-dg="pt"]').dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
+  el.addEventListener('input', (e) => {
+    const q = e.target.closest('[data-dgq]'); if (!q) return;
+    st.q = q.value; const pos = q.selectionStart; render();
+    const n = el.querySelector('[data-dgq]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
+  });
   el.addEventListener('change', (e) => {
+    const hh = e.target.closest('[data-dgh]');
+    if (hh && hh.dataset.dgh !== 'paste') { st.harm[hh.dataset.dgh] = hh.value; ls.set('coredash.diag.harm', st.harm); render(); return; }
     const i = e.target.closest('[data-dgp]'); if (!i) return;
     const v = Number(i.value); if (!Number.isFinite(v) || v < 0) return;
     const arr = st.prices[i.dataset.dgp].slice(); arr[Number(i.dataset.i)] = v; st.prices[i.dataset.dgp] = arr;
@@ -277,7 +404,13 @@ export function createDiagView({ lang = () => 'th', snapshot = () => null } = {}
     el,
     show() { render(); },
     // live data: refresh the diagnosis (not the forms or the guide text while someone is typing)
-    refresh() { if (st.src === 'live' && (st.tab === 'diag' || (st.tab === 'guide' && GUIDE[st.guide].live))) render(); },
+    refresh() { if ((st.src === 'live' && (st.tab === 'diag' || (st.tab === 'guide' && GUIDE[st.guide].live))) || st.tab === 'risk') { if (!el.contains(document.activeElement) || !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) render(); } },
+    openRisk() { st.tab = 'risk'; render(); },
+    openLearn(term) {
+      st.tab = 'learn'; const t = term ? findTerm(term) : null; st.focus = t ? t.k : ''; st.q = ''; render();
+      if (t) setTimeout(() => { const n = el.querySelector('#gl-' + t.k.replace(/[^\w-]/g, '_')); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+      else el.scrollIntoView({ behavior: 'smooth' });
+    },
     _state: st
   };
 }
