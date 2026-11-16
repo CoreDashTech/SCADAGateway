@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoreDash Nexus – ทุกเครื่องจักร ทุกมิเตอร์ ในจอเดียว</title>
+<meta name="description" content="CoreDash Nexus แพลตฟอร์ม Smart Facility · IIoT · SCADA-lite มอนิเตอร์ไฟฟ้า น้ำ แสงสว่าง และเครื่องจักรแบบเรียลไทม์ สั่งงานได้จากเว็บและมือถือ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<style>
+/* ---------- HERO ---------- */
+.hero{position:relative;background:radial-gradient(900px 600px at 80% 10%,rgba(59,130,246,.35),transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(34,211,238,.12),transparent 60%),#0a1745;color:#fff;overflow:hidden}
+.hero:before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(148,180,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(148,180,255,.07) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(180deg,#000 60%,transparent)}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1fr 1.12fr;gap:36px;align-items:center;padding-top:34px;padding-bottom:64px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.25);border-radius:30px;padding:6px 14px;font-size:13px;color:#dbe6ff;background:rgba(255,255,255,.04)}
+.pill i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399}
+.hero h1{font-size:clamp(40px,5.2vw,68px);line-height:1.08;font-weight:800;margin:22px 0 22px;letter-spacing:-.5px}
+.hero h1 .gr{background:linear-gradient(90deg,#fff,#9cc2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{font-size:17px;line-height:1.75;color:#c9d6f5;max-width:560px}
+.cta{display:flex;gap:12px;margin:30px 0 24px;flex-wrap:wrap}
+.proto small{display:block;font-size:12.5px;color:#9fb2e0;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{font-size:12.5px;font-weight:500;padding:6px 11px;border-radius:9px}
+.c-or{background:rgba(245,158,11,.16);color:#fbbf24}.c-bl{background:rgba(59,130,246,.2);color:#93c5fd}.c-vi{background:rgba(139,92,246,.22);color:#c4b5fd}.c-te{background:rgba(20,184,166,.2);color:#5eead4}
+/* scene card */
+.scene{position:relative;border-radius:26px;padding:0;background:#0f1d55;border:1px solid rgba(147,197,253,.25);box-shadow:0 40px 80px -30px rgba(0,0,0,.7);overflow:hidden}
+.stage{position:relative;transition:background .8s}
+.stage.day{background:linear-gradient(180deg,#bcd3ff 0%,#dbe7ff 55%,#eaf1ff 100%)}
+.stage.night{background:linear-gradient(180deg,#0b1640 0%,#13235f 60%,#18306f 100%)}
+.stage svg{display:block;width:100%;height:auto}
+.shead{position:absolute;left:16px;top:14px;right:16px;display:flex;justify-content:space-between;gap:10px;z-index:3;pointer-events:none}
+.sbox{max-width:60%;pointer-events:auto;background:rgba(255,255,255,.9);color:#0d1b3e;border-radius:14px;padding:8px 12px;font-size:12.5px;box-shadow:0 8px 20px -12px rgba(0,0,0,.4)}
+.sbox b{display:flex;gap:6px;align-items:center;font-size:13px}.sbox b:before{content:'';width:8px;height:8px;border-radius:50%;background:#2563eb}
+.sbox small{color:#5b6b8f;font-size:11px}
+.night .sbox{background:rgba(15,29,85,.85);color:#e6eeff}.night .sbox small{color:#9fb2e0}
+.dn{pointer-events:auto;display:flex;gap:2px;background:rgba(255,255,255,.9);border-radius:30px;padding:4px;height:max-content}
+.night .dn{background:rgba(15,29,85,.85)}
+.dn button{white-space:nowrap;border:none;background:none;border-radius:20px;padding:6px 11px;font-size:12px;color:#33415e;display:flex;gap:4px;align-items:center}
+.night .dn button{color:#c9d6f5}
+.dn button.on{background:#2563eb;color:#fff}
+.sfoot{position:relative;padding:0 14px 12px;margin-top:-8px;display:flex;justify-content:space-between;gap:8px;z-index:3;pointer-events:none;flex-wrap:wrap}
+.leg{background:rgba(255,255,255,.9);border-radius:12px;padding:6px 10px;font-size:11px;display:flex;gap:10px;color:#33415e}
+.night .leg{background:rgba(15,29,85,.85);color:#c9d6f5}
+.leg i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:4px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px;background:#0f1d55}
+.kpi{border:1px solid rgba(147,197,253,.18);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03)}
+.kpi small{color:#9fb2e0;font-size:12px}
+.kpi .v{display:flex;align-items:center;gap:8px;font-size:24px;font-weight:700;color:#fff}
+.kpi .v em{font-style:normal;font-size:11px;color:#9fb2e0;font-weight:400}
+.kpi svg{flex:1;height:26px;min-width:0;width:100%}.kpi{min-width:0}
+.kpi.al{border-color:#f59e0b;background:rgba(245,158,11,.08)}.kpi.al .v{color:#fbbf24}
+/* svg scene text */
+.lbl rect{fill:#fff;stroke:rgba(37,99,235,.15)}
+.night .lbl rect{fill:#13245f;stroke:rgba(147,197,253,.25)}
+.lbl .t1{font-size:8.5px;fill:#5b6b8f}.night .lbl .t1{fill:#9fb2e0}
+.lbl .t2{font-size:11px;font-weight:700;fill:#0d1b3e}.night .lbl .t2{fill:#fff}
+.lbl .ok{font-size:7.5px;fill:#10b981;font-weight:600}
+.lbl .wn{font-size:7.5px;fill:#f59e0b;font-weight:600}
+.ptag rect{fill:#fff}.ptag text{font-size:7.5px;fill:#33415e}
+.night .ptag rect{fill:#13245f}.night .ptag text{fill:#c9d6f5}
+.flow{stroke-dasharray:6 6;animation:dash 1.2s linear infinite}
+.flow.wl{stroke-dasharray:2 5}
+@keyframes dash{to{stroke-dashoffset:-24}}
+.hs{cursor:pointer}
+.hs .pr{animation:pr 2s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pr{0%{transform:scale(.5);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+/* tour pointer */
+.cursor{position:absolute;left:0;top:0;z-index:5;pointer-events:none;transition:transform 1.1s cubic-bezier(.6,.05,.25,1)}
+.cursor svg{width:30px;height:30px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))}
+.cursor .rip{position:absolute;left:-14px;top:-14px;width:30px;height:30px;border-radius:50%;border:3px solid #22d3ee;opacity:0}
+.cursor.click .rip{animation:rip .7s}
+@keyframes rip{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.8);opacity:0}}
+.callout{position:absolute;z-index:6;left:0;top:0;background:#fff;color:#0d1b3e;border-radius:14px;padding:10px 12px;width:220px;box-shadow:0 18px 40px -14px rgba(0,0,0,.55);font-size:12.5px;line-height:1.45;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s;pointer-events:none}
+.callout.on{opacity:1;transform:none;pointer-events:auto}
+.callout b{display:block;font-size:13.5px;margin-bottom:2px}
+.callout .go{display:inline-flex;margin-top:8px;background:#2563eb;color:#fff;border-radius:9px;padding:6px 10px;font-weight:600;font-size:12px}
+.callout .nx{float:right;margin-top:8px;font-size:11.5px;color:#5b6b8f;background:none;border:none}
+.tourbar{position:absolute;left:50%;transform:translateX(-50%);bottom:56px;z-index:4;display:flex;gap:5px}
+.tourbar i{width:7px;height:7px;border-radius:50%;background:rgba(37,99,235,.25)}.tourbar i.on{background:#2563eb;width:18px;border-radius:4px}
+.night .tourbar i{background:rgba(255,255,255,.25)}.night .tourbar i.on{background:#22d3ee}
+/* ---------- STATS ---------- */
+.stats{background:#fff;box-shadow:0 20px 40px -30px rgba(13,27,62,.4);position:relative;z-index:2}
+.stats .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding-top:30px;padding-bottom:30px}
+.st b{display:block;font-size:34px;font-weight:700;color:var(--blue);line-height:1.1}
+.st span{color:var(--mut);font-size:14px}
+/* ---------- DEMOS ---------- */
+.demos{display:grid;grid-template-columns:1.3fr 1fr 1fr;grid-auto-rows:minmax(220px,auto);gap:18px;margin-top:40px}
+.dc{position:relative;border-radius:var(--r);overflow:hidden;padding:24px;color:#fff;display:flex;flex-direction:column;min-height:240px;transition:transform .25s,box-shadow .25s;isolation:isolate}
+.dc:hover{transform:translateY(-4px);box-shadow:0 30px 50px -25px rgba(13,27,62,.6)}
+.dc.big{grid-row:span 2}
+.dc .ic{font-size:30px}
+.dc h3{font-size:22px;margin:10px 0 6px;line-height:1.25}
+.dc p{font-size:14px;line-height:1.6;opacity:.88;max-width:420px}
+.dc .open{margin-top:auto;padding-top:16px;font-weight:600;font-size:14px;display:flex;gap:6px;align-items:center}
+.dc .open:after{content:'→';transition:transform .2s}.dc:hover .open:after{transform:translateX(5px)}
+.dc .art{position:absolute;inset:0;z-index:-1;opacity:.95}
+.dc .tag{position:absolute;right:18px;top:18px;font-size:11.5px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:4px 10px;border-radius:20px;backdrop-filter:blur(4px)}
+.g1{background:linear-gradient(135deg,#0b1846,#1d4ed8)}.g2{background:linear-gradient(135deg,#7c2d12,#ea580c)}.g3{background:linear-gradient(135deg,#312e81,#6366f1)}.g4{background:linear-gradient(135deg,#064e3b,#10b981)}.g5{background:linear-gradient(135deg,#0c4a6e,#0ea5e9)}
+/* mini command center art */
+.mini{position:absolute;right:-30px;bottom:-30px;width:78%;border-radius:16px;background:rgba(5,13,38,.85);border:1px solid rgba(147,197,253,.3);padding:12px;transform:rotate(-6deg);box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+.mini .r{display:flex;gap:8px;margin-bottom:8px}.mini .k{flex:1;height:38px;border-radius:9px;background:rgba(59,130,246,.18);position:relative;overflow:hidden}
+.mini .k:after{content:'';position:absolute;left:8px;top:8px;width:40%;height:8px;border-radius:4px;background:rgba(255,255,255,.35)}
+.mini .m{display:flex;gap:8px}.mini .map{flex:1.3;height:150px;border-radius:10px;background:radial-gradient(circle at 50% 40%,rgba(59,130,246,.35),transparent 60%),#0b1846;position:relative}
+.mini .map i{position:absolute;width:9px;height:9px;border-radius:50%;background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.7);animation:png 2s infinite}
+.mini .map i.r{background:#f43f5e;animation-name:pnr}
+@keyframes png{70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}}@keyframes pnr{70%{box-shadow:0 0 0 12px rgba(244,63,94,0)}}
+.mini .fd{flex:1;display:grid;gap:6px}.mini .fd b{display:block;height:30px;border-radius:8px;background:rgba(255,255,255,.08);border-left:3px solid #f59e0b}.mini .fd b:first-child{border-color:#f43f5e;animation:fl 2.4s infinite}
+@keyframes fl{0%,100%{background:rgba(244,63,94,.25)}50%{background:rgba(255,255,255,.08)}}
+.spark{position:absolute;right:20px;bottom:20px;width:55%;opacity:.5}
+/* ---------- SOLUTIONS ---------- */
+.sol{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+.sc{border:1px solid var(--line);border-radius:var(--r);padding:24px;background:#fff;transition:.25s;position:relative;overflow:hidden}
+.sc:hover{border-color:#bfd3ff;box-shadow:0 24px 40px -28px rgba(37,99,235,.55);transform:translateY(-3px)}
+.sc .si{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:25px;background:var(--c1)}
+.sc h3{font-size:19px;margin:14px 0 6px}
+.sc p{color:var(--mut);font-size:14px;line-height:1.6}
+.sc ul{list-style:none;margin:12px 0 14px;display:grid;gap:6px;font-size:13.5px}
+.sc li:before{content:'✓';color:var(--green);font-weight:700;margin-right:8px}
+.sc .lk{display:flex;gap:10px;flex-wrap:wrap}
+.sc .lk a{font-size:13px;font-weight:600;color:var(--blue);background:#eef4ff;padding:7px 11px;border-radius:9px}
+.sc .lk a:hover{background:var(--blue);color:#fff}
+/* ---------- HOW ---------- */
+.how{background:#0a1745;color:#fff;position:relative;overflow:hidden}
+.how .eyebrow{background:rgba(59,130,246,.2);color:#9cc2ff}
+.how .lead{color:#c9d6f5}
+.flowline{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:44px;position:relative}
+.flowline:before{content:'';position:absolute;left:8%;right:8%;top:46px;height:2px;background:repeating-linear-gradient(90deg,#3b82f6 0 10px,transparent 10px 20px);animation:mv 1s linear infinite}
+@keyframes mv{to{background-position:20px 0}}
+.fs{position:relative;text-align:center}
+.fs .o{width:92px;height:92px;border-radius:28px;margin:0 auto;display:grid;place-items:center;font-size:38px;background:linear-gradient(145deg,#13245f,#1d3a8a);border:1px solid rgba(147,197,253,.3);box-shadow:0 16px 30px -16px #000;position:relative;z-index:1;transition:.3s}
+.fs.lit .o{border-color:#22d3ee;box-shadow:0 0 34px -6px #22d3ee}
+.fs b{display:block;margin-top:14px;font-size:16px}.fs small{color:#9fb2e0;font-size:13px;line-height:1.5;display:block;margin-top:4px}
+.protos{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:40px}
+.protos span{border:1px solid rgba(147,197,253,.3);border-radius:12px;padding:9px 14px;font-size:13.5px;background:rgba(255,255,255,.04)}
+/* ---------- SOCIETY BANNER ---------- */
+.soc{border-radius:30px;overflow:hidden;background:linear-gradient(120deg,#ecfeff,#eef2ff 55%,#fdf2f8);display:grid;grid-template-columns:1.1fr 1fr;align-items:center;border:1px solid #dbe4ff}
+.soc .tx{padding:48px}
+.soc .ill{position:relative;height:100%;min-height:360px}
+.orb{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;border:1.5px dashed #a5b4fc;animation:spin 40s linear infinite}
+.orb2{width:200px;height:200px;margin:-100px 0 0 -100px;animation-direction:reverse;animation-duration:30s;border-color:#99f6e4}
+.hub{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:28px;background:linear-gradient(135deg,#2563eb,#22d3ee);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;box-shadow:0 20px 40px -14px #2563eb;text-align:center;line-height:1.2}
+.orb span{position:absolute;width:54px;height:54px;margin:-27px;border-radius:16px;background:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 10px 20px -10px rgba(13,27,62,.4);animation:spin 40s linear infinite reverse}
+.orb2 span{animation-duration:30s;animation-direction:normal}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* CTA */
+.ctab{background:linear-gradient(120deg,#1d4ed8,#2563eb 50%,#0ea5e9);color:#fff;border-radius:30px;padding:48px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;position:relative;overflow:hidden}
+.ctab h2{font-size:clamp(24px,3vw,34px);line-height:1.25}
+.ctab p{opacity:.9;margin-top:6px}
+.btn.wh{background:#fff;color:var(--blue)}
+@media (max-width:1100px){.hero .wrap{grid-template-columns:1fr;padding-top:24px}.demos{grid-template-columns:1fr 1fr}.dc.big{grid-row:auto;grid-column:span 2;min-height:320px}.sol{grid-template-columns:1fr 1fr}.flowline{grid-template-columns:1fr 1fr 1fr}.flowline:before{display:none}.soc{grid-template-columns:1fr}.soc .ill{min-height:340px}}
+@media (max-width:640px){.mini{display:none}.shead .sbox{display:none}.cursor{display:none}.tourbar{display:none}.kpis{grid-template-columns:1fr 1fr}.stats .wrap{grid-template-columns:1fr 1fr}.demos,.sol{grid-template-columns:1fr}.dc.big{grid-column:auto}.flowline{grid-template-columns:1fr 1fr}.soc .tx{padding:28px}.ctab{padding:30px}.callout{width:190px}.sfoot .leg{display:none}.shead .sbox small{display:none}.dn button span{display:none}}
+</style>
+</head>
+<body>
+<script>
+/* ลิงก์ไปหน้าเดโม – เปลี่ยนเป็นที่อยู่บนเซิร์ฟเวอร์ CoreDash ได้ที่นี่ เช่น '/command/' */
+const LINKS={cc:'command/index.html',lab:'lab/index.html',plook:'plookpun/index.html',society:'society.html',hydro:'../hydrolink/',app:'../app/'};
+</script>
+<div class="ann"><div class="wrap">
+  <a class="hot" data-l="hydro" href="#solutions">ใหม่: CoreDash HydroLink · SCADA สถานีสูบน้ำ →</a>
+  <a class="hot2" data-l="cc" href="#">ศูนย์ควบคุม Command Center พร้อมทดลองแล้ว</a>
+  <a href="#contact">สำหรับผู้รับเหมา/SI</a>
+  <a data-l="society" href="#">CoreDash เพื่อสังคม</a>
+</div></div>
+<header class="nav" id="nav"><div class="wrap">
+  <a class="logo" href="#top" aria-label="CoreDash Nexus หน้าแรก"><span class="lm"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><circle cx="12" cy="12" r="3.2"/></svg></span>CoreDash <b>Nexus</b></a>
+  <nav class="menu" aria-label="เมนูหลัก">
+    <a href="#demos">ผลิตภัณฑ์</a><a href="#solutions">โซลูชัน</a><a data-l="hydro" href="#solutions">HydroLink<span class="tag-new">ใหม่</span></a><a href="#how">วิธีทำงาน</a><a data-l="society" href="#">เพื่อสังคม</a><a href="#contact">ติดต่อ</a>
+  </nav>
+  <a data-l="app" href="#contact" class="phone" style="font-weight:500">เข้าสู่ระบบ</a><a class="phone" href="tel:0819232380">📞 081-923-2380</a>
+  <a class="btn pri" data-l="cc" href="#">ทดลองใช้ฟรี</a>
+  <button class="burger" aria-label="เปิดเมนู" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+</div></header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="pill"><i></i>Smart Facility · IIoT · SCADA-lite</span>
+      <h1><span class="gr">CoreDash Nexus</span><br>ทุกเครื่องจักร<br>ทุกมิเตอร์<br>ในจอเดียว</h1>
+      <p class="sub">มอนิเตอร์ไฟฟ้า น้ำ แสงสว่าง และเครื่องจักรแบบเรียลไทม์ พร้อมสั่งเปิด–ปิดวาล์ว หลอดไฟ และมอเตอร์จากหน้าจอเดียว ทั้งบนเว็บและมือถือ แจ้งเตือนความปลอดภัยทางไฟฟ้าก่อนเกิดเหตุ</p>
+      <div class="cta"><a class="btn pri" data-l="cc" href="#">ทดลองใช้ฟรี →</a><a class="btn ghost" data-l="cc" href="#">ดูคอนโซลสด</a><a class="btn ghost" data-l="lab" href="#">🧪 ห้องแล็บ 3D</a></div>
+      <div class="proto"><small>เชื่อมต่อผ่าน Gateway ตัวเดียว รองรับโปรโตคอลอุตสาหกรรม</small>
+        <div class="chips"><span class="c-or">Modbus RTU/TCP</span><span class="c-bl">LAN · Ethernet</span><span class="c-vi">OPC UA</span><span class="c-te">MQTT · Wireless M-Bus · LoRaWAN · Zigbee</span></div></div>
+    </div>
+    <div class="scene" id="scene">
+      <div class="stage day" id="stage">
+        <div class="shead"><div class="sbox"><b>โรงงาน A · แผนผังการเชื่อมต่อสด</b><small id="modeTxt">โหมดกลางวัน · ใช้แสงธรรมชาติ · อัปเดตทุก 1 วินาที</small></div>
+          <div class="dn" role="group" aria-label="โหมดแสง"><button data-m="day">☀️<span> กลางวัน</span></button><button data-m="night">🌙<span> กลางคืน</span></button><button data-m="auto" class="on">⟳<span> อัตโนมัติ</span></button></div></div>
+        <div class="tourbar" id="tourbar" aria-hidden="true"></div>
+        <svg id="iso" viewBox="0 0 700 520" role="img" aria-label="แผนผังโรงงานจำลอง แสดงเครื่องจักร มิเตอร์ และการเชื่อมต่อเข้า CoreDash"></svg>
+        <div class="cursor" id="cursor" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 2l15 9-6.5 1.6L9.5 19z" fill="#fff" stroke="#0d1b3e" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="rip"></span></div>
+        <div class="callout" id="callout" role="status"></div>
+        <div class="sfoot"><div class="leg"><span><i style="background:#f59e0b"></i>Modbus</span><span><i style="background:#3b82f6"></i>LAN</span><span><i style="background:#8b5cf6"></i>OPC UA</span><span><i style="background:repeating-linear-gradient(90deg,#14b8a6 0 3px,transparent 3px 6px)"></i>ไร้สาย</span></div>
+          <div class="leg"><span style="color:#10b981;font-weight:600" id="onl">● 7/8 ออนไลน์</span><span style="color:#f59e0b;font-weight:600" id="alc">2 แจ้งเตือน</span></div></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><small>กำลังไฟ</small><div class="v"><span id="k1">416</span><em>kW</em><svg id="s1" viewBox="0 0 80 26" preserveAspectRatio="none"></svg></div></div>
+        <div class="kpi"><small>อัตราน้ำ</small><div class="v"><span id="k2">18.1</span><em>m³/h</em><svg id="s2" viewBox="0 0 80 26" preserveAspectRatio="none"></svg></div></div>
+        <div class="kpi"><small>เครื่องเดิน</small><div class="v"><span id="k3">7</span><em>/8</em><svg id="s3" viewBox="0 0 80 26" preserveAspectRatio="none"></svg></div></div>
+        <div class="kpi al"><small>แจ้งเตือน</small><div class="v"><span id="k4">2</span><em>รายการ</em></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats"><div class="wrap">
+  <div class="st reveal"><b>6</b><span>ระบบในแพลตฟอร์มเดียว</span></div>
+  <div class="st reveal"><b>1 วินาที</b><span>รอบอัปเดตข้อมูลสด</span></div>
+  <div class="st reveal"><b>2 ทาง</b><span>ทั้งอ่านค่าและสั่งการ</span></div>
+  <div class="st reveal"><b>81</b><span>อุปกรณ์จำลองในห้องแล็บ 3D</span></div>
+</div></div>
+
+<!-- DEMOS -->
+<section class="sec" id="demos"><div class="wrap">
+  <div class="center reveal"><span class="eyebrow">🖱️ ลองของจริง ไม่ต้องติดตั้ง</span><h2 class="h2">เปิดเดโมที่ทำงานได้จริง</h2><p class="lead">ทุกหน้าเป็นระบบที่ใช้งานได้ ใช้ได้ทั้งบนจอใหญ่ในห้องควบคุมและบนมือถือ ต่อกับอุปกรณ์จริงผ่าน MQTT ได้ทันที</p></div>
+  <div class="demos">
+    <a class="dc big g1 reveal" data-l="cc" href="#"><span class="tag">จอใหญ่ + มือถือ</span><span class="ic">🛰️</span><h3>CoreDash Command Center<br>ศูนย์ควบคุมทุกพื้นที่</h3><p>แผนที่ประเทศไทย เหตุการณ์สด ขั้นตอนรับมือ มอบหมายทีม ไทม์ไลน์ และเบอร์ฉุกเฉิน ในหน้าจอเดียว</p><span class="open">เปิดศูนย์ควบคุม</span>
+      <div class="mini" aria-hidden="true"><div class="r"><div class="k"></div><div class="k"></div><div class="k"></div></div><div class="m"><div class="map"><i style="left:40%;top:30%"></i><i class="r" style="left:55%;top:55%"></i><i style="left:30%;top:65%"></i><i style="left:62%;top:25%"></i><i class="r" style="left:45%;top:80%"></i></div><div class="fd"><b></b><b></b><b></b><b></b></div></div></div></a>
+    <a class="dc g2 reveal" data-l="lab" data-h="hotpanel" href="#"><span class="tag">LifeGuard ⚡</span><span class="ic">🔥</span><h3>ความปลอดภัยไฟฟ้าในโรงงาน</h3><p>จุดร้อนตู้ไฟ กระแสเกิน ประจุตกค้าง ไฟกระชาก ตัดไฟก่อนเกิดเหตุ</p><span class="open">ดูจำลอง 3D</span></a>
+    <a class="dc g3 reveal" data-l="lab" data-h="fence" href="#"><span class="tag">SafeZone 🛡️</span><span class="ic">🚧</span><h3>รักษาความปลอดภัยพื้นที่</h3><p>รั้วกันบุกรุก ประตูตรวจโลหะ กล้อง AI โดรนเขตห้ามบิน</p><span class="open">ดูจำลอง 3D</span></a>
+    <a class="dc g5 reveal" data-l="lab" href="#"><span class="tag">81 อุปกรณ์</span><span class="ic">🧪</span><h3>ห้องแล็บ IoT 3D</h3><p>ทุกเซ็นเซอร์ขยับได้ เห็นข้อมูลวิ่งเข้า CoreDash มีโค้ดและวิธีต่อสายครบ</p><span class="open">เข้าห้องแล็บ</span></a>
+    <a class="dc g4 reveal" data-l="plook" href="#"><span class="tag">แอปมือถือ</span><span class="ic">🌾</span><h3>ปลูกปั้น – แอปเกษตรกร</h3><p>เซ็นเซอร์แปลง คำนวณปุ๋ยตามค่าดิน ปฏิทินงาน กลุ่มรวมซื้อปุ๋ย</p><span class="open">เปิดแอป</span></a>
+  </div>
+</div></section>
+
+<!-- SOLUTIONS -->
+<section class="sec alt" id="solutions"><div class="wrap">
+  <div class="reveal"><span class="eyebrow">🏭 โซลูชันอุตสาหกรรม</span><h2 class="h2">ครบทุกระบบของโรงงานและอาคาร</h2><p class="lead">เริ่มจากมิเตอร์ตัวเดียวก็ได้ แล้วขยายทั้งโรงงานด้วย Gateway และหน้าจอเดิม</p></div>
+  <div class="sol">
+    <div class="sc reveal" style="--c1:#fef3c7"><div class="si">⚡</div><h3>Energy Monitoring</h3><p>ดูการใช้ไฟรายเครื่อง รายไลน์ผลิต และค่าไฟแบบเรียลไทม์</p><ul><li>มิเตอร์ไฟฟ้า 3 เฟส Modbus</li><li>แจ้งเตือน Peak Demand</li><li>รายงานพลังงานอัตโนมัติ</li></ul><div class="lk"><a data-l="lab" data-h="power" href="#">มิเตอร์ไฟฟ้า 3D →</a></div></div>
+    <div class="sc reveal" style="--c1:#e0e7ff"><div class="si">⚙️</div><h3>Machine & OEE</h3><p>สถานะเครื่องจักร เดิน/หยุด/ขัดข้อง เวลาทำงาน และสั่งงานจากระยะไกล</p><ul><li>อ่าน PLC ผ่าน OPC UA / Modbus TCP</li><li>นับชิ้นงาน คำนวณ OEE</li><li>สั่งเปิด–ปิด 2 ทาง</li></ul><div class="lk"><a data-l="lab" data-h="overload" href="#">กระแสเกิน 3D →</a></div></div>
+    <div class="sc reveal" style="--c1:#cffafe"><div class="si">💧</div><h3>HydroLink · SCADA น้ำ</h3><p>สถานีสูบน้ำ ระดับน้ำ อัตราการไหล สั่งปั๊มและวาล์วได้จากมือถือ</p><ul><li>มิเตอร์น้ำ Wireless M-Bus</li><li>ระดับน้ำ / ความดันท่อ</li><li>เตือนน้ำท่วม–น้ำรั่ว</li></ul><div class="lk"><a data-l="hydro" href="#solutions">HydroLink →</a><a data-l="lab" data-h="flood" href="#">ระดับน้ำ 3D →</a><a data-l="lab" data-h="leak" href="#">น้ำรั่ว →</a></div></div>
+    <div class="sc reveal" style="--c1:#fee2e2"><div class="si">🛡️</div><h3>LifeGuard ภัยไฟฟ้า</h3><p>ป้องกันไฟรั่ว ไฟไหม้ ไฟดูด ในโรงงาน อาคาร และพื้นที่ทำงาน</p><ul><li>กล้องความร้อนจับจุดร้อนตู้ไฟ</li><li>ตรวจประจุตกค้างก่อนซ่อม (LOTO)</li><li>ไฟรั่ว / ไฟกระชาก / ฟ้าผ่า</li></ul><div class="lk"><a data-l="lab" data-h="hotpanel" href="#">จุดร้อน →</a><a data-l="lab" data-h="capcharge" href="#">ประจุตกค้าง →</a></div></div>
+    <div class="sc reveal" style="--c1:#ede9fe"><div class="si">🚧</div><h3>SafeZone ความปลอดภัย</h3><p>รั้วกันบุกรุก จุดตรวจคนเข้า–ออก กล้อง AI และระบบล็อกดาวน์</p><ul><li>เซ็นเซอร์สั่นสะเทือนบนรั้ว</li><li>ประตูตรวจโลหะ / RFID</li><li>ทุกการแจ้งเตือนให้คนยืนยัน</li></ul><div class="lk"><a data-l="lab" data-h="fence" href="#">รั้ว 3D →</a><a data-l="lab" data-h="metalgate" href="#">ประตูตรวจโลหะ →</a></div></div>
+    <div class="sc reveal" style="--c1:#dcfce7"><div class="si">☀️</div><h3>Solar & Building</h3><p>โซลาร์เซลล์ อินเวอร์เตอร์ แสงสว่าง และสภาพแวดล้อมในอาคาร</p><ul><li>SunSpec / Modbus TCP</li><li>เปิด–ปิดไฟตามเวลาและแสง</li><li>ฝุ่น PM2.5 / CO₂ / อุณหภูมิ</li></ul><div class="lk"><a data-l="lab" data-h="solar" href="#">โซลาร์ 3D →</a><a data-l="lab" data-h="light" href="#">แสงสว่าง →</a></div></div>
+  </div>
+</div></section>
+
+<!-- HOW -->
+<section class="sec how" id="how"><div class="wrap">
+  <div class="center reveal"><span class="eyebrow">🔁 วิธีทำงาน</span><h2 class="h2">จากเครื่องจักร ถึงมือคุณ ในหนึ่งวินาที</h2><p class="lead">ต่ออุปกรณ์เดิมได้เลย ไม่ต้องเปลี่ยนเครื่องจักร Gateway แปลงทุกโปรโตคอลให้เป็นภาษาเดียวกัน</p></div>
+  <div class="flowline" id="flowline">
+    <div class="fs"><div class="o">📟</div><b>มิเตอร์ / เซ็นเซอร์</b><small>ไฟฟ้า น้ำ อุณหภูมิ แรงสั่น</small></div>
+    <div class="fs"><div class="o">🏭</div><b>เครื่องจักร / PLC</b><small>OPC UA · Modbus TCP</small></div>
+    <div class="fs"><div class="o">🔌</div><b>Edge Gateway</b><small>แปลงโปรโตคอล เก็บข้อมูลตอนเน็ตหลุด</small></div>
+    <div class="fs"><div class="o">☁️</div><b>CoreDash Cloud</b><small>MQTT/TLS · กฎแจ้งเตือน · ประวัติ</small></div>
+    <div class="fs"><div class="o">📱</div><b>เว็บ · มือถือ · LINE</b><small>ดูค่า สั่งงาน รับแจ้งเตือน</small></div>
+  </div>
+  <div class="protos reveal"><span>Modbus RTU / RS-485</span><span>Modbus TCP</span><span>OPC UA</span><span>MQTT / TLS</span><span>SunSpec</span><span>Wireless M-Bus</span><span>LoRaWAN</span><span>Zigbee</span><span>4G / LAN / Wi‑Fi</span></div>
+</div></section>
+
+<!-- SOCIETY -->
+<section class="sec"><div class="wrap">
+  <a class="soc reveal" data-l="society" href="#">
+    <div class="tx"><span class="eyebrow" style="background:#ccfbf1;color:#0f766e">🤝 CoreDash เพื่อสังคม & การศึกษา</span><h2 class="h2">เทคโนโลยีเดียวกัน<br>ดูแลทุกคนในชุมชน</h2>
+      <p class="lead">ห้องเรียน IoT สำหรับเด็ก, โหมดพิทักษ์ชีวิตจากไฟฟ้า, คัดกรองภัยในโรงเรียน วัด ตลาด, แอปเกษตรกร และอุปกรณ์ช่วยผู้พิการ ผู้สูงวัย เด็กอนุบาล</p>
+      <span class="btn pri" style="margin-top:20px">ไปหน้า CoreDash เพื่อสังคม →</span></div>
+    <div class="ill" aria-hidden="true"><div class="orb"><span style="left:50%;top:0">🏫</span><span style="left:100%;top:50%">🌾</span><span style="left:50%;top:100%">👵</span><span style="left:0;top:50%">🦯</span></div>
+      <div class="orb orb2"><span style="left:15%;top:15%">⚡</span><span style="left:85%;top:15%">🛡️</span><span style="left:85%;top:85%">🧒</span><span style="left:15%;top:85%">🧏</span></div><div class="hub">CoreDash<br>เพื่อทุกคน</div></div>
+  </a>
+</div></section>
+
+<!-- CTA -->
+<section class="sec" id="contact" style="padding-top:0"><div class="wrap">
+  <div class="ctab reveal"><div><h2>พร้อมให้โรงงานของคุณ<br>เห็นทุกอย่างในจอเดียว</h2><p>ทดลองศูนย์ควบคุมได้ทันที หรือโทรคุยกับทีมวิศวกร</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn wh" data-l="cc" href="#">ทดลองใช้ฟรี</a><a class="btn ghost" href="tel:0819232380">📞 081-923-2380</a></div></div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><div class="logo" style="color:#fff"><span class="lm"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><circle cx="12" cy="12" r="3.2"/></svg></span>CoreDash <b style="color:#93c5fd">Nexus</b></div><p style="margin-top:12px;line-height:1.7">แพลตฟอร์ม Smart Facility · IIoT · SCADA-lite<br>ทุกเครื่องจักร ทุกมิเตอร์ ในจอเดียว</p></div>
+    <div><h4>เดโม</h4><a data-l="cc" href="#">Command Center</a><a data-l="lab" href="#">ห้องแล็บ IoT 3D</a><a data-l="plook" href="#">แอปปลูกปั้น</a></div>
+    <div><h4>โซลูชัน</h4><a href="#solutions">Energy Monitoring</a><a href="#solutions">HydroLink</a><a href="#solutions">LifeGuard</a><a href="#solutions">SafeZone</a></div>
+    <div><h4>ติดต่อ</h4><a href="tel:0819232380">081-923-2380</a><a data-l="society" href="#">CoreDash เพื่อสังคม</a></div>
+  </div>
+  <div class="bot"><span>© CoreDash Nexus</span><span>ข้อมูลในเดโมเป็นข้อมูลจำลองเพื่อการสาธิต</span></div>
+</div></footer>
+
+<script>
+/* ---------- ลิงก์ ---------- */
+document.querySelectorAll('[data-l]').forEach(a=>{const u=LINKS[a.dataset.l];if(!u)return;a.href=u+(a.dataset.h?'#'+a.dataset.h:'');if(/^https?:/.test(u)){a.target='_blank';a.rel='noopener'}});
+/* ---------- reveal ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(e=>io.observe(e));setTimeout(()=>document.querySelectorAll('.reveal').forEach(e=>e.classList.add('in')),2500);
+
+/* ---------- ISOMETRIC SCENE ---------- */
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('iso');
+const VW=700,VH=520,S=20,OX=350,OY=104,C=Math.cos(Math.PI/6);
+const P=(x,y,z=0)=>[OX+(x-y)*C*S,OY+(x+y)*.5*S-z*S];
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e};
+const pts=a=>a.map(p=>p.join(',')).join(' ');
+const G=(cls)=>el('g',cls?{class:cls}:{});
+function box(x,y,z,w,d,h,col,p){const g=el('g',{},p);const [t,l,r]=col;
+  el('polygon',{points:pts([P(x,y,z+h),P(x+w,y,z+h),P(x+w,y+d,z+h),P(x,y+d,z+h)]),fill:t,stroke:'rgba(13,27,62,.12)','stroke-width':.6},g);
+  el('polygon',{points:pts([P(x,y+d,z),P(x+w,y+d,z),P(x+w,y+d,z+h),P(x,y+d,z+h)]),fill:l,stroke:'rgba(13,27,62,.12)','stroke-width':.6},g);
+  el('polygon',{points:pts([P(x+w,y,z),P(x+w,y+d,z),P(x+w,y+d,z+h),P(x+w,y,z+h)]),fill:r,stroke:'rgba(13,27,62,.12)','stroke-width':.6},g);return g}
+const W=['#ffffff','#dfe6f5','#c7d2ea'],B=['#dbe7ff','#a9c0f0','#8aa6e3'],D=['#475569','#334155','#1e293b'],BL=['#3b82f6','#2563eb','#1d4ed8'];
+const defs=el('defs');defs.innerHTML='<radialGradient id="sun"><stop offset="0" stop-color="#ffe680"/><stop offset=".6" stop-color="#fbbf24"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient><radialGradient id="lamp"><stop offset="0" stop-color="#fff7c2"/><stop offset="1" stop-color="#fde68a" stop-opacity="0"/></radialGradient><filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0d1b3e" flood-opacity=".18"/></filter>';
+/* sky objects */
+const sun=el('circle',{cx:640,cy:96,r:46,fill:'url(#sun)'});
+const moon=el('g',{opacity:0});el('circle',{cx:640,cy:96,r:20,fill:'#e2e8f0'},moon);el('circle',{cx:649,cy:89,r:18,fill:'#0f1d55'},moon);
+const stars=el('g',{opacity:0});for(let i=0;i<26;i++)el('circle',{cx:Math.random()*700,cy:70+Math.random()*90,r:Math.random()*1.3+.3,fill:'#fff'},stars);
+/* ground grid */
+const ground=G('');el('polygon',{points:pts([P(0,0),P(20,0),P(20,20),P(0,20)]),fill:'rgba(255,255,255,.35)',stroke:'rgba(37,99,235,.18)',class:'gnd'},ground);
+for(let i=1;i<20;i++){el('line',{x1:P(i,0)[0],y1:P(i,0)[1],x2:P(i,20)[0],y2:P(i,20)[1],stroke:'rgba(37,99,235,.08)'},ground);el('line',{x1:P(0,i)[0],y1:P(0,i)[1],x2:P(20,i)[0],y2:P(20,i)[1],stroke:'rgba(37,99,235,.08)'},ground)}
+/* nodes */
+const N={};const lines=G(''),objs=G(''),labels=G(''),hot=G('');
+function node(id,x,y,top){N[id]={x,y,top,sp:P(x,y,top)}}
+// Factory A
+box(1,6,0,4,3,2.2,W,objs);for(let i=0;i<3;i++){const g=el('g',{},objs);const x0=1+i*1.33;el('polygon',{points:pts([P(x0,6,2.2),P(x0+1.33,6,2.2),P(x0+1.33,6,3.2),P(x0,6,2.2)]),fill:'#93b4f5'},g);el('polygon',{points:pts([P(x0+1.33,6,2.2),P(x0+1.33,9,2.2),P(x0+1.33,9,3.2),P(x0+1.33,6,3.2)]),fill:'#7c9be0'},g);el('polygon',{points:pts([P(x0,6,2.2),P(x0+1.33,6,3.2),P(x0+1.33,9,3.2),P(x0,9,2.2)]),fill:'#bcd0fa'},g)}
+box(4.2,6.4,2.2,.5,.5,1.6,['#cbd5e1','#94a3b8','#64748b'],objs);
+const fwin=[];for(let i=0;i<4;i++){const q=[P(1.4+i*.9,9,.5),P(2.0+i*.9,9,.5),P(2.0+i*.9,9,1.3),P(1.4+i*.9,9,1.3)];fwin.push(el('polygon',{points:pts(q),fill:'#93c5fd'},objs))}
+node('fac',3,7.5,3.2);
+// Pump + valve
+box(7,0.6,0,1.2,1.2,.8,D,objs);box(7.2,.8,.8,.8,.8,.5,BL,objs);box(8.2,1,.35,2.6,.35,.35,['#94a3b8','#64748b','#475569'],objs);box(9.4,.9,.7,.5,.55,.5,['#f59e0b','#d97706','#b45309'],objs);node('pump',7.6,1.2,1.4);
+// CNC
+box(1,13,0,2.6,1.6,1.4,W,objs);box(1,13,1.4,2.6,1.6,.2,['#e2e8f0','#cbd5e1','#94a3b8'],objs);const scr=el('polygon',{points:pts([P(1.5,14.6,.6),P(2.5,14.6,.6),P(2.5,14.6,1.1),P(1.5,14.6,1.1)]),fill:'#22d3ee'},objs);node('cnc',2.3,13.8,1.8);
+// Gateway
+box(9,9,0,2.2,1.6,.55,W,objs);const gled=[0,1,2].map(i=>el('circle',{cx:P(9.4+i*.4,10.6,.28)[0],cy:P(9.4+i*.4,10.6,.28)[1],r:1.8,fill:'#10b981'},objs));node('gw',10.1,9.8,.55);
+// Meter PM-01
+box(5,16,0,1.1,.7,2,['#f1f5f9','#cbd5e1','#94a3b8'],objs);el('polygon',{points:pts([P(5.2,16.7,1.2),P(5.9,16.7,1.2),P(5.9,16.7,1.7),P(5.2,16.7,1.7)]),fill:'#0f172a'},objs);node('pm',5.5,16.3,2.2);
+// Water meter FM-02 (pipe)
+box(9.5,16.5,.3,5,.5,.5,['#7dd3fc','#38bdf8','#0284c7'],objs);el('ellipse',{cx:P(11.8,16.7,1.05)[0],cy:P(11.8,16.7,1.05)[1],rx:13,ry:7,fill:'#e0f2fe',stroke:'#0284c7','stroke-width':2},objs);node('fm',11.8,16.7,1.2);
+// Solar panels
+for(let i=0;i<2;i++){const x0=13+i*2.1,y0=1;box(x0+.8,y0+.6,0,.15,.15,1,D,objs);const pnl=[P(x0,y0,1.6),P(x0+1.9,y0,1.6),P(x0+1.9,y0+1.4,.8),P(x0,y0+1.4,.8)];el('polygon',{points:pts(pnl),fill:'#1e3a8a',stroke:'#60a5fa','stroke-width':1},objs);
+  for(let k=1;k<4;k++){const a=P(x0+k*.475,y0,1.6),b=P(x0+k*.475,y0+1.4,.8);el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#60a5fa','stroke-width':.6},objs)}}
+node('pv',15,1.6,1.7);
+// Inverter
+box(17.5,6,0,.9,.8,1.4,W,objs);el('polygon',{points:pts([P(17.65,6.8,.8),P(18.25,6.8,.8),P(18.25,6.8,1.15),P(17.65,6.8,1.15)]),fill:'#22c55e'},objs);node('inv',17.9,6.4,1.6);
+// Office / house
+box(13,11,0,2.4,2,1.6,W,objs);el('polygon',{points:pts([P(13,11,1.6),P(15.4,11,1.6),P(14.2,12,2.8)]),fill:'#bfd0f5'},objs);el('polygon',{points:pts([P(15.4,11,1.6),P(15.4,13,1.6),P(14.2,12,2.8)]),fill:'#93b0ea'},objs);el('polygon',{points:pts([P(13,13,1.6),P(15.4,13,1.6),P(14.2,12,2.8)]),fill:'#a9c0f0'},objs);
+const hwin=[0,1].map(i=>el('polygon',{points:pts([P(13.4+i*1.1,13,.5),P(14+i*1.1,13,.5),P(14+i*1.1,13,1.1),P(13.4+i*1.1,13,1.1)]),fill:'#93c5fd'},objs));node('house',14.2,12,2.8);
+// Lamp zone
+const lamps=[];for(let i=0;i<3;i++){const x0=16+i*1.1,y0=15+i*1.1;box(x0,y0,0,.12,.12,2.2,['#94a3b8','#64748b','#475569'],objs);const lp=P(x0+.06,y0+.06,2.3);el('circle',{cx:lp[0],cy:lp[1],r:3,fill:'#e2e8f0'},objs);lamps.push([el('circle',{cx:lp[0],cy:lp[1]+16,r:22,fill:'url(#lamp)',opacity:0},objs),el('circle',{cx:lp[0],cy:lp[1],r:3,fill:'#fde68a',opacity:0},objs)])}
+node('lamp',17.1,16.1,2.4);
+// Cloud
+const cl=[372,104];
+/* connections */
+const LINES=[['fac','#3b82f6',''],['pump','#f59e0b',''],['cnc','#8b5cf6',''],['pm','#8b5cf6',''],['fm','#14b8a6','wl'],['pv','#f59e0b',''],['inv','#f59e0b',''],['house','#f59e0b',''],['lamp','#14b8a6','wl']];
+const gwP=P(10.1,9.8,.55);
+LINES.forEach(([id,c,cls])=>{const n=N[id],b=P(n.x,n.y,.05);const d=`M${gwP[0]},${gwP[1]} L${b[0]},${b[1]}`;el('path',{d,stroke:c,'stroke-width':1.8,fill:'none',class:'flow '+cls,opacity:.9},lines);
+  const dot=el('circle',{r:2.6,fill:c},lines);const am=el('animateMotion',{dur:(1.6+Math.random()*1.4).toFixed(2)+'s',repeatCount:'indefinite',path:`M${b[0]},${b[1]} L${gwP[0]},${gwP[1]}`},dot)});
+el('path',{d:`M${gwP[0]},${gwP[1]-8} L${cl[0]},${cl[1]+14}`,stroke:'#2563eb','stroke-width':2,fill:'none',class:'flow',opacity:.8},lines);
+const upd=el('circle',{r:3,fill:'#2563eb'},lines);el('animateMotion',{dur:'1.2s',repeatCount:'indefinite',path:`M${gwP[0]},${gwP[1]-8} L${cl[0]},${cl[1]+14}`},upd);
+svg.insertBefore(lines,objs);
+/* cloud badge */
+const cg=el('g',{filter:'url(#sh)'},labels);el('rect',{x:cl[0]-62,y:cl[1]-18,width:124,height:34,rx:10,fill:'#2563eb'},cg);el('text',{x:cl[0]-38,y:cl[1]-3,'font-size':11,'font-weight':700,fill:'#fff'},cg).textContent='CoreDash Cloud';el('text',{x:cl[0]-38,y:cl[1]+9,'font-size':7.5,fill:'#cfe0ff'},cg).textContent='MQTT/TLS · 4G / LAN';el('text',{x:cl[0]-56,y:cl[1]+6,'font-size':16},cg).textContent='☁️';
+/* labels */
+const LB={};
+function label(id,dx,dy,t1,t2,st){const n=N[id],p=n.sp;const g=el('g',{class:'lbl',filter:'url(#sh)'},labels);const x=p[0]+dx,y=p[1]+dy;const w=Math.max(t1.length*4.6,t2.length*6.6+40)+16;
+  el('rect',{x,y,width:w,height:30,rx:7},g);el('text',{x:x+7,y:y+11,class:'t1'},g).textContent='● '+t1;const tv=el('text',{x:x+7,y:y+24,class:'t2'},g);tv.textContent=t2;const s=el('text',{x:x+w-30,y:y+24,class:st==='w'?'wn':'ok'},g);s.textContent=st==='w'?'เตือน':'ออนไลน์';LB[id]={tv,s,g}}
+label('fac',-118,-40,'โรงงาน A','416 kW');label('pump',-24,-66,'ปั๊ม P-02 · วาล์ว V-101','แรงดันปกติ · วาล์วเปิด 100%');label('cnc',-70,-58,'เครื่องจักร CNC-03','เดินเครื่อง 7/8','w');
+label('pm',-120,-6,'มิเตอร์ไฟฟ้า PM-01','416 kW');label('fm',-40,22,'มิเตอร์น้ำ FM-02','18.1 m³/h');label('pv',-150,-66,'แผงโซลาร์ PV-01 · 120 kWp','85 kW');label('inv',-130,-62,'อินเวอร์เตอร์ INV-01','83 kW · 98%');
+label('house',36,6,'บ้าน / อาคารสำนักงาน','6.4 kW');label('lamp',26,-26,'ไฟโซนผลิต · 6 ดวง','ปิด (กลางวัน)');
+const gwL=el('g',{class:'lbl',filter:'url(#sh)'},labels);el('rect',{x:gwP[0]-150,y:gwP[1]+26,width:122,height:30,rx:7},gwL);el('text',{x:gwP[0]-143,y:gwP[1]+41,class:'t2','font-size':10},gwL).textContent='Edge Gateway GW-01';el('text',{x:gwP[0]-143,y:gwP[1]+51,class:'t1'},gwL).textContent='Modbus RTU/TCP · LAN · OPC UA';
+/* protocol tags on lines */
+function ptag(id,t,k){const n=N[id],a=gwP,b=P(n.x,n.y);const x=a[0]+(b[0]-a[0])*k,y=a[1]+(b[1]-a[1])*k;const g=el('g',{class:'ptag'},labels);const w=t.length*4.2+16;el('rect',{x:x-w/2,y:y-8,width:w,height:14,rx:7,stroke:'rgba(0,0,0,.06)'},g);el('circle',{cx:x-w/2+6,cy:y-1,r:2.2,fill:LINES.find(l=>l[0]===id)[1]},g);el('text',{x:x-w/2+11,y:y+2},g).textContent=t}
+ptag('fac','LAN · Ethernet',.45);ptag('cnc','OPC UA',.5);ptag('pm','Modbus RTU · RS-485',.55);ptag('fm','Wireless M-Bus',.6);ptag('house','Modbus TCP · SunSpec',.55);ptag('lamp','Wi‑Fi · MQTT',.6);ptag('pv','Modbus TCP',.3);ptag('pump','Modbus RTU',.55);
+/* ---------- day / night ---------- */
+const stage=document.getElementById('stage');let dnMode='auto';
+function applyDN(){const h=new Date().getHours();const night=dnMode==='night'||(dnMode==='auto'&&(h>=18||h<6));stage.classList.toggle('night',night);stage.classList.toggle('day',!night);
+  sun.setAttribute('opacity',night?0:1);moon.setAttribute('opacity',night?1:0);stars.setAttribute('opacity',night?.9:0);
+  fwin.concat(hwin).forEach(w=>w.setAttribute('fill',night?'#fde68a':'#93c5fd'));lamps.forEach(l=>{l[0].setAttribute('opacity',night?1:0);l[1].setAttribute('opacity',night?1:0)});
+  LB.lamp.tv.textContent=night?'เปิด 6/6 (กลางคืน)':'ปิด (กลางวัน)';document.querySelector('.ground .gnd, .gnd').setAttribute('fill',night?'rgba(30,58,138,.35)':'rgba(255,255,255,.35)');
+  document.getElementById('modeTxt').textContent=night?'โหมดกลางคืน · ไฟโซนผลิตเปิดอัตโนมัติ · อัปเดตทุก 1 วินาที':'โหมดกลางวัน · ใช้แสงธรรมชาติ · อัปเดตทุก 1 วินาที';
+  LB.pv.tv.textContent=night?'0 kW':pv.toFixed(0)+' kW'}
+document.querySelectorAll('.dn button').forEach(b=>b.onclick=()=>{dnMode=b.dataset.m;document.querySelectorAll('.dn button').forEach(x=>x.classList.toggle('on',x===b));applyDN()});
+/* ---------- live values ---------- */
+let kw=416,flow=18.1,pv=85,run=7;const H1=[],H2=[],H3=[];
+function spark(id,arr,col){const s=document.getElementById(id);const mn=Math.min(...arr),mx=Math.max(...arr),sp=mx-mn||1;s.innerHTML=`<polyline fill="none" stroke="${col}" stroke-width="2" points="${arr.map((v,i)=>`${i/(arr.length-1)*80},${24-(v-mn)/sp*20}`).join(' ')}"/>`}
+function live(){const t=Date.now()/1000;kw=416+Math.sin(t/7)*18+Math.random()*6;flow=18.1+Math.sin(t/5)*1.2+Math.random()*.3;pv=85+Math.sin(t/11)*6;
+  [H1,H2,H3].forEach((h,i)=>{h.push([kw,flow,run+Math.sin(t/3)*.3][i]);if(h.length>24)h.shift()});
+  document.getElementById('k1').textContent=Math.round(kw);document.getElementById('k2').textContent=flow.toFixed(1);
+  LB.fac.tv.textContent=Math.round(kw)+' kW';LB.pm.tv.textContent=Math.round(kw)+' kW';LB.fm.tv.textContent=flow.toFixed(1)+' m³/h';LB.inv.tv.textContent=Math.round(pv*.98)+' kW · 98%';LB.house.tv.textContent=(6.4+Math.sin(t/4)*.4).toFixed(1)+' kW';
+  if(!stage.classList.contains('night'))LB.pv.tv.textContent=Math.round(pv)+' kW';
+  if(H1.length>2){spark('s1',H1,'#60a5fa');spark('s2',H2,'#2dd4bf');spark('s3',H3,'#a78bfa')}
+  gled.forEach((g,i)=>g.setAttribute('opacity',(Math.floor(t*3)+i)%3?1:.25));scr.setAttribute('fill',Math.floor(t*2)%2?'#22d3ee':'#67e8f9')}
+setInterval(live,1000);live();applyDN();setInterval(applyDN,60000);
+
+/* ---------- hotspots + tour pointer ---------- */
+const TOUR=[
+ ['gw','🛰️ Edge Gateway → Command Center','ทุกอุปกรณ์รวมที่ Gateway แล้วขึ้นศูนย์ควบคุม ดูแผนที่ เหตุการณ์ และสั่งงานได้','cc','','เปิดศูนย์ควบคุม'],
+ ['pm','🔥 LifeGuard: ตู้ไฟ & มิเตอร์','กล้องความร้อนจับข้อต่อหลวมในตู้ไฟ ก่อนเกิดไฟไหม้','lab','hotpanel','ดูจำลอง 3D'],
+ ['cnc','⚙️ เครื่องจักร CNC-03 แจ้งเตือน','กระแสเกินพิกัด ระบบตัดไฟก่อนสายไหม้ และแจ้งช่างทันที','lab','overload','ดูจำลอง 3D'],
+ ['fm','💧 HydroLink: มิเตอร์น้ำ','อัตราการไหล ระดับน้ำ เตือนน้ำรั่ว–น้ำท่วม','lab','flood','ดูจำลอง 3D'],
+ ['pv','☀️ โซลาร์เซลล์ & อินเวอร์เตอร์','ดูกำลังผลิตจริงเทียบกับแสงแดด','lab','solar','ดูจำลอง 3D'],
+ ['lamp','🚧 SafeZone: รั้วและไฟส่องสว่าง','ไฟเปิดเองเมื่อมืด เซ็นเซอร์บนรั้วจับการปีน','lab','fence','ดูจำลอง 3D'],
+ ['house','🤝 CoreDash เพื่อสังคม','บ้าน โรงเรียน วัด เกษตรกร ผู้สูงวัย ผู้พิการ และห้องเรียน IoT','society','','ไปหน้าเพื่อสังคม'],
+];
+const cur=document.getElementById('cursor'),co=document.getElementById('callout'),tb=document.getElementById('tourbar');let ti=0,tTimer=null,paused=false;
+tb.innerHTML=TOUR.map(()=>'<i></i>').join('');
+TOUR.forEach((t,i)=>{const n=N[t[0]],p=P(n.x,n.y,n.top*.6);const g=el('g',{class:'hs',tabindex:0,role:'button','aria-label':t[1]},hot);el('circle',{cx:p[0],cy:p[1],r:7,fill:'#22d3ee',class:'pr'},g);el('circle',{cx:p[0],cy:p[1],r:5.5,fill:'#22d3ee',stroke:'#fff','stroke-width':2},g);
+  g.addEventListener('click',()=>{paused=true;show(i,true)});g.addEventListener('keydown',e=>{if(e.key==='Enter'){paused=true;show(i,true)}})});
+function toPx(p){const r=svg.getBoundingClientRect(),R=stage.getBoundingClientRect();return[(p[0]/VW)*r.width+(r.left-R.left),(p[1]/VH)*r.height+(r.top-R.top)]}
+function show(i,instant){ti=i;const t=TOUR[i],n=N[t[0]],xy=toPx(P(n.x,n.y,n.top*.6));cur.style.transform=`translate(${xy[0]-4}px,${xy[1]-2}px)`;co.classList.remove('on');
+  [...tb.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+  setTimeout(()=>{cur.classList.remove('click');void cur.offsetWidth;cur.classList.add('click');const R=stage.getBoundingClientRect();let x=xy[0]+18,y=xy[1]+14;if(x+225>R.width)x=xy[0]-232;if(y+120>R.height-40)y=xy[1]-128;
+    const u=LINKS[t[3]]+(t[4]?'#'+t[4]:'');const ext=/^https?:/.test(LINKS[t[3]]);
+    co.innerHTML=`<b>${t[1]}</b>${t[2]}<br><a class="go" href="${u}" ${ext?'target="_blank" rel="noopener"':''}>${t[5]} →</a><button class="nx" type="button">ถัดไป ›</button>`;co.style.left=x+'px';co.style.top=y+'px';co.classList.add('on');
+    co.querySelector('.nx').onclick=()=>{paused=false;next()}},instant?250:1150);
+  clearTimeout(tTimer);if(!paused)tTimer=setTimeout(next,5200)}
+function next(){show((ti+1)%TOUR.length)}
+stage.addEventListener('mouseenter',()=>{});addEventListener('resize',()=>{if(co.classList.contains('on'))show(ti,true)});
+if(innerWidth>=640)setTimeout(()=>show(0),900);else paused=true;
+/* ---------- flow highlight ---------- */
+const fsx=[...document.querySelectorAll('#flowline .fs')];let fk=0;setInterval(()=>{fsx.forEach((f,i)=>f.classList.toggle('lit',i===fk));fk=(fk+1)%fsx.length},900);
+</script>
+</body>
+</html>

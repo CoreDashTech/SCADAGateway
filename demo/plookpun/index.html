@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f7a4d">
+<meta name="description" content="ปลูกปั้น – แอปเกษตรอัจฉริยะของกลุ่มเกษตรกร เชื่อมเซ็นเซอร์แปลงผ่าน CoreDash">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ปลูกปั้น">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>ปลูกปั้น – เกษตรกรอัจฉริยะ by CoreDash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:#1f7a4d;--g2:#2fa86a;--gl:#e7f6ec;--soil:#8a5a3a;--sun:#f5b301;--bg:#f4f6f1;--card:#fff;--txt:#17251c;--mut:#5f6f64;--line:#e2e8df;--ok:#1f9d55;--warn:#d98a00;--bad:#d6334a;--r:18px;--fs:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:Prompt,system-ui,sans-serif;font-size:var(--fs)}
+body.big{--fs:19px}
+button,input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#1f7a4d,#2fa86a);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 14px;border-radius:0 0 22px 22px;box-shadow:0 6px 20px -10px rgba(31,122,77,.7)}
+.hrow{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:12px;background:#fff2;display:grid;place-items:center;font-size:22px}
+header h1{font-size:1.25rem;font-weight:700;line-height:1.1}
+header small{display:block;font-size:.75rem;opacity:.85;font-weight:400}
+.hbtn{margin-left:auto;display:flex;gap:6px}
+.ib{background:#fff2;border:none;color:#fff;border-radius:12px;min-width:42px;height:42px;font-size:1.1rem;cursor:pointer;padding:0 10px}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;background:#0002;border-radius:20px;padding:3px 10px;margin-top:8px}
+.conn i{width:8px;height:8px;border-radius:50%;background:#ffd23f;display:inline-block}
+.conn.live i{background:#7dffb0;box-shadow:0 0 8px #7dffb0}
+main{padding:14px}
+.sec{margin:16px 2px 8px;font-weight:600;font-size:1.02rem;display:flex;align-items:center;gap:8px}
+.sec .more{margin-left:auto;font-size:.8rem;color:var(--g);font-weight:500;background:none;border:none;cursor:pointer}
+.card{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:0 2px 12px -6px rgba(20,60,30,.18);border:1px solid var(--line)}
+.alerts{display:grid;gap:8px}
+.al{display:flex;gap:10px;align-items:flex-start;border-radius:14px;padding:10px 12px;font-size:.9rem;line-height:1.45;border:1px solid}
+.al b{display:block;font-size:.78rem;opacity:.8;font-weight:600}
+.al.ok{background:#eaf8ef;border-color:#bfe8cd;color:#13603a}.al.warn{background:#fff6e1;border-color:#f6d68a;color:#7a5200}.al.bad{background:#ffecee;border-color:#f6b5bf;color:#9a1a2e}
+.al .e{font-size:1.3rem;line-height:1}
+.plots{display:grid;gap:12px}
+.plot{cursor:pointer;position:relative;overflow:hidden}
+.plot .top{display:flex;gap:12px;align-items:center}
+.pe{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:1.7rem;background:var(--gl);flex:none}
+.plot h3{font-size:1.02rem;font-weight:600}
+.plot .sub{font-size:.8rem;color:var(--mut)}
+.badge{margin-left:auto;font-size:.72rem;font-weight:600;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.badge.ok{background:#e1f5e8;color:var(--ok)}.badge.warn{background:#fff1d0;color:var(--warn)}.badge.bad{background:#ffe1e5;color:var(--bad)}
+.prog{height:7px;background:#edf1ea;border-radius:7px;margin:10px 0 8px;overflow:hidden}.prog i{display:block;height:100%;background:linear-gradient(90deg,#9bd36a,#1f7a4d);border-radius:7px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;background:#f2f5ef;border-radius:10px;padding:4px 8px;display:flex;gap:4px;align-items:center}
+.chip b{font-weight:600}
+.tip{margin-top:8px;font-size:.84rem;color:#33503d;background:#f4faf2;border-left:4px solid var(--g2);padding:7px 10px;border-radius:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:#f7f9f5;border-radius:14px;padding:10px 12px;border:1px solid var(--line)}
+.tile .k{font-size:.75rem;color:var(--mut)}.tile .v{font-size:1.45rem;font-weight:700;line-height:1.15}.tile .u{font-size:.75rem;color:var(--mut);font-weight:400}
+.tile canvas{width:100%;height:34px;display:block;margin-top:4px}
+.tile.ok .v{color:var(--ok)}.tile.warn .v{color:var(--warn)}.tile.bad .v{color:var(--bad)}
+.wx{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.wx div{background:#f3f7fb;border-radius:12px;padding:6px 2px;font-size:.7rem}
+.wx .d{font-weight:600}.wx .r{font-size:1.1rem;margin:2px 0}.wx .mm{color:#1f6fd1;font-weight:600}
+.wx .rain{background:#e3efff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--g);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:600;cursor:pointer;min-height:48px}
+.btn.alt{background:#eef4ec;color:var(--g)}
+.btn.warn{background:var(--sun);color:#3a2a00}
+.btn.full{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+label.f{display:block;font-size:.82rem;color:var(--mut);margin:10px 0 4px}
+input,select,textarea{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;min-height:46px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--g2)}
+.seg{display:flex;background:#eef2ec;border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:none;background:none;border-radius:11px;padding:9px 4px;font-weight:500;cursor:pointer;font-size:.88rem}
+.seg button.on{background:#fff;color:var(--g);box-shadow:0 2px 8px -4px rgba(0,0,0,.3)}
+.res{margin-top:12px;background:#f4faf2;border-radius:14px;padding:12px;border:1px solid #cfe8d4}
+.res table{width:100%;border-collapse:collapse;font-size:.88rem}
+.res td,.res th{padding:6px 4px;border-bottom:1px solid #dcebdc;text-align:left}
+.res th{color:var(--mut);font-weight:500;font-size:.78rem}
+.res .big{font-size:1.3rem;font-weight:700;color:var(--g)}
+.note{font-size:.76rem;color:var(--mut);margin-top:8px;line-height:1.5}
+.task{display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:flex-start}
+.task:last-child{border:none}
+.task .d{flex:none;width:58px;text-align:center;background:var(--gl);border-radius:12px;padding:5px 0;font-size:.72rem;color:var(--g)}
+.task .d b{display:block;font-size:1.05rem}
+.task.now .d{background:var(--g);color:#fff}
+.task p{font-size:.88rem;line-height:1.45}.task small{color:var(--mut);font-size:.75rem}
+.msgs{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;padding:4px}
+.msg{max-width:84%;background:#f1f4ef;border-radius:16px 16px 16px 4px;padding:8px 12px;font-size:.9rem;align-self:flex-start}
+.msg.me{align-self:flex-end;background:#dff3e5;border-radius:16px 16px 4px 16px}
+.msg .who{font-size:.72rem;color:var(--mut);font-weight:600}
+.msg.alert{background:#fff1d0;border:1px solid #f6d68a}
+.list .it{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.list .it:last-child{border:none}
+.list .ic{width:40px;height:40px;border-radius:12px;background:var(--gl);display:grid;place-items:center;font-size:1.2rem;flex:none}
+.list .it p{font-size:.88rem;line-height:1.35}.list .it small{color:var(--mut);font-size:.75rem}
+.list .amt{margin-left:auto;font-weight:600;font-size:.9rem;white-space:nowrap}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.sum div{background:#f7f9f5;border-radius:14px;padding:10px 4px}.sum b{display:block;font-size:1.1rem}.sum small{font-size:.72rem;color:var(--mut)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:9;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 20px -14px rgba(0,0,0,.4)}
+nav .in{display:flex;max-width:560px;width:100%}
+nav button{flex:1;border:none;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;color:var(--mut);cursor:pointer;min-height:64px}
+nav button span{font-size:1.4rem;line-height:1.2}
+nav button.on{color:var(--g);font-weight:600}
+nav button.on span{transform:scale(1.12)}
+.page{display:none}.page.on{display:block;animation:fi .25s}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}}
+.sheet{position:fixed;inset:0;z-index:20;background:#0006;display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .bd{background:#fff;width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .25s}
+@keyframes up{from{transform:translateY(40px);opacity:.5}}
+.sheet h2{font-size:1.15rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.x{margin-left:auto;background:#eef2ec;border:none;border-radius:12px;width:40px;height:40px;font-size:1.1rem;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#17251c;color:#fff;padding:10px 16px;border-radius:14px;font-size:.88rem;z-index:30;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.install{display:none;margin-top:10px}
+.hero2{background:linear-gradient(135deg,#fff8e1,#eaf7ee);border:1px solid #f0e2b0}
+.hero2 h3{font-size:1rem}.hero2 p{font-size:.85rem;color:#4a5a4f;margin-top:4px;line-height:1.5}
+.pumprow{display:flex;align-items:center;gap:10px;margin-top:10px;background:#eef6ff;border-radius:14px;padding:10px 12px}
+.sw{position:relative;width:56px;height:32px;border-radius:20px;background:#cdd6cf;border:none;cursor:pointer;flex:none;margin-left:auto}
+.sw:after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 4px #0004}
+.sw.on{background:var(--g2)}.sw.on:after{left:27px}
+.photo{width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-top:8px}
+.thumb{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="hrow">
+    <div class="logo" aria-hidden="true">🌾</div>
+    <div><h1>ปลูกปั้น</h1><small>ปลูกด้วยใจ ปั้นด้วยข้อมูล · by CoreDash</small></div>
+    <div class="hbtn">
+      <button class="ib" id="bSpeak" aria-label="ฟังสรุปด้วยเสียง">🔊</button>
+      <button class="ib" id="bSet" aria-label="ตั้งค่า">⚙️</button>
+    </div>
+  </div>
+  <div class="conn" id="conn" role="status"><i></i><span>โหมดสาธิต</span></div>
+</header>
+
+<main>
+<!-- HOME -->
+<section class="page on" id="p-home" aria-label="หน้าแรก">
+  <div class="card hero2" id="hello"><h3 id="helloT">สวัสดีครับ 👋</h3><p id="helloS"></p>
+    <button class="btn warn install" id="bInstall">📲 ติดตั้งแอปลงมือถือ</button></div>
+  <div class="sec">🔔 แจ้งเตือนวันนี้</div>
+  <div class="alerts" id="alerts"></div>
+  <div class="sec">🗺️ แปลงของฉัน <button class="more" id="bAddPlot">+ เพิ่มแปลง</button></div>
+  <div class="plots" id="plots"></div>
+</section>
+
+<!-- FERT -->
+<section class="page" id="p-fert" aria-label="คำนวณปุ๋ย">
+  <div class="sec">🧪 คำนวณปุ๋ยตามค่าวิเคราะห์ดิน</div>
+  <div class="card">
+    <label class="f" for="fPlot">เลือกแปลง (ดึงค่าดินจากเซ็นเซอร์ได้)</label>
+    <select id="fPlot"></select>
+    <label class="f" for="fCrop">พืช</label>
+    <select id="fCrop"></select>
+    <div id="fRiceType"><label class="f">ชนิดข้าว</label><div class="seg" id="segRice"><button data-v="ns" class="on">ไม่ไวแสง (นาปรัง)</button><button data-v="s">ไวแสง (นาปี)</button></div></div>
+    <div id="fSoilType"><label class="f">ชนิดดิน (มันสำปะหลัง)</label><div class="seg" id="segSoil"><button data-v="hi" class="on">อัตราสูง</button><button data-v="lo">อัตราต่ำ</button></div></div>
+    <div class="grid2">
+      <div class="soilin"><label class="f" for="fOM">อินทรียวัตถุ (%)</label><input id="fOM" type="number" step="0.1" inputmode="decimal" value="1.2"></div>
+      <div><label class="f" for="fArea">พื้นที่ (ไร่)</label><input id="fArea" type="number" inputmode="decimal" value="10"></div>
+      <div class="soilin"><label class="f" for="fP">ฟอสฟอรัส P (ppm)</label><input id="fP" type="number" inputmode="decimal" value="7"></div>
+      <div class="soilin"><label class="f" for="fK">โพแทสเซียม K (ppm)</label><input id="fK" type="number" inputmode="decimal" value="55"></div>
+    </div>
+    <div id="fManual" hidden>
+      <label class="f">ค่าแนะนำ N–P₂O₅–K₂O (กก./ไร่) จากผลตรวจดิน / คำแนะนำหน่วยงาน</label>
+      <div class="grid2" style="grid-template-columns:1fr 1fr 1fr"><input id="mN" type="number" value="12" aria-label="N"><input id="mP" type="number" value="6" aria-label="P2O5"><input id="mK" type="number" value="12" aria-label="K2O"></div>
+    </div>
+    <button class="btn alt full" id="bFromSensor" style="margin-top:12px">📡 ใช้ค่า P, K จากเซ็นเซอร์แปลงนี้</button>
+    <label class="f">ราคาแม่ปุ๋ย (บาท/กระสอบ 50 กก.)</label>
+    <div class="grid2" style="grid-template-columns:1fr 1fr 1fr"><input id="pr46" type="number" value="850" aria-label="ราคา 46-0-0"><input id="pr18" type="number" value="1150" aria-label="ราคา 18-46-0"><input id="pr60" type="number" value="1050" aria-label="ราคา 0-0-60"></div>
+    <div class="note">46-0-0 · 18-46-0 · 0-0-60 (แก้ราคาตามร้านในพื้นที่)</div>
+    <div class="res" id="fRes" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- CAL -->
+<section class="page" id="p-cal" aria-label="ปฏิทินงาน">
+  <div class="sec">📅 ปฏิทินงานตามระยะปลูก</div>
+  <div class="seg" id="calSeg"></div>
+  <div class="card" style="margin-top:10px" id="calBody"></div>
+</section>
+
+<!-- GROUP -->
+<section class="page" id="p-group" aria-label="กลุ่มเกษตรกร">
+  <div class="sec">👥 กลุ่มเกษตรกร <span id="gName" style="font-weight:500;color:var(--g)"></span></div>
+  <div class="seg" id="gSeg"><button data-v="chat" class="on">💬 แชท</button><button data-v="buy">🧺 รวมซื้อปุ๋ย</button><button data-v="mkt">🛒 ตลาดผลผลิต</button></div>
+  <div class="card" style="margin-top:10px">
+    <div id="g-chat">
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="row" style="margin-top:10px"><input id="msgIn" placeholder="พิมพ์ข้อความถึงกลุ่ม…" style="flex:1"><button class="btn" id="bSend" aria-label="ส่ง">➤</button></div>
+      <div class="row" style="margin-top:8px"><button class="btn alt" id="bPest">🐛 แจ้งพบศัตรูพืช</button><button class="btn alt" id="bLoc">📍 แชร์ตำแหน่ง</button></div>
+    </div>
+    <div id="g-buy" hidden>
+      <p style="font-size:.88rem">ใส่จำนวนที่ต้องการ ระบบรวมยอดของทุกคนในกลุ่ม เพื่อต่อรองราคาส่งจากร้าน/สหกรณ์</p>
+      <div class="grid2" id="buyIn"></div>
+      <button class="btn full" id="bBuy" style="margin-top:10px">ส่งยอดของฉันเข้ากลุ่ม</button>
+      <div class="res" id="buyRes"></div>
+    </div>
+    <div id="g-mkt" hidden>
+      <div class="grid2"><select id="mkCrop" aria-label="ผลผลิต"></select><input id="mkKg" type="number" placeholder="จำนวน (กก.)" aria-label="จำนวนกิโลกรัม"><input id="mkPrice" type="number" placeholder="ราคา/กก." aria-label="ราคาต่อกิโลกรัม"><input id="mkDate" type="date" aria-label="วันพร้อมขาย"></div>
+      <button class="btn full" id="bMk" style="margin-top:10px">ประกาศขายในกลุ่ม</button>
+      <div class="list" id="mkList" style="margin-top:6px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LOG -->
+<section class="page" id="p-log" aria-label="สมุดฟาร์ม">
+  <div class="sec">📒 สมุดฟาร์ม & รายได้ <button class="more" id="bCsv">ส่งออก CSV</button></div>
+  <div class="sum card" id="sum"></div>
+  <button class="btn full" id="bAddLog" style="margin-top:12px">+ บันทึกกิจกรรม / ผลผลิต</button>
+  <div class="card list" id="logList" style="margin-top:12px"></div>
+</section>
+</main>
+</div>
+
+<nav aria-label="เมนูหลัก"><div class="in">
+  <button data-p="home" class="on"><span>🏡</span>หน้าแรก</button>
+  <button data-p="fert"><span>🧪</span>ปุ๋ย</button>
+  <button data-p="cal"><span>📅</span>ปฏิทิน</button>
+  <button data-p="group"><span>👥</span>กลุ่ม</button>
+  <button data-p="log"><span>📒</span>สมุดฟาร์ม</button>
+</div></nav>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="bd" id="sheetBd"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* =================== ปลูกปั้น – PlookPun =================== */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const LS={get(k,d){try{const v=localStorage.getItem('pp_'+k);return v!=null?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('pp_'+k,JSON.stringify(v))}catch(e){}}};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const daysSince=s=>Math.floor((today()-new Date(s))/864e5);
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const ago=n=>{const d=today();d.setDate(d.getDate()-n);return iso(d)};
+const fmt=(n,d=0)=>Number(n).toLocaleString('th-TH',{maximumFractionDigits:d,minimumFractionDigits:d});
+const thDate=s=>new Date(s).toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- ข้อมูลพืช ---------- */
+const CROPS={
+ rice:{n:'ข้าว',e:'🌾',days:120,ph:[5,7],sm:null,price:9,
+  st:[[0,'ตั้งตัว / กล้า'],[20,'แตกกอ'],[45,'แตกกอสูงสุด–กำเนิดช่อดอก'],[65,'ตั้งท้อง–ออกดอก'],[90,'สุกแก่'],[110,'เก็บเกี่ยว']],
+  tasks:[[0,'ใส่ปุ๋ยรองพื้นวันปักดำ หรือหลังหว่าน 20 วัน','กรมการข้าว'],[10,'คุมระดับน้ำ 3–5 ซม. กำจัดวัชพืช',''],[25,'เริ่มทำนาเปียกสลับแห้ง (AWD): ปล่อยน้ำลดจนต่ำกว่าผิวดิน 15 ซม. แล้วค่อยสูบเข้า','ประหยัดน้ำ ลดก๊าซมีเทน'],[45,'ใส่ปุ๋ยแต่งหน้าระยะแตกกอสูงสุด',''],[60,'ใส่ปุ๋ยแต่งหน้าระยะกำเนิดช่อดอก',''],[65,'ช่วงออกดอก ห้ามขาดน้ำ รักษาระดับน้ำ ~5 ซม.',''],[105,'ระบายน้ำออกก่อนเก็บเกี่ยว 10–15 วัน',''],[120,'เก็บเกี่ยว ตากลดความชื้นก่อนขาย','']]},
+ cassava:{n:'มันสำปะหลัง',e:'🥔',days:300,ph:[5,6.5],sm:[15,35],price:3,
+  st:[[0,'งอก / ตั้งตัว'],[30,'เจริญทางลำต้น'],[90,'สร้างหัว'],[180,'สะสมแป้ง'],[240,'พร้อมเก็บเกี่ยว (8–12 เดือน)']],
+  tasks:[[0,'ปลูกท่อนพันธุ์ยาว 20–25 ซม. ปักลึก 2 ใน 3',''],[21,'ตรวจหลุมที่ไม่งอก ปลูกซ่อม',''],[30,'ใส่ปุ๋ยช่วงอายุ 1–3 เดือน ตามค่าวิเคราะห์ดิน','กรมวิชาการเกษตร'],[45,'กำจัดวัชพืชช่วง 1–3 เดือนแรก',''],[120,'เฝ้าระวังเพลี้ยแป้งและโรคใบด่าง',''],[240,'เก็บเกี่ยวได้เมื่ออายุ 8–12 เดือน ดูเปอร์เซ็นต์แป้ง','']]},
+ rubber:{n:'ยางพารา',e:'🌳',days:0,ph:[4.5,5.5],sm:[18,40],price:60,perennial:true,
+  st:[[0,'ต้นยางกรีดได้']],
+  tasks:[[0,'กรีดช่วงเช้ามืด เปลือกต้องแห้ง',''],[0,'งดกรีดวันที่ฝนตก/เปลือกเปียก ลดโรคหน้ายาง',''],[0,'พักกรีดช่วงผลัดใบ (ราว ก.พ.–เม.ย.)',''],[0,'ใส่ปุ๋ยปีละ 2 ครั้ง: ต้นฤดูฝน และปลายฤดูฝน','ตามคำแนะนำ กยท.']]},
+ pineapple:{n:'สับปะรด',e:'🍍',days:420,ph:[4.5,5.5],sm:[12,35],price:8,
+  st:[[0,'ตั้งตัว'],[60,'เจริญเติบโตทางใบ'],[240,'ช่วงบังคับดอก (8–12 เดือน)'],[300,'ออกดอก–ติดผล'],[390,'ผลแก่ เก็บเกี่ยว']],
+  tasks:[[0,'ปลูกหน่อขนาดสม่ำเสมอ จะออกดอกพร้อมกัน',''],[45,'ใส่ปุ๋ยครั้งแรก',''],[150,'ใส่ปุ๋ยเร่งการเจริญเติบโต',''],[240,'บังคับดอกเมื่อต้นสมบูรณ์ ทำช่วงเย็น/กลางคืนที่อากาศเย็น',''],[390,'เก็บเกี่ยวประมาณ 5–6 เดือนหลังบังคับดอก','']]},
+ corn:{n:'ข้าวโพดเลี้ยงสัตว์',e:'🌽',days:115,ph:[5.5,7],sm:[20,40],price:9,
+  st:[[0,'งอก'],[15,'เจริญทางลำต้น'],[45,'ออกดอก (ช่วงวิกฤตน้ำ)'],[65,'ติดเมล็ด'],[100,'สุกแก่ เก็บเกี่ยว']],
+  tasks:[[0,'ใส่ปุ๋ย N ครึ่งหนึ่ง + P + K รองก้นร่องตอนปลูก','ตามค่าวิเคราะห์ดิน'],[25,'ใส่ปุ๋ย N ส่วนที่เหลือ',''],[30,'เฝ้าระวังหนอนกระทู้ข้าวโพดลายจุด',''],[45,'ช่วงออกดอก ห้ามขาดน้ำ',''],[110,'เก็บเกี่ยว ลดความชื้นเมล็ดก่อนขาย','']]},
+ sugarcane:{n:'อ้อย',e:'🎋',days:330,ph:[5.5,7.5],sm:[20,40],price:1.1,st:[[0,'งอก'],[30,'แตกกอ'],[120,'ย่างปล้อง'],[270,'สุกแก่'],[300,'เก็บเกี่ยว']],tasks:[[0,'ปลูกและใส่ปุ๋ยรองพื้น',''],[90,'ใส่ปุ๋ยครั้งที่ 2 + พูนโคน',''],[300,'ตัดอ้อยสด ไม่เผาใบ ลด PM2.5','']]},
+ veg:{n:'ผัก / อื่น ๆ',e:'🥬',days:45,ph:[6,7],sm:[30,50],price:25,st:[[0,'ต้นกล้า'],[14,'เจริญเติบโต'],[35,'เก็บเกี่ยว']],tasks:[[0,'เตรียมดิน ใส่ปุ๋ยคอก',''],[14,'รดน้ำเช้า–เย็น',''],[35,'เก็บเกี่ยว','']]},
+};
+
+/* ---------- สถานะ ---------- */
+let S=LS.get('state',null);
+if(!S){S={name:'',group:{code:'BANNA-01',name:'กลุ่มเกษตรกรบ้านนา'},me:uid(),mode:'demo',mqtt:{url:'wss://broker.hivemq.com:8884/mqtt',user:'',pass:'',farm:'farm-'+uid()},
+  plots:[
+   {id:'p1',name:'นาข้าวหลังบ้าน',crop:'rice',rice:'ns',area:15,plant:ago(52),node:'node-rice-01',lat:15.23,lon:104.85,pump:false},
+   {id:'p2',name:'ไร่มันโคกใหญ่',crop:'cassava',area:20,plant:ago(70),node:'node-cass-01',lat:15.25,lon:104.88},
+   {id:'p3',name:'สวนยางห้วยทราย',crop:'rubber',area:10,plant:'2016-06-01',node:'node-rub-01',lat:15.2,lon:104.8},
+   {id:'p4',name:'สับปะรดแปลงใต้',crop:'pineapple',area:5,plant:ago(262),node:'node-pine-01',lat:15.22,lon:104.86},
+   {id:'p5',name:'ข้าวโพดหลังนา',crop:'corn',area:12,plant:ago(26),node:'node-corn-01',lat:15.24,lon:104.84}],
+  logs:[{id:uid(),date:ago(30),plot:'p2',type:'ปุ๋ย',note:'ใส่ปุ๋ย 15-15-15 รอบแรก',cost:4200,income:0},{id:uid(),date:ago(9),plot:'p3',type:'ขาย',note:'ขายยางก้อนถ้วย 320 กก.',cost:0,income:19200},{id:uid(),date:ago(4),plot:'p1',type:'ฉีดพ่น',note:'ฉีดสารชีวภัณฑ์ป้องกันเพลี้ย',cost:650,income:0}],
+  buy:{},big:false,voice:true};LS.set('state',S)}
+const save=()=>LS.set('state',S);
+if(S.big)document.body.classList.add('big');
+
+/* ---------- เซ็นเซอร์: สาธิต หรือ MQTT จริง ---------- */
+const SENS={},HIST={};
+function demoTick(){const t=Date.now()/1000;
+  S.plots.forEach((p,i)=>{const c=p.crop,w=Math.sin(t/40+i),w2=Math.sin(t/23+i*2);let d={temp:+(29+3*w2).toFixed(1),hum:Math.round(72+15*w),ph:+((CROPS[c].ph[0]+CROPS[c].ph[1])/2+(i===1?-.9:0)+.1*w).toFixed(1),n:Math.round(32+8*w),p:Math.round(i===1?4+w:9+3*w),k:Math.round(i===1?26+4*w:58+10*w2),ec:+(0.4+.1*w).toFixed(2),bat:Math.round(88-i*3),rain1h:i===2&&w>.6?2.4:0};
+    if(c==='rice'){d.water=+(p.pump?Math.min(6,(SENS[p.id]?.water||-10)+.6):(-8-10*((Math.sin(t/30)+1)/2))).toFixed(1)}else{d.sm=Math.round((c==='corn'?18:c==='pineapple'?22:27)+9*w)}
+    ingest(p.node,d)})}
+function ingest(node,d){const p=S.plots.find(x=>x.node===node);if(!p)return;SENS[p.id]=Object.assign(SENS[p.id]||{},d,{ts:Date.now()});
+  const h=HIST[p.id]||(HIST[p.id]={});Object.keys(d).forEach(k=>{if(typeof d[k]!=='number')return;(h[k]||(h[k]=[])).push(d[k]);if(h[k].length>60)h[k].shift()})}
+let demoT=null,mq=null,mqOK=false;
+function setConn(live,txt){const c=$('#conn');c.classList.toggle('live',live);c.querySelector('span').textContent=txt}
+function startData(){clearInterval(demoT);if(mq){try{mq.end(true)}catch(e){}mq=null}mqOK=false;
+  if(S.mode==='demo'){setConn(false,'โหมดสาธิต · ข้อมูลจำลอง');demoTick();demoT=setInterval(()=>{demoTick();checkNotify();if(cur==='home')renderHome();if(sheetPlot)renderPlot(sheetPlot,true)},3000);return}
+  if(!window.mqtt){setConn(false,'กำลังโหลดตัวเชื่อม MQTT…');const s=document.createElement('script');s.src='https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js';s.onload=startData;s.onerror=()=>{toast('โหลดตัวเชื่อม MQTT ไม่ได้ (ไม่มีอินเทอร์เน็ต?) · ใช้ข้อมูลจำลองชั่วคราว');S.mode='demo';startData()};document.head.appendChild(s);return}
+  setConn(false,'กำลังเชื่อมต่อ CoreDash…');
+  try{mq=mqtt.connect(S.mqtt.url,{username:S.mqtt.user||undefined,password:S.mqtt.pass||undefined,clientId:'pp-'+S.me+'-'+uid(),reconnectPeriod:4000,connectTimeout:8000})}catch(e){setConn(false,'URL ไม่ถูกต้อง');return}
+  mq.on('connect',()=>{mqOK=true;setConn(true,'เชื่อมต่อแล้ว · ข้อมูลจริงจากแปลง');const f=S.mqtt.farm;mq.subscribe([`plookpun/${f}/+/telemetry`,gTopic('chat'),gTopic('buy/+'),gTopic('mkt/+')]);publishBuy(true);publishMkt(true)});
+  mq.on('reconnect',()=>setConn(false,'กำลังเชื่อมต่อใหม่…'));mq.on('offline',()=>{mqOK=false;setConn(false,'ออฟไลน์ · แสดงค่าล่าสุด')});mq.on('error',e=>setConn(false,'เชื่อมต่อไม่ได้: '+(e.message||'')));
+  mq.on('message',(t,b)=>{let m;try{m=JSON.parse(b.toString())}catch(e){return}const parts=t.split('/');
+    if(parts[2]&&parts[3]==='telemetry'){ingest(parts[2],m);if(cur==='home')renderHome();if(sheetPlot)renderPlot(sheetPlot,true);checkNotify();return}
+    if(t===gTopic('chat')){addMsg(m,false);return}
+    if(t.startsWith(gTopic('buy/'))){GB[parts.pop()]=m;renderBuy();return}
+    if(t.startsWith(gTopic('mkt/'))){const id=parts.pop();if(m&&m.items)GM[id]=m;else delete GM[id];renderMkt()}})}
+const gTopic=s=>`plookpun/group/${S.group.code}/${s}`;
+function sendCmd(p,cmd){if(S.mode==='mqtt'&&mqOK){mq.publish(`plookpun/${S.mqtt.farm}/${p.node}/cmd`,JSON.stringify(cmd));toast('ส่งคำสั่งไปที่ '+p.node+' แล้ว')}else toast('โหมดสาธิต: จำลองการสั่งงาน')}
+
+/* ---------- พยากรณ์อากาศ (Open-Meteo) ---------- */
+const WX={};
+async function loadWx(p){if(WX[p.id]&&Date.now()-WX[p.id].t<3*3600e3)return;
+  try{const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&daily=precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia%2FBangkok`;
+    const r=await fetch(u);if(!r.ok)throw 0;const j=await r.json();WX[p.id]={t:Date.now(),real:true,days:j.daily.time.map((d,i)=>({d,rain:j.daily.precipitation_sum[i]||0,pp:j.daily.precipitation_probability_max?.[i]||0,tmax:j.daily.temperature_2m_max[i],tmin:j.daily.temperature_2m_min[i]}))}}
+  catch(e){const days=[...Array(7)].map((_,i)=>{const d=today();d.setDate(d.getDate()+i);const rain=[0,18,6,0,0,2,12][i];return{d:iso(d),rain,pp:rain?Math.min(95,40+rain*3):10,tmax:33-(rain?2:0),tmin:24}});WX[p.id]={t:Date.now(),real:false,days}}
+  if(cur==='home')renderHome();if(sheetPlot===p.id)renderPlot(p.id,true)}
+
+/* ---------- ระบบแนะนำ ---------- */
+function stageOf(p){const c=CROPS[p.crop];if(c.perennial){const m=new Date().getMonth();return{day:daysSince(p.plant),name:(m>=1&&m<=3)?'ช่วงผลัดใบ (ควรพักกรีด)':'ฤดูกรีด',pct:0}}
+  const day=Math.max(0,daysSince(p.plant));let name=c.st[0][1];c.st.forEach(s=>{if(day>=s[0])name=s[1]});return{day,name,pct:clamp(day/c.days,0,1)}}
+function advise(p){const c=CROPS[p.crop],d=SENS[p.id]||{},st=stageOf(p),wx=WX[p.id],out=[];const A=(lv,e,t,b)=>out.push({lv,e,t,b,plot:p});
+  if(p.crop==='rice'&&d.water!=null){const w=d.water;
+    if(st.day>=65&&st.day<90&&w<0)A('bad','💧','ช่วงออกดอก ระดับน้ำต่ำกว่าผิวดิน — สูบน้ำเข้า รักษาระดับ ~5 ซม.','ข้าวระยะออกดอกขาดน้ำ ผลผลิตลดมาก');
+    else if(st.day>=105&&w>0)A('warn','🚿','ใกล้เก็บเกี่ยว ควรระบายน้ำออกจากนา','ระบายก่อนเก็บเกี่ยว 10–15 วัน');
+    else if(st.day>=20&&st.day<65&&w<=-15)A('bad','💧',`น้ำลดต่ำกว่าผิวดิน ${Math.abs(w).toFixed(0)} ซม. — ถึงเวลาสูบน้ำเข้านา (AWD)`,'นาเปียกสลับแห้ง: สูบเมื่อน้ำลดต่ำกว่า 15 ซม.');
+    else if(st.day>=20&&st.day<65&&w<0)A('ok','🌱',`นาแห้งสลับเปียก: น้ำอยู่ใต้ผิวดิน ${Math.abs(w).toFixed(0)} ซม. ยังไม่ต้องสูบ`,'ประหยัดน้ำและค่าน้ำมันสูบ')}
+  if(c.sm&&d.sm!=null){if(d.sm<c.sm[0])A(p.crop==='corn'&&st.day>=45&&st.day<70?'bad':'warn','🏜️',`ดินแห้ง ความชื้น ${d.sm}% (ต่ำกว่า ${c.sm[0]}%) — ควรให้น้ำ`,p.crop==='corn'?'ข้าวโพดช่วงออกดอกขาดน้ำไม่ได้':'');}
+  if(d.ph!=null){if(d.ph<c.ph[0])A('warn','🧂',`ดินเป็นกรด pH ${d.ph} (เหมาะ ${c.ph[0]}–${c.ph[1]}) — พิจารณาใส่ปูนตามผลตรวจดิน`,'ส่งดินตรวจที่สถานีพัฒนาที่ดินก่อนใส่ปูน');else if(d.ph>c.ph[1])A('warn','🧪',`ดินค่อนข้างด่าง pH ${d.ph} (เหมาะ ${c.ph[0]}–${c.ph[1]})`,'')}
+  if(p.crop==='rubber'){const m=new Date().getMonth();if((d.rain1h||0)>0||(d.hum||0)>=95)A('warn','🌧️','เปลือกยางเปียก — งดกรีดวันนี้','ลดโรคเส้นดำ/หน้ายางเน่า');else if(m>=1&&m<=3)A('warn','🍂','ช่วงผลัดใบ — ควรพักกรีด','');else A('ok','🌳','อากาศแห้ง กรีดยางได้ตามปกติ','')}
+  if(p.crop==='pineapple'&&st.day>=240&&st.day<300)A('warn','🍍','ถึงช่วงบังคับดอก — ทำช่วงเย็น/กลางคืนที่อากาศเย็น','');
+  if(p.crop==='cassava'&&st.day>=30&&st.day<=90)A('warn','🧪','อยู่ในช่วงใส่ปุ๋ย (1–3 เดือน) — คำนวณสูตรที่เมนู “ปุ๋ย”','');
+  if(p.crop==='cassava'&&st.day>=240)A('ok','🥔','อายุ 8 เดือนขึ้นไป เก็บเกี่ยวได้ — ดูราคาและเปอร์เซ็นต์แป้ง','');
+  if(p.crop==='corn'&&st.day>=20&&st.day<=30)A('warn','🌽','ถึงเวลาใส่ปุ๋ยไนโตรเจนส่วนที่เหลือ','ตามคำแนะนำ: ส่วนที่เหลือใส่หลังปลูก ~20–30 วัน');
+  if(wx){const tm=wx.days[1];if(tm&&tm.rain>=10)A('warn','☔',`พรุ่งนี้ฝน ${tm.rain.toFixed(0)} มม. — เลื่อนการใส่ปุ๋ย/ฉีดพ่น`,'ปุ๋ยและสารจะถูกชะล้าง');const hot=wx.days.find(x=>x.tmax>=38);if(hot)A('warn','🥵',`${thDate(hot.d)} ร้อนจัด ${hot.tmax.toFixed(0)}°C — ให้น้ำเช้าตรู่`,'')}
+  if((d.bat||100)<20)A('warn','🔋',`แบตเตอรี่เซ็นเซอร์ ${d.bat}% — เปลี่ยน/ชาร์จ`,'');
+  if(!out.length)A('ok','✅','ทุกอย่างปกติ','');
+  const rank={bad:0,warn:1,ok:2};return out.sort((a,b)=>rank[a.lv]-rank[b.lv])}
+const worst=a=>a.length?a[0].lv:'ok';
+const LVTXT={ok:'ปกติ',warn:'ควรดูแล',bad:'ด่วน'};
+
+/* ---------- หน้าแรก ---------- */
+function chipsOf(p){const d=SENS[p.id]||{};const ch=[];
+  if(d.water!=null)ch.push(['💧','น้ำ',(d.water>0?'+':'')+d.water+' ซม.']);if(d.sm!=null)ch.push(['🌱','ความชื้นดิน',d.sm+'%']);
+  if(d.ph!=null)ch.push(['🧪','pH',d.ph]);if(d.n!=null)ch.push(['🟢','N-P-K',`${d.n}-${d.p}-${d.k}`]);if(d.temp!=null)ch.push(['🌡️','',d.temp+'°']);
+  return ch.map(c=>`<span class="chip">${c[0]} ${c[1]} <b>${c[2]}</b></span>`).join('')}
+function renderHome(){const hr=new Date().getHours();$('#helloT').textContent=`${hr<12?'อรุณสวัสดิ์':hr<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น'}${S.name?' คุณ'+S.name:''} 👋`;
+  const raw=S.plots.flatMap(advise).filter(a=>a.lv!=='ok');const grp={};raw.forEach(a=>{const k=a.t;if(grp[k])grp[k].names.push(a.plot.name);else grp[k]=Object.assign({},a,{names:[a.plot.name]})});
+  const all=Object.values(grp).map(a=>Object.assign(a,{plot:{name:a.names.length>2?`${a.names.length} แปลง`:a.names.join(', ')}}));const n=all.filter(a=>a.lv==='bad').length;
+  $('#helloS').textContent=`มี ${S.plots.length} แปลง รวม ${fmt(S.plots.reduce((s,p)=>s+ +p.area,0))} ไร่ · วันนี้มีงานด่วน ${n} เรื่อง ควรดูแล ${all.length-n} เรื่อง`;
+  $('#alerts').innerHTML=(all.length?all.slice(0,5):[{lv:'ok',e:'✅',t:'ทุกแปลงปกติดี',plot:{name:'ทุกแปลง'}}]).map(a=>`<div class="al ${a.lv}"><span class="e">${a.e}</span><div><b>${esc(a.plot.name)}</b>${esc(a.t)}</div></div>`).join('');
+  $('#plots').innerHTML=S.plots.map(p=>{const c=CROPS[p.crop],st=stageOf(p),ad=advise(p),lv=worst(ad);
+    return `<article class="card plot" data-id="${p.id}" tabindex="0" role="button" aria-label="${esc(p.name)} ${c.n} สถานะ${LVTXT[lv]}">
+      <div class="top"><div class="pe">${c.e}</div><div><h3>${esc(p.name)}</h3><div class="sub">${c.n} · ${p.area} ไร่ · ${c.perennial?st.name:'อายุ '+st.day+' วัน · '+st.name}</div></div><span class="badge ${lv}">${LVTXT[lv]}</span></div>
+      ${c.perennial?'<div style="height:10px"></div>':`<div class="prog" aria-hidden="true"><i style="width:${st.pct*100}%"></i></div>`}
+      <div class="chips">${chipsOf(p)}</div><div class="tip">${ad[0].e} ${esc(ad[0].t)}</div></article>`}).join('');
+  $$('.plot').forEach(e=>{e.onclick=()=>openPlot(e.dataset.id);e.onkeydown=k=>{if(k.key==='Enter')openPlot(e.dataset.id)}})}
+
+/* ---------- รายละเอียดแปลง ---------- */
+let sheetPlot=null;
+function spark(cv,arr,col){if(!cv||!arr||arr.length<2)return;const w=cv.clientWidth,h=cv.clientHeight,r=devicePixelRatio||1;cv.width=w*r;cv.height=h*r;const x=cv.getContext('2d');x.scale(r,r);const mn=Math.min(...arr),mx=Math.max(...arr),sp=mx-mn||1;
+  x.strokeStyle=col;x.lineWidth=2;x.beginPath();arr.forEach((v,i)=>{const X=i/(arr.length-1)*w,Y=h-3-(v-mn)/sp*(h-6);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke()}
+function tileLv(p,k,v){const c=CROPS[p.crop];if(k==='ph')return v<c.ph[0]||v>c.ph[1]?'warn':'ok';if(k==='sm'&&c.sm)return v<c.sm[0]?'warn':'ok';if(k==='water'){const st=stageOf(p);return st.day>=20&&st.day<65&&v<=-15?'bad':'ok'}if(k==='p')return v<5?'warn':'ok';if(k==='k')return v<30?'warn':'ok';return''}
+function renderPlot(id,soft){const p=S.plots.find(x=>x.id===id);if(!p)return;const c=CROPS[p.crop],d=SENS[p.id]||{},st=stageOf(p),ad=advise(p),wx=WX[p.id];
+  const T=[['water','💧 ระดับน้ำในนา','ซม.'],['sm','🌱 ความชื้นดิน','%'],['ph','🧪 pH ดิน',''],['n','N ไนโตรเจน','mg/kg'],['p','P ฟอสฟอรัส','mg/kg'],['k','K โพแทสเซียม','mg/kg'],['ec','⚡ EC','dS/m'],['temp','🌡️ อุณหภูมิ','°C'],['hum','💦 ความชื้นอากาศ','%'],['bat','🔋 แบตเซ็นเซอร์','%']].filter(t=>d[t[0]]!=null);
+  const tiles=T.map(t=>`<div class="tile ${tileLv(p,t[0],d[t[0]])}"><div class="k">${t[1]}</div><div class="v">${d[t[0]]} <span class="u">${t[2]}</span></div><canvas data-k="${t[0]}" aria-hidden="true"></canvas></div>`).join('');
+  const wxh=wx?`<div class="sec">🌦️ พยากรณ์ 7 วัน ${wx.real?'(Open-Meteo)':'<small style="font-weight:400;color:var(--mut)">(ตัวอย่าง · ออนไลน์จะดึงข้อมูลจริง)</small>'}</div><div class="wx">${wx.days.map((x,i)=>`<div class="${x.rain>=5?'rain':''}"><div class="d">${i?new Date(x.d).toLocaleDateString('th-TH',{weekday:'short'}):'วันนี้'}</div><div class="r">${x.rain>=10?'🌧️':x.rain>=1?'🌦️':'☀️'}</div><div class="mm">${x.rain.toFixed(0)}</div><div>${Math.round(x.tmax)}°</div></div>`).join('')}</div><div class="note">ตัวเลขสีฟ้า = ฝน (มม.)</div>`:'';
+  const pump=p.crop==='rice'?`<div class="pumprow"><span style="font-size:1.4rem">🚰</span><div><b style="font-size:.92rem">ปั๊มน้ำเข้านา</b><div class="note" style="margin:0">สั่งรีเลย์ที่ ${esc(p.node)}</div></div><button class="sw ${p.pump?'on':''}" id="pumpSw" role="switch" aria-checked="${!!p.pump}" aria-label="ปั๊มน้ำ"></button></div>`:'';
+  const html=`<h2>${c.e} ${esc(p.name)}<button class="x" aria-label="ปิด" onclick="closeSheet()">✕</button></h2>
+   <div class="note" style="margin-top:0">${c.n} · ${p.area} ไร่ · ${c.perennial?st.name:'อายุ '+st.day+' วัน · '+st.name} · เซ็นเซอร์ ${esc(p.node)}${d.ts?' · อัปเดต '+new Date(d.ts).toLocaleTimeString('th-TH'):''}</div>
+   <div class="alerts" style="margin:12px 0">${ad.map(a=>`<div class="al ${a.lv}"><span class="e">${a.e}</span><div>${esc(a.t)}${a.b?`<b style="font-weight:400;margin-top:2px">${esc(a.b)}</b>`:''}</div></div>`).join('')}</div>
+   ${pump}<div class="grid2" style="margin-top:12px">${tiles||'<div class="note">ยังไม่มีข้อมูลจากเซ็นเซอร์</div>'}</div>${wxh}
+   <div class="row" style="margin-top:14px"><button class="btn" onclick="openLog('${p.id}')">📝 บันทึกกิจกรรม</button><button class="btn alt" onclick="goFert('${p.id}')">🧪 คำนวณปุ๋ย</button>
+   <a class="btn alt" href="https://www.google.com/maps?q=${p.lat},${p.lon}" target="_blank" rel="noopener">🧭 นำทางไปแปลง</a><button class="btn alt" onclick="editPlot('${p.id}')">✏️ แก้ไขแปลง</button></div>`;
+  const bd=$('#sheetBd');const sc=bd.scrollTop;bd.innerHTML=html;if(soft)bd.scrollTop=sc;
+  $$('#sheetBd canvas').forEach(cv=>spark(cv,(HIST[p.id]||{})[cv.dataset.k],'#2fa86a'));
+  const sw=$('#pumpSw');if(sw)sw.onclick=()=>{p.pump=!p.pump;save();sendCmd(p,{pump:p.pump?1:0});renderPlot(p.id,true)}}
+function openPlot(id){sheetPlot=id;$('#sheet').classList.add('on');renderPlot(id);loadWx(S.plots.find(p=>p.id===id))}
+function closeSheet(){$('#sheet').classList.remove('on');sheetPlot=null}
+$('#sheet').onclick=e=>{if(e.target.id==='sheet')closeSheet()};addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+function cropOpts(sel){return Object.entries(CROPS).map(([k,c])=>`<option value="${k}" ${k===sel?'selected':''}>${c.e} ${c.n}</option>`).join('')}
+function editPlot(id){const p=id?S.plots.find(x=>x.id===id):{id:'p'+uid(),name:'',crop:'rice',rice:'ns',area:5,plant:iso(today()),node:'node-'+uid(),lat:15.23,lon:104.85};sheetPlot=null;
+  $('#sheetBd').innerHTML=`<h2>${id?'✏️ แก้ไขแปลง':'➕ เพิ่มแปลงใหม่'}<button class="x" onclick="closeSheet()" aria-label="ปิด">✕</button></h2>
+  <label class="f" for="eN">ชื่อแปลง</label><input id="eN" value="${esc(p.name)}" placeholder="เช่น นาโคกหนองนา">
+  <label class="f" for="eC">พืช</label><select id="eC">${cropOpts(p.crop)}</select>
+  <div class="grid2"><div><label class="f" for="eA">พื้นที่ (ไร่)</label><input id="eA" type="number" inputmode="decimal" value="${p.area}"></div><div><label class="f" for="eD">วันปลูก</label><input id="eD" type="date" value="${p.plant}"></div></div>
+  <label class="f" for="eS">รหัสเซ็นเซอร์ (Node ID บน ESP32)</label><input id="eS" value="${esc(p.node)}">
+  <div class="grid2"><div><label class="f" for="eLa">ละติจูด</label><input id="eLa" type="number" step="any" value="${p.lat}"></div><div><label class="f" for="eLo">ลองจิจูด</label><input id="eLo" type="number" step="any" value="${p.lon}"></div></div>
+  <button class="btn alt full" id="eGps" style="margin-top:10px">📍 ใช้ตำแหน่งปัจจุบัน (ยืนอยู่ที่แปลง)</button>
+  <div class="row" style="margin-top:14px"><button class="btn" id="eSave" style="flex:1">บันทึก</button>${id?'<button class="btn alt" id="eDel">ลบแปลง</button>':''}</div>`;
+  $('#sheet').classList.add('on');
+  $('#eGps').onclick=()=>{if(!navigator.geolocation)return toast('อุปกรณ์นี้ไม่รองรับ GPS');toast('กำลังหาตำแหน่ง…');navigator.geolocation.getCurrentPosition(g=>{$('#eLa').value=g.coords.latitude.toFixed(5);$('#eLo').value=g.coords.longitude.toFixed(5);toast('ได้ตำแหน่งแล้ว')},()=>toast('ขอสิทธิ์ตำแหน่งไม่สำเร็จ'),{enableHighAccuracy:true,timeout:10000})};
+  $('#eSave').onclick=()=>{Object.assign(p,{name:$('#eN').value||'แปลงใหม่',crop:$('#eC').value,area:+$('#eA').value||1,plant:$('#eD').value,node:$('#eS').value.trim(),lat:+$('#eLa').value,lon:+$('#eLo').value});if(!id)S.plots.push(p);delete WX[p.id];save();closeSheet();renderAll();toast('บันทึกแปลงแล้ว')};
+  if(id)$('#eDel').onclick=()=>{S.plots=S.plots.filter(x=>x.id!==id);save();closeSheet();renderAll();toast('ลบแปลงแล้ว')}}
+$('#bAddPlot').onclick=()=>editPlot();
+
+/* ---------- คำนวณปุ๋ย ---------- */
+// อ้างอิง: ข้าว – กรมการข้าว (คำแนะนำการใส่ปุ๋ยตามค่าวิเคราะห์ดิน) ; มันสำปะหลัง – กรมวิชาการเกษตร (ดินทราย–ร่วนปนทราย อัตราสูง/ต่ำ) ; ข้าวโพด – คำแนะนำตามค่าวิเคราะห์ดิน (N,P ; K ระดับกลาง/สูงเป็นค่าประมาณ)
+const lvl=(v,a,b)=>v<a?0:v<=b?1:2;
+const FERT={
+ rice:(om,P,K,o)=>{const ns=o.rice!=='s';return{N:[[9,18],[6,12],[3,6]][lvl(om,1,2)][ns?1:0],P:[6,3,0][lvl(P,5,10)],K:[6,3,0][lvl(K,60,80)],src:'กรมการข้าว',when:'P, K และ N บางส่วนใส่รองพื้น · N ที่เหลือแบ่งใส่ระยะแตกกอสูงสุดและระยะกำเนิดช่อดอก'}},
+ cassava:(om,P,K,o)=>{const h=o.soil!=='lo'?0:1;return{N:[[16,8],[8,4],[4,2]][lvl(om,.6,2)][h],P:[[16,8],[8,4],[4,2]][lvl(P,5,30)][h],K:[[16,8],[8,4],[4,2]][lvl(K,30,90)][h],src:'กรมวิชาการเกษตร (ดินทราย–ร่วนปนทราย)',when:'ใส่ช่วงอายุ 1–3 เดือน โรยข้างแถวแล้วกลบ'}},
+ corn:(om,P,K)=>({N:[20,15,5][lvl(om,1,2)],P:[10,10,5][lvl(P,10,15)],K:[10,5,0][lvl(K,60,100)],src:'คำแนะนำตามค่าวิเคราะห์ดิน (K ระดับกลาง/สูง = ค่าประมาณ)',when:'N ครึ่งหนึ่ง + P + K รองก้นร่องตอนปลูก · N ที่เหลือใส่เมื่ออายุ 20–30 วัน'}),
+};
+let fOpt={rice:'ns',soil:'hi'};
+function fertInit(){$('#fPlot').innerHTML=S.plots.map(p=>`<option value="${p.id}">${CROPS[p.crop].e} ${esc(p.name)}</option>`).join('');$('#fCrop').innerHTML=cropOpts('rice');syncFertCrop()}
+function syncFertCrop(){const c=$('#fCrop').value;$('#fRiceType').hidden=c!=='rice';$('#fSoilType').hidden=c!=='cassava';$('#fManual').hidden=!!FERT[c];$$('#p-fert .soilin').forEach(e=>e.style.display=FERT[c]?'':'none');$('#bFromSensor').style.display=FERT[c]?'':'none';calcFert()}
+function calcFert(){const c=$('#fCrop').value,area=+$('#fArea').value||0;let r;
+  if(FERT[c])r=FERT[c](+$('#fOM').value,+$('#fP').value,+$('#fK').value,fOpt);else r={N:+$('#mN').value||0,P:+$('#mP').value||0,K:+$('#mK').value||0,src:'ค่าที่ผู้ใช้กรอก',when:'ใส่ตามคำแนะนำของหน่วยงาน (เช่น กยท. สำหรับยางพารา)'};
+  const dap=r.P/.46,urea=Math.max(0,(r.N-dap*.18)/.46),mop=r.K/.6;const pr=[+$('#pr46').value,+$('#pr18').value,+$('#pr60').value];
+  const rows=[['46-0-0 (ยูเรีย)',urea,pr[0]],['18-46-0 (DAP)',dap,pr[1]],['0-0-60 (โพแทช)',mop,pr[2]]].filter(x=>x[1]>.01);
+  const cost=rows.reduce((s,x)=>s+x[1]*area/50*x[2],0);
+  $('#fRes').innerHTML=`<div class="note" style="margin:0">ธาตุอาหารที่ต้องใส่ (กก./ไร่)</div><div class="big">N ${r.N} – P₂O₅ ${r.P} – K₂O ${r.K}</div>
+   <table style="margin-top:8px"><tr><th>แม่ปุ๋ย</th><th>กก./ไร่</th><th>รวม ${fmt(area)} ไร่</th><th>กระสอบ</th></tr>
+   ${rows.map(x=>`<tr><td>${x[0]}</td><td>${fmt(x[1],1)}</td><td>${fmt(x[1]*area,0)} กก.</td><td>${fmt(x[1]*area/50,1)}</td></tr>`).join('')||'<tr><td colspan=4>ไม่ต้องใส่ปุ๋ยเคมีเพิ่ม</td></tr>'}</table>
+   <div style="margin-top:8px;font-weight:600">ค่าปุ๋ยประมาณ ${fmt(cost)} บาท (${fmt(area?cost/area:0)} บาท/ไร่)</div>
+   <div class="note">⏱️ ${r.when}<br>📚 ที่มา: ${r.src}<br>⚠️ ค่าจากเซ็นเซอร์ดินราคาประหยัดเป็นค่าประมาณ ควรส่งดินตรวจที่สถานีพัฒนาที่ดินอย่างน้อยปีละครั้ง</div>
+   <button class="btn alt full" style="margin-top:8px" onclick="addBuyFromFert(${urea*area},${dap*area},${mop*area})">🧺 ส่งยอดนี้ไปรวมซื้อกับกลุ่ม</button>`}
+$('#fCrop').onchange=syncFertCrop;$$('#p-fert input').forEach(i=>i.oninput=calcFert);
+$('#segRice').onclick=e=>{const b=e.target.closest('button');if(!b)return;fOpt.rice=b.dataset.v;$$('#segRice button').forEach(x=>x.classList.toggle('on',x===b));calcFert()};
+$('#segSoil').onclick=e=>{const b=e.target.closest('button');if(!b)return;fOpt.soil=b.dataset.v;$$('#segSoil button').forEach(x=>x.classList.toggle('on',x===b));calcFert()};
+$('#fPlot').onchange=()=>{const p=S.plots.find(x=>x.id===$('#fPlot').value);$('#fCrop').value=p.crop;$('#fArea').value=p.area;fOpt.rice=p.rice||'ns';syncFertCrop()};
+$('#bFromSensor').onclick=()=>{const d=SENS[$('#fPlot').value];if(!d||d.p==null)return toast('ยังไม่มีค่า P, K จากเซ็นเซอร์แปลงนี้');$('#fP').value=d.p;$('#fK').value=d.k;calcFert();toast('ดึงค่า P='+d.p+' K='+d.k+' จากเซ็นเซอร์แล้ว')};
+function goFert(id){closeSheet();go('fert');$('#fPlot').value=id;$('#fPlot').onchange()}
+
+/* ---------- ปฏิทิน ---------- */
+let calPlot=null;
+function renderCal(){if(!calPlot||!S.plots.find(p=>p.id===calPlot))calPlot=S.plots[0]?.id;$('#calSeg').innerHTML=S.plots.map(p=>`<button data-v="${p.id}" class="${p.id===calPlot?'on':''}">${CROPS[p.crop].e}</button>`).join('');
+  $$('#calSeg button').forEach(b=>b.onclick=()=>{calPlot=b.dataset.v;renderCal()});const p=S.plots.find(x=>x.id===calPlot);if(!p){$('#calBody').innerHTML='<p>ยังไม่มีแปลง</p>';return}
+  const c=CROPS[p.crop],st=stageOf(p);let nowI=-1;c.tasks.forEach((t,i)=>{if(st.day>=t[0])nowI=i});
+  $('#calBody').innerHTML=`<b>${c.e} ${esc(p.name)}</b><div class="note" style="margin:2px 0 8px">${c.perennial?'พืชยืนต้น · งานประจำ':'ปลูก '+thDate(p.plant)+' · วันนี้อายุ '+st.day+' วัน · '+st.name}</div>`+
+   c.tasks.map((t,i)=>{const d=new Date(p.plant);d.setDate(d.getDate()+t[0]);return `<div class="task ${i===nowI?'now':''}"><div class="d">${c.perennial?'ประจำ':'วันที่<b>'+t[0]+'</b>'}</div><div><p>${t[1]}</p><small>${c.perennial?'':thDate(iso(d))}${t[2]?' · '+t[2]:''}${i===nowI?' · 👉 ช่วงนี้':''}</small></div></div>`}).join('')}
+
+/* ---------- กลุ่มเกษตรกร ---------- */
+const MSGS=LS.get('msgs_'+S.group.code,[]),GB={},GM={};
+function addMsg(m,mine){if(MSGS.find(x=>x.id===m.id))return;MSGS.push(m);if(MSGS.length>200)MSGS.shift();LS.set('msgs_'+S.group.code,MSGS);renderMsgs();if(!mine&&m.alert)notify('📢 '+m.from,m.text)}
+function renderMsgs(){const box=$('#msgs');box.innerHTML=MSGS.map(m=>`<div class="msg ${m.uid===S.me?'me':''} ${m.alert?'alert':''}"><div class="who">${esc(m.from)} · ${new Date(m.ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</div>${esc(m.text)}${m.loc?`<br><a href="https://www.google.com/maps?q=${m.loc}" target="_blank" rel="noopener">📍 เปิดแผนที่</a>`:''}</div>`).join('')||'<div class="note">ยังไม่มีข้อความ เริ่มทักทายกลุ่มได้เลย</div>';box.scrollTop=box.scrollHeight}
+function sendMsg(text,extra){if(!text)return;const m=Object.assign({id:uid(),uid:S.me,from:S.name||'สมาชิก',text,ts:Date.now()},extra||{});
+  if(S.mode==='mqtt'&&mqOK)mq.publish(gTopic('chat'),JSON.stringify(m));addMsg(m,true);
+  if(S.mode==='demo')setTimeout(()=>addMsg({id:uid(),uid:'demo',from:['ลุงสมชาย','ป้าบุญมี','พี่แดง'][Math.floor(Math.random()*3)],text:m.alert?'ขอบคุณที่แจ้ง เดี๋ยวไปดูแปลงตัวเองด้วย 🙏':['รับทราบครับ','👍','เห็นด้วยจ้า'][Math.floor(Math.random()*3)],ts:Date.now()}),2500)}
+$('#bSend').onclick=()=>{sendMsg($('#msgIn').value.trim());$('#msgIn').value=''};$('#msgIn').onkeydown=e=>{if(e.key==='Enter')$('#bSend').click()};
+$('#bPest').onclick=()=>{const p=S.plots[0];sendMsg(`⚠️ พบศัตรูพืชระบาด (${p?CROPS[p.crop].n:''}) ใกล้แปลง ${p?p.name:''} ขอให้สมาชิกตรวจแปลงตัวเอง`,{alert:true,loc:p?`${p.lat},${p.lon}`:''})};
+$('#bLoc').onclick=()=>{if(!navigator.geolocation)return toast('ไม่รองรับ GPS');navigator.geolocation.getCurrentPosition(g=>sendMsg('📍 ตำแหน่งของฉันตอนนี้',{loc:`${g.coords.latitude.toFixed(5)},${g.coords.longitude.toFixed(5)}`}),()=>toast('ขอสิทธิ์ตำแหน่งไม่สำเร็จ'))};
+$('#gSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#gSeg button').forEach(x=>x.classList.toggle('on',x===b));['chat','buy','mkt'].forEach(k=>$('#g-'+k).hidden=k!==b.dataset.v)};
+const FORM=['46-0-0','18-46-0','0-0-60','15-15-15','16-16-8'];
+function renderBuyIn(){$('#buyIn').innerHTML=FORM.map(f=>`<div><label class="f" for="by${f}">${f} (กก.)</label><input id="by${f}" type="number" inputmode="numeric" value="${S.buy[f]||0}"></div>`).join('')}
+function publishBuy(silent){const m={from:S.name||'สมาชิก',items:S.buy,ts:Date.now()};GB[S.me]=m;if(S.mode==='mqtt'&&mqOK)mq.publish(gTopic('buy/'+S.me),JSON.stringify(m),{retain:true});renderBuy();if(!silent)toast('ส่งยอดเข้ากลุ่มแล้ว')}
+$('#bBuy').onclick=()=>{FORM.forEach(f=>S.buy[f]=+$('#by'+f).value||0);save();publishBuy()};
+function addBuyFromFert(u,d,k){S.buy['46-0-0']=Math.round(u);S.buy['18-46-0']=Math.round(d);S.buy['0-0-60']=Math.round(k);save();renderBuyIn();publishBuy();go('group');$('#gSeg button[data-v=buy]').click()}
+function renderBuy(){if(S.mode==='demo'&&!GB.d1){GB.d1={from:'ลุงสมชาย',items:{'46-0-0':300,'0-0-60':100}};GB.d2={from:'ป้าบุญมี',items:{'15-15-15':500}};GB.d3={from:'พี่แดง',items:{'46-0-0':150,'18-46-0':100}}}
+  const mem=Object.values(GB);const tot={};mem.forEach(m=>FORM.forEach(f=>tot[f]=(tot[f]||0)+(+(m.items||{})[f]||0)));
+  $('#buyRes').innerHTML=`<b>ยอดรวมของกลุ่ม (${mem.length} คน)</b><table style="margin-top:6px"><tr><th>สูตร</th><th>รวม (กก.)</th><th>กระสอบ</th></tr>${FORM.filter(f=>tot[f]).map(f=>`<tr><td>${f}</td><td>${fmt(tot[f])}</td><td>${fmt(tot[f]/50,1)}</td></tr>`).join('')}</table>
+   <div class="note">ยอดรวม ${fmt(Object.values(tot).reduce((a,b)=>a+b,0)/1000,2)} ตัน · ใช้ต่อรองราคาส่งกับร้านปุ๋ย/สหกรณ์ (ราคาขึ้นกับการตกลงของกลุ่ม)</div>
+   <div class="list">${mem.map(m=>`<div class="it"><div class="ic">👤</div><p>${esc(m.from)}<br><small>${Object.entries(m.items||{}).filter(e=>e[1]).map(e=>e[0]+': '+e[1]+' กก.').join(' · ')||'—'}</small></p></div>`).join('')}</div>`}
+let MY_MKT=LS.get('mkt',[]);
+function publishMkt(silent){GM[S.me]={from:S.name||'สมาชิก',items:MY_MKT};if(S.mode==='mqtt'&&mqOK)mq.publish(gTopic('mkt/'+S.me),JSON.stringify(GM[S.me]),{retain:true});renderMkt()}
+$('#bMk').onclick=()=>{const kg=+$('#mkKg').value;if(!kg)return toast('ใส่จำนวนก่อน');MY_MKT.push({id:uid(),crop:$('#mkCrop').value,kg,price:+$('#mkPrice').value||0,date:$('#mkDate').value||iso(today())});LS.set('mkt',MY_MKT);publishMkt();toast('ประกาศขายในกลุ่มแล้ว')};
+function delMkt(id){MY_MKT=MY_MKT.filter(x=>x.id!==id);LS.set('mkt',MY_MKT);publishMkt()}
+function renderMkt(){if(S.mode==='demo'&&!GM.d1)GM.d1={from:'ป้าบุญมี',items:[{id:'x1',crop:'rice',kg:4500,price:9.8,date:ago(-6)}]},GM.d2={from:'ลุงสมชาย',items:[{id:'x2',crop:'cassava',kg:18000,price:3.1,date:ago(-12)}]};
+  const all=Object.entries(GM).flatMap(([u,m])=>(m.items||[]).map(it=>Object.assign({from:m.from,mine:u===S.me},it)));const tot={};all.forEach(i=>tot[i.crop]=(tot[i.crop]||0)+i.kg);
+  $('#mkList').innerHTML=`<div class="note">รวมผลผลิตในกลุ่ม: ${Object.entries(tot).map(([c,k])=>CROPS[c].e+' '+CROPS[c].n+' '+fmt(k/1000,1)+' ตัน').join(' · ')||'—'} — ใช้นัดพ่อค้า/โรงสีมารับครั้งเดียว ลดค่าขนส่ง</div>`+
+   all.map(i=>`<div class="it"><div class="ic">${CROPS[i.crop].e}</div><p>${CROPS[i.crop].n} ${fmt(i.kg)} กก. ${i.price?'· '+i.price+' บ./กก.':''}<br><small>${esc(i.from)} · พร้อมขาย ${thDate(i.date)}</small></p>${i.mine?`<button class="btn alt" style="margin-left:auto;min-height:38px;padding:6px 10px" onclick="delMkt('${i.id}')">ลบ</button>`:''}</div>`).join('')}
+
+/* ---------- สมุดฟาร์ม ---------- */
+const TYPES=['ปุ๋ย','ฉีดพ่น','รดน้ำ','ปลูก','เก็บเกี่ยว','ขาย','ค่าแรง','อื่น ๆ'],TIC={'ปุ๋ย':'🧪','ฉีดพ่น':'💨','รดน้ำ':'💧','ปลูก':'🌱','เก็บเกี่ยว':'🧺','ขาย':'💰','ค่าแรง':'👷','อื่น ๆ':'📝'};
+function renderLog(){const cost=S.logs.reduce((s,l)=>s+(+l.cost||0),0),inc=S.logs.reduce((s,l)=>s+(+l.income||0),0);
+  $('#sum').innerHTML=`<div><small>รายจ่าย</small><b style="color:var(--bad)">${fmt(cost)}</b></div><div><small>รายรับ</small><b style="color:var(--ok)">${fmt(inc)}</b></div><div><small>กำไร</small><b>${fmt(inc-cost)}</b></div>`;
+  const L=[...S.logs].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#logList').innerHTML=L.map(l=>{const p=S.plots.find(x=>x.id===l.plot);return `<div class="it">${l.photo?`<img class="thumb" src="${l.photo}" alt="">`:`<div class="ic">${TIC[l.type]||'📝'}</div>`}<p>${esc(l.note||l.type)}<br><small>${thDate(l.date)} · ${p?esc(p.name):'-'} · ${l.type}</small></p><div class="amt" style="color:${l.income?'var(--ok)':'var(--bad)'}">${l.income?'+'+fmt(l.income):l.cost?'-'+fmt(l.cost):''}</div></div>`}).join('')||'<div class="note">ยังไม่มีบันทึก</div>'}
+function openLog(pid){closeSheet();$('#sheetBd').innerHTML=`<h2>📝 บันทึกกิจกรรม<button class="x" onclick="closeSheet()" aria-label="ปิด">✕</button></h2>
+  <div class="grid2"><div><label class="f" for="lD">วันที่</label><input id="lD" type="date" value="${iso(today())}"></div><div><label class="f" for="lP">แปลง</label><select id="lP">${S.plots.map(p=>`<option value="${p.id}" ${p.id===pid?'selected':''}>${CROPS[p.crop].e} ${esc(p.name)}</option>`).join('')}</select></div></div>
+  <label class="f" for="lT">กิจกรรม</label><select id="lT">${TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+  <label class="f" for="lN">รายละเอียด</label><input id="lN" placeholder="เช่น ใส่ปุ๋ย 46-0-0 10 กก./ไร่">
+  <div class="grid2"><div><label class="f" for="lC">รายจ่าย (บาท)</label><input id="lC" type="number" inputmode="numeric" value="0"></div><div><label class="f" for="lI">รายรับ (บาท)</label><input id="lI" type="number" inputmode="numeric" value="0"></div></div>
+  <label class="f" for="lF">รูปถ่าย (ถ่ายจากกล้องมือถือได้)</label><input id="lF" type="file" accept="image/*" capture="environment"><img id="lImg" class="photo" hidden alt="ตัวอย่างรูป">
+  <button class="btn full" id="lSave" style="margin-top:14px">บันทึก</button>`;$('#sheet').classList.add('on');let photo='';
+  $('#lF').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),s=Math.min(1,480/Math.max(im.width,im.height));c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);photo=c.toDataURL('image/jpeg',.7);$('#lImg').src=photo;$('#lImg').hidden=false};im.src=URL.createObjectURL(f)};
+  $('#lSave').onclick=()=>{S.logs.push({id:uid(),date:$('#lD').value,plot:$('#lP').value,type:$('#lT').value,note:$('#lN').value,cost:+$('#lC').value||0,income:+$('#lI').value||0,photo});save();closeSheet();renderLog();toast('บันทึกแล้ว')}}
+$('#bAddLog').onclick=()=>openLog(S.plots[0]?.id);
+$('#bCsv').onclick=()=>{const rows=[['วันที่','แปลง','กิจกรรม','รายละเอียด','รายจ่าย','รายรับ']].concat(S.logs.map(l=>[l.date,(S.plots.find(p=>p.id===l.plot)||{}).name||'',l.type,l.note,l.cost,l.income]));
+  const csv='﻿'+rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='plookpun-farmbook.csv';a.click();toast('ดาวน์โหลด CSV แล้ว (เปิดใน Excel/Google Sheets ได้)')}catch(e){navigator.clipboard?.writeText(csv);toast('คัดลอก CSV แล้ว')}};
+
+/* ---------- ตั้งค่า ---------- */
+function openSettings(){closeSheet();$('#sheetBd').innerHTML=`<h2>⚙️ ตั้งค่า<button class="x" onclick="closeSheet()" aria-label="ปิด">✕</button></h2>
+  <label class="f" for="sN">ชื่อของฉัน (แสดงในกลุ่ม)</label><input id="sN" value="${esc(S.name)}" placeholder="เช่น สมศรี">
+  <div class="grid2"><div><label class="f" for="sGC">รหัสกลุ่มเกษตรกร</label><input id="sGC" value="${esc(S.group.code)}"></div><div><label class="f" for="sGN">ชื่อกลุ่ม</label><input id="sGN" value="${esc(S.group.name)}"></div></div>
+  <label class="f">แหล่งข้อมูลเซ็นเซอร์</label><div class="seg" id="sMode"><button data-v="demo" class="${S.mode==='demo'?'on':''}">ข้อมูลจำลอง</button><button data-v="mqtt" class="${S.mode==='mqtt'?'on':''}">เชื่อม CoreDash / MQTT</button></div>
+  <div id="sMq" ${S.mode==='mqtt'?'':'hidden'}>
+   <label class="f" for="sU">Broker (WebSocket แบบ wss://)</label><input id="sU" value="${esc(S.mqtt.url)}">
+   <div class="grid2"><div><label class="f" for="sUs">ชื่อผู้ใช้</label><input id="sUs" value="${esc(S.mqtt.user)}" autocomplete="off"></div><div><label class="f" for="sPw">รหัสผ่าน</label><input id="sPw" type="password" value="${esc(S.mqtt.pass)}" autocomplete="off"></div></div>
+   <label class="f" for="sF">รหัสฟาร์ม (Farm ID – ใส่ให้ตรงกับ ESP32)</label><input id="sF" value="${esc(S.mqtt.farm)}">
+   <div class="note">หัวข้อที่ ESP32 ต้องส่ง: <code>plookpun/${esc(S.mqtt.farm)}/&lt;node-id&gt;/telemetry</code><br>broker สาธารณะใช้ทดสอบเท่านั้น ข้อมูลจริงควรใช้ broker ของ CoreDash ที่มีรหัสผ่าน</div></div>
+  <div class="pumprow" style="background:#f4faf2"><span>🔠</span><b style="font-size:.92rem">ตัวหนังสือใหญ่ (ผู้สูงวัย)</b><button class="sw ${S.big?'on':''}" id="sBig" role="switch" aria-checked="${S.big}" aria-label="ตัวหนังสือใหญ่"></button></div>
+  <div class="pumprow" style="background:#f4faf2"><span>🔔</span><b style="font-size:.92rem">แจ้งเตือนบนมือถือ</b><button class="btn alt" id="sNoti" style="margin-left:auto;min-height:38px">อนุญาต</button></div>
+  <button class="btn full" id="sSave" style="margin-top:14px">บันทึกการตั้งค่า</button>
+  <button class="btn alt full" id="sReset" style="margin-top:8px">ล้างข้อมูลทั้งหมดในเครื่อง</button>
+  <div class="note">ข้อมูลแปลง สมุดฟาร์ม และรูปถ่าย เก็บอยู่ในเครื่องนี้เท่านั้น · ปลูกปั้น v1.0 · CoreDash</div>`;$('#sheet').classList.add('on');
+  $('#sMode').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#sMode button').forEach(x=>x.classList.toggle('on',x===b));$('#sMq').hidden=b.dataset.v!=='mqtt'};
+  $('#sBig').onclick=e=>{e.currentTarget.classList.toggle('on')};
+  $('#sNoti').onclick=async()=>{if(!('Notification'in window))return toast('เครื่องนี้ไม่รองรับการแจ้งเตือน');const r=await Notification.requestPermission();toast(r==='granted'?'เปิดการแจ้งเตือนแล้ว':'ไม่ได้รับอนุญาต')};
+  $('#sSave').onclick=()=>{const oldCode=S.group.code;S.name=$('#sN').value.trim();S.group={code:$('#sGC').value.trim()||'BANNA-01',name:$('#sGN').value.trim()};S.mode=$('#sMode .on').dataset.v;
+    Object.assign(S.mqtt,{url:$('#sU').value.trim(),user:$('#sUs').value,pass:$('#sPw').value,farm:$('#sF').value.trim()});S.big=$('#sBig').classList.contains('on');document.body.classList.toggle('big',S.big);save();
+    if(oldCode!==S.group.code)location.reload();closeSheet();startData();renderAll();toast('บันทึกแล้ว')};
+  $('#sReset').onclick=()=>{if($('#sReset').dataset.c){try{localStorage.clear()}catch(e){}location.reload()}else{$('#sReset').dataset.c=1;$('#sReset').textContent='แตะอีกครั้งเพื่อยืนยันการล้างข้อมูล'}}}
+$('#bSet').onclick=openSettings;
+
+/* ---------- เสียง / แจ้งเตือน ---------- */
+$('#bSpeak').onclick=()=>{const all=S.plots.flatMap(advise).filter(a=>a.lv!=='ok');const t=all.length?'วันนี้มีเรื่องต้องดูแล '+all.length+' เรื่อง. '+all.slice(0,4).map(a=>a.plot.name+'. '+a.t).join('. '):'ทุกแปลงปกติดีครับ';
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[\u{1F000}-\u{1FFFF}☀-➿]/gu,''));u.lang='th-TH';const v=speechSynthesis.getVoices().find(v=>/^th/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);toast('🔊 กำลังอ่านสรุป')}catch(e){toast('เครื่องนี้ไม่รองรับการอ่านออกเสียง')}};
+const notified=new Set();
+function notify(title,body){try{if(Notification.permission!=='granted')return;if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:'icon-192.png',badge:'icon-192.png'}));else new Notification(title,{body,icon:'icon-192.png'})}catch(e){}}
+function checkNotify(){S.plots.flatMap(advise).filter(a=>a.lv==='bad').forEach(a=>{const k=a.plot.id+a.t.slice(0,20);if(!notified.has(k)){notified.add(k);notify('🌾 '+a.plot.name,a.t)}})}
+
+/* ---------- นำทาง ---------- */
+let cur='home';
+function go(p){cur=p;$$('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));$$('nav button').forEach(b=>{const on=b.dataset.p===p;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'page':'false')});scrollTo(0,0);
+  if(p==='home')renderHome();if(p==='cal')renderCal();if(p==='group'){renderMsgs();renderBuy();renderMkt()}if(p==='log')renderLog();if(p==='fert')calcFert()}
+$$('nav button').forEach(b=>b.onclick=()=>go(b.dataset.p));
+function renderAll(){fertInit();renderBuyIn();$('#mkCrop').innerHTML=cropOpts('rice');$('#gName').textContent='· '+S.group.name;go(cur)}
+
+/* ---------- ติดตั้งแอป (PWA) ---------- */
+let deferred=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#bInstall').style.display='inline-flex'});
+$('#bInstall').onclick=async()=>{if(deferred){deferred.prompt();await deferred.userChoice;deferred=null;$('#bInstall').style.display='none'}};
+const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(!standalone&&/iphone|ipad/i.test(navigator.userAgent)){$('#bInstall').style.display='inline-flex';$('#bInstall').onclick=()=>toast('iPhone: กดปุ่มแชร์ ⬆️ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”')}
+if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+
+/* ---------- เริ่มทำงาน ---------- */
+renderAll();startData();S.plots.forEach(p=>loadWx(p));
+if(S.mode==='demo'&&!MSGS.length){[['ลุงสมชาย','พรุ่งนี้ฝนตกหนัก เลื่อนใส่ปุ๋ยกันก่อนนะครับ'],['ป้าบุญมี','ใครจะรวมซื้อปุ๋ยยูเรียบ้าง สหกรณ์ลดให้ถ้าเกิน 5 ตัน'],['พี่แดง','⚠️ เจอเพลี้ยแป้งในไร่มันโซนเหนือ ฝากตรวจแปลงด้วย']].forEach((m,i)=>MSGS.push({id:'s'+i,uid:'demo',from:m[0],text:m[1],ts:Date.now()-(3-i)*3600e3,alert:i===2}))}
+</script>
+</body>
+</html>
