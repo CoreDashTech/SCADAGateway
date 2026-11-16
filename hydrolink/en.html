@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoreDash HydroLink — pump-station SCADA on web and mobile</title>
+<meta name="description" content="Pump-station SCADA with PID pressure control, automatic pump alternation, LINE / Telegram / email alerts and an open REST API, on web and mobile.">
+<meta property="og:title" content="CoreDash HydroLink">
+<meta property="og:image" content="assets/en/shot-overview.png">
+<meta name="theme-color" content="#061033">
+<link rel="icon" href="app/icons/icon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="th" href="./">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root{--bg:#050C26;--bg2:#081640;--card:#0C1A45;--line:rgba(140,170,255,.16);--ink:#EEF3FF;--mute:#A9B8DA;--blue:#2E6BFF;--cyan:#22D3EE;--teal:#14B8A6;--amber:#F5C76A}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun','Space Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+.grot{font-family:'Space Grotesk','Sarabun',sans-serif}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+.eyebrow::before{content:"";width:22px;height:2px;background:currentColor;border-radius:2px}
+h1,h2,h3{margin:0;color:#fff;line-height:1.2}
+h2{font-family:'Space Grotesk','Sarabun',sans-serif;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.01em}
+.lead{color:var(--mute);font-size:18px;max-width:720px;margin:14px 0 0}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:10px;font-weight:700;font-size:16px;text-decoration:none;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(135deg,#2E6BFF,#1BB5E8);color:#fff;box-shadow:0 10px 30px -8px rgba(46,107,255,.7)}
+.btn.pri:hover{box-shadow:0 14px 36px -8px rgba(34,211,238,.7)}
+.btn.ghost{border:1px solid var(--line);color:#DCE6FF;background:rgba(255,255,255,.03)}
+.btn.ghost:hover{background:rgba(255,255,255,.07)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:20;background:rgba(5,12,38,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:20px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand .mk{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#2E6BFF,#22D3EE)}
+.brand b{font-family:'Space Grotesk',sans-serif;font-size:21px;letter-spacing:-.02em}
+.brand b span{background:linear-gradient(90deg,#7FB6FF,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav .links{display:flex;gap:26px;margin-left:auto;font-weight:600;font-size:15px}
+.nav .links a{text-decoration:none;color:#C9D5F2}
+.nav .links a:hover{color:#fff}
+.lang{display:flex;border:1px solid var(--line);border-radius:8px;padding:2px}
+.lang a{text-decoration:none;font-size:13px;font-weight:700;padding:5px 10px;border-radius:6px;color:#C9D5F2}
+.lang a.on{background:var(--blue);color:#fff}
+.nav .btn{padding:10px 16px;font-size:15px}
+@media(max-width:900px){.nav .links{display:none}.nav .lang{margin-left:auto}}
+@media(max-width:520px){.nav .btn{display:none}.brand b{font-size:18px}.brand .mk{width:34px;height:34px}}
+.brand b{white-space:nowrap}
+@media(max-width:600px){.live{display:none}.phone{bottom:-30px}}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:radial-gradient(900px 520px at 78% 18%,rgba(34,211,238,.20),transparent 60%),radial-gradient(1000px 640px at 20% 0%,rgba(46,107,255,.30),transparent 60%),var(--bg2)}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(122,162,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(122,162,255,.06) 1px,transparent 1px);background-size:48px 48px;mask:linear-gradient(#000 40%,transparent);-webkit-mask:linear-gradient(#000 40%,transparent)}
+.hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:48px;align-items:center;padding-top:72px;padding-bottom:96px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid rgba(34,211,238,.35);background:rgba(34,211,238,.08);font-size:14px;font-weight:600;color:#BFF4FF}
+.pill i{width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:ping 2s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.hero h1{font-family:'Space Grotesk','Sarabun',sans-serif;font-size:clamp(38px,5vw,62px);letter-spacing:-.025em;line-height:1.12;margin-top:20px}
+.hero h1 .g{background:linear-gradient(90deg,#8DBBFF,#22D3EE 60%,#5EEAD4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{font-size:19px;color:#C4D0EE;margin:20px 0 30px;max-width:560px}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+.chip{font-size:14px;color:#C9D5F2;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.03)}
+.chip b{color:#fff}
+.stage{position:relative;perspective:1600px}
+.browser{border-radius:14px;overflow:hidden;background:#0A1434;border:1px solid rgba(160,190,255,.22);box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03);transform:rotateY(-9deg) rotateX(4deg);transform-origin:left center;transition:transform .6s}
+.stage:hover .browser{transform:rotateY(-4deg) rotateX(2deg)}
+.bar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:#0E1A40;border-bottom:1px solid rgba(160,190,255,.14)}
+.bar i{width:10px;height:10px;border-radius:50%;background:#33406A}
+.bar i:nth-child(1){background:#F87171}.bar i:nth-child(2){background:#FBBF24}.bar i:nth-child(3){background:#34D399}
+.bar span{margin-left:12px;flex:1;font-size:12px;color:#8FA2CF;background:#081233;border-radius:6px;padding:4px 10px;font-family:'Space Grotesk',sans-serif}
+.phone{position:absolute;right:-14px;bottom:-56px;width:31%;min-width:150px;border-radius:30px;padding:9px;background:#0B1022;border:1px solid rgba(160,190,255,.3);box-shadow:0 30px 60px -20px rgba(0,0,0,.85);animation:float 6s ease-in-out infinite}
+.phone img{border-radius:22px;aspect-ratio:390/700;object-fit:cover;object-position:top}
+@keyframes float{50%{transform:translateY(-10px)}}
+.live{position:absolute;left:-26px;bottom:24px;display:flex;flex-direction:column;gap:2px;padding:14px 18px;border-radius:14px;background:rgba(9,20,56,.88);backdrop-filter:blur(10px);border:1px solid rgba(34,211,238,.35);box-shadow:0 20px 40px -14px rgba(0,0,0,.8);animation:float 7s ease-in-out infinite reverse}
+.live small{font-size:12px;color:#9FB2DD;display:flex;align-items:center;gap:6px}
+.live small i{width:7px;height:7px;border-radius:50%;background:#34D399}
+.live b{font-family:'Space Grotesk',sans-serif;font-size:30px;color:#fff;line-height:1.1}
+.live b em{font-style:normal;font-size:15px;color:#9FB2DD;margin-left:4px}
+.spark{display:block;margin-top:4px}
+@media(max-width:980px){.hero .wrap{grid-template-columns:1fr;padding-top:48px}.browser{transform:none}.stage:hover .browser{transform:none}.live{left:8px}.phone{right:6px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* integrations strip */
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#06102E}
+.strip .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:14px 30px;padding-top:22px;padding-bottom:22px}
+.strip span.t{font-size:13px;font-weight:700;letter-spacing:.12em;color:#7F92C0;text-transform:uppercase}
+.strip span.p{font-family:'Space Grotesk',sans-serif;font-weight:600;color:#C9D5F2;font-size:15px;opacity:.85}
+
+section.blk{padding:96px 0}
+.head{margin-bottom:44px}
+
+/* features */
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media(max-width:980px){.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.grid3{grid-template-columns:1fr}}
+.feat{position:relative;padding:28px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid var(--line);transition:border-color .2s,transform .2s}
+.feat:hover{border-color:rgba(34,211,238,.45);transform:translateY(-3px)}
+.fi{display:grid;place-items:center;width:48px;height:48px;border-radius:12px;color:#7FE6F7;background:linear-gradient(135deg,rgba(46,107,255,.28),rgba(34,211,238,.18));border:1px solid rgba(34,211,238,.25);margin-bottom:18px}
+.feat h3{font-size:20px;margin-bottom:8px}
+.feat p{margin:0;color:var(--mute);font-size:16px}
+
+/* architecture */
+.arch{background:linear-gradient(180deg,#06102E,#081640)}
+.diagram{border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.02);padding:18px;overflow-x:auto}
+.diagram svg{display:block;min-width:860px;width:100%;height:auto}
+.flow{stroke-dasharray:6 8;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-28}}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+.step{padding:22px 24px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.step .n{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--cyan);letter-spacing:.1em}
+.step b{display:block;font-size:18px;color:#fff;margin:6px 0 4px}
+.step span{color:var(--mute);font-size:15px}
+
+/* gallery */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{font:inherit;font-size:15px;font-weight:600;color:#C9D5F2;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
+.tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.shotframe{border-radius:16px;overflow:hidden;border:1px solid rgba(160,190,255,.22);box-shadow:0 40px 80px -36px rgba(0,0,0,.9);background:#0A1434}
+.shotframe img{width:100%;transition:opacity .25s}
+.cap{margin-top:12px;color:var(--mute);font-size:15px}
+
+/* security + uses */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:start}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.sec li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);color:#D6E0F8}
+.sec ul{list-style:none;margin:24px 0 0;padding:0}
+.sec li svg{flex:0 0 auto;color:#34D399;margin-top:3px}
+.uses{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.uses{grid-template-columns:1fr}}
+.use{display:flex;flex-direction:column;gap:6px;padding:22px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.use .ui{color:var(--amber)}
+.use b{color:#fff;font-size:17px}
+.use span:last-child{color:var(--mute);font-size:15px}
+
+/* faq */
+.qa{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025);margin-bottom:12px}
+.qa summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;padding:18px 22px;font-weight:700;color:#fff;font-size:17px}
+.qa summary::-webkit-details-marker{display:none}
+.qa .pm{position:relative;width:16px;height:16px;flex:0 0 auto;margin-top:5px}
+.qa .pm::before,.qa .pm::after{content:"";position:absolute;left:0;top:7px;width:16px;height:2px;background:var(--cyan);transition:transform .2s}
+.qa .pm::after{transform:rotate(90deg)}
+.qa[open] .pm::after{transform:rotate(0)}
+.qa p{margin:0;padding:0 22px 20px;color:var(--mute)}
+
+/* cta */
+.cta{position:relative;overflow:hidden;border-radius:24px;padding:56px;background:radial-gradient(600px 300px at 85% 20%,rgba(34,211,238,.35),transparent 60%),linear-gradient(135deg,#1442C8,#0B2A8A);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between}
+.cta h2{max-width:620px}
+.cta p{margin:10px 0 0;color:#D5E2FF}
+.cta .btn.ghost{border-color:rgba(255,255,255,.4);color:#fff}
+@media(max-width:600px){.cta{padding:32px 24px}}
+footer{border-top:1px solid var(--line);padding:30px 0 40px;color:#8FA2CF;font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:center}
+footer a{text-decoration:none;color:#C9D5F2}
+html[lang=th] .eyebrow,html[lang=th] .strip span.t,html[lang=th] .step .n{letter-spacing:.02em}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+<div class="wrap">
+<a class="brand" href="en.html">
+<span class="mk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5s7 7.6 7 12.5a7 7 0 0 1-14 0c0-4.9 7-12.5 7-12.5z"/><path d="M8.5 15a3.5 3.5 0 0 0 3.5 3.5"/></svg></span>
+<b>CoreDash <span>HydroLink</span></b>
+</a>
+<div class="links">
+<a href="#features">Features</a>
+<a href="#how">How it works</a>
+<a href="#screens">Screens</a>
+<a href="docs/api.html">API</a>
+<a href="../en.html">CoreDash Nexus</a>
+</div>
+<span class="lang" role="group" aria-label="Language"><a href="./" class="">TH</a><a href="en.html" class="on">EN</a></span>
+<a class="btn pri" href="app/">Live demo</a>
+</div>
+</nav>
+
+<header class="hero">
+<div class="wrap">
+<div>
+<span class="pill"><i></i>New in the CoreDash family · pump-station SCADA</span>
+<h1>Every pump station,<br><span class="g">seen and controlled</span><br>from anywhere</h1>
+<p class="sub">CoreDash HydroLink is web and mobile SCADA for water pump stations: PID pressure control, automatic pump alternation, alerts to LINE, and a REST API for your other systems, with nothing to install.</p>
+<div class="cta-row">
+<a class="btn pri" href="app/">Try the live demo <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+<a class="btn ghost" href="#screens">See every screen</a>
+</div>
+<div class="chips">
+<span class="chip"><b>PID</b> steady pressure</span>
+<span class="chip"><b>Lead/Lag</b> auto alternation</span>
+<span class="chip"><b>Modbus</b> TCP · RTU · MQTT</span>
+<span class="chip"><b>AES-256</b> API</span>
+</div>
+</div>
+<div class="stage">
+<div class="browser">
+<div class="bar"><i></i><i></i><i></i><span>coredashtech.com/hydrolink/app</span></div>
+<img src="assets/en/shot-overview.png" alt="Station overview: live P&ID, pressure, flow and control logic" width="1440" height="900" fetchpriority="high">
+</div>
+<div class="phone"><img src="assets/en/shot-mobile.png" alt="Mobile screen" width="780" height="1688" loading="lazy"></div>
+<div class="live" aria-live="off">
+<small><i></i>Discharge pressure · live</small>
+<b><span id="lvP">4.00</span><em>bar</em></b>
+<svg class="spark" width="150" height="34" viewBox="0 0 150 34" aria-hidden="true"><path id="lvS" d="" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linejoin="round"/></svg>
+</div>
+</div>
+</div>
+</header>
+
+<div class="strip"><div class="wrap">
+<span class="t">Works with</span>
+<span class="p">Modbus TCP / RTU</span><span class="p">MQTT</span><span class="p">PLC FX5U</span><span class="p">ACS580 VSD</span><span class="p">Power Meter</span><span class="p">Flowmeter</span><span class="p">LINE OA</span><span class="p">Telegram</span><span class="p">SMTP</span>
+</div></div>
+
+<section class="blk" id="features">
+<div class="wrap">
+<div class="head reveal"><span class="eyebrow">Features</span><h2 style="margin-top:12px">Everything a pump station needs, from the panel to the boardroom</h2>
+<p class="lead">Shaped by how operators and water engineers actually work: easy to read on a phone, safe to command, and every action traceable.</p></div>
+<div class="grid3"><article class="feat"><span class="fi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><h3>PID pressure control</h3><p>Inverter speed is trimmed automatically to hold the pressure set-point, using less energy than throttling and reducing water hammer.</p></article><article class="feat"><span class="fi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v13M7 17l-3-3M7 17l3-3M17 20V7M17 7l-3 3M17 7l3 3"/></svg></span><h3>Automatic lead / lag alternation</h3><p>Duty pump rotates on a timer, the assist pump starts when pressure cannot be held, with a live countdown and run hours per pump.</p></article><article class="feat"><span class="fi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.4"/></svg></span><h3>PIN-protected commands</h3><p>Click a pump on the P&ID to open its faceplate, unlock with a personal PIN, confirm every command, and every action lands in the audit log.</p></article><article class="feat"><span class="fi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></span><h3>Instant alerts</h3><p>Alarms go to LINE OA, Telegram and email by severity, with acknowledgement and a full history.</p></article><article class="feat"><span class="fi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></svg></span><h3>History, trends and reports</h3><p>Trends for every point, daily and monthly reports on volume and kWh/m³, CSV export and printable PDF.</p></article><article class="feat"><span class="fi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6M14 4l-4 16"/></svg></span><h3>Open REST API</h3><p>Plug into ERP, BI or BMS straight away: OpenAPI spec, scoped API keys, rate limits and AES-256 encryption.</p></article></div>
+</div>
+</section>
+
+<section class="blk arch" id="how">
+<div class="wrap">
+<div class="head reveal"><span class="eyebrow">How it works</span><h2 style="margin-top:12px">From the pump panel to your phone in seconds</h2>
+<p class="lead">Control logic always stays in the on-site PLC. HydroLink reads it through the CoreDash Edge Gateway and publishes it securely to the web.</p></div>
+<div class="diagram reveal">
+<svg viewBox="0 0 1160 310" role="img" aria-label="Architecture: field devices → PLC → edge gateway → cloud → users and other systems">
+<defs><linearGradient id="gA" x1="0" x2="1"><stop offset="0" stop-color="#2E6BFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+<g font-family="Sarabun, Space Grotesk, sans-serif" fill="#EEF3FF">
+<g transform="translate(20,40)">
+<rect width="200" height="220" rx="16" fill="#0C1A45" stroke="rgba(140,170,255,.25)"/>
+<text x="20" y="34" font-size="13" font-weight="700" fill="#7F92C0" letter-spacing="1.5">FIELD</text>
+<g font-size="15"><text x="20" y="72">Pumps + VSD ×2</text><text x="20" y="104">Pressure sensors</text><text x="20" y="136">Flowmeter</text><text x="20" y="168">Power Meter</text><text x="20" y="200">Tank level</text></g>
+</g>
+<g transform="translate(270,90)"><rect width="170" height="120" rx="16" fill="#0C1A45" stroke="rgba(140,170,255,.25)"/><text x="85" y="52" text-anchor="middle" font-size="20" font-weight="700" font-family="Space Grotesk, Sarabun, sans-serif">PLC</text><text x="85" y="80" text-anchor="middle" font-size="14" fill="#A9B8DA">PID · lead/lag</text></g>
+<g transform="translate(490,80)"><rect width="200" height="140" rx="16" fill="url(#gA)" opacity=".18"/><rect width="200" height="140" rx="16" fill="none" stroke="#22D3EE" stroke-opacity=".7"/><text x="100" y="52" text-anchor="middle" font-size="18" font-weight="700" font-family="Space Grotesk, Sarabun, sans-serif">Edge Gateway</text><text x="100" y="80" text-anchor="middle" font-size="14" fill="#BFF4FF">polls every 1 s</text><text x="100" y="104" text-anchor="middle" font-size="14" fill="#BFF4FF">buffers when offline</text></g>
+<g transform="translate(740,90)"><rect width="170" height="120" rx="16" fill="#0C1A45" stroke="rgba(140,170,255,.25)"/><text x="85" y="52" text-anchor="middle" font-size="18" font-weight="700" font-family="Space Grotesk, Sarabun, sans-serif">HydroLink</text><text x="85" y="80" text-anchor="middle" font-size="14" fill="#A9B8DA">HTTPS · REST · AES-256</text></g>
+<g transform="translate(955,30)">
+<rect width="190" height="70" rx="14" fill="#0C1A45" stroke="rgba(140,170,255,.25)"/><text x="95" y="41" text-anchor="middle" font-size="15">Web & mobile</text>
+<rect y="95" width="190" height="70" rx="14" fill="#0C1A45" stroke="rgba(140,170,255,.25)"/><text x="95" y="136" text-anchor="middle" font-size="15">LINE · Telegram · Email</text>
+<rect y="190" width="190" height="70" rx="14" fill="#0C1A45" stroke="rgba(140,170,255,.25)"/><text x="95" y="231" text-anchor="middle" font-size="15">ERP · BI · BMS</text>
+</g>
+</g>
+<g fill="none" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round">
+<path class="flow" d="M220 150H270"/><path class="flow" d="M440 150H490"/><path class="flow" d="M690 150H740"/>
+<path class="flow" d="M910 140C935 140 935 65 960 65"/><path class="flow" d="M910 150C935 150 935 160 960 160"/><path class="flow" d="M910 160C935 160 935 255 960 255"/>
+</g>
+<g font-family="Space Grotesk, sans-serif" font-size="12" fill="#7F92C0" text-anchor="middle"><text x="245" y="138">I/O</text><text x="465" y="138">Modbus</text><text x="715" y="138">TLS</text></g>
+</svg>
+</div>
+<div class="steps">
+<div class="step reveal"><span class="n">01 · SIMULATE</span><b>Try it in the browser</b><span>A process simulator behaves like a real station: command pumps, change set-points, watch the alternation.</span></div>
+<div class="step reveal"><span class="n">02 · TEST FILE</span><b>Replay events from JSON</b><span>Upload scenario files — pump trip, power loss, peak demand — to test alerts before go-live.</span></div>
+<div class="step reveal"><span class="n">03 · LIVE</span><b>Connect the edge gateway</b><span>Install the gateway in the panel, enter its URL and API key, and the same screens switch to live data.</span></div>
+</div>
+</div>
+</section>
+
+<section class="blk" id="screens">
+<div class="wrap">
+<div class="head reveal"><span class="eyebrow">Screens</span><h2 style="margin-top:12px">Every screen your team will use</h2></div>
+<div class="tabs" role="tablist"><button class="tab on" role="tab" aria-selected="true" data-shot="overview" data-cap="Live P&ID · KPIs · control logic">Overview</button><button class="tab" role="tab" aria-selected="false" data-shot="station" data-cap="Orbit the view, click a pump to command it">3D station</button><button class="tab" role="tab" aria-selected="false" data-shot="pumps" data-cap="Hz · A · kW · run hours · faults">Pumps & inverters</button><button class="tab" role="tab" aria-selected="false" data-shot="alarms" data-cap="Severity · ACK · delivery channels">Alarms</button><button class="tab" role="tab" aria-selected="false" data-shot="history" data-cap="Trends · CSV export">History & trends</button><button class="tab" role="tab" aria-selected="false" data-shot="api" data-cap="API keys · scopes · try it in the browser">REST API</button></div>
+<div class="shotframe"><img id="shotImg" src="assets/en/shot-overview.png" alt="Overview" width="1440" height="900" loading="lazy"></div>
+<p class="cap" id="shotCap">Live P&ID · KPIs · control logic</p>
+</div>
+</section>
+
+<section class="blk arch">
+<div class="wrap two">
+<div class="sec reveal">
+<span class="eyebrow">Security</span>
+<h2 style="margin-top:12px">Remote control, with certainty every time</h2>
+<ul>
+<li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Three roles: viewer · operator · admin</span></li><li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Personal PIN unlocks commands for 5 minutes, then auto-locks</span></li><li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Confirm before every command; the audit log records who did what, when</span></li><li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Interlocks block unsafe sequences; core logic always stays in the PLC</span></li><li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>HTTPS · scoped API keys · rate limits · AES-256-GCM encryption</span></li>
+</ul>
+</div>
+<div class="reveal">
+<span class="eyebrow">Built for</span>
+<h2 style="margin-top:12px;margin-bottom:24px">Anywhere pumps need looking after</h2>
+<div class="uses"><div class="use"><span class="ui"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5s7 7.6 7 12.5a7 7 0 0 1-14 0c0-4.9 7-12.5 7-12.5z"/></svg></span><b>Village & municipal water</b><span>Supply stations and elevated tanks, many sites on one screen</span></div><div class="use"><span class="ui"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 21h20M4 21V10l5 3V10l5 3V10l5 3v8M18 6V3h2v7"/></svg></span><b>Industrial estates & plants</b><span>Process water, fire water, boosters and cooling water</span></div><div class="use"><span class="ui"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l5-3v16M10 21V3l9 4v14M14 9h2M14 13h2M14 17h2"/></svg></span><b>High-rise, condos, hospitals</b><span>Booster sets that must hold pressure 24/7</span></div><div class="use"><span class="ui"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21c0-9 6-15 16-16-1 10-7 16-16 16z"/><path d="M5 21l8-8"/></svg></span><b>Irrigation & farms</b><span>Scheduled pumping with alerts when something is off</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="blk" id="faq">
+<div class="wrap" style="max-width:900px">
+<div class="head reveal"><span class="eyebrow">FAQ</span><h2 style="margin-top:12px">Before you start</h2></div>
+<details class="qa" open><summary>Does it work with other PLC and inverter brands?<span class="pm" aria-hidden="true"></span></summary><p>Yes. HydroLink reads Modbus TCP / RTU and MQTT through the CoreDash Edge Gateway; you only edit the register map in the config file. The demo uses a Mitsubishi FX5U PLC and ABB ACS580 inverters.</p></details><details class="qa"><summary>What happens if the internet goes down?<span class="pm" aria-hidden="true"></span></summary><p>The pumps keep running: control logic lives in the on-site PLC, and the gateway buffers data locally until the link is back.</p></details><details class="qa"><summary>Can we try it before installing anything?<span class="pm" aria-hidden="true"></span></summary><p>Three ways: the in-browser simulator, uploading JSON test files that replay events (pump trip, power loss), and connecting a real gateway when ready.</p></details><details class="qa"><summary>How is the data protected?<span class="pm" aria-hidden="true"></span></summary><p>HTTPS everywhere, three user roles, a PIN for commands, an audit log of every action, and optional AES-256-GCM encryption on API payloads.</p></details>
+</div>
+</section>
+
+<section style="padding:0 0 96px">
+<div class="wrap">
+<div class="cta reveal">
+<div><h2>Want to see your station on this screen?</h2><p>Open the demo now, or talk to the team about your site and register map.</p></div>
+<div class="cta-row"><a class="btn pri" style="background:#fff;color:#0B2A8A;box-shadow:none" href="app/">Open live demo</a><a class="btn ghost" href="tel:0819232380">Call 081-923-2380</a></div>
+</div>
+</div>
+</section>
+
+<footer><div class="wrap">
+<b style="color:#fff">CoreDash HydroLink</b>
+<span>Part of <a href="../en.html">CoreDash Nexus</a></span>
+<a href="docs/api.html">API docs</a>
+<a href="api/openapi.yaml">OpenAPI</a>
+<span style="margin-left:auto">© 2026 CoreDash Technology</span>
+</div></footer>
+
+<script>
+(function(){
+  // gallery
+  var img=document.getElementById('shotImg'), cap=document.getElementById('shotCap');
+  document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-selected','false')});
+    b.classList.add('on'); b.setAttribute('aria-selected','true');
+    img.style.opacity=.2; var n=new Image(); n.onload=function(){img.src=n.src;img.alt=b.textContent;img.style.opacity=1}; n.src='assets/en/shot-'+b.dataset.shot+'.png';
+    cap.textContent=b.dataset.cap;
+  }) });
+  // live pressure card (demo values around the 4.0 bar set-point)
+  var pv=document.getElementById('lvP'), sp=document.getElementById('lvS'), buf=[], k=0;
+  for(var i=0;i<30;i++) buf.push(4);
+  function tick(){ k++; var v=4+Math.sin(k*.45)*.035+Math.sin(k*1.7)*.015+(Math.random()-.5)*.01; buf.push(v); buf.shift();
+    pv.textContent=v.toFixed(2);
+    sp.setAttribute('d', buf.map(function(y,i){return (i?'L':'M')+(i*5.1).toFixed(1)+' '+(17-(y-4)*260).toFixed(1)}).join(' ')); }
+  tick(); setInterval(tick,1000);
+  // reveal on scroll
+  var io='IntersectionObserver' in window ? new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12}) : null;
+  document.querySelectorAll('.reveal').forEach(function(el){ io ? io.observe(el) : el.classList.add('in') });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API Documentation · CoreDash HydroLink</title>
+<link rel="icon" href="../app/icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--ink:#1E2A44;--muted:#5E5646;--line:#E3D8C1;--blue:#1D4ED8;--bg:#F3ECDD}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun',system-ui,sans-serif;color:var(--ink);background:#FBF7EE;line-height:1.7;font-size:18px;font-weight:500}
+header{background:#FFFCF5;color:#14213D;padding:22px 0;border-bottom:1px solid var(--line)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header img{width:36px;height:36px}
+header b{font-size:22px;font-weight:800}
+header nav{margin-left:auto;display:flex;gap:18px}
+header a{color:#3A3426;text-decoration:none;font-weight:700}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;padding:36px 0 80px}
+aside{position:sticky;top:20px;align-self:start;font-size:16.5px;font-weight:600}
+aside a{display:block;padding:6px 10px;border-radius:8px;color:var(--muted);text-decoration:none}
+aside a:hover{background:var(--bg);color:var(--ink)}
+aside .g{font-size:12px;font-weight:700;letter-spacing:.08em;color:#8A96B4;margin:16px 10px 4px}
+h1{font-size:38px;font-weight:800;margin:0 0 6px}
+h2{font-size:28px;font-weight:800;margin:48px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+h3{font-size:21px;font-weight:800;margin:26px 0 8px}
+p,li{color:#3A3426}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;background:var(--bg);padding:2px 6px;border-radius:6px}
+pre{background:#0B1430;color:#D6E2FF;padding:16px;border-radius:12px;overflow:auto;font-size:13px;line-height:1.55}
+pre code{background:none;padding:0;color:inherit}
+table{width:100%;border-collapse:collapse;font-size:16.5px;margin:10px 0;background:#FFFCF5}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg);font-weight:800;font-size:15px;color:var(--muted)}
+.m{display:inline-block;font-family:'Sarabun';font-weight:700;font-size:13px;padding:2px 9px;border-radius:6px;background:#E3F6EC;color:#0E7A43;margin-right:8px}
+.ep{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#FFFCF5;font-family:ui-monospace,Menlo,monospace;font-size:15px}
+.scope{font-family:'Sarabun';font-size:12.5px;padding:2px 8px;border-radius:999px;background:#EAF0FF;color:#1D4ED8;margin-left:auto}
+.note{padding:12px 16px;border-left:4px solid #B7791F;background:#F7EEDB;border-radius:8px;margin:14px 0}
+.lead{font-size:19.5px;color:#3A3426}
+.tbl-scroll{overflow-x:auto}
+.layout>*{min-width:0}
+td code{word-break:break-word}
+.ep{min-width:0;overflow-wrap:anywhere}
+@media (max-width:860px){.layout{grid-template-columns:1fr}aside{position:static}header nav{display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><img src="../app/icons/icon.svg" alt=""><b>CoreDash HydroLink · API</b><nav><a href="../">หน้าหลัก</a><a href="../app/#/api">ทดลองเรียก API</a><a href="../api/openapi.yaml">openapi.yaml</a></nav></div></header>
+<div class="wrap layout">
+<aside>
+<div class="g">เริ่มต้น</div><a href="#intro">ภาพรวม</a><a href="#auth">การยืนยันตัวตน</a><a href="#rate">จำกัดการเรียก</a><a href="#format">รูปแบบข้อมูล</a><a href="#gateway">ตัวกลาง (Edge Gateway)</a><a href="#encrypt">เข้ารหัส AES-256</a>
+<div class="g">Endpoints</div><a href="#latest">GET /latest</a><a href="#history">GET /history</a><a href="#status">GET /devices/status</a><a href="#alarms">GET /alarms</a><a href="#lastupdate">GET /meta/last-update</a><a href="#points">GET /points</a><a href="#export">GET /export</a><a href="#control">POST /control</a><a href="#testfile">ไฟล์ทดสอบ JSON</a>
+<div class="g">อ้างอิง</div><a href="#errors">รหัสข้อผิดพลาด</a><a href="#pointlist">รายการจุดตรวจวัด</a><a href="#examples">ตัวอย่างโค้ด</a>
+</aside>
+<main>
+<h1 id="intro">REST API · CoreDash HydroLink</h1>
+<p class="lead">API สำหรับเชื่อมต่อข้อมูล SCADA เข้ากับระบบอื่นขององค์กร (ERP, BI, BMS) ใช้มาตรฐาน REST และข้อมูล JSON ไม่ผูกขาดกับผู้พัฒนา</p>
+<div class="tbl-scroll"><table><tr><th>Base URL</th><td><code>https://scada.hydrolink.example</code> (กำหนดจริงเมื่อส่งมอบ)</td></tr><tr><th>เวอร์ชัน</th><td><code>v1</code> — เส้นทางขึ้นต้นด้วย <code>/api/v1</code></td></tr><tr><th>รูปแบบ</th><td>JSON (UTF-8) · เวลาเป็น ISO 8601 พร้อมเขตเวลา (+07:00)</td></tr><tr><th>Spec</th><td><a href="../api/openapi.yaml">OpenAPI 3.0 (openapi.yaml)</a> — นำเข้า Postman / Swagger UI ได้ทันที</td></tr></table></div>
+
+<h2 id="auth">การยืนยันตัวตน</h2>
+<p>ทุกคำขอต้องแนบ API Key ที่ผู้ดูแลระบบสร้างจากเมนู <b>REST API</b> ในระบบ เลือกแบบใดแบบหนึ่ง</p>
+<pre><code>X-API-Key: cdhl_live_xxxxxxxxxxxxxxxxxxxxxxxx
+# หรือ
+Authorization: Bearer cdhl_live_xxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+<p>คีย์แต่ละตัวกำหนดสิทธิ์ (scope) ได้ และยกเลิกสิทธิ์ได้ทันทีโดยไม่กระทบคีย์อื่น</p>
+<div class="tbl-scroll"><table><tr><th>Scope</th><th>อนุญาต</th></tr><tr><td><code>read:latest</code></td><td>/latest, /points, /meta/last-update</td></tr><tr><td><code>read:history</code></td><td>/history</td></tr><tr><td><code>read:status</code></td><td>/devices/status</td></tr><tr><td><code>read:alarms</code></td><td>/alarms</td></tr><tr><td><code>control</code></td><td>/control, /sim/scenario (ผู้ปฏิบัติงานขึ้นไป)</td></tr></table></div>
+
+<h2 id="rate">จำกัดจำนวนการเรียก</h2>
+<p>กำหนดได้ต่อคีย์ (30 / 60 / 120 / 600 ครั้งต่อนาที) ทุกคำตอบมี header</p>
+<pre><code>X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 57
+X-RateLimit-Reset: 1794667380      # epoch seconds เมื่อโควตารีเซ็ต
+Retry-After: 23                    # เฉพาะเมื่อได้ 429</code></pre>
+
+<h2 id="format">รูปแบบข้อมูล</h2>
+<p>ค่าตัวเลขเป็นหน่วยตามจุดตรวจวัด <code>quality</code> บอกคุณภาพข้อมูล: <code>good</code> ปกติ, <code>bad_comm</code> ขาดการสื่อสารกับอุปกรณ์, <code>uncertain</code> ค่าไม่แน่นอน</p>
+
+<h2 id="gateway">ตัวกลาง (Edge Gateway) — ข้อมูลกลายเป็น JSON ได้อย่างไร</h2>
+<p>อุปกรณ์ในตู้ควบคุมใช้โปรโตคอลอุตสาหกรรมคนละแบบ ระบบภายนอกต้องการ JSON ผ่าน HTTPS จึงมี <b>CoreDash Edge Gateway</b> เป็นตัวกลางในตู้ควบคุม</p>
+<pre><code>Inverter ACS580 ×2 ─┐
+Power Meter M1M 20 ─┼─► PLC FX5U ──Modbus TCP──► Edge Gateway ──HTTPS + JSON──► Web App · มือถือ · ERP · BI
+Flowmeter (RS-485) ─┘    (D-register)            อ่านทุก 1 วินาที
+                                                 Alarm → LINE / Telegram / Email
+                                                 ประวัติ + Audit log · AES-256-GCM</code></pre>
+<div class="tbl-scroll"><table><tr><th>ขั้น</th><th>ทำอะไร</th></tr>
+<tr><td>1. อ่าน</td><td>Gateway อ่าน D-register ของ PLC ทุก 1 วินาทีตาม Register Map (เช่น D100–D101 = <code>system.pressure</code> แบบ float32)</td></tr>
+<tr><td>2. แปลง</td><td>คูณ scale ใส่หน่วย ตรวจคุณภาพข้อมูล แล้วเก็บเป็นจุดตรวจวัดชื่อเดียวกับ API</td></tr>
+<tr><td>3. ให้บริการ</td><td>ตอบคำขอ REST เป็น JSON ตรวจ API Key, scope, rate limit และเข้ารหัสเพิ่มได้</td></tr>
+<tr><td>4. สั่งงาน</td><td>รับ POST /control ตรวจสิทธิ์และ Interlock แล้วเขียนกลับไปที่ PLC พร้อมบันทึก Audit log</td></tr></table></div>
+<p class="note"><b>ทำไมไม่ต่อ PLC ตรงกับ Cloud:</b> PLC ส่ง HTTPS/JSON ไม่ได้ และการเปิด Modbus ออกอินเทอร์เน็ตเสี่ยงถูกสั่งงานจากภายนอก Gateway จึงเป็นจุดเดียวที่คุยกับ PLC และตรวจสิทธิ์ทุกคำสั่ง ถ้าอินเทอร์เน็ตหลุด Gateway ยังเก็บข้อมูลต่อ แล้วส่งย้อนหลังเมื่อกลับมา</p>
+
+<h2 id="encrypt">เข้ารหัสข้อมูล (AES-256-GCM)</h2>
+<p>ทุกการเชื่อมต่อใช้ HTTPS อยู่แล้ว ถ้าระบบปลายทางต้องการเข้ารหัสตัวข้อมูลเพิ่ม ส่ง header นี้ (หรือผู้ดูแลกำหนดให้ API Key นั้นเข้ารหัสทุกครั้ง)</p>
+<pre><code>X-CD-Encrypt: aes-256-gcm</code></pre>
+<p>คำตอบจะเป็นซอง JSON แทนข้อมูลปกติ ถอดรหัสแล้วได้ JSON เดิมทุกประการ</p>
+<pre><code>{ "enc": "aes-256-gcm", "kid": "v1", "iv": "base64 12 byte", "tag": "base64 16 byte", "data": "base64" }</code></pre>
+<div class="tbl-scroll"><table><tr><th>กุญแจ</th><td>32 byte (<code>CD_AES_KEY</code>) สร้างด้วย <code>node tools/keygen.js</code> บน Gateway</td></tr>
+<tr><th>IV</th><td>สุ่มใหม่ 12 byte ทุกคำตอบ</td></tr>
+<tr><th>ตรวจการแก้ไข</th><td>tag 16 byte ในตัว (GCM) — ข้อมูลถูกแก้แม้ 1 bit ถอดรหัสจะล้มเหลว</td></tr></table></div>
+<h3>วิธีใช้</h3>
+<ol><li>ผู้ดูแลระบบสร้างกุญแจด้วย <code>node tools/keygen.js</code> บน Gateway</li>
+<li>ส่งกุญแจให้ระบบปลายทางทางช่องทางปลอดภัย (ไม่ส่งทางอีเมล/แชท) และเปลี่ยนกุญแจทุก 90 วัน</li>
+<li>ระบบปลายทางเรียก API พร้อม <code>X-CD-Encrypt: aes-256-gcm</code> แล้วถอดรหัสตามตัวอย่าง</li></ol>
+<pre><code># Python (pip install requests cryptography)
+import base64, json, requests
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+env = requests.get(URL + "/api/v1/latest", headers={"X-API-Key": KEY, "X-CD-Encrypt": "aes-256-gcm"}).json()
+b = base64.b64decode
+payload = json.loads(AESGCM(AES_KEY).decrypt(b(env["iv"]), b(env["data"]) + b(env["tag"]), None))</code></pre>
+<pre><code>// Node.js
+const b = (s) => Buffer.from(s, 'base64');
+const d = crypto.createDecipheriv('aes-256-gcm', AES_KEY, b(env.iv)); d.setAuthTag(b(env.tag));
+const payload = JSON.parse(Buffer.concat([d.update(b(env.data)), d.final()]));</code></pre>
+
+<h2 id="latest">ค่าล่าสุด</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/latest<span class="scope">read:latest</span></div>
+<div class="tbl-scroll"><table><tr><th>พารามิเตอร์</th><th>ชนิด</th><th>คำอธิบาย</th></tr><tr><td><code>points</code></td><td>string</td><td>รหัสจุดตรวจวัด คั่นด้วย <code>,</code> (ดู <a href="#pointlist">รายการจุดตรวจวัด</a>)</td></tr></table></div>
+<h3>ตัวอย่าง</h3>
+<pre><code>curl -s "https://scada.hydrolink.example/api/v1/latest?points=system.pressure,FT-01.flow,P-01.current" \
+  -H "X-API-Key: $CDPS_KEY"</code></pre>
+<pre><code>{
+  "data": [
+    { "point": "system.pressure", "value": 4.01,  "unit": "bar",  "quality": "good", "ts": "2026-11-14T21:42:24+07:00" },
+    { "point": "FT-01.flow",      "value": 104.49,"unit": "m3/h", "quality": "good", "ts": "2026-11-14T21:42:24+07:00" },
+    { "point": "P-01.current",    "value": 35.7,  "unit": "A",    "quality": "good", "ts": "2026-11-14T21:42:24+07:00" }
+  ],
+  "meta": { "site": "DEMO-01", "generated_at": "2026-11-14T21:42:24+07:00" }
+}</code></pre>
+
+<h2 id="history">ข้อมูลย้อนหลัง</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/history<span class="scope">read:history</span></div>
+<div class="tbl-scroll"><table><tr><th>พารามิเตอร์</th><th>ชนิด</th><th>คำอธิบาย</th></tr>
+<tr><td><code>point</code> *</td><td>string</td><td>จุดตรวจวัด เช่น <code>FT-01.flow</code></td></tr>
+<tr><td><code>start</code> *</td><td>ISO 8601</td><td>เวลาเริ่มต้น</td></tr>
+<tr><td><code>end</code> *</td><td>ISO 8601</td><td>เวลาสิ้นสุด (ต้องมากกว่า start)</td></tr>
+<tr><td><code>interval</code></td><td>enum</td><td>ช่วงเวลารวมข้อมูล <code>1m</code> <code>5m</code> <code>15m</code> <code>1h</code> <code>1d</code> (ค่าเริ่มต้น 5m)</td></tr>
+<tr><td><code>agg</code></td><td>enum</td><td>วิธีรวม <code>avg</code> <code>min</code> <code>max</code> (ค่าเริ่มต้น avg)</td></tr></table></div>
+<div class="note">ได้สูงสุด 10,000 จุดข้อมูลต่อคำขอ หากเกินจะได้ <code>400 RANGE_TOO_LARGE</code> ให้เพิ่ม interval หรือแบ่งช่วงเวลา</div>
+<pre><code>curl -s "https://scada.hydrolink.example/api/v1/history?point=FT-01.flow&start=2026-11-13T00:00:00%2B07:00&end=2026-11-14T00:00:00%2B07:00&interval=1h&agg=avg" \
+  -H "X-API-Key: $CDPS_KEY"</code></pre>
+<pre><code>{
+  "point": "FT-01.flow", "unit": "m3/h",
+  "start": "2026-11-13T00:00:00+07:00", "end": "2026-11-14T00:00:00+07:00",
+  "interval": "1h", "agg": "avg", "count": 24, "truncated": false,
+  "data": [
+    { "ts": "2026-11-13T00:00:00+07:00", "value": 96.412 },
+    { "ts": "2026-11-13T01:00:00+07:00", "value": 88.905 },
+    ...
+  ],
+  "meta": { "site": "DEMO-01", "generated_at": "2026-11-14T21:45:02+07:00" }
+}</code></pre>
+
+<h2 id="status">สถานะอุปกรณ์</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/devices/status<span class="scope">read:status</span></div>
+<pre><code>{
+  "devices": [
+    { "id": "PLC", "name": "PLC Mitsubishi FX5U-32MR/DS", "address": "192.168.10.10", "protocol": "SLMP (MC) / Modbus TCP", "online": true, "last_update": "2026-11-14T21:42:24+07:00" },
+    { "id": "INV-01", "name": "ABB ACS580-01-073A-4 + FMBT-21", "address": "192.168.10.21", "protocol": "Modbus TCP :502", "online": true, "last_update": "..." }
+  ],
+  "pumps": [
+    { "id": "P-01", "status": "RUN",  "ready": true, "role": "LEAD", "frequency_hz": 44.62, "active_fault": null },
+    { "id": "P-02", "status": "STOP", "ready": true, "role": "LAG",  "frequency_hz": 0,     "active_fault": null }
+  ],
+  "control": { "mode": "AUTO", "setpoint_bar": 4.0, "alternation_hours": 6, "next_alternation": "2026-11-15T01:20:00+07:00" }
+}</code></pre>
+
+<h2 id="alarms">รายการ Alarm</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/alarms<span class="scope">read:alarms</span></div>
+<div class="tbl-scroll"><table><tr><th>พารามิเตอร์</th><th>คำอธิบาย</th></tr><tr><td><code>state</code></td><td><code>active</code> (ค่าเริ่มต้น) หรือ <code>all</code></td></tr><tr><td><code>from</code>, <code>to</code></td><td>ISO 8601 ช่วงเวลาที่เกิด Alarm</td></tr></table></div>
+<pre><code>{
+  "state": "active", "count": 1,
+  "data": [
+    { "id": "ALM-1001", "code": "P1_FAULT", "severity": "critical", "tag": "INV-01",
+      "message": "P-01 Inverter Fault 2310 Overcurrent — กระแสเกิน",
+      "raised_at": "2026-11-14T21:42:19+07:00", "cleared_at": null, "ack_by": null, "ack_at": null }
+  ]
+}</code></pre>
+
+<h2 id="lastupdate">เวลาอัปเดตล่าสุด</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/meta/last-update<span class="scope">read:latest</span></div>
+<pre><code>{ "last_update": "2026-11-14T21:42:24+07:00", "age_seconds": 1, "source": "PLC FX5U-32MR/DS" }</code></pre>
+
+<h2 id="points">รายการจุดตรวจวัด</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/points<span class="scope">read:latest</span></div>
+
+<h2 id="export">ภาพรวมทั้งหมดเป็นไฟล์ JSON</h2>
+<div class="ep"><span class="m">GET</span>/api/v1/export<span class="scope">read:latest</span></div>
+<p>ได้ค่าล่าสุดทุกจุด ค่าตั้ง และ Alarm ที่ค้างอยู่ในไฟล์เดียว (รูปแบบเดียวกับปุ่ม “ส่งออกภาพรวม” ใน Web App)</p>
+<pre><code>{ "format": "coredash.snapshot/v1", "site": "DEMO-01", "generated_at": "2026-11-15T09:30:00Z",
+  "values":   { "system.pressure": 4.01, "FT-01.flow": 106.2, "P-01.run": 1, "P-01.freq": 45.0, "…": "…" },
+  "settings": { "CTRL.sp": 4.0, "CTRL.int_start": 30, "CTRL.int_stop": 60, "CTRL.alt_hours": 6, "…": "…" },
+  "alarms_active": [] }</code></pre>
+
+<h2 id="control">สั่งงาน</h2>
+<div class="ep"><span class="m" style="background:#FDECEA;color:#B42318">POST</span>/api/v1/control<span class="scope">control</span></div>
+<div class="tbl-scroll"><table><tr><th>command</th><th>args</th><th>ผล</th></tr>
+<tr><td><code>start</code> / <code>stop</code></td><td><code>{"pump": 1}</code></td><td>สั่งเดิน/หยุดปั๊ม (โหมด MANUAL)</td></tr>
+<tr><td><code>reset</code></td><td><code>{"pump": 2}</code></td><td>Reset Fault (DI02)</td></tr>
+<tr><td><code>alternate</code></td><td>—</td><td>สลับปั๊มหลักทันที</td></tr>
+<tr><td><code>mode</code></td><td><code>{"mode": "AUTO"}</code></td><td>AUTO / MANUAL</td></tr>
+<tr><td><code>config</code></td><td><code>{"sp": 4.2, "intervalStart": 30, "intervalStop": 60, "altHours": 6, "kp": 0.8, "ti": 3, "deadband": 0.15, "lowAlarm": 3.5, "highAlarm": 5.5}</code></td><td>ตั้งค่าควบคุม (ตรวจช่วงค่า เช่น sp 2–6 bar)</td></tr></table></div>
+<pre><code>curl -X POST -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
+     -d '{"command":"config","args":{"sp":4.2}}' https://scada.hydrolink.example/api/v1/control
+# 202 { "accepted": true, "command": "config", "writes": [ { "point": "CTRL.sp", "value": 4.2 } ] }
+# 409 INTERLOCK — เช่น กด E-Stop อยู่แล้วสั่งเดินปั๊ม</code></pre>
+
+<h2 id="testfile">ทดสอบด้วยไฟล์ JSON</h2>
+<p>เตรียมไฟล์ค่าตามเวลา แล้วอัปโหลดใน Web App (แถบ <b>📄 ไฟล์ทดสอบ</b>) หรือส่งให้ Gateway ขณะรันโหมดจำลอง ทุกหน้าจอ ค่าตั้ง และ Alarm ทำงานตามไฟล์ — ใช้ทดสอบระบบและสาธิตก่อนติดตั้งจริง</p>
+<pre><code>{ "format": "coredash.scenario/v1",
+  "description": "P-01 Fault → ปั๊มสำรองรับงาน",
+  "loop": true, "interpolate": true,
+  "settings": { "CTRL.sp": 4.0 },
+  "frames": [
+    { "t": 0,  "values": { "system.pressure": 4.0, "P-01.run": 1, "P-01.freq": 45 } },
+    { "t": 41, "values": { "system.pressure": 3.6, "P-01.run": 0, "P-01.fault": 2310 }, "note": "P-01 Fault" },
+    { "t": 46, "values": { "P-02.run": 1, "P-02.freq": 30, "CTRL.lead": 2 }, "note": "Failover" } ] }</code></pre>
+<div class="tbl-scroll"><table><tr><th>ฟิลด์</th><th>ความหมาย</th></tr>
+<tr><td><code>t</code></td><td>วินาทีนับจากเริ่ม เรียงจากน้อยไปมาก</td></tr>
+<tr><td><code>values</code></td><td>ชื่อจุดตรวจวัดเหมือน API · จุดที่ไม่ระบุจะคงค่าเดิม</td></tr>
+<tr><td><code>interpolate</code></td><td>ค่าตัวเลขเปลี่ยนแบบต่อเนื่องระหว่าง frame (สถานะ 0/1 และ Fault code เปลี่ยนทันที)</td></tr>
+<tr><td><code>note</code></td><td>ข้อความแสดงบนแถบด้านบนขณะเล่นถึงช่วงนั้น</td></tr></table></div>
+<div class="ep"><span class="m" style="background:#FDECEA;color:#B42318">POST</span>/api/v1/sim/scenario<span class="scope">control · วิศวกรขึ้นไป · SIMULATE=1</span></div>
+<p>ตัวอย่างพร้อมใช้: <a href="../app/samples/scenario-peak.json">scenario-peak.json</a> · <a href="../app/samples/scenario-p01-fault.json">scenario-p01-fault.json</a> · <a href="../app/samples/scenario-power-estop.json">scenario-power-estop.json</a></p>
+
+<h2 id="errors">รหัสข้อผิดพลาด</h2>
+<pre><code>{ "error": { "status": 429, "code": "RATE_LIMITED", "message": "เกินจำนวนการเรียกที่กำหนด 60 ครั้ง/นาที" } }</code></pre>
+<div class="tbl-scroll"><table><tr><th>HTTP</th><th>code</th><th>สาเหตุ</th><th>แนวทางแก้</th></tr>
+<tr><td>400</td><td><code>INVALID_PARAMETER</code></td><td>พารามิเตอร์ผิดรูปแบบ</td><td>ตรวจ start/end/interval/agg</td></tr>
+<tr><td>400</td><td><code>RANGE_TOO_LARGE</code></td><td>เกิน 10,000 จุดข้อมูล</td><td>เพิ่ม interval หรือแบ่งช่วง</td></tr>
+<tr><td>401</td><td><code>UNAUTHORIZED</code></td><td>ไม่ได้ส่ง API Key</td><td>แนบ X-API-Key</td></tr>
+<tr><td>401</td><td><code>INVALID_API_KEY</code></td><td>คีย์ผิดหรือถูกยกเลิก</td><td>ขอคีย์ใหม่จากผู้ดูแลระบบ</td></tr>
+<tr><td>403</td><td><code>FORBIDDEN</code></td><td>คีย์ไม่มี scope ที่ต้องใช้</td><td>ขอเพิ่ม scope</td></tr>
+<tr><td>409</td><td><code>INTERLOCK</code></td><td>คำสั่งขัดกับ Interlock (เช่น E-Stop)</td><td>แก้สาเหตุที่หน้างานก่อน</td></tr>
+<tr><td>501</td><td><code>ENCRYPTION_NOT_CONFIGURED</code></td><td>ขอเข้ารหัสแต่ยังไม่ได้ตั้งกุญแจ</td><td>ผู้ดูแลรัน tools/keygen.js</td></tr>
+<tr><td>400</td><td><code>ENCRYPTION_NOT_ALLOWED</code></td><td>ขอวิธีเข้ารหัสอื่นที่ไม่ใช่ AES-256-GCM</td><td>ใช้ X-CD-Encrypt: aes-256-gcm</td></tr>
+<tr><td>404</td><td><code>POINT_NOT_FOUND</code></td><td>ไม่พบจุดตรวจวัด</td><td>ดู GET /points</td></tr>
+<tr><td>429</td><td><code>RATE_LIMITED</code></td><td>เกินโควตาต่อนาที</td><td>รอตาม Retry-After</td></tr>
+<tr><td>503</td><td><code>DEVICE_OFFLINE</code></td><td>อุปกรณ์ต้นทางขาดการสื่อสาร</td><td>ลองใหม่ / ตรวจสถานะ</td></tr>
+<tr><td>500</td><td><code>INTERNAL_ERROR</code></td><td>ข้อผิดพลาดภายใน</td><td>แจ้งผู้ดูแลพร้อม X-Request-Id</td></tr></table></div>
+
+<h2 id="pointlist">รายการจุดตรวจวัด</h2>
+<p>ครอบคลุมค่าที่ PLC อ่านจากปั๊ม Inverter มิเตอร์ และ Flowmeter ทั้งหมด</p>
+<div class="tbl-scroll"><table id="ptTable"><tr><th>point</th><th>ชื่อ</th><th>หน่วย</th></tr></table></div>
+
+<h2 id="examples">ตัวอย่างโค้ด</h2>
+<h3>Python</h3>
+<pre><code>import requests
+r = requests.get("https://scada.hydrolink.example/api/v1/latest",
+                 params={"points": "system.pressure,FT-01.flow"},
+                 headers={"X-API-Key": CDPS_KEY}, timeout=10)
+r.raise_for_status()
+for p in r.json()["data"]:
+    print(p["point"], p["value"], p["unit"])</code></pre>
+<h3>JavaScript</h3>
+<pre><code>const res = await fetch("https://scada.hydrolink.example/api/v1/devices/status", {
+  headers: { Authorization: `Bearer ${CDPS_KEY}` }
+});
+const { pumps } = await res.json();
+console.table(pumps);</code></pre>
+<h3>Power BI / Excel (Power Query)</h3>
+<pre><code>let
+  Src = Json.Document(Web.Contents("https://scada.hydrolink.example/api/v1/history",
+        [Query=[point="FT-01.flow", start="2026-11-01T00:00:00+07:00", end="2026-12-01T00:00:00+07:00", interval="1d"],
+         Headers=[#"X-API-Key"=CDPS_KEY]])),
+  T = Table.FromRecords(Src[data])
+in T</code></pre>
+<p style="margin-top:40px;color:var(--muted);font-size:14px">CoreDash Technology · โทร 081-923-2380</p>
+</main></div>
+<script src="../app/sim.js"></script>
+<script>
+  var t = document.getElementById('ptTable');
+  SIM.points().forEach(function (p) { var tr = document.createElement('tr'); tr.innerHTML = '<td><code>' + p.id + '</code></td><td>' + p.name + '</td><td>' + p.unit + '</td>'; t.appendChild(tr); });
+</script>
+</body>
+</html>

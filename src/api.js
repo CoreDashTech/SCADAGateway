@@ -31,10 +31,11 @@ const { CommandError } = require('./engine/commands');
 function createServer(gw) {
   const { cfg, store, alarms, commands, historian, audit, interlocks, scheduler } = gw;
   const app = express();
-  app.use(express.json({ limit: '64kb' }));
+  app.use(express.json({ limit: '5mb' }));   // 5 MB: JSON test files (scenario) can be uploaded
   app.use((req, res, next) => {
     res.set('Access-Control-Allow-Origin', cfg.server.cors);
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-API-Key, X-CD-Encrypt');
+    res.set('Access-Control-Expose-Headers', 'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-CD-Encrypted');
     res.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
@@ -58,6 +59,8 @@ function createServer(gw) {
       res.status(500).json({ error: 'INTERNAL', message: err.message });
     }
   };
+
+  require('./api-v1').mount(app, gw);   // /api/v1/* — REST API (JSON) for pump stations and other integrations
 
   app.get('/api/health', (req, res) => res.json({ ok: true, product: 'CoreDash Nexus', developer: 'CoreDash Technology', site: cfg.site.id, simulate: cfg.simulate, uptimeSec: Math.round(process.uptime()) }));
   app.get('/api/me', auth(), (req, res) => res.json(publicUser(req.user)));
@@ -127,7 +130,7 @@ function createServer(gw) {
   });
 
   // ---- Installable mobile web app (PWA) ---------------------------------------
-  const appDir = path.join(__dirname, '..', 'app');
+  const appDir = cfg.server.appDir ? path.resolve(__dirname, '..', cfg.server.appDir) : path.join(__dirname, '..', 'app');
   app.get('/', (req, res) => res.redirect('/app/'));
   app.get('/app/sw.js', (req, res) => { res.set('Service-Worker-Allowed', '/app/'); res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(appDir, 'sw.js')); });
   app.use('/app', express.static(appDir, { index: 'index.html', setHeaders: (res, p) => { if (p.endsWith('.webmanifest')) res.type('application/manifest+json'); if (p.endsWith('.mjs')) res.type('text/javascript'); if (p.endsWith('index.html')) res.set('Cache-Control', 'no-cache'); } }));

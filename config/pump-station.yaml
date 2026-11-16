@@ -1,0 +1,156 @@
+# CoreDash HydroLink — pump-station gateway config (2 pumps + VSD, power meter, flowmeter, PLC over Modbus TCP)
+# ตัวกลาง (Edge Gateway): อ่านค่าจาก PLC FX5U ผ่าน Modbus TCP แล้วให้บริการเป็น JSON (REST API /api/v1)
+# Tag id = ชื่อจุดตรวจวัด (point) ใน API ตรงตัว เช่น system.pressure, P-01.freq
+#
+# Register Map: PLC เป็นผู้อ่าน Inverter ACS580 (FMBT-21), Power Meter M1M 20 และ Flowmeter 
+# แล้ววางค่าไว้ใน D-register ตามตารางนี้ Gateway อ่านจาก PLC ที่เดียว (FX5U: holding register n = Dn)
+# float32 ใช้ 2 word (D n = word ต่ำ, D n+1 = word สูง → wordSwap: true) · ยืนยันกับผู้เขียนโปรแกรม PLC ก่อนใช้งานจริง
+
+site:
+  id: STATION-01
+  name: { th: "สถานีสูบจ่ายน้ำ 01", en: "Pump Station 01" }
+  timezone: Asia/Bangkok
+
+server:
+  port: 8080
+  cors: "*"              # ใช้จริง: ใส่โดเมนของ Web App เช่น https://scada.example.com
+  commandTtlSec: 30
+  appDir: ../app          # (ถ้ามี) โฟลเดอร์ Web App ที่จะเสิร์ฟที่ /app/
+
+simulator: pump-station  # SIMULATE=1 → ใช้ตัวจำลองสถานีสูบน้ำ (PID, ปั๊ม 2 ตัว, สลับ 6 ชม.)
+
+historian:
+  dir: ./data/history
+  sampleSec: 1           # เก็บทุก 1 วินาที (Realtime)
+  memoryPoints: 3600
+
+audit:
+  file: ./data/audit.jsonl
+
+devices:
+  - id: PLC-01
+    name: { th: "PLC Mitsubishi FX5U", en: "PLC Mitsubishi FX5U" }
+    driver: modbus-tcp
+    host: 192.168.10.10
+    port: 502
+    unitId: 1
+    pollMs: 1000          # อ่านค่าทุก 1 วินาที
+    timeoutMs: 1500
+
+tags:
+  - { id: system.pressure, device: PLC-01, type: holding, address: 100, dataType: float32, wordSwap: true, unit: "bar", name: { th: "แรงดันจ่าย (PT-01)", en: "Discharge pressure" } }   # D100
+  - { id: FT-01.flow, device: PLC-01, type: holding, address: 102, dataType: float32, wordSwap: true, unit: "m³/h", name: { th: "อัตราการไหล", en: "Flow rate" } }   # D102
+  - { id: FT-01.total, device: PLC-01, type: holding, address: 104, dataType: float32, wordSwap: true, unit: "m³", name: { th: "ปริมาณน้ำสะสม", en: "Totalizer" } }   # D104
+  - { id: PM-01.kw, device: PLC-01, type: holding, address: 106, dataType: float32, wordSwap: true, unit: "kW", name: { th: "กำลังไฟฟ้ารวม", en: "Total power" } }   # D106
+  - { id: PM-01.kwh, device: PLC-01, type: holding, address: 108, dataType: float32, wordSwap: true, unit: "kWh", name: { th: "พลังงานสะสม", en: "Energy" } }   # D108
+  - { id: PM-01.v_l1, device: PLC-01, type: holding, address: 110, dataType: float32, wordSwap: true, unit: "V", name: { th: "แรงดัน L1", en: "Voltage L1" } }   # D110
+  - { id: PM-01.v_l2, device: PLC-01, type: holding, address: 112, dataType: float32, wordSwap: true, unit: "V", name: { th: "แรงดัน L2", en: "Voltage L2" } }   # D112
+  - { id: PM-01.v_l3, device: PLC-01, type: holding, address: 114, dataType: float32, wordSwap: true, unit: "V", name: { th: "แรงดัน L3", en: "Voltage L3" } }   # D114
+  - { id: PM-01.a_l1, device: PLC-01, type: holding, address: 116, dataType: float32, wordSwap: true, unit: "A", name: { th: "กระแส L1", en: "Current L1" } }   # D116
+  - { id: PM-01.a_l2, device: PLC-01, type: holding, address: 118, dataType: float32, wordSwap: true, unit: "A", name: { th: "กระแส L2", en: "Current L2" } }   # D118
+  - { id: PM-01.a_l3, device: PLC-01, type: holding, address: 120, dataType: float32, wordSwap: true, unit: "A", name: { th: "กระแส L3", en: "Current L3" } }   # D120
+  - { id: PM-01.hz, device: PLC-01, type: holding, address: 122, dataType: float32, wordSwap: true, unit: "Hz", name: { th: "ความถี่ไฟฟ้า", en: "Frequency" } }   # D122
+  - { id: PM-01.pf, device: PLC-01, type: holding, address: 124, dataType: float32, wordSwap: true, name: { th: "ตัวประกอบกำลัง", en: "Power factor" } }   # D124
+  - { id: MCC.cab_temp, device: PLC-01, type: holding, address: 126, dataType: float32, wordSwap: true, unit: "°C", name: { th: "อุณหภูมิตู้ควบคุม", en: "Cabinet temperature" } }   # D126
+  - { id: MCC.phase, device: PLC-01, type: holding, address: 130, dataType: uint16, name: { th: "Phase Protection ปกติ (1=ปกติ)", en: "Phase OK (1=OK)" } }   # D130
+  - { id: MCC.estop, device: PLC-01, type: holding, address: 131, dataType: uint16, name: { th: "Emergency Stop (1=กด)", en: "Emergency stop (1=pressed)" } }   # D131
+  - { id: CTRL.mode, device: PLC-01, type: holding, address: 132, dataType: uint16, name: { th: "โหมด (0=AUTO, 1=MANUAL)", en: "Mode (0=AUTO, 1=MANUAL)" } }   # D132
+  - { id: CTRL.lead, device: PLC-01, type: holding, address: 133, dataType: uint16, name: { th: "ปั๊มหลักปัจจุบัน (1/2)", en: "Lead pump (1/2)" } }   # D133
+  - { id: CTRL.alt_remain_min, device: PLC-01, type: holding, address: 134, dataType: uint16, unit: "min", name: { th: "เวลาก่อนสลับปั๊ม", en: "Minutes to alternation" } }   # D134
+  - { id: P-01.freq, device: PLC-01, type: holding, address: 200, dataType: float32, wordSwap: true, unit: "Hz", name: { th: "P-01 ความถี่", en: "P-01 Frequency" } }   # D200
+  - { id: P-01.speed, device: PLC-01, type: holding, address: 202, dataType: float32, wordSwap: true, unit: "rpm", name: { th: "P-01 ความเร็วรอบ", en: "P-01 Speed" } }   # D202
+  - { id: P-01.current, device: PLC-01, type: holding, address: 204, dataType: float32, wordSwap: true, unit: "A", name: { th: "P-01 กระแสมอเตอร์", en: "P-01 Motor current" } }   # D204
+  - { id: P-01.torque, device: PLC-01, type: holding, address: 206, dataType: float32, wordSwap: true, unit: "%", name: { th: "P-01 แรงบิด", en: "P-01 Torque" } }   # D206
+  - { id: P-01.power, device: PLC-01, type: holding, address: 208, dataType: float32, wordSwap: true, unit: "kW", name: { th: "P-01 กำลัง", en: "P-01 Power" } }   # D208
+  - { id: P-01.dcbus, device: PLC-01, type: holding, address: 210, dataType: float32, wordSwap: true, unit: "V", name: { th: "P-01 DC bus", en: "P-01 DC bus" } }   # D210
+  - { id: P-01.vout, device: PLC-01, type: holding, address: 212, dataType: float32, wordSwap: true, unit: "V", name: { th: "P-01 แรงดันขาออก", en: "P-01 Output voltage" } }   # D212
+  - { id: P-01.energy, device: PLC-01, type: holding, address: 214, dataType: float32, wordSwap: true, unit: "kWh", name: { th: "P-01 พลังงานสะสม", en: "P-01 Energy" } }   # D214
+  - { id: P-01.saved_kwh, device: PLC-01, type: holding, address: 216, dataType: float32, wordSwap: true, unit: "kWh", name: { th: "P-01 พลังงานที่ประหยัด", en: "P-01 Energy saved" } }   # D216
+  - { id: P-01.inv_hours, device: PLC-01, type: holding, address: 218, dataType: float32, wordSwap: true, unit: "h", name: { th: "P-01 ชั่วโมง Inverter", en: "P-01 Inverter hours" } }   # D218
+  - { id: P-01.motor_hours, device: PLC-01, type: holding, address: 220, dataType: float32, wordSwap: true, unit: "h", name: { th: "P-01 ชั่วโมงมอเตอร์", en: "P-01 Motor hours" } }   # D220
+  - { id: P-01.fan_hours, device: PLC-01, type: holding, address: 222, dataType: float32, wordSwap: true, unit: "h", name: { th: "P-01 ชั่วโมงพัดลม", en: "P-01 Fan hours" } }   # D222
+  - { id: P-01.pid_fb, device: PLC-01, type: holding, address: 224, dataType: float32, wordSwap: true, unit: "bar", name: { th: "P-01 PID feedback", en: "P-01 PID feedback" } }   # D224
+  - { id: P-01.pid_out, device: PLC-01, type: holding, address: 226, dataType: float32, wordSwap: true, unit: "%", name: { th: "P-01 PID output", en: "P-01 PID output" } }   # D226
+  - { id: P-01.run, device: PLC-01, type: holding, address: 230, dataType: uint16, name: { th: "P-01 เดิน (1=เดิน)", en: "P-01 running" } }   # D230
+  - { id: P-01.ready, device: PLC-01, type: holding, address: 231, dataType: uint16, name: { th: "P-01 พร้อมทำงาน", en: "P-01 ready" } }   # D231
+  - { id: P-01.fault, device: PLC-01, type: holding, address: 232, dataType: uint16, name: { th: "P-01 Fault code (0=ไม่มี)", en: "P-01 fault code (0=none)" } }   # D232
+  - { id: P-02.freq, device: PLC-01, type: holding, address: 250, dataType: float32, wordSwap: true, unit: "Hz", name: { th: "P-02 ความถี่", en: "P-02 Frequency" } }   # D250
+  - { id: P-02.speed, device: PLC-01, type: holding, address: 252, dataType: float32, wordSwap: true, unit: "rpm", name: { th: "P-02 ความเร็วรอบ", en: "P-02 Speed" } }   # D252
+  - { id: P-02.current, device: PLC-01, type: holding, address: 254, dataType: float32, wordSwap: true, unit: "A", name: { th: "P-02 กระแสมอเตอร์", en: "P-02 Motor current" } }   # D254
+  - { id: P-02.torque, device: PLC-01, type: holding, address: 256, dataType: float32, wordSwap: true, unit: "%", name: { th: "P-02 แรงบิด", en: "P-02 Torque" } }   # D256
+  - { id: P-02.power, device: PLC-01, type: holding, address: 258, dataType: float32, wordSwap: true, unit: "kW", name: { th: "P-02 กำลัง", en: "P-02 Power" } }   # D258
+  - { id: P-02.dcbus, device: PLC-01, type: holding, address: 260, dataType: float32, wordSwap: true, unit: "V", name: { th: "P-02 DC bus", en: "P-02 DC bus" } }   # D260
+  - { id: P-02.vout, device: PLC-01, type: holding, address: 262, dataType: float32, wordSwap: true, unit: "V", name: { th: "P-02 แรงดันขาออก", en: "P-02 Output voltage" } }   # D262
+  - { id: P-02.energy, device: PLC-01, type: holding, address: 264, dataType: float32, wordSwap: true, unit: "kWh", name: { th: "P-02 พลังงานสะสม", en: "P-02 Energy" } }   # D264
+  - { id: P-02.saved_kwh, device: PLC-01, type: holding, address: 266, dataType: float32, wordSwap: true, unit: "kWh", name: { th: "P-02 พลังงานที่ประหยัด", en: "P-02 Energy saved" } }   # D266
+  - { id: P-02.inv_hours, device: PLC-01, type: holding, address: 268, dataType: float32, wordSwap: true, unit: "h", name: { th: "P-02 ชั่วโมง Inverter", en: "P-02 Inverter hours" } }   # D268
+  - { id: P-02.motor_hours, device: PLC-01, type: holding, address: 270, dataType: float32, wordSwap: true, unit: "h", name: { th: "P-02 ชั่วโมงมอเตอร์", en: "P-02 Motor hours" } }   # D270
+  - { id: P-02.fan_hours, device: PLC-01, type: holding, address: 272, dataType: float32, wordSwap: true, unit: "h", name: { th: "P-02 ชั่วโมงพัดลม", en: "P-02 Fan hours" } }   # D272
+  - { id: P-02.pid_fb, device: PLC-01, type: holding, address: 274, dataType: float32, wordSwap: true, unit: "bar", name: { th: "P-02 PID feedback", en: "P-02 PID feedback" } }   # D274
+  - { id: P-02.pid_out, device: PLC-01, type: holding, address: 276, dataType: float32, wordSwap: true, unit: "%", name: { th: "P-02 PID output", en: "P-02 PID output" } }   # D276
+  - { id: P-02.run, device: PLC-01, type: holding, address: 280, dataType: uint16, name: { th: "P-02 เดิน (1=เดิน)", en: "P-02 running" } }   # D280
+  - { id: P-02.ready, device: PLC-01, type: holding, address: 281, dataType: uint16, name: { th: "P-02 พร้อมทำงาน", en: "P-02 ready" } }   # D281
+  - { id: P-02.fault, device: PLC-01, type: holding, address: 282, dataType: uint16, name: { th: "P-02 Fault code (0=ไม่มี)", en: "P-02 fault code (0=none)" } }   # D282
+  - { id: CTRL.sp, device: PLC-01, type: holding, address: 400, dataType: float32, wordSwap: true, unit: "bar", writable: true, min: 2, max: 6, minRole: engineer, name: { th: "ค่าตั้งแรงดัน PID", en: "PID setpoint" } }   # D400
+  - { id: CTRL.kp, device: PLC-01, type: holding, address: 402, dataType: float32, wordSwap: true, writable: true, min: 0.1, max: 5, minRole: engineer, name: { th: "PID Kp", en: "PID Kp" } }   # D402
+  - { id: CTRL.ti, device: PLC-01, type: holding, address: 404, dataType: float32, wordSwap: true, unit: "s", writable: true, min: 0.5, max: 30, minRole: engineer, name: { th: "PID Ti", en: "PID Ti" } }   # D404
+  - { id: CTRL.deadband, device: PLC-01, type: holding, address: 406, dataType: float32, wordSwap: true, unit: "bar", writable: true, min: 0.05, max: 0.5, minRole: engineer, name: { th: "Deadband", en: "Deadband" } }   # D406
+  - { id: CTRL.int_start, device: PLC-01, type: holding, address: 408, dataType: float32, wordSwap: true, unit: "s", writable: true, min: 5, max: 600, minRole: engineer, name: { th: "Interval สั่ง Run ปั๊ม 2", en: "Lag start interval" } }   # D408
+  - { id: CTRL.int_stop, device: PLC-01, type: holding, address: 410, dataType: float32, wordSwap: true, unit: "s", writable: true, min: 5, max: 900, minRole: engineer, name: { th: "Interval สั่งปิดปั๊ม 2", en: "Lag stop interval" } }   # D410
+  - { id: CTRL.alt_hours, device: PLC-01, type: holding, address: 412, dataType: float32, wordSwap: true, unit: "h", writable: true, min: 1, max: 48, minRole: engineer, name: { th: "รอบสลับปั๊ม", en: "Alternation hours" } }   # D412
+  - { id: CTRL.low_alarm, device: PLC-01, type: holding, address: 414, dataType: float32, wordSwap: true, unit: "bar", writable: true, min: 1, max: 6, minRole: engineer, name: { th: "Alarm แรงดันต่ำ", en: "Low pressure alarm" } }   # D414
+  - { id: CTRL.high_alarm, device: PLC-01, type: holding, address: 416, dataType: float32, wordSwap: true, unit: "bar", writable: true, min: 3, max: 9, minRole: engineer, name: { th: "Alarm แรงดันสูง", en: "High pressure alarm" } }   # D416
+  - { id: CMD.P-01.start, device: PLC-01, type: holding, address: 500, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "สั่งเดิน P-01", en: "Start P-01" } }   # D500
+  - { id: CMD.P-01.stop, device: PLC-01, type: holding, address: 501, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "สั่งหยุด P-01", en: "Stop P-01" } }   # D501
+  - { id: CMD.P-01.reset, device: PLC-01, type: holding, address: 502, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "Reset Fault P-01", en: "Reset P-01" } }   # D502
+  - { id: CMD.P-02.start, device: PLC-01, type: holding, address: 510, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "สั่งเดิน P-02", en: "Start P-02" } }   # D510
+  - { id: CMD.P-02.stop, device: PLC-01, type: holding, address: 511, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "สั่งหยุด P-02", en: "Stop P-02" } }   # D511
+  - { id: CMD.P-02.reset, device: PLC-01, type: holding, address: 512, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "Reset Fault P-02", en: "Reset P-02" } }   # D512
+  - { id: CMD.alternate, device: PLC-01, type: holding, address: 520, dataType: uint16, writable: true, min: 0, max: 1, name: { th: "สั่งสลับปั๊มทันที", en: "Alternate now" } }   # D520
+  - { id: CMD.mode, device: PLC-01, type: holding, address: 521, dataType: uint16, writable: true, min: 0, max: 1, minRole: operator, name: { th: "สั่งเปลี่ยนโหมด (0=AUTO,1=MANUAL)", en: "Set mode" } }   # D521
+
+# Alarm (รหัสตรงกับหน้าจอ SCADA) · severity: critical | high | medium → API: critical | major | warning
+alarms:
+  - { id: PRESS_LOW,  tag: system.pressure, op: "<",  value: 3.5, delaySec: 20, severity: medium,   notify: [line, telegram], escalateMin: 15, text: { th: "แรงดันจ่ายต่ำกว่ากำหนด", en: "Discharge pressure low" } }
+  - { id: PRESS_CRIT, tag: system.pressure, op: "<",  value: 2.5, delaySec: 10, severity: critical, notify: [line, telegram, email], escalateMin: 15, text: { th: "แรงดันจ่ายต่ำวิกฤต", en: "Discharge pressure critical" } }
+  - { id: PRESS_HIGH, tag: system.pressure, op: ">",  value: 5.5, delaySec: 5,  severity: critical, notify: [line, telegram, email], escalateMin: 15, text: { th: "แรงดันจ่ายสูงเกินกำหนด", en: "Discharge pressure high" } }
+  - { id: P1_FAULT,   tag: P-01.fault,      op: "!=", value: 0,                severity: critical, notify: [line, telegram, email], escalateMin: 15, text: { th: "P-01 Inverter Fault", en: "P-01 inverter fault" } }
+  - { id: P2_FAULT,   tag: P-02.fault,      op: "!=", value: 0,                severity: critical, notify: [line, telegram, email], escalateMin: 15, text: { th: "P-02 Inverter Fault", en: "P-02 inverter fault" } }
+  - { id: P1_CURR,    tag: P-01.current,    op: ">",  value: 64,  delaySec: 15, severity: medium,   notify: [line], text: { th: "P-01 กระแสมอเตอร์สูง", en: "P-01 motor current high" } }
+  - { id: P2_CURR,    tag: P-02.current,    op: ">",  value: 64,  delaySec: 15, severity: medium,   notify: [line], text: { th: "P-02 กระแสมอเตอร์สูง", en: "P-02 motor current high" } }
+  - { id: ESTOP,      tag: MCC.estop,       op: "==", value: 1,                severity: critical, notify: [line, telegram, email], text: { th: "กด Emergency Stop — หยุดปั๊มทั้งหมด", en: "Emergency stop pressed" } }
+  - { id: PHASE,      tag: MCC.phase,       op: "==", value: 0,                severity: critical, notify: [line, telegram, email], text: { th: "Phase Protection ทำงาน — ไฟฟ้าขาดเฟส/กลับเฟส", en: "Phase protection tripped" } }
+  - { id: CAB_TEMP,   tag: MCC.cab_temp,    op: ">",  value: 45,  delaySec: 5,  severity: medium,   notify: [line], text: { th: "อุณหภูมิตู้ควบคุมสูง", en: "Cabinet temperature high" } }
+
+# Interlock หลักอยู่ใน PLC (ทำงานแม้ Gateway ดับ) Gateway ตรวจซ้ำเฉพาะคำสั่งจากหน้าจอ/API
+interlocks:
+  - { id: IL_ESTOP_P1, when: { tag: MCC.estop, op: "==", value: 1 }, force: { tag: CMD.P-01.start, value: 0 }, bypassable: false, text: { th: "กด E-Stop อยู่ — ห้ามสั่งเดิน P-01", en: "E-Stop pressed — P-01 start blocked" } }
+  - { id: IL_ESTOP_P2, when: { tag: MCC.estop, op: "==", value: 1 }, force: { tag: CMD.P-02.start, value: 0 }, bypassable: false, text: { th: "กด E-Stop อยู่ — ห้ามสั่งเดิน P-02", en: "E-Stop pressed — P-02 start blocked" } }
+
+schedules: []
+
+# ผู้ใช้หน้าจอ SCADA (viewer · operator · engineer · admin) — โทเคนอยู่ใน environment variable เท่านั้น
+users:
+  - { id: admin,    name: "ผู้ดูแลระบบ",   role: admin,    tokenEnv: TOKEN_ADMIN }
+  - { id: engineer, name: "วิศวกร",        role: engineer, tokenEnv: TOKEN_ENGINEER }
+  - { id: operator, name: "ผู้ปฏิบัติงาน", role: operator, tokenEnv: TOKEN_OPERATOR }
+  - { id: viewer,   name: "ผู้ดูข้อมูล",   role: viewer,   tokenEnv: TOKEN_VIEWER }
+
+# REST API v1 — API Key แยกต่อระบบที่มาเชื่อม · scope กำหนด/ยกเลิกสิทธิ์ · จำกัดจำนวนครั้งต่อนาที
+# encrypt: aes-256-gcm → บังคับเข้ารหัสข้อมูล (payload) เพิ่มจาก HTTPS ทุกครั้งสำหรับ key นั้น
+api:
+  rateLimitPerMin: 120
+  maxHistoryPoints: 10000
+  keys:
+    - { id: scada-web, name: "หน้าจอ SCADA",        keyEnv: API_KEY_SCADA, role: engineer, scopes: [read:latest, read:history, read:status, read:alarms, control] }
+    - { id: erp,       name: "ระบบ ERP ของนิคมฯ",  keyEnv: API_KEY_ERP,   role: viewer,   scopes: [read:latest, read:history], rateLimitPerMin: 60 }
+
+# กุญแจเข้ารหัส payload (hex) — สร้างด้วย: node tools/keygen.js
+security:
+  aesKeyEnv: CD_AES_KEY        # 32 byte (64 hex) สำหรับ AES-256-GCM (มาตรฐานของระบบ)
+  allow3des: false             # 3DES ปิดไว้ (NIST เลิกรับรอง) — เปิดเฉพาะเมื่อต้องเชื่อมระบบเดิม แล้วตั้ง CD_3DES_KEY + CD_MAC_KEY
+
+notify:
+  line:     { type: line,     tokenEnv: LINE_CHANNEL_TOKEN, to: "" }        # to = userId หรือ groupId ของกลุ่มช่าง
+  telegram: { type: telegram, tokenEnv: TELEGRAM_BOT_TOKEN, chatId: "" }    # chatId ของกลุ่ม (เช่น -1001234567890)
+  email:    { type: email, host: smtp.gmail.com, port: 587, user: "", passwordEnv: SMTP_PASSWORD, from: "HydroLink SCADA <alerts@example.com>", to: [] }

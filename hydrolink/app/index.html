@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CoreDash HydroLink · Pump Station SCADA</title>
+<meta name="description" content="ระบบ SCADA สถานีสูบจ่ายน้ำ — Dashboard เรียลไทม์ เว็บ และแอปมือถือ">
+<meta name="theme-color" content="#F7F2E7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<section id="login" class="login">
+  <div class="login-art" aria-hidden="true">
+    <div class="login-brand"><span class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><path d="M12 7v10M8 9.5l8 5M16 9.5l-8 5" opacity=".55"/></svg></span><span><b>CoreDash</b> HydroLink</span></div>
+    <div class="login-hero">
+      <span class="eyebrow">SCADA สถานีสูบจ่ายน้ำ · ประปา นิคมฯ อาคาร โรงงาน</span>
+      <h1>SCADA สถานีสูบจ่ายน้ำ<br>ดูได้ทุกที่ ทั้งเว็บและมือถือ</h1>
+      <p>ควบคุมแรงดันด้วย PID · สลับปั๊มอัตโนมัติทุก 6 ชม. · แจ้งเตือน Email / LINE OA / Telegram · REST API มาตรฐานเปิด</p>
+    </div>
+    <svg class="login-pumps" viewBox="0 0 520 220">
+      <defs><linearGradient id="lgP" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3B7BFF"/><stop offset="1" stop-color="#1B47C9"/></linearGradient></defs>
+      <path class="pipe" d="M10 160 H500"/><path class="pipe flow" d="M10 160 H500"/>
+      <path class="pipe" d="M150 160 V90 H260 M330 160 V90 H260 M260 90 V30 H500"/><path class="pipe flow" d="M150 160 V90 H260 M330 160 V90 H260 M260 90 V30 H500"/>
+      <g transform="translate(150 125)"><circle r="26" fill="url(#lgP)"/><g class="imp"><path d="M0 -16 L4 0 L0 16 L-4 0Z M-16 0 L0 4 L16 0 L0 -4Z" fill="#CFE0FF"/></g></g>
+      <g transform="translate(330 125)"><circle r="26" fill="url(#lgP)"/><g class="imp"><path d="M0 -16 L4 0 L0 16 L-4 0Z M-16 0 L0 4 L16 0 L0 -4Z" fill="#CFE0FF"/></g></g>
+      <g transform="translate(420 30)"><circle r="14" fill="#0F1D45" stroke="#22C3EE" stroke-width="2"/><text y="4" text-anchor="middle" font-size="10" fill="#22C3EE" font-family="Sarabun">FT</text></g>
+    </svg>
+    <div class="login-foot">Web · Mobile · REST API · LINE / Telegram / Email</div>
+  </div>
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="tabs login-lang" role="group" aria-label="Language"><button type="button" data-login-lang="th">ไทย</button><button type="button" data-login-lang="en">English</button></div>
+    <h2>เข้าสู่ระบบ</h2>
+    <p class="muted">ใช้บัญชีที่ผู้ดูแลระบบกำหนดให้</p>
+    <label>ชื่อผู้ใช้<input id="lgUser" name="username" autocomplete="username" required value="admin"></label>
+    <label>รหัสผ่าน<input id="lgPass" name="password" type="password" autocomplete="current-password" required value="demo1234"></label>
+    <button class="btn primary block" type="submit">เข้าสู่ระบบ</button>
+    <div class="divider"><span>หรือทดลองตามระดับสิทธิ์</span></div>
+    <div class="role-pick">
+      <button type="button" class="role-btn" data-demo="admin"><b>ผู้ดูแลระบบ</b><small>จัดการผู้ใช้ · API · แจ้งเตือน</small></button>
+      <button type="button" class="role-btn" data-demo="operator"><b>ผู้ปฏิบัติงาน</b><small>สั่งงาน · ตั้งค่า · รับทราบ Alarm</small></button>
+      <button type="button" class="role-btn" data-demo="viewer"><b>ผู้ดูข้อมูล</b><small>ดู Dashboard · ประวัติ · รายงาน</small></button>
+    </div>
+    <p class="demo-note">โหมดสาธิต — ข้อมูลมาจากตัวจำลองกระบวนการที่ทำงานตามลอจิก PLC มาตรฐาน เมื่อติดตั้งจริงจะเชื่อมต่อ PLC FX5U, Inverter ABB ACS580, Power Meter และ Flowmeter</p>
+  </form>
+</section>
+
+<!-- ============ APP SHELL ============ -->
+<div id="shell" class="shell" hidden>
+  <aside class="side" id="side">
+    <div class="side-brand"><span class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><path d="M12 7v10M8 9.5l8 5M16 9.5l-8 5" opacity=".55"/></svg></span><span><b>CoreDash</b><small>HydroLink SCADA</small></span></div>
+    <nav class="side-nav" id="sideNav"></nav>
+    <div class="side-foot">
+      <div class="site-chip"><span class="dot ok"></span><span>สถานีสาธิต · Demo 01<br><small>CoreDash HydroLink</small></span></div>
+    </div>
+  </aside>
+  <header class="top">
+    <button class="icon-btn only-m" id="menuBtn" aria-label="เมนู"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div class="top-title"><h1 id="pageTitle">ภาพรวม</h1><span class="muted" id="pageSub"></span></div>
+    <div class="top-right">
+      <span class="live-pill" id="livePill"><span class="dot ok pulse"></span><span class="hide-s lp-t">PLC ออนไลน์</span> <b data-v="ago">0 วิ</b></span>
+      <span class="clock hide-s" data-v="clock"></span>
+      <button class="icon-btn lang-btn" id="langBtn" aria-label="เปลี่ยนภาษา / Language"><span data-langlabel>EN</span></button>
+      <button class="icon-btn" id="themeBtn" aria-label="สลับธีมสว่าง/มืด"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <a class="icon-btn bell" href="#/alarms" aria-label="การแจ้งเตือน"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="badge" data-v="alarmCount" hidden></span></a>
+      <button class="user-chip" id="userBtn" aria-haspopup="menu"><span class="avatar" id="userAvatar">A</span><span class="hide-s"><b id="userName"></b><small id="userRole"></small></span></button>
+      <div class="menu" id="userMenu" role="menu" hidden>
+        <div class="menu-head"><b id="umName"></b><small id="umRole"></small></div>
+        <a href="#/settings" role="menuitem">การแสดงผล & ภาษา</a>
+        <a href="#/users" role="menuitem">ผู้ใช้และสิทธิ์</a>
+        <button role="menuitem" id="installBtn" hidden>ติดตั้งเป็นแอปบนเครื่อง</button>
+        <button role="menuitem" id="logoutBtn">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+  <div id="modebar" class="modebar"></div>
+  <main id="view" class="view" tabindex="-1"></main>
+  <nav class="bottom" id="bottomNav" aria-label="เมนูหลักบนมือถือ"></nav>
+</div>
+
+<div class="sheet" id="sheet" hidden><div class="sheet-panel"><div class="sheet-grip"></div><nav id="sheetNav"></nav></div></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="modal" id="modal" hidden><div class="modal-card" role="dialog" aria-modal="true" id="modalCard"></div></div>
+<div class="install-bar" id="installBar" hidden><span>ติดตั้ง <b>CoreDash HydroLink</b> เป็นแอปบนมือถือ</span><button class="btn primary sm" id="installYes">ติดตั้ง</button><button class="btn ghost sm" id="installNo">ภายหลัง</button></div>
+
+<script src="i18n-dict.js"></script>
+<script src="i18n.js"></script>
+<script src="sim.js"></script>
+<script src="points.js"></script>
+<script src="live.js"></script>
+<script src="replay.js"></script>
+<script src="core.js"></script>
+<script src="control.js"></script>
+<script src="pages-ops.js"></script>
+<script src="pages-data.js"></script>
+<script src="pages-admin.js"></script>
+<script src="station3d.js"></script>
+<script src="settings.js"></script>
+<script>
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) navigator.serviceWorker.register('sw.js').catch(function () {});
+</script>
+</body>
+</html>

@@ -63,10 +63,21 @@ function normalizeConfig(raw, { env = process.env, baseDir = process.cwd() } = {
   // Notification secrets
   for (const [id, ch] of Object.entries(cfg.notify)) {
     if (ch.tokenEnv) ch.token = env[ch.tokenEnv];
+    if (ch.passwordEnv) ch.password = env[ch.passwordEnv];
     ch.id = id;
   }
   for (const d of cfg.devices) if (d.passwordEnv) d.password = env[d.passwordEnv];
   for (const i of (cfg.pq && cfg.pq.instruments) || []) if (i.ftp && i.ftp.passwordEnv) i.ftp.password = env[i.ftp.passwordEnv];
+
+  // REST API keys (/api/v1): key from env (keyEnv). A key without a value is disabled.
+  cfg.api = { rateLimitPerMin: 120, maxHistoryPoints: 10000, keys: [], ...(cfg.api || {}) };
+  cfg.api.keys = cfg.api.keys.map((k) => {
+    if (!ROLES.includes(k.role || 'viewer')) throw new Error(`API key ${k.id}: bad role ${k.role}`);
+    return { ...k, key: k.key || (k.keyEnv ? env[k.keyEnv] : undefined) };
+  }).filter((k) => k.key);
+  if (env.DEMO_TOKENS === '1') cfg.api.keys.push({ id: 'demo-key', name: 'Demo API key', key: 'demo-key', role: 'engineer', scopes: ['read:latest', 'read:history', 'read:status', 'read:alarms', 'control'] });
+  cfg.security = cfg.security || {};
+  if (env.SIM_FILE) cfg.simFile = path.resolve(env.SIM_FILE);
 
   // SIMULATE=1: every device is served by the built-in plant simulator.
   cfg.simulate = env.SIMULATE === '1' || cfg.simulate === true;

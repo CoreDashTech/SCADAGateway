@@ -26,7 +26,7 @@ The gateway bridges field devices (Modbus TCP/RTU, MQTT) to the CoreDash Nexus w
 | **Interlock** | บังคับค่าปลอดภัยทุกโหมด และบล็อกคำสั่งที่ขัดกับ Interlock — แอปแสดงสาเหตุ ค่าปัจจุบัน/เกณฑ์ ปุ่มแก้ไขทันที (`fixes`) และสั่งคำสั่งเดิมให้อัตโนมัติเมื่อปลดล็อก |
 | **Bypass ชั่วคราว** | วิศวกร/ผู้ดูแลเท่านั้น ต้องใส่เหตุผล ≥5 ตัวอักษร เลือก 5/15/30 นาที (≤ `maxBypassMin`) หมดเวลาคืนค่าเอง บันทึก `interlock.bypass` / `interlock.restore` ใน Audit log Interlock ที่ตั้ง `bypassable: false` (เช่น `IL_TANK_LSHH` 99.5%) ข้ามไม่ได้เด็ดขาด |
 | **Alarm** | เงื่อนไข + หน่วงเวลา, สถานะแบบ ISA-18.2 (active / acked / cleared), ส่งต่อ (escalation) เมื่อไม่มีคนรับทราบ |
-| **แจ้งเตือน** | LINE Official Account (Messaging API), Webhook สำหรับ Email / SMS / Push |
+| **แจ้งเตือน** | LINE Official Account (Messaging API), Telegram Bot, Email (SMTP), ntfy, Webhook สำหรับ SMS / Push |
 | **Historian** | เก็บค่าในหน่วยความจำสำหรับกราฟเร็ว + ไฟล์ JSONL รายวัน, API ดึงกราฟย้อนหลัง |
 | **Audit log** | บันทึกทุกคำสั่งแบบ hash-chain (แก้ไขย้อนหลังแล้วตรวจจับได้) |
 | **Scheduler** | ตารางเวลาทำงานบน Gateway ตามเขตเวลาไซต์ แม้คลาวด์ออฟไลน์ |
@@ -177,6 +177,37 @@ GitHub Pages รัน Gateway (Node.js) ไม่ได้ แอปจึง�
 หน้าจอ: การ์ดเครื่องวัด 3 ตัว (มาตร PF แบบเข็ม + kW/kVA/A/THD) · ผลของ APF สำหรับผู้บริหาร (THD-I, PF, kVA คืนพิกัด, กระแส, ความสูญเสีย, ประหยัด ฿/เดือน) · ค่าวัดรายเฟส · รูปคลื่น · เฟสเซอร์ · ฮาร์มอนิก 2–50 เทียบ IEEE 519 / IEC 61000-2-4 · แนวโน้ม 24 ชม. · เหตุการณ์บนกราฟ ITIC · ไฟล์ FTP/นำเข้า CSV แล้ว plot + สถิติ
 
 API: `GET /api/pq` · `GET /api/pq/history?hours=24` · `GET /api/pq/:id/files?dir=/` · `GET /api/pq/:id/file?path=` · `POST /api/pq/apf` (เฉพาะโหมดจำลอง)
+
+## CoreDash HydroLink — SCADA สถานีสูบจ่ายน้ำ / Pump-station SCADA
+
+โซลูชันสำเร็จรูปสำหรับสถานีสูบจ่ายน้ำ (ประปา นิคมฯ อาคารสูง โรงงาน ชลประทาน) ใช้ Gateway ตัวเดียวกันนี้
+A ready-made pump-station solution running on this same gateway.
+
+| ส่วน | ที่อยู่ |
+|---|---|
+| หน้าผลิตภัณฑ์ / Product page | `hydrolink/` (TH) · `hydrolink/en.html` (EN) |
+| เว็บแอป SCADA + PWA | `hydrolink/app/` — โหมดจำลอง · ไฟล์ทดสอบ JSON · ทำงานจริง (ต่อ Gateway) |
+| เอกสาร API / OpenAPI | `hydrolink/docs/api.html` · `hydrolink/api/openapi.yaml` |
+| ไฟล์ตั้งค่า Gateway | `config/pump-station.yaml` (ปั๊ม 2 ตัว + Inverter, Power Meter, Flowmeter, PLC ผ่าน Modbus TCP) |
+| ไฟล์ทดสอบเหตุการณ์ | `examples/scenario-*.json` (ช่วงพีค · ปั๊มทริป · ไฟดับ/E-Stop) |
+| ตัวอย่างเรียก API | `examples/client.py` · `examples/client.mjs` |
+
+ความสามารถหลัก: ควบคุมแรงดันด้วย PID · สลับปั๊ม Lead/Lag ตามรอบเวลา (นับต่อเมื่อกลับเป็น AUTO) · สั่งงานผ่าน Faceplate พร้อม PIN และยืนยันก่อนสั่ง · Audit log · แจ้งเตือน LINE OA / Telegram / Email (SMTP) · REST API v1 เป็น JSON พร้อม API Key แยก scope และจำกัดอัตรา · เข้ารหัสข้อมูลด้วย AES-256-GCM (3DES ปิดไว้เป็นค่าเริ่มต้น)
+
+```bash
+# จำลองสถานีสูบน้ำ (ไม่ต้องมีฮาร์ดแวร์) / simulate a pump station
+SIMULATE=1 DEMO_TOKENS=1 PORT=8080 node src/index.js config/pump-station.yaml
+
+# เล่นไฟล์ทดสอบแทนตัวจำลอง / replay a JSON test file instead of the model
+SIMULATE=1 SIM_FILE=examples/scenario-p01-fault.json node src/index.js config/pump-station.yaml
+
+# เรียก API / call the API
+curl -H "X-API-Key: demo-key" http://localhost:8080/api/v1/latest
+```
+
+REST API v1: `GET /api/v1/points` · `/latest` · `/history` · `/devices/status` · `/alarms` · `/meta/last-update` · `/export` · `POST /api/v1/control` · `POST /api/v1/sim/scenario`
+
+ตัวแปรแวดล้อม / Environment: `CD_AES_KEY` (64 hex) · `LINE_CHANNEL_TOKEN` · `TELEGRAM_BOT_TOKEN` · `SMTP_PASSWORD` · `TOKEN_*` ของผู้ใช้ และ `keyEnv` ของ API Key แต่ละตัว
 
 ## การแมป Tag / Tag mapping
 

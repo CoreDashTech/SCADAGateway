@@ -4,6 +4,9 @@ const { TagStore } = require('./tagStore');
 const { createModbusDriver } = require('./drivers/modbus');
 const { createMqttDriver } = require('./drivers/mqtt');
 const { SimDriver } = require('./drivers/sim');
+const { SimPump } = require('./drivers/sim-pump');
+const { ReplayDriver } = require('./drivers/replay');
+const secure = require('./secure');
 const { AlarmEngine } = require('./engine/alarms');
 const { AuditLog } = require('./engine/audit');
 const { CommandService } = require('./engine/commands');
@@ -21,8 +24,25 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
   const deviceDrivers = [];       // { device, driver }
   let sim = null;
 
+  let simSwitch = null;
   if (cfg.simulate) {
-    sim = new SimDriver(cfg.devices, cfg.tags, store, { tickMs: simTickMs || 1000 });
+    // SIMULATE=1: plant model (simulator: pump-station → pump-station model) or a JSON test file (SIM_FILE=… / upload via API)
+    const tickMs = simTickMs || 1000;
+    const makeModel = () => (cfg.simulator === 'pump-station' ? new SimPump(cfg.devices, cfg.tags, store, { tickMs }) : new SimDriver(cfg.devices, cfg.tags, store, { tickMs }));
+    const first = cfg.simFile ? new ReplayDriver(cfg.devices, cfg.tags, store, { file: cfg.simFile, tickMs, log }) : makeModel();
+    simSwitch = {
+      cur: first, running: false, mode: cfg.simFile ? 'scenario' : 'model',
+      start() { this.running = true; this.cur.start(); },
+      stop() { this.running = false; this.cur.stop(); },
+      write(tag, v) { return this.cur.write(tag, v); },
+      healthOf(id) { return this.cur.healthOf(id); },
+      force(id, v) { if (this.cur.force) this.cur.force(id, v); },   // test hook
+      get health() { return this.cur.health; },
+      swap(next, mode) { if (this.running) this.cur.stop(); this.cur = next; this.mode = mode; if (this.running) next.start(); },
+      useScenario(sc) { this.swap(new ReplayDriver(cfg.devices, cfg.tags, store, { scenario: sc, tickMs, log }), 'scenario'); },
+      useModel() { this.swap(makeModel(), 'model'); }
+    };
+    sim = simSwitch;
     for (const t of cfg.tags) drivers.set(t.id, sim);
     for (const d of cfg.devices) deviceDrivers.push({ device: d, driver: sim, health: () => sim.healthOf(d.id) });
   } else {
@@ -69,7 +89,8 @@ function createGateway(cfg, { log = console, fetchImpl, simTickMs } = {}) {
     notifier.sendText(ch, pq.alarmText(ev, 'th', kind), { priority: kind === 'clear' ? 2 : ev.sev === 'alarm' ? 5 : 3 });
   };
   const cams = new CamService(cfg.cameras || [], { log });
-  const gw = { cfg, pq, cams, store, drivers, sim, audit, commands, interlocks, alarms, historian, scheduler, notifier, devices, log };
+  const secureKeys = secure.loadKeys(cfg.security);
+  const gw = { cfg, simSwitch, secureKeys, pq, cams, store, drivers, sim, audit, commands, interlocks, alarms, historian, scheduler, notifier, devices, log };
   gw.server = createServer(gw);
 
   gw.start = async () => {
