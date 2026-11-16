@@ -58,7 +58,7 @@ a{color:var(--cy)}
 .lgd{margin:6px 6px 0;font-size:12.5px;color:var(--mu);line-height:1.5}.bar{height:9px;border-radius:5px;margin:4px 0}
 .basenote{font-size:12.5px;color:var(--mu);margin:7px 6px 0;line-height:1.5}
 /* tabs */
-.tabs{display:flex;gap:4px;padding:10px 10px 6px;overflow-x:auto;scrollbar-width:none;flex:none}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;padding:10px 10px 6px;flex:none}@media(max-width:860px){.tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}}
 .tabs button{flex:none;border:none;background:var(--pn2);border-radius:12px;padding:8px 11px;font-size:14px;font-weight:500;white-space:nowrap}
 .tabs button.on{background:linear-gradient(135deg,#0f766e,#4338ca);font-weight:700}
 .pane{display:none}.pane.on{display:block}
@@ -194,7 +194,7 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
     <button data-t="eq">🔴 แผ่นดินไหว</button>
     <button data-t="st">🌀 พายุ</button>
     <button data-t="wx">🌦️ อากาศไทย</button>
-    <button data-t="fc">🔮 ทำนาย</button><button data-t="log">📜 บันทึก</button>
+    <button data-t="fc" style="background:linear-gradient(135deg,#7c3aed,#db2777)">🔮 ทำนาย</button><button data-t="log">📜 บันทึก</button>
     <button data-t="src">🛰️ ที่มา</button>
     <button class="mob" id="bMin" aria-label="ย่อ/ขยายแผง">▾</button>
   </div>
