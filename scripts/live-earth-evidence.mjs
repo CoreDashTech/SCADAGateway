@@ -31,7 +31,7 @@ async function findLatest(L, tms, ext, start, step, tries, minBytes = 1500) {
     try { const b = await get1(gibs(L, tms, ext, iso(t)), 'buf', 15000); if (b.length > minBytes) return { t, bytes: b.length, tile_sha256: sha(b) }; } catch (e) {} }
   return null;
 }
-async function part(name, fn) { try { return await fn(); } catch (e) { return { error: String(e.message || e) }; } }
+async function part(name, fn) { try { return await fn(); } catch (e) { const c = e.cause ? ' (' + (e.cause.code || e.cause.message || e.cause) + ')' : ''; return { error: String(e.message || e) + c }; } }
 
 const now = Date.now();
 const sources = [];
@@ -39,8 +39,10 @@ const cloud = await part('cloud', () => findLatest('Himawari_AHI_Band13_Clean_In
 sources.push({ key: 'cloud', provider: 'NASA GIBS', satellite: 'Himawari-9 (JMA, geostationary 140.7E)', instrument: 'AHI Band 13 clean IR 10.4um',
   data_time_utc: cloud && cloud.t ? iso(cloud.t) : null, url: cloud && cloud.t ? gibs('Himawari_AHI_Band13_Clean_Infrared', 'GoogleMapsCompatible_Level6', 'png', iso(cloud.t)) : null,
   tile_sha256: cloud && cloud.tile_sha256 || null, status: cloud && cloud.t ? 'ok' : (cloud && cloud.error) || 'not found' });
-const imerg = await part('imerg', () => findLatest('IMERG_Precipitation_Rate', 'GoogleMapsCompatible_Level6', 'png', Math.floor((now - 3 * 3600000) / 1800000) * 1800000, 1800000, 24, 700));
-sources.push({ key: 'imerg', provider: 'NASA GIBS', satellite: 'GPM constellation (NASA/JAXA)', instrument: 'IMERG precipitation rate',
+let imergLayer = 'IMERG_Precipitation_Rate';
+let imerg = await part('imerg', () => findLatest(imergLayer, 'GoogleMapsCompatible_Level6', 'png', Math.floor((now - 3 * 3600000) / 1800000) * 1800000, 1800000, 24, 700));
+if (!imerg || !imerg.t) { imergLayer = 'IMERG_Precipitation_Rate_30min'; const alt = await part('imerg', () => findLatest(imergLayer, 'GoogleMapsCompatible_Level6', 'png', Math.floor((now - 3 * 3600000) / 1800000) * 1800000, 1800000, 24, 700)); if (alt && alt.t) imerg = alt; }
+sources.push({ key: 'imerg', provider: 'NASA GIBS', satellite: 'GPM constellation (NASA/JAXA)', instrument: 'IMERG precipitation rate', product: imergLayer,
   data_time_utc: imerg && imerg.t ? iso(imerg.t) : null, tile_sha256: imerg && imerg.tile_sha256 || null, status: imerg && imerg.t ? 'ok' : (imerg && imerg.error) || 'not found' });
 const rv = await part('radar', () => get('https://api.rainviewer.com/public/weather-maps.json'));
 const rvLast = rv && rv.radar && rv.radar.past && rv.radar.past.at(-1);
@@ -62,9 +64,14 @@ const storms = eo.error ? { status: eo.error } : { status: 'ok', list: eo.events
 const LAT = CITY.map(c => c[1]).join(','), LON = CITY.map(c => c[2]).join(',');
 const wx = await part('wx', () => get(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,precipitation,weather_code&timezone=Asia%2FBangkok`));
 const aq = await part('aq', () => get(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=pm2_5&timezone=Asia%2FBangkok`));
-const W = Array.isArray(wx) ? wx : null, A = Array.isArray(aq) ? aq : null;
-const weather = { status: W ? 'ok' : (wx.error || 'error'), source: 'Open-Meteo (model, not station)', model_time_local: W ? W[0].current.time + ' +07:00' : null,
-  cities: W ? CITY.map((c, i) => ({ city: c[0], temp_c: W[i].current.temperature_2m, rain_mm: W[i].current.precipitation, wmo: W[i].current.weather_code, pm25: A ? A[i].current.pm2_5 : null })) : null };
+let W = Array.isArray(wx) ? wx : null; const A = Array.isArray(aq) ? aq : null; let wxSource = 'Open-Meteo (model, not station)';
+if (!W) { // สำรอง: สถาบันอุตุนิยมวิทยานอร์เวย์ (MET Norway) ฟรี ต้องระบุ User-Agent
+  const res = [];
+  for (const c of CITY) { const j = await part('met', () => get(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${c[1]}&lon=${c[2]}`)); const t0 = j && j.properties && j.properties.timeseries && j.properties.timeseries[0];
+    res.push(t0 ? { current: { time: t0.time, temperature_2m: t0.data.instant.details.air_temperature, precipitation: t0.data.next_1_hours ? t0.data.next_1_hours.details.precipitation_amount : null, weather_code: null, symbol: t0.data.next_1_hours ? t0.data.next_1_hours.summary.symbol_code : null } } : null); }
+  if (res.some(Boolean)) { W = res; wxSource = 'MET Norway locationforecast (model, not station) – fallback because Open-Meteo: ' + wx.error; } }
+const weather = { status: W ? 'ok' : (wx.error || 'error'), source: wxSource, open_meteo_error: wx.error || null, air_quality_error: aq.error || null, model_time: W ? (W.find(Boolean) || {}).current?.time || null : null,
+  cities: W ? CITY.map((c, i) => ({ city: c[0], temp_c: W[i] ? W[i].current.temperature_2m : null, rain_mm: W[i] ? W[i].current.precipitation : null, wmo: W[i] ? W[i].current.weather_code : null, symbol: W[i] ? W[i].current.symbol || null : null, pm25: A ? A[i].current.pm2_5 : null })) : null };
 
 /* ต่อโซ่หลักฐาน: บันทึกใหม่เก็บลายนิ้วมือของบันทึกก่อนหน้า ถ้ามีใครแก้บันทึกเก่า โซ่จะขาดทันที */
 const latestPath = join(OUT, 'latest.json');
