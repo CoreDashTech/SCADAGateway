@@ -1,11 +1,11 @@
 {
-  "record_id": "LEG-20261116-224132",
-  "created_utc": "2026-11-16T15:41:32Z",
+  "record_id": "LEG-20261116-224927",
+  "created_utc": "2026-11-16T15:49:27Z",
   "generator": "CoreDash Live Earth evidence bot (GitHub Actions)",
   "run": {
     "repo": "CoreDashTech/SCADAGateway",
-    "run_id": "43899061087",
-    "commit_before": "d0c4a3966b2685f71a7d69c11e83dd22d9a58c43"
+    "run_id": "43900546829",
+    "commit_before": "fca42712acb772f31f82d4f2ef19705d67331f72"
   },
   "sources": [
     {
@@ -40,8 +40,8 @@
   "earthquakes": {
     "status": "ok",
     "source": "USGS 2.5_week.geojson",
-    "feed_generated_utc": "2026-11-16T15:41:14Z",
-    "count_7d": 303,
+    "feed_generated_utc": "2026-11-16T15:49:14Z",
+    "count_7d": 304,
     "m45_24h": 9,
     "near_thailand_1000km": [
       {
@@ -117,7 +117,7 @@
     "cities": null
   },
   "disclaimer": "ข้อมูลจากแหล่งเปิด บันทึกอัตโนมัติ อาจล่าช้า/คลาดเคลื่อน ไม่ใช่ประกาศทางการ",
-  "prev_record_id": null,
-  "prev_sha256": null,
-  "sha256": "ce987aeb6ad0373fe7f89d5169e939d03a9998308e4894bc4cff7dd6b4773738"
+  "prev_record_id": "LEG-20261116-224132",
+  "prev_sha256": "ce987aeb6ad0373fe7f89d5169e939d03a9998308e4894bc4cff7dd6b4773738",
+  "sha256": "d18c0bbaa26b53587e4bc58b51512e052537c533d452ca0dd45bb2fa01ce629f"
 }
