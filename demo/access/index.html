@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3b2fc9">
+<meta name="description" content="สื่อใจ – แอปช่วยสื่อสารสำหรับคนหูหนวก หูตึง คนตาบอด และสายตาเลือนราง โดย CoreDash">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="สื่อใจ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>สื่อใจ – เห็นเสียง ฟังภาพ สื่อสารได้ทุกคน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f3ff;--card:#fff;--txt:#1b1640;--mut:#625d8a;--line:#e6e3fb;--pri:#4f46e5;--pri2:#7c3aed;--teal:#0d9488;--ok:#059669;--warn:#d97706;--bad:#dc2626;--chip:#eeecff;--fs:17px;--r:22px}
+body.dark{--bg:#0e0b24;--card:#1a1638;--txt:#f1efff;--mut:#a9a3d6;--line:#2c2757;--chip:#262052}
+body.hc{--bg:#000;--card:#000;--txt:#ffeb3b;--mut:#fff59d;--line:#ffeb3b;--pri:#ffeb3b;--pri2:#ffeb3b;--chip:#111;--ok:#00e676;--bad:#ff5252}
+body.hc .btn.pri,body.hc .tile,body.hc .sos{color:#000!important}body.hc .tile small{color:#222}body.hc .show{background:#000;color:#ffeb3b}body.hc .show.sosm{background:#d50000;color:#fff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:Prompt,system-ui,sans-serif;font-size:var(--fs)}
+button,input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
+.app{max-width:620px;margin:0 auto;min-height:100vh;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 14px;border-radius:0 0 26px 26px;box-shadow:0 10px 30px -14px rgba(79,70,229,.8)}
+body.hc header{background:#000;border-bottom:3px solid #ffeb3b;color:#ffeb3b}
+.hr{display:flex;align-items:center;gap:10px}
+.lg{width:44px;height:44px;border-radius:14px;background:#fff3;display:grid;place-items:center;font-size:24px}
+header h1{font-size:1.3rem;line-height:1.1}header small{display:block;font-size:.72rem;opacity:.85;font-weight:400}
+.hb{margin-left:auto;display:flex;gap:6px}
+.ib{min-width:48px;height:48px;border-radius:14px;border:none;background:#fff2;color:#fff;font-size:1.25rem;cursor:pointer}
+body.hc .ib{border:2px solid #ffeb3b;color:#ffeb3b;background:#000}
+main{padding:14px}
+.page{display:none}.page.on{display:block;animation:fi .25s}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}}
+h2.t{font-size:1.15rem;margin:14px 2px 10px;display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:0 6px 20px -14px rgba(40,30,120,.35)}
+body.hc .card{border:2px solid #ffeb3b}
+.modes{display:grid;gap:12px}
+.mode{display:flex;gap:14px;align-items:center;padding:18px;border-radius:24px;border:none;text-align:left;cursor:pointer;color:#fff;min-height:110px;position:relative;overflow:hidden}
+.mode .e{font-size:2.6rem;width:66px;height:66px;border-radius:20px;background:#fff3;display:grid;place-items:center;flex:none}
+.mode b{font-size:1.2rem;display:block}.mode small{opacity:.9;font-size:.85rem;line-height:1.45;display:block;margin-top:3px}
+.m1{background:linear-gradient(135deg,#0d9488,#0ea5e9)}.m2{background:linear-gradient(135deg,#7c3aed,#db2777)}.m3{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+body.hc .mode{background:#000;border:3px solid #ffeb3b;color:#ffeb3b}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{border:none;border-radius:22px;padding:16px 14px;min-height:118px;background:var(--card);border:1px solid var(--line);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;color:var(--txt)}
+.tile .e{font-size:2rem}.tile b{font-size:1rem}.tile small{color:var(--mut);font-size:.78rem;line-height:1.4}
+body.hc .tile{background:#ffeb3b;border:none}
+.sos{width:100%;margin-top:14px;border:none;border-radius:24px;padding:18px;background:linear-gradient(135deg,#dc2626,#f43f5e);color:#fff;font-size:1.25rem;font-weight:700;cursor:pointer;box-shadow:0 14px 30px -14px #dc2626;display:flex;align-items:center;justify-content:center;gap:10px;min-height:72px}
+body.hc .sos{background:#ff5252}
+/* chat */
+.chat{display:flex;flex-direction:column;gap:10px;min-height:46vh;max-height:56vh;overflow:auto;padding:4px 2px 10px}
+.bub{max-width:88%;padding:12px 15px;border-radius:20px;font-size:1.15rem;line-height:1.5;position:relative;word-break:break-word}
+.bub small{display:block;font-size:.72rem;opacity:.7;margin-bottom:2px}
+.bub.them{align-self:flex-start;background:var(--chip);border-bottom-left-radius:6px}
+.bub.me{align-self:flex-end;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-bottom-right-radius:6px}
+body.hc .bub.me{background:#ffeb3b;color:#000}
+.bub.live{opacity:.7;font-style:italic}
+.bub.kw{outline:3px solid var(--warn)}
+.bub .rp{position:absolute;right:8px;bottom:6px;background:none;border:none;font-size:.9rem;cursor:pointer;opacity:.8;color:inherit}
+.composer{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));background:var(--bg);padding:8px 0 4px}
+.qchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
+.qchips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:30px;padding:9px 14px;font-size:.92rem;cursor:pointer;white-space:nowrap}
+.row{display:flex;gap:8px;align-items:center}
+.inp{flex:1;min-height:56px;border-radius:18px;border:2px solid var(--line);background:var(--card);padding:12px 14px;outline:none;font-size:1.05rem}
+.inp:focus{border-color:var(--pri)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:16px;padding:12px 16px;font-weight:600;cursor:pointer;min-height:56px;min-width:56px;background:var(--chip);color:var(--txt)}
+.btn.pri{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+.btn.mic{background:#0d9488;color:#fff;font-size:1.4rem}
+.btn.mic.on{background:#dc2626;animation:pz 1.2s infinite}
+@keyframes pz{50%{box-shadow:0 0 0 10px rgba(220,38,38,.2)}}
+.btn.full{width:100%}
+.status{font-size:.85rem;color:var(--mut);margin:4px 2px 8px;display:flex;gap:6px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mut);display:inline-block}.dot.on{background:#dc2626;box-shadow:0 0 8px #dc2626}
+/* phrases */
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.cats button{flex:none;border:none;border-radius:30px;padding:10px 15px;background:var(--chip);cursor:pointer;font-weight:500}
+.cats button.on{background:var(--pri);color:#fff}
+body.hc .cats button.on{color:#000}
+.phr{display:grid;gap:10px}
+.ph{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:var(--card);border:1px solid var(--line);cursor:pointer;text-align:left;font-size:1.08rem;min-height:64px;width:100%}
+.ph .e{font-size:1.6rem}.ph span{flex:1;text-align:left}
+.ph .x{background:none;border:none;font-size:1rem;color:var(--mut);cursor:pointer;padding:6px}
+/* big show */
+.show{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;background:#fff;color:#111}
+.show.on{display:flex}
+.show.flip .stx{transform:rotate(180deg)}
+.stx{font-size:clamp(34px,10vw,90px);font-weight:700;line-height:1.25;word-break:break-word}
+.show .sbt{position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:16px;display:flex;gap:10px;justify-content:center}
+.show.sosm{background:#dc2626;color:#fff}
+.show .info{font-size:1.1rem;margin-top:18px;line-height:1.6;opacity:.95}
+.calls{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px;margin-top:18px}
+.calls a{display:block;padding:14px;border-radius:16px;background:#fff;color:#dc2626;font-weight:700;text-decoration:none;font-size:1.15rem}
+/* vision */
+.cam{position:relative;border-radius:22px;overflow:hidden;background:#000;aspect-ratio:3/4;max-height:56vh;width:100%}
+.cam video,.cam canvas.ov{width:100%;height:100%;object-fit:cover;display:block}
+.cam .ret{position:absolute;left:50%;top:50%;width:70px;height:70px;margin:-35px;border:4px solid #fff;border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.25)}
+.cam .res{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(0,0,0,.72);color:#fff;border-radius:16px;padding:12px 14px;font-size:1.35rem;font-weight:700;display:flex;align-items:center;gap:12px}
+.cam .sw{width:40px;height:40px;border-radius:12px;border:2px solid #fff;flex:none}
+.cam .ph0[hidden]{display:none}.cam .ph0{position:absolute;inset:0;display:grid;place-items:center;color:#cbd5e1;text-align:center;padding:20px;font-size:1rem}
+.vt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.vt button{border:none;border-radius:16px;padding:12px 6px;background:var(--chip);cursor:pointer;font-weight:600;font-size:.92rem;min-height:64px}
+.vt button.on{background:var(--pri);color:#fff}
+.ocr{white-space:pre-wrap;font-size:1.15rem;line-height:1.6;margin-top:10px}
+/* listen */
+.meter{height:30px;border-radius:15px;background:var(--chip);overflow:hidden;position:relative}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#10b981,#f59e0b,#ef4444);transition:width .1s}
+.meter b{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--txt)}
+.flash{position:fixed;inset:0;z-index:45;pointer-events:none;opacity:0;transition:opacity .15s}
+.flash.on{opacity:.85}
+.log{display:grid;gap:8px;margin-top:10px}
+.log div{padding:10px 14px;border-radius:14px;background:var(--chip);font-size:.95rem}
+/* settings */
+.set label{display:block;font-size:.88rem;color:var(--mut);margin:14px 0 6px}
+.set select,.set input[type=text],.set input[type=tel],.set textarea{width:100%;min-height:52px;border-radius:14px;border:2px solid var(--line);background:var(--card);padding:10px 12px}
+.set input[type=range]{width:100%;accent-color:var(--pri);height:32px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:90px;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:11px 8px;cursor:pointer;font-weight:500}
+.seg button.on{border-color:var(--pri);background:var(--chip);color:var(--pri)}
+.tg{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.tg span{flex:1}.tg small{display:block;color:var(--mut);font-size:.78rem}
+.sw2{width:62px;height:36px;border-radius:20px;background:#cbd5e1;border:none;position:relative;cursor:pointer;flex:none}
+.sw2:after{content:'';position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;background:#fff;transition:.2s}
+.sw2.on{background:var(--ok)}.sw2.on:after{left:30px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+body.hc nav{border-top:3px solid #ffeb3b}
+nav .in{display:flex;max-width:620px;width:100%}
+nav button{flex:1;border:none;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 10px;font-size:.74rem;cursor:pointer;min-height:72px}
+nav button span{font-size:1.55rem}
+nav button.on{color:var(--pri);font-weight:700}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#1b1640;color:#fff;padding:12px 18px;border-radius:16px;z-index:70;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center;font-size:1rem}
+.toast.on{opacity:1}
+.note{font-size:.8rem;color:var(--mut);line-height:1.55;margin-top:10px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:4px solid #f59e0b;outline-offset:3px}
+.guide-on [data-g]{outline:2px dashed rgba(124,58,237,.35);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="sr" class="sr" aria-live="assertive"></div>
+<div class="flash" id="flash"></div>
+<div class="app">
+<header>
+  <div class="hr"><div class="lg" aria-hidden="true">💜</div><div><h1>สื่อใจ</h1><small>เห็นเสียง · ฟังภาพ · สื่อสารได้ทุกคน</small></div>
+  <div class="hb"><button class="ib" id="hSos" aria-label="ขอความช่วยเหลือฉุกเฉิน" data-g>🆘</button><button class="ib" id="hSet" aria-label="ตั้งค่า" data-g>⚙️</button></div></div>
+</header>
+<main>
+<!-- HOME -->
+<section class="page on" id="p-home" aria-label="หน้าแรก">
+  <h2 class="t">วันนี้ให้ช่วยอะไรดีครับ</h2>
+  <div class="modes">
+    <button class="mode m1" data-go="talk" data-g aria-label="สำหรับคนหูหนวกและหูตึง: คุยกัน ถอดเสียงเป็นตัวหนังสือ และพิมพ์ให้พูดแทน"><span class="e">🧏</span><div><b>คนหูหนวก · หูตึง</b><small>เปลี่ยนเสียงพูดรอบตัวเป็นตัวหนังสือ และพิมพ์ให้มือถือพูดแทนเรา</small></div></button>
+    <button class="mode m2" data-go="see" data-g aria-label="สำหรับคนตาบอดและสายตาเลือนราง: กล้องบอกสี บอกแสง อ่านข้อความออกเสียง"><span class="e">🦯</span><div><b>คนตาบอด · สายตาเลือนราง</b><small>กล้องช่วยดูแทน บอกสี บอกแสง อ่านป้ายและเอกสารออกเสียง</small></div></button>
+  </div>
+  <h2 class="t">ใช้บ่อย</h2>
+  <div class="tiles">
+    <button class="tile" data-go="talk" data-g><span class="e">💬</span><b>คุยกัน</b><small>ถอดเสียง + พิมพ์ให้พูด</small></button>
+    <button class="tile" data-go="phr" data-g><span class="e">📚</span><b>คลังประโยค</b><small>แตะเพื่อพูด หรือโชว์ตัวใหญ่</small></button>
+    <button class="tile" data-go="see" data-g><span class="e">👁️</span><b>ดูแทน</b><small>สี · แสง · อ่านข้อความ</small></button>
+    <button class="tile" data-go="hear" data-g><span class="e">🔔</span><b>เฝ้าเสียง</b><small>เสียงดังแล้วจอกะพริบและสั่น</small></button>
+  </div>
+  <button class="sos" id="bSos" data-g aria-label="ขอความช่วยเหลือฉุกเฉิน">🆘 ขอความช่วยเหลือฉุกเฉิน</button>
+  <p class="note">เคล็ดลับ: ผู้ใช้ตาบอดเปิด “เสียงนำทาง” ได้ในหน้าตั้งค่า (แตะ 1 ครั้งเพื่อฟังชื่อปุ่ม แตะซ้ำเพื่อกด) หรือใช้ร่วมกับ TalkBack / VoiceOver ได้</p>
+</section>
+
+<!-- TALK -->
+<section class="page" id="p-talk" aria-label="คุยกัน">
+  <div class="status" role="status"><span class="dot" id="micDot"></span><span id="micTxt">แตะปุ่มไมค์ 🎙️ เพื่อเริ่มฟังเสียงรอบตัว</span></div>
+  <div class="chat" id="chat" aria-live="polite"></div>
+  <div class="composer">
+    <div class="qchips" id="qchips"></div>
+    <div class="row">
+      <button class="btn mic" id="bMic" aria-label="เริ่มหรือหยุดฟังเสียงพูดรอบตัว" data-g>🎙️</button>
+      <input class="inp" id="tIn" placeholder="พิมพ์ข้อความให้มือถือพูดแทน…" aria-label="พิมพ์ข้อความให้มือถือพูดแทน">
+      <button class="btn pri" id="bSay" aria-label="พูดข้อความ" data-g>🔊</button>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="bShow" style="flex:1" data-g>🔠 โชว์ตัวใหญ่</button><button class="btn" id="bFlip" style="flex:1" data-g>🔄 โชว์ให้คนตรงข้าม</button><button class="btn" id="bClr" aria-label="ล้างบทสนทนา" data-g>🗑️</button></div>
+  </div>
+</section>
+
+<!-- PHRASES -->
+<section class="page" id="p-phr" aria-label="คลังประโยค">
+  <div class="cats" id="cats" role="tablist"></div>
+  <div class="phr" id="phr"></div>
+  <div class="card" style="margin-top:14px"><b>➕ เพิ่มประโยคของฉัน</b>
+    <div class="row" style="margin-top:10px"><input class="inp" id="newPh" placeholder="เช่น ฉันแพ้ยาเพนิซิลลิน" aria-label="ประโยคใหม่"><button class="btn pri" id="bAddPh" data-g>เพิ่ม</button></div></div>
+</section>
+
+<!-- SEE -->
+<section class="page" id="p-see" aria-label="ดูแทน">
+  <div class="vt" role="tablist"><button data-v="color" class="on" data-g>🎨 บอกสี</button><button data-v="light" data-g>💡 บอกแสง</button><button data-v="read" data-g>📖 อ่านข้อความ</button></div>
+  <div class="cam" id="cam"><video id="vid" playsinline muted autoplay aria-hidden="true"></video><div class="ret" id="ret"></div><div class="res" id="vres" aria-live="polite"><span class="sw" id="vsw"></span><span id="vtx">กำลังเปิดกล้อง…</span></div><div class="ph0" id="camPh">แตะ “เปิดกล้อง” เพื่อเริ่ม<br>(ต้องอนุญาตให้ใช้กล้อง)</div></div>
+  <div class="row" style="margin-top:10px"><button class="btn pri" id="bCam" style="flex:1" data-g>📷 เปิดกล้อง</button><button class="btn" id="bSpeakV" style="flex:1" data-g>🔊 พูดผลอีกครั้ง</button></div>
+  <div id="readBox" hidden><button class="btn full pri" id="bOcr" style="margin-top:8px" data-g>📸 ถ่ายแล้วอ่านออกเสียง</button><div class="card ocr" id="ocrOut" aria-live="polite">เล็งกล้องไปที่ป้ายหรือเอกสาร แล้วกดปุ่มด้านบน</div></div>
+  <div class="tg" style="border:none"><span>พูดผลอัตโนมัติเมื่อเปลี่ยน<small>สีหรือระดับแสงเปลี่ยน แอปจะพูดให้ฟังเอง</small></span><button class="sw2 on" id="autoSay" role="switch" aria-checked="true" aria-label="พูดผลอัตโนมัติ"></button></div>
+  <p class="note">การอ่านข้อความทำงานบนเครื่อง ครั้งแรกต้องดาวน์โหลดข้อมูลภาษาไทย–อังกฤษ (ราว 10–15 MB) ผลอ่านภาษาไทยอาจผิดได้ ควรถ่ายให้ตัวหนังสือชัดและตรง</p>
+</section>
+
+<!-- HEAR -->
+<section class="page" id="p-hear" aria-label="เฝ้าเสียง">
+  <div class="card">
+    <b style="font-size:1.1rem">🔔 เฝ้าเสียงรอบตัว</b>
+    <p class="note" style="margin-top:4px">เมื่อมีเสียงดังกว่าเกณฑ์ เช่น กริ่ง เคาะประตู เด็กร้อง หรือสัญญาณเตือน จอจะกะพริบ มือถือจะสั่น และบันทึกเวลาไว้</p>
+    <div class="meter" style="margin-top:14px" aria-hidden="true"><i id="lvl"></i><b id="thrMark" style="left:60%"></b></div>
+    <div class="status"><span id="lvlTxt">ยังไม่เริ่ม</span></div>
+    <label class="note" for="thr" style="display:block;margin-top:8px">ความไวของการเตือน (เลื่อนซ้าย = ไวขึ้น)</label>
+    <input type="range" id="thr" min="20" max="95" value="60" style="width:100%;accent-color:var(--pri);height:34px">
+    <div class="tg"><span>เฝ้าคำสำคัญจากเสียงพูด<small>ถ้ามีคนพูดชื่อเรา หรือคำว่า “ไฟไหม้ / ช่วยด้วย” จะเตือนทันที (ต้องเปิดไมค์ในหน้าคุยกัน)</small></span><button class="sw2 on" id="kwSw" role="switch" aria-checked="true" aria-label="เฝ้าคำสำคัญ"></button></div>
+    <button class="btn full pri" id="bHear" style="margin-top:12px" data-g>▶️ เริ่มเฝ้าเสียง</button>
+    <button class="btn full" id="bTestA" style="margin-top:8px" data-g>🧪 ทดสอบการเตือน</button>
+  </div>
+  <h2 class="t">ประวัติการเตือน</h2><div class="log" id="alog"><div>ยังไม่มี</div></div>
+</section>
+
+<!-- SETTINGS -->
+<section class="page set" id="p-set" aria-label="ตั้งค่า">
+  <div class="card">
+    <b>🗣️ เสียงพูด</b>
+    <label for="sVoice">เสียง (ภาษาไทยที่มีในเครื่อง)</label><select id="sVoice"></select>
+    <label for="sRate">ความเร็วในการพูด <span id="vRate"></span></label><input type="range" id="sRate" min="0.5" max="1.6" step="0.05">
+    <label for="sPitch">ระดับเสียงสูง–ต่ำ <span id="vPitch"></span></label><input type="range" id="sPitch" min="0.6" max="1.6" step="0.05">
+    <button class="btn full" id="bTestV" style="margin-top:12px" data-g>▶️ ทดสอบเสียงพูด</button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <b>🔔 เสียงเตือน · การสั่น · แสง</b>
+    <label>เสียงเตือน</label><div class="seg" id="sTone"></div>
+    <label>รูปแบบการสั่น</label><div class="seg" id="sVib"></div>
+    <label>สีไฟกะพริบ</label><div class="seg" id="sFlash"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <b>👀 การมองเห็น</b>
+    <label>ธีม</label><div class="seg" id="sTheme"><button data-v="light">☀️ สว่าง</button><button data-v="dark">🌙 มืด</button><button data-v="hc">⬛ คอนทราสต์สูง</button></div>
+    <label for="sFs">ขนาดตัวอักษร <span id="vFs"></span></label><input type="range" id="sFs" min="15" max="26" step="1">
+    <div class="tg"><span>เสียงนำทาง (สำหรับคนตาบอด)<small>แตะครั้งแรก = ฟังชื่อปุ่ม · แตะซ้ำภายใน 2 วินาที = กด (ถ้าใช้ TalkBack/VoiceOver อยู่แล้ว ให้ปิดตัวเลือกนี้)</small></span><button class="sw2" id="sGuide" role="switch" aria-checked="false" aria-label="เสียงนำทาง"></button></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <b>🪪 บัตรข้อมูลฉุกเฉินของฉัน</b>
+    <label for="sName">ชื่อ</label><input type="text" id="sName" placeholder="ชื่อ–นามสกุล">
+    <label for="sNeed">ฉันเป็น / ข้อควรรู้</label><input type="text" id="sNeed" placeholder="เช่น ฉันเป็นคนหูหนวก กรุณาพิมพ์หรือเขียนคุยกับฉัน">
+    <label for="sMed">โรคประจำตัว / แพ้ยา</label><input type="text" id="sMed" placeholder="เช่น เบาหวาน แพ้ยาเพนิซิลลิน">
+    <label for="sTel">เบอร์ญาติ</label><input type="tel" id="sTel" placeholder="08x-xxx-xxxx">
+    <label for="sKw">ชื่อเรียก / คำที่อยากให้เตือน (คั่นด้วย ,)</label><input type="text" id="sKw" placeholder="เช่น สมชาย, ไฟไหม้, ช่วยด้วย">
+  </div>
+  <button class="btn full pri" id="bSave" style="margin-top:14px" data-g>💾 บันทึก</button>
+  <p class="note">ข้อมูลทั้งหมดเก็บในมือถือเครื่องนี้เท่านั้น · สื่อใจ v1.0 by CoreDash</p>
+</section>
+</main>
+</div>
+
+<nav aria-label="เมนูหลัก"><div class="in">
+  <button data-go="home" class="on" data-g><span>🏠</span>หน้าแรก</button>
+  <button data-go="talk" data-g><span>💬</span>คุยกัน</button>
+  <button data-go="phr" data-g><span>📚</span>ประโยค</button>
+  <button data-go="see" data-g><span>👁️</span>ดูแทน</button>
+  <button data-go="hear" data-g><span>🔔</span>เฝ้าเสียง</button>
+</div></nav>
+
+<div class="show" id="show" role="dialog" aria-modal="true" aria-label="ข้อความตัวใหญ่"><div class="stx" id="stx"></div><div id="sExtra"></div><div class="sbt"><button class="btn pri" id="sSay" data-g>🔊 พูดอีกครั้ง</button><button class="btn" id="sFlipB" data-g>🔄 กลับด้าน</button><button class="btn" id="sClose" data-g>✕ ปิด</button></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============== สื่อใจ – CoreDash Access ============== */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const LS={get(k,d){try{const v=localStorage.getItem('sj_'+k);return v!=null?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('sj_'+k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600);$('#sr').textContent=t}
+let C=Object.assign({voice:'',rate:1,pitch:1,tone:'dingdong',vib:'pulse',flash:'#fde047',theme:'light',fs:17,guide:false,name:'',need:'',med:'',tel:'',kw:'ไฟไหม้, ช่วยด้วย'},LS.get('cfg',{}));
+function applyCfg(){document.body.classList.toggle('dark',C.theme==='dark');document.body.classList.toggle('hc',C.theme==='hc');document.documentElement.style.setProperty('--fs',C.fs+'px');document.body.style.setProperty('--fs',C.fs+'px');document.body.classList.toggle('guide-on',C.guide);
+  document.querySelector('meta[name=theme-color]').content=C.theme==='hc'?'#000000':C.theme==='dark'?'#0e0b24':'#3b2fc9'}
+applyCfg();
+
+/* ---------- เสียงพูด ---------- */
+let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();fillVoices()}catch(e){}}
+if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}
+function speak(t,o){o=o||{};if(!t)return;try{if(o.cancel!==false)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(t).replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu,''));u.lang='th-TH';
+  const v=VOICES.find(v=>v.voiceURI===C.voice)||VOICES.find(v=>/^th/i.test(v.lang));if(v)u.voice=v;u.rate=o.rate||C.rate;u.pitch=C.pitch;u.volume=1;speechSynthesis.speak(u);return true}catch(e){toast('เครื่องนี้ยังพูดภาษาไทยไม่ได้');return false}}
+
+/* ---------- เสียงเตือน / สั่น / แสง ---------- */
+let actx=null;const AC=()=>{try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume()}catch(e){}return actx};
+const TONES={dingdong:['🔔 ติ๊ง–ต่อง',[[988,.35],[784,.5]]],beep:['📟 บี๊บสั้น',[[1400,.12],[0,.08],[1400,.12],[0,.08],[1400,.12]]],siren:['🚨 ไซเรน',[[700,.25],[1100,.25],[700,.25],[1100,.25]]],bell:['🛎️ ระฆัง',[[1318,.9]]],soft:['🎵 นุ่มนวล',[[523,.25],[659,.25],[784,.4]]],none:['🔇 ไม่มีเสียง',[]]};
+function playTone(k){const a=AC();if(!a)return;let t=a.currentTime+.02;(TONES[k||C.tone]||TONES.dingdong)[1].forEach(([f,d])=>{if(f){const o=a.createOscillator(),g=a.createGain();o.type=k==='bell'?'sine':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.35,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02)}t+=d})}
+const VIBS={pulse:['สั้น 3 ครั้ง',[200,100,200,100,200]],long:['ยาว',[900]],sos:['SOS',[100,80,100,80,100,250,300,80,300,80,300,250,100,80,100,80,100]],heart:['หัวใจเต้น',[80,120,80,500,80,120,80]],none:['ไม่สั่น',[]]};
+const vibrate=k=>{try{navigator.vibrate&&navigator.vibrate(VIBS[k||C.vib][1])}catch(e){}};
+const FLASHES=[['#fde047','เหลือง'],['#ef4444','แดง'],['#38bdf8','ฟ้า'],['#ffffff','ขาว'],['#a855f7','ม่วง']];
+function flash(col,n){const f=$('#flash');f.style.background=col||C.flash;let i=0;const s=()=>{f.classList.toggle('on');if(++i<(n||6)*2)setTimeout(s,180);else f.classList.remove('on')};s()}
+function alertAll(msg,o){o=o||{};playTone(o.tone);vibrate(o.vib);flash(o.col,o.n);toast(msg);if('Notification'in window&&Notification.permission==='granted'&&document.hidden)try{new Notification('สื่อใจ',{body:msg,icon:'icon-192.png'})}catch(e){}}
+
+/* ---------- นำทาง ---------- */
+let cur='home';
+function go(p){cur=p;$$('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));$$('nav button').forEach(b=>{const on=b.dataset.go===p;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'page':'false')});scrollTo(0,0);
+  if(p!=='see')stopCam();if(p==='phr')renderPhr();if(p==='set')renderSet();if(p==='talk')renderChat()}
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+$('#hSet').onclick=()=>go('set');
+
+/* ---------- เสียงนำทาง (แตะ 1 = ฟัง, แตะ 2 = กด) ---------- */
+let gLast=null,gT=0;
+document.addEventListener('click',e=>{if(!C.guide)return;const el=e.target.closest('button,a,input[type=range],select,.ph');if(!el||el.closest('.show'))return;
+  if(gLast===el&&Date.now()-gT<2000){gLast=null;return}e.preventDefault();e.stopImmediatePropagation();gLast=el;gT=Date.now();
+  const lab=el.getAttribute('aria-label')||el.textContent.trim();speak(lab+'. แตะซ้ำเพื่อกด')},true);
+
+/* ---------- คุยกัน ---------- */
+let CHAT=LS.get('chat',[]);
+function renderChat(){const c=$('#chat');c.innerHTML=CHAT.map((m,i)=>`<div class="bub ${m.who}${m.kw?' kw':''}"><small>${m.who==='me'?'ฉันพิมพ์':'เขาพูด'} · ${new Date(m.t).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</small>${esc(m.x)}<button class="rp" aria-label="พูดซ้ำ" onclick="speak(CHAT[${i}].x)">🔊</button></div>`).join('')+(interim?`<div class="bub them live">${esc(interim)}…</div>`:'')||'<p class="note" style="text-align:center;margin-top:30px">💬 กดไมค์เพื่อให้แอปฟังและเขียนเป็นตัวหนังสือ<br>หรือพิมพ์ด้านล่างให้แอปพูดแทน</p>';c.scrollTop=c.scrollHeight}
+function addMsg(who,x){const kw=who==='them'&&checkKw(x);CHAT.push({who,x,t:Date.now(),kw});if(CHAT.length>200)CHAT.shift();LS.set('chat',CHAT);renderChat()}
+function sayText(t){t=(t||'').trim();if(!t)return;addMsg('me',t);speak(t);$('#tIn').value=''}
+$('#bSay').onclick=()=>sayText($('#tIn').value);$('#tIn').addEventListener('keydown',e=>{if(e.key==='Enter')sayText($('#tIn').value)});
+$('#bClr').onclick=()=>{CHAT=[];LS.set('chat',CHAT);renderChat();toast('ล้างบทสนทนาแล้ว')};
+const lastText=()=>{const t=$('#tIn').value.trim();if(t)return t;const m=[...CHAT].reverse()[0];return m?m.x:''};
+$('#bShow').onclick=()=>bigShow(lastText()||'สวัสดีครับ');$('#bFlip').onclick=()=>bigShow(lastText()||'สวัสดีครับ',true);
+const QUICK=['สวัสดีครับ/ค่ะ','ขอบคุณครับ/ค่ะ','กรุณาพูดช้า ๆ','ช่วยพิมพ์ให้อ่านได้ไหม','ฉันไม่ได้ยิน','ใช่','ไม่ใช่','รอสักครู่'];
+$('#qchips').innerHTML=QUICK.map(q=>`<button>${q}</button>`).join('');$$('#qchips button').forEach(b=>b.onclick=()=>sayText(b.textContent));
+/* ถอดเสียง */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false,interim='';
+function setMic(on,t){listening=on;$('#bMic').classList.toggle('on',on);$('#micDot').classList.toggle('on',on);$('#micTxt').textContent=t||(on?'กำลังฟัง… พูดใกล้มือถือได้เลย':'หยุดฟังแล้ว · แตะ 🎙️ เพื่อฟังต่อ');$('#bMic').setAttribute('aria-pressed',on)}
+$('#bMic').onclick=()=>{if(!SR){toast('เบราว์เซอร์นี้ยังถอดเสียงไม่ได้ ลองใช้ Chrome บน Android หรือ Safari บน iPhone');return}
+  if(listening){listening=false;try{rec.stop()}catch(e){}setMic(false);return}
+  rec=new SR();rec.lang='th-TH';rec.continuous=true;rec.interimResults=true;
+  rec.onresult=e=>{interim='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal){const x=r[0].transcript.trim();if(x)addMsg('them',x)}else interim+=r[0].transcript}renderChat()};
+  rec.onerror=e=>{if(e.error==='not-allowed'){setMic(false,'ไม่ได้รับอนุญาตให้ใช้ไมค์ · เปิดสิทธิ์ในการตั้งค่าเบราว์เซอร์');listening=false}else if(e.error==='network')setMic(false,'ถอดเสียงต้องใช้อินเทอร์เน็ต')};
+  rec.onend=()=>{if(listening){try{rec.start()}catch(e){}}else setMic(false)};
+  try{rec.start();setMic(true)}catch(e){toast('เปิดไมค์ไม่ได้')}};
+function kwList(){return (C.kw+','+(C.name||'')).split(',').map(s=>s.trim()).filter(Boolean)}
+function checkKw(x){if(!$('#kwSw').classList.contains('on'))return false;const k=kwList().find(k=>x.includes(k));if(k){alertAll('⚠️ ได้ยินคำว่า “'+k+'”',{tone:/ไฟไหม้|ช่วยด้วย/.test(k)?'siren':C.tone,col:/ไฟไหม้|ช่วยด้วย/.test(k)?'#ef4444':C.flash});logA('ได้ยินคำว่า “'+k+'”');return true}return false}
+
+/* ---------- โชว์ตัวใหญ่ ---------- */
+function bigShow(t,flip,sos){$('#stx').textContent=t;$('#show').className='show on'+(flip?' flip':'')+(sos?' sosm':'');$('#sExtra').innerHTML=sos?sosExtra():'';speak(t)}
+$('#sClose').onclick=()=>{$('#show').className='show';speechSynthesis&&speechSynthesis.cancel()};$('#sSay').onclick=()=>speak($('#stx').textContent);$('#sFlipB').onclick=()=>$('#show').classList.toggle('flip');
+addEventListener('keydown',e=>{if(e.key==='Escape')$('#sClose').click()});
+
+/* ---------- คลังประโยค ---------- */
+const PH={
+ 'ทักทาย':['👋|สวัสดีครับ/ค่ะ','🙏|ขอบคุณมากครับ/ค่ะ','😊|ยินดีที่ได้รู้จัก','🧏|ฉันเป็นคนหูหนวก กรุณาพิมพ์หรือเขียนคุยกับฉัน','🦯|ฉันมองไม่เห็น ช่วยบอกทางด้วยเสียงได้ไหม','🐢|กรุณาพูดช้า ๆ และหันหน้ามาทางฉัน','❓|ขอโทษครับ/ค่ะ ช่วยพูดอีกครั้งได้ไหม'],
+ 'ฉุกเฉิน':['🆘|ช่วยด้วย! ฉันต้องการความช่วยเหลือ','🚑|กรุณาโทร 1669 เรียกรถพยาบาลให้ฉันด้วย','👮|กรุณาโทร 191 แจ้งตำรวจ','🔥|ไฟไหม้! ออกจากอาคารเดี๋ยวนี้','🤕|ฉันบาดเจ็บ','📞|กรุณาโทรหาญาติของฉัน','🧭|ฉันหลงทาง ช่วยพาไปที่ปลอดภัยด้วย'],
+ 'โรงพยาบาล':['🏥|ฉันมาหาหมอ','🤒|ฉันมีไข้','🤢|ฉันปวดท้อง','🤕|ฉันปวดหัว','💊|ฉันแพ้ยา','📋|ฉันมีโรคประจำตัว','💉|ฉันต้องกินยาอะไร กี่เม็ด','🧾|ช่วยเขียนคำแนะนำของหมอให้ฉันอ่านด้วย'],
+ 'ร้านค้า':['💰|อันนี้ราคาเท่าไร','🛒|ฉันอยากได้อันนี้','💵|ทอนเงินเท่าไร','🛍️|ขอถุงด้วย','📱|จ่ายด้วยการสแกน QR ได้ไหม','🧾|ขอใบเสร็จด้วย'],
+ 'เดินทาง':['🚌|รถคันนี้ไปที่ไหน','📍|ช่วยบอกเมื่อถึงป้ายนี้ด้วย','🚕|ช่วยพาไปที่อยู่นี้','🚻|ห้องน้ำอยู่ที่ไหน','🚉|ทางออกอยู่ที่ไหน','⬆️|ช่วยพาข้ามถนนได้ไหม'],
+ 'ธนาคาร/ราชการ':['🏦|ฉันมาติดต่อเรื่องบัญชี','🪪|นี่บัตรประชาชนของฉัน','✍️|ต้องเซ็นตรงไหน','🔢|ฉันได้คิวหมายเลขอะไร','📄|ช่วยอธิบายเอกสารนี้เป็นตัวหนังสือด้วย'],
+ 'ที่บ้าน':['🍚|หิวข้าวแล้ว','💧|ขอน้ำหน่อย','🚿|ฉันจะไปอาบน้ำ','😴|ฉันจะนอนแล้ว','🚪|มีคนมาที่ประตูไหม','❤️|รักนะ'],
+};
+let MY=LS.get('myph',[]),catSel='ทักทาย';
+function renderPhr(){const cats=['⭐ ของฉัน',...Object.keys(PH)];$('#cats').innerHTML=cats.map(c=>`<button role="tab" class="${c===catSel||(c==='⭐ ของฉัน'&&catSel==='mine')?'on':''}" data-c="${c}">${c}</button>`).join('');
+  $$('#cats button').forEach(b=>b.onclick=()=>{catSel=b.dataset.c==='⭐ ของฉัน'?'mine':b.dataset.c;renderPhr()});
+  const list=catSel==='mine'?MY.map(x=>'⭐|'+x):PH[catSel];
+  $('#phr').innerHTML=(list.length?list:[]).map((p,i)=>{const [e,t]=p.split('|');return `<div class="ph" role="button" tabindex="0" data-t="${esc(t)}" aria-label="${esc(t)}"><span class="e">${e}</span><span>${esc(t)}</span><button class="x" aria-label="โชว์ตัวใหญ่" data-big="1">🔠</button>${catSel==='mine'?`<button class="x" aria-label="ลบ" data-del="${i}">🗑️</button>`:''}</div>`}).join('')||'<p class="note">ยังไม่มีประโยคของฉัน เพิ่มได้ด้านล่าง</p>';
+  $$('#phr .ph').forEach(el=>{el.onclick=e=>{const t=el.dataset.t;if(e.target.dataset.del!=null){MY.splice(+e.target.dataset.del,1);LS.set('myph',MY);renderPhr();return}if(e.target.dataset.big){bigShow(t);return}addMsg('me',t);speak(t);toast('🔊 '+t)};el.onkeydown=e=>{if(e.key==='Enter')el.click()}})}
+$('#bAddPh').onclick=()=>{const t=$('#newPh').value.trim();if(!t)return;MY.unshift(t);LS.set('myph',MY);$('#newPh').value='';catSel='mine';renderPhr();toast('เพิ่มประโยคแล้ว')};
+
+/* ---------- ดูแทน (กล้อง) ---------- */
+let stream=null,vMode='color',vLoop=null,lastSaid='',lastSayT=0,lightOsc=null,lightGain=null,vText='';
+const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+async function startCam(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}},audio:false});const v=$('#vid');v.srcObject=stream;await v.play().catch(()=>{});$('#camPh').hidden=true;$('#bCam').textContent='⏹️ ปิดกล้อง';loopV();speak(vMode==='color'?'เปิดกล้องแล้ว เล็งวัตถุให้อยู่ในกรอบกลางจอ':vMode==='light'?'เปิดกล้องแล้ว เสียงสูงแปลว่าสว่าง':'เปิดกล้องแล้ว เล็งไปที่ข้อความแล้วกดถ่าย')}
+  catch(e){toast('เปิดกล้องไม่ได้ · อนุญาตให้ใช้กล้องก่อน');$('#camPh').hidden=false;$('#camPh').innerHTML='เปิดกล้องไม่ได้<br>กรุณาอนุญาตให้แอปใช้กล้อง'}}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}clearInterval(vLoop);stopLight();$('#bCam').textContent='📷 เปิดกล้อง';$('#camPh').hidden=false}
+$('#bCam').onclick=()=>stream?stopCam():startCam();
+$$('.vt button').forEach(b=>b.onclick=()=>{vMode=b.dataset.v;$$('.vt button').forEach(x=>x.classList.toggle('on',x===b));$('#readBox').hidden=vMode!=='read';$('#ret').style.display=vMode==='read'?'none':'';if(vMode!=='light')stopLight();lastSaid='';speak({color:'โหมดบอกสี',light:'โหมดบอกแสง',read:'โหมดอ่านข้อความ'}[vMode])});
+function sample(sz){const v=$('#vid');if(!v.videoWidth)return null;cv.width=sz;cv.height=sz;const s=Math.min(v.videoWidth,v.videoHeight)*.18;cx.drawImage(v,(v.videoWidth-s)/2,(v.videoHeight-s)/2,s,s,0,0,sz,sz);const d=cx.getImageData(0,0,sz,sz).data;let r=0,g=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}const n=d.length/4;return[r/n,g/n,b/n]}
+function colorName(r,g,b){const mx=Math.max(r,g,b)/255,mn=Math.min(r,g,b)/255,l=(mx+mn)/2,d=mx-mn,s=d===0?0:d/(1-Math.abs(2*l-1));let h=0;if(d){if(mx===r/255)h=60*(((g-b)/255/d)%6);else if(mx===g/255)h=60*((b-r)/255/d+2);else h=60*((r-g)/255/d+4)}if(h<0)h+=360;
+  if(l<.12)return'ดำ';if(l>.9&&s<.25)return'ขาว';if(s<.14)return l<.35?'เทาเข้ม':l<.7?'เทา':'เทาอ่อน';
+  let n=h<12||h>=345?'แดง':h<40?(l<.45?'น้ำตาล':'ส้ม'):h<65?(l<.4?'เขียวขี้ม้า':'เหลือง'):h<160?'เขียว':h<195?'เขียวอมฟ้า':h<240?(l>.55?'ฟ้า':'น้ำเงิน'):h<285?'ม่วง':h<345?(l>.6?'ชมพู':'ม่วงแดง'):'แดง';
+  if(n==='แดง'&&l>.7)n='ชมพู';const sh=l<.3?'เข้ม':l>.72?'อ่อน':'';return n+(sh&&!['ดำ','ขาว','ชมพู','ฟ้า','น้ำตาล'].includes(n)?sh:'')}
+function loopV(){clearInterval(vLoop);vLoop=setInterval(()=>{if(!stream)return;if(vMode==='color'){const c=sample(24);if(!c)return;const n=colorName(...c);$('#vsw').style.background=`rgb(${c.map(Math.round)})`;$('#vsw').style.display='';$('#vtx').textContent='สี'+n;vText='สี'+n;
+    if($('#autoSay').classList.contains('on')&&n!==lastSaid&&Date.now()-lastSayT>1600){lastSaid=n;lastSayT=Date.now();speak('สี'+n)}}
+   else if(vMode==='light'){const c=sample(32);if(!c)return;const L=Math.round((.2126*c[0]+.7152*c[1]+.0722*c[2])/2.55);const lv=L<15?'มืดมาก':L<35?'มืด':L<60?'สว่างปานกลาง':L<85?'สว่าง':'สว่างมาก';$('#vsw').style.display='none';$('#vtx').textContent=`💡 ${lv} (${L}%)`;vText=lv;
+    lightTone(L);if($('#autoSay').classList.contains('on')&&lv!==lastSaid&&Date.now()-lastSayT>2500){lastSaid=lv;lastSayT=Date.now();speak(lv)}}
+   else{$('#vsw').style.display='none';$('#vtx').textContent='📖 พร้อมถ่ายและอ่าน'}},400)}
+function lightTone(L){const a=AC();if(!a)return;if(!lightOsc){lightOsc=a.createOscillator();lightGain=a.createGain();lightGain.gain.value=.05;lightOsc.type='sine';lightOsc.connect(lightGain).connect(a.destination);lightOsc.start()}lightOsc.frequency.setTargetAtTime(180+L*9,a.currentTime,.1)}
+function stopLight(){if(lightOsc){try{lightOsc.stop()}catch(e){}lightOsc=null}}
+$('#bSpeakV').onclick=()=>speak(vMode==='read'?$('#ocrOut').textContent:(vText||'ยังไม่มีผล'));
+let ocrW=null;
+$('#bOcr').onclick=async()=>{if(!stream){toast('เปิดกล้องก่อน');return}const v=$('#vid');const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);playTone('beep');
+  $('#ocrOut').textContent='⏳ กำลังอ่าน… (ครั้งแรกจะช้าเพราะต้องโหลดข้อมูลภาษา)';speak('กำลังอ่าน กรุณารอสักครู่');
+  try{if(!window.Tesseract)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+    if(!ocrW)ocrW=await Tesseract.createWorker(['tha','eng']);const {data}=await ocrW.recognize(c);const t=(data.text||'').replace(/\n{2,}/g,'\n').trim();
+    $('#ocrOut').textContent=t||'อ่านไม่พบตัวหนังสือ ลองถ่ายใกล้ขึ้นและให้แสงพอ';speak(t||'อ่านไม่พบตัวหนังสือ ลองถ่ายใกล้ขึ้น')}
+  catch(e){$('#ocrOut').textContent='อ่านไม่สำเร็จ · ต้องต่ออินเทอร์เน็ตในครั้งแรกเพื่อโหลดข้อมูลภาษา';speak('อ่านไม่สำเร็จ')}};
+
+/* ---------- เฝ้าเสียง ---------- */
+let mstream=null,anal=null,hLoop=null,over=0,cool=0;const ALOG=LS.get('alog',[]);
+function logA(x){ALOG.unshift({x,t:Date.now()});if(ALOG.length>50)ALOG.pop();LS.set('alog',ALOG);renderLog()}
+function renderLog(){$('#alog').innerHTML=ALOG.map(a=>`<div>${new Date(a.t).toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'})} · ${esc(a.x)}</div>`).join('')||'<div>ยังไม่มี</div>'}
+$('#thr').oninput=()=>$('#thrMark').style.left=$('#thr').value+'%';
+$('#bHear').onclick=async()=>{if(mstream){mstream.getTracks().forEach(t=>t.stop());mstream=null;cancelAnimationFrame(hLoop);$('#bHear').textContent='▶️ เริ่มเฝ้าเสียง';$('#lvlTxt').textContent='หยุดแล้ว';try{wake&&wake.release()}catch(e){}return}
+  try{mstream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});const a=AC();const src=a.createMediaStreamSource(mstream);anal=a.createAnalyser();anal.fftSize=1024;src.connect(anal);
+    $('#bHear').textContent='⏹️ หยุดเฝ้าเสียง';try{wake=await navigator.wakeLock.request('screen')}catch(e){}const buf=new Float32Array(anal.fftSize);
+    const tick=()=>{anal.getFloatTimeDomainData(buf);let s=0;for(const v of buf)s+=v*v;const rms=Math.sqrt(s/buf.length);const lvl=Math.max(0,Math.min(100,(20*Math.log10(rms+1e-6)+70)*1.4));
+      $('#lvl').style.width=lvl+'%';$('#lvlTxt').textContent=`ระดับเสียง ${Math.round(lvl)}% · เกณฑ์ ${$('#thr').value}%`;
+      if(lvl>+$('#thr').value){over++;if(over>8&&Date.now()>cool){cool=Date.now()+4000;over=0;alertAll('🔊 มีเสียงดังรอบตัว!');logA('เสียงดัง '+Math.round(lvl)+'%')}}else over=Math.max(0,over-1);
+      hLoop=requestAnimationFrame(tick)};tick();speak('เริ่มเฝ้าเสียงแล้ว')}
+  catch(e){toast('ใช้ไมค์ไม่ได้ · กรุณาอนุญาตการใช้ไมค์')}};
+let wake=null;
+$('#bTestA').onclick=()=>{alertAll('🧪 ทดสอบการเตือน');logA('ทดสอบการเตือน')};
+
+/* ---------- SOS ---------- */
+function sosExtra(){const n=C.name?`<b>${esc(C.name)}</b><br>`:'';return `<div class="info">${n}${esc(C.need||'')}${C.med?'<br>⚕️ '+esc(C.med):''}</div>
+  <div class="calls"><a href="tel:1669">🚑 1669<br><small>เจ็บป่วยฉุกเฉิน</small></a><a href="tel:191">👮 191<br><small>ตำรวจ</small></a>${C.tel?`<a href="tel:${esc(C.tel)}">📞 ญาติ<br><small>${esc(C.tel)}</small></a>`:''}<a href="#" id="sosLoc">📍 ส่งตำแหน่ง<br><small>SMS ถึงญาติ</small></a></div>`}
+function sos(){bigShow('ช่วยด้วย! ฉันต้องการความช่วยเหลือ',false,true);vibrate('sos');playTone('siren');flash('#ef4444',8);let k=0;const rep=setInterval(()=>{if(!$('#show').classList.contains('on')||++k>2){clearInterval(rep);return}speak('ช่วยด้วย ฉันต้องการความช่วยเหลือ',{cancel:false})},4500);
+  setTimeout(()=>{const l=$('#sosLoc');if(l)l.onclick=e=>{e.preventDefault();if(!navigator.geolocation)return toast('ไม่มี GPS');navigator.geolocation.getCurrentPosition(p=>{const m=`ช่วยด้วย ฉันอยู่ที่ https://maps.google.com/?q=${p.coords.latitude.toFixed(5)},${p.coords.longitude.toFixed(5)}`;location.href=`sms:${C.tel||''}?&body=${encodeURIComponent(m)}`},()=>toast('ขอตำแหน่งไม่สำเร็จ'),{enableHighAccuracy:true,timeout:10000})}},50)}
+$('#bSos').onclick=sos;$('#hSos').onclick=sos;
+
+/* ---------- ตั้งค่า ---------- */
+function fillVoices(){const s=$('#sVoice');if(!s)return;const th=VOICES.filter(v=>/^th/i.test(v.lang)),oth=VOICES.filter(v=>!/^th/i.test(v.lang)).slice(0,6);
+  s.innerHTML=(th.length?th:[]).map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name)} (ไทย)</option>`).join('')+(th.length?'':'<option value="">ค่าเริ่มต้นของเครื่อง (ยังไม่พบเสียงไทย)</option>')+oth.map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name)}</option>`).join('');s.value=C.voice||s.options[0]?.value||''}
+function seg(el,items,val,cb){el.innerHTML=items.map(([k,l])=>`<button data-v="${k}" class="${k===val?'on':''}">${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));cb(b.dataset.v)})}
+function renderSet(){fillVoices();$('#sRate').value=C.rate;$('#sPitch').value=C.pitch;$('#sFs').value=C.fs;upd();
+  seg($('#sTone'),Object.entries(TONES).map(([k,v])=>[k,v[0]]),C.tone,v=>{C.tone=v;playTone(v)});
+  seg($('#sVib'),Object.entries(VIBS).map(([k,v])=>[k,v[0]]),C.vib,v=>{C.vib=v;vibrate(v)});
+  seg($('#sFlash'),FLASHES.map(([c,n])=>[c,`<span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${c};border:1px solid #999;vertical-align:-2px"></span> ${n}`]),C.flash,v=>{C.flash=v;flash(v,2)});
+  $$('#sTheme button').forEach(b=>{b.classList.toggle('on',b.dataset.v===C.theme);b.onclick=()=>{C.theme=b.dataset.v;$$('#sTheme button').forEach(x=>x.classList.toggle('on',x===b));applyCfg()}});
+  $('#sGuide').classList.toggle('on',C.guide);['name','need','med','tel','kw'].forEach(k=>$('#s'+k[0].toUpperCase()+k.slice(1)).value=C[k]||'')}
+function upd(){$('#vRate').textContent=(+$('#sRate').value).toFixed(2)+'x';$('#vPitch').textContent=(+$('#sPitch').value).toFixed(2);$('#vFs').textContent=$('#sFs').value+'px'}
+['sRate','sPitch'].forEach(id=>$('#'+id).oninput=()=>{upd();C.rate=+$('#sRate').value;C.pitch=+$('#sPitch').value});
+$('#sFs').oninput=()=>{upd();C.fs=+$('#sFs').value;applyCfg()};$('#sVoice').onchange=()=>{C.voice=$('#sVoice').value};
+$('#sGuide').onclick=()=>{C.guide=!C.guide;$('#sGuide').classList.toggle('on',C.guide);$('#sGuide').setAttribute('aria-checked',C.guide);applyCfg();speak(C.guide?'เปิดเสียงนำทางแล้ว แตะหนึ่งครั้งเพื่อฟัง แตะซ้ำเพื่อกด':'ปิดเสียงนำทางแล้ว')};
+$('#bTestV').onclick=()=>{C.voice=$('#sVoice').value;speak('สวัสดีครับ นี่คือเสียงของแอปสื่อใจ ความเร็วและระดับเสียงแบบนี้ฟังสบายไหมครับ')};
+$('#bSave').onclick=()=>{['name','need','med','tel','kw'].forEach(k=>C[k]=$('#s'+k[0].toUpperCase()+k.slice(1)).value.trim());C.voice=$('#sVoice').value;LS.set('cfg',C);applyCfg();toast('💾 บันทึกแล้ว');if('Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})};
+$$('.sw2').forEach(s=>{if(s.id==='sGuide')return;s.addEventListener('click',()=>{s.classList.toggle('on');s.setAttribute('aria-checked',s.classList.contains('on'))})});
+
+/* ---------- เริ่ม ---------- */
+renderLog();renderChat();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+const h=location.hash.slice(1);if(['talk','phr','see','hear','set'].includes(h))go(h);
+</script>
+</body>
+</html>
