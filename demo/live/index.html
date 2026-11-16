@@ -79,6 +79,9 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
 .pm{display:inline-block;min-width:36px;text-align:center;border-radius:7px;padding:1px 5px;font-weight:700;color:#111}
 .flow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:12.5px;margin:7px 0}.flow span{background:rgba(99,102,241,.22);border-radius:8px;padding:3px 8px}
 .btn{border:1px solid var(--ln);background:var(--pn2);border-radius:12px;padding:9px 12px;font-size:14px;font-weight:600;display:inline-flex;gap:6px;align-items:center;justify-content:center;text-decoration:none;color:var(--tx)}
+.fci{width:100%;min-height:42px;border-radius:10px;border:1px solid var(--ln);background:#0b1024;color:var(--tx);padding:6px 10px;font-family:inherit;font-size:14px}.fci option{background:#0b1024}
+.rel{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:12.5px}
+.bar2{height:8px;border-radius:4px;background:#38bdf8;display:inline-block;vertical-align:middle}
 .btn.p{background:linear-gradient(135deg,#0f766e,#4338ca);border-color:transparent}
 .btn.y{background:#fbbf24;color:#1a1200;border-color:transparent}
 .brow{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
@@ -191,7 +194,7 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
     <button data-t="eq">🔴 แผ่นดินไหว</button>
     <button data-t="st">🌀 พายุ</button>
     <button data-t="wx">🌦️ อากาศไทย</button>
-    <button data-t="log">📜 บันทึก</button>
+    <button data-t="fc">🔮 ทำนาย</button><button data-t="log">📜 บันทึก</button>
     <button data-t="src">🛰️ ที่มา</button>
     <button class="mob" id="bMin" aria-label="ย่อ/ขยายแผง">▾</button>
   </div>
@@ -205,6 +208,16 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
     <div class="pane" id="p-eq"><div class="flt" id="eqF"><button data-f="near" class="on">ใกล้ไทย ≤2,000 กม.</button><button data-f="big">ทั่วโลก M4.5+</button><button data-f="all">ทั้งหมด 7 วัน</button></div><div id="eqList"></div><p class="lgd" style="margin-top:8px">ที่มา: USGS · ขนาดและตำแหน่งอาจต่างจากกรมอุตุนิยมวิทยาเล็กน้อย และอาจปรับแก้ภายหลัง</p></div>
     <div class="pane" id="p-st"><div id="stList"></div><p class="lgd" style="margin-top:8px">ที่มา: NASA EONET (ตำแหน่งพายุจาก JTWC ทุก ~6 ชม.) · จัดระดับตามเกณฑ์ความเร็วลมของกรมอุตุนิยมวิทยา</p></div>
     <div class="pane" id="p-wx"><div class="flt" id="wxF"><button data-f="now" class="on">🌧️ ตอนนี้</button><button data-f="pm">😷 PM2.5</button><button data-f="tmr">📅 พรุ่งนี้</button></div><div id="wxBox"></div><p class="lgd" style="margin-top:8px">ค่าจากแบบจำลองพยากรณ์อากาศ (Open-Meteo / Copernicus CAMS) ไม่ใช่เครื่องวัดในพื้นที่ · มาตรฐาน PM2.5 ของไทย: เฉลี่ย 24 ชม. ไม่เกิน 37.5 µg/m³</p></div>
+    <div class="pane" id="p-fc">
+      <div class="card"><h4>🔮 ทำนายสภาพอากาศ ณ จุดและช่วงเวลาที่เลือก</h4>
+        <label class="lgd" style="margin:6px 0 4px;display:block">สถานที่</label>
+        <select id="fcPlace" class="fci"><option value="13.8197,100.5146,มจพ. (มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ) บางซื่อ">มจพ. (มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ) บางซื่อ</option><option value="13.7563,100.5018,กรุงเทพฯ (ใจกลางเมือง)">กรุงเทพฯ (ใจกลางเมือง)</option><option value="18.7883,98.9853,เชียงใหม่">เชียงใหม่</option><option value="16.4419,102.8360,ขอนแก่น">ขอนแก่น</option><option value="7.8804,98.3923,ภูเก็ต">ภูเก็ต</option><option value="me">📍 ตำแหน่งของฉัน</option><option value="custom">✏️ กำหนดพิกัดเอง</option></select>
+        <div id="fcCustom" style="display:none;gap:6px;margin-top:6px"><input id="fcLat" class="fci" placeholder="ละติจูด เช่น 13.8197"><input id="fcLon" class="fci" placeholder="ลองจิจูด เช่น 100.5146"></div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;margin-top:8px"><div><label class="lgd" style="margin:0 0 4px;display:block">วันที่</label><input type="date" id="fcDate" class="fci" value="2026-11-28"></div><div><label class="lgd" style="margin:0 0 4px;display:block">ตั้งแต่</label><select id="fcH1" class="fci"></select></div><div><label class="lgd" style="margin:0 0 4px;display:block">ถึง</label><select id="fcH2" class="fci"></select></div></div>
+        <button class="btn p" id="fcGo" style="width:100%;margin-top:10px">🔮 วิเคราะห์และทำนาย</button>
+      </div>
+      <div id="fcOut"></div>
+    </div>
     <div class="pane" id="p-log">
       <div class="card"><h4>📜 บันทึกหลักฐาน</h4><p>ทุกครั้งที่โหลดข้อมูล ระบบบันทึกว่าแต่ละภาพมาจาก<b>ดาวเทียมดวงไหน วันที่ เวลา</b> และลิงก์ต้นทาง พร้อมลายนิ้วมือดิจิทัล (SHA-256) เพื่อพิสูจน์ว่าบันทึกไม่ถูกแก้ไข</p><p style="margin-top:4px;color:var(--mu);font-size:13.5px">บันทึกเก็บในเครื่องนี้เท่านั้น (สูงสุด 200 รายการ) กด ⬇️ เพื่อเก็บเป็นไฟล์ถาวร</p>
         <div class="brow"><button class="btn y" id="bSnap2">📸 บันทึกหลักฐานตอนนี้</button><button class="btn" id="bExp">⬇️ ส่งออกทั้งหมด</button><button class="btn" id="bClr">🗑️ ล้าง</button></div></div>
@@ -598,6 +611,59 @@ async function loadCentral(){const box=$('#centralList');try{const idx=await get
   box.innerHTML=`<p>${okAll?'✅ ตรวจลายนิ้วมือและโซ่ในเบราว์เซอร์นี้แล้ว: ถูกต้อง':'⚠️ พบบันทึกที่ลายนิ้วมือหรือโซ่ไม่ตรง โปรดแจ้ง CoreDash'} · ทั้งหมด ${fmt(idx.count||recs.length)} บันทึก · ล่าสุด ${idx.updated_utc?fFull(idx.updated_utc):'–'}</p>`+L.map(({r,ok})=>{const c=(r.sources||[]).find(s=>s.key==='cloud'),rd=(r.sources||[]).find(s=>s.key==='radar');return `<div class="rec" data-id="${esc(r.record_id)}"><b>${esc(r.record_id)}</b><span class="tag">${ok?'✅ ตรวจผ่าน':'⚠️ ไม่ผ่าน'}</span><small>${fFull(r.created_utc)} · ☁️ ${c&&c.data_time_utc?fT(c.data_time_utc):'–'} · 🌧️ ${rd&&rd.data_time_utc?fT(rd.data_time_utc):'–'} · 🔴 M4.5+ 24 ชม. ${r.earthquakes&&r.earthquakes.m45_24h!=null?r.earthquakes.m45_24h:'–'} · SHA ${esc((r.sha256||'').slice(0,12))}…</small></div>`}).join('');
   $$('#centralList .rec').forEach(el=>el.onclick=()=>{const r=recs.find(x=>x.record_id===el.dataset.id);dl(r.record_id+'.json',new Blob([JSON.stringify(r,null,2)],{type:'application/json'}));toast('⬇️ ดาวน์โหลด '+r.record_id)})}
  catch(e){box.innerHTML='<p style="color:var(--mu)">ยังไม่มีบันทึกกลาง (บอทจะเริ่มบันทึกหลังติดตั้ง GitHub Actions) หรือโหลดไม่ได้ในขณะนี้</p>'}}
+
+/* ---------- ทำนาย ณ จุด ---------- */
+(function(){const h1=$('#fcH1'),h2=$('#fcH2');for(let h=0;h<24;h++){h1.add(new Option(String(h).padStart(2,'0')+':00',h));h2.add(new Option(String(h).padStart(2,'0')+':00',h))}h1.value=10;h2.value=23;
+  $('#fcPlace').onchange=()=>{$('#fcCustom').style.display=$('#fcPlace').value==='custom'?'flex':'none'}})();
+let FC=null,fcMk=null;
+function moonPhase(ms){const syn=29.530588853,ref=Date.UTC(2000,0,6,18,14);const age=(((ms-ref)/864e5)%syn+syn)%syn;const ill=Math.round((1-Math.cos(2*Math.PI*age/syn))/2*100);
+  const n=age<1.85?'จันทร์ดับ (เดือนมืด)':age<7.38?'ข้างขึ้น เสี้ยว':age<9.23?'ข้างขึ้น ครึ่งดวง':age<14.77?'ข้างขึ้น เกือบเต็มดวง':age<16.61?'จันทร์เต็มดวง':age<22.15?'ข้างแรม เกือบเต็มดวง':age<23.99?'ข้างแรม ครึ่งดวง':age<27.68?'ข้างแรม เสี้ยว':'จันทร์ดับ (เดือนมืด)';return{n,ill}}
+async function fcPlace(){const v=$('#fcPlace').value;if(v==='me'){return await new Promise((ok,no)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>ok([p.coords.latitude,p.coords.longitude,'ตำแหน่งของฉัน']),()=>no(new Error('ขอตำแหน่งไม่ได้')),{timeout:10000}):no(new Error('ไม่มี GPS')))}
+  if(v==='custom'){const la=+$('#fcLat').value,lo=+$('#fcLon').value;if(!isFinite(la)||!isFinite(lo)||!$('#fcLat').value)throw new Error('กรอกพิกัดให้ครบ');return[la,lo,`พิกัด ${la.toFixed(4)}, ${lo.toFixed(4)}`]}
+  const [la,lo,...n]=v.split(',');return[+la,+lo,n.join(',')]}
+const relB=d=>d<0?['ผ่านมาแล้ว','#94a3b8']:d<=3?['ความเชื่อมั่นค่อนข้างสูง','#4ade80']:d<=7?['ความเชื่อมั่นปานกลาง','#fde047']:d<=15?['ความเชื่อมั่นต่ำ · ดูเป็นแนวโน้ม','#fb923c']:['เกินช่วงพยากรณ์ · ใช้สถิติย้อนหลัง','#f87171'];
+$('#fcGo').onclick=async()=>{const out=$('#fcOut');let la,lo,name;try{[la,lo,name]=await fcPlace()}catch(e){toast(e.message);return}
+  const d=$('#fcDate').value,H1=+$('#fcH1').value,H2=+$('#fcH2').value;if(!d||H2<H1){toast('เลือกวันและช่วงเวลาให้ถูกต้อง');return}
+  const today=new Date(Date.now()+7*3600000).toISOString().slice(0,10),lead=Math.round((Date.parse(d)-Date.parse(today))/864e5),[rt,rc]=relB(lead);
+  out.innerHTML='<div class="card"><p>⏳ กำลังดึงแบบจำลองพยากรณ์ สถิติย้อนหลัง และประวัติแผ่นดินไหว…</p></div>';
+  if(fcMk)fcMk.remove();const el=document.createElement('div');el.style.cssText='font-size:30px;filter:drop-shadow(0 0 8px #5eead4)';el.textContent='📍';fcMk=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([lo,la]).addTo(map);stopSpin();map.flyTo({center:[lo,la],zoom:8,speed:.9});
+  const q=`latitude=${la}&longitude=${lo}&timezone=Asia%2FBangkok`,inWin=t=>{const h=+t.slice(11,13);return t.slice(0,10)===d&&h>=H1&&h<=H2};
+  const [fc,ens,cl,aq,eq]=await Promise.allSettled([
+    lead>=0&&lead<=15?getJSON(`https://api.open-meteo.com/v1/forecast?${q}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,cloud_cover,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=sunrise,sunset&start_date=${d}&end_date=${d}`):Promise.reject(new Error('นอกช่วง')),
+    lead>=0&&lead<=14?getJSON(`https://ensemble-api.open-meteo.com/v1/ensemble?${q}&hourly=precipitation&models=ecmwf_ifs025&start_date=${d}&end_date=${d}`):Promise.reject(new Error('นอกช่วง')),
+    getJSON(`https://archive-api.open-meteo.com/v1/archive?${q}&start_date=2016-01-01&end_date=2025-12-31&daily=precipitation_sum,temperature_2m_max,temperature_2m_min`,30000),
+    lead>=0&&lead<=4?getJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?${q}&hourly=pm2_5&start_date=${d}&end_date=${d}`):Promise.reject(new Error('นอกช่วง')),
+    getJSON(`https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&latitude=${la}&longitude=${lo}&maxradiuskm=1200&minmagnitude=5.5&starttime=1976-01-01&orderby=magnitude&limit=300`,30000)]);
+  const R={place:name,lat:la,lon:lo,date:d,window:`${String(H1).padStart(2,'0')}:00–${String(H2).padStart(2,'0')}:00`,lead_days:lead,reliability:rt,created_utc:iso(Date.now())};let H='',say=[];
+  H+=`<div class="card" style="border-color:${rc}"><h4>📍 ${esc(name)}</h4><p>วันที่ <b>${fT(d+'T12:00:00+07:00',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</b> · ช่วง <b>${R.window} น.</b><br>ล่วงหน้า ${lead} วัน · <span class="rel" style="background:${rc};color:#111">${rt}</span></p></div>`;
+  if(fc.status==='fulfilled'){const h=fc.value.hourly,I=h.time.map((t,i)=>i).filter(i=>inWin(h.time[i]));const g=k=>I.map(i=>h[k][i]).filter(v=>v!=null);
+    const pp=g('precipitation_probability'),pr=g('precipitation'),cc=g('cloud_cover'),tt=g('temperature_2m'),gu=g('wind_gusts_10m'),uv=g('uv_index'),hu=g('relative_humidity_2m');
+    const pmax=pp.length?Math.max(...pp):null,rsum=pr.reduce((a,b)=>a+b,0),cav=cc.reduce((a,b)=>a+b,0)/(cc.length||1),storm=I.some(i=>h.weather_code[i]>=95);
+    const sky=cav<25?'ท้องฟ้าโปร่ง':cav<60?'มีเมฆบางส่วน':cav<85?'เมฆค่อนข้างมาก':'เมฆมาก';const rainT=pmax==null?'–':pmax<20?'โอกาสฝนต่ำ':pmax<50?'อาจมีฝนบางช่วง':pmax<75?'มีโอกาสฝนค่อนข้างสูง':'มีโอกาสฝนสูง';
+    Object.assign(R,{forecast:{model:'Open-Meteo best match',rain_prob_max:pmax,rain_mm_total:+rsum.toFixed(1),cloud_avg:Math.round(cav),temp_min:Math.min(...tt),temp_max:Math.max(...tt),gust_max:Math.max(...gu),uv_max:uv.length?Math.max(...uv):null,thunderstorm:storm}});
+    let ensT='';if(ens.status==='fulfilled'){const eh=ens.value.hourly,keys=Object.keys(eh).filter(k=>/^precipitation(_member\d+)?$/.test(k));const EI=eh.time.map((t,i)=>i).filter(i=>inWin(eh.time[i]));const wet=keys.filter(k=>EI.reduce((a,i)=>a+(eh[k][i]||0),0)>=0.5).length;R.ensemble={model:'ECMWF IFS ensemble',members:keys.length,members_rain_ge_0_5mm:wet,pct:keys.length?Math.round(wet/keys.length*100):null};ensT=`<br>🎲 แบบจำลองชุด ECMWF ${keys.length} ชุด: <b>${wet} ชุด (${R.ensemble.pct}%)</b> คาดว่ามีฝนรวม ≥0.5 มม. ในช่วงนี้`}
+    H+=`<div class="card"><h4>🌦️ สรุปการทำนาย</h4><p>☁️ ${sky} (เมฆเฉลี่ย ${Math.round(cav)}%)<br>🌧️ ${rainT} · โอกาสฝนสูงสุด <b>${pmax??'–'}%</b> · ฝนรวมคาด ${rsum.toFixed(1)} มม.${ensT}<br>${storm?'⛈️ <b>มีสัญญาณพายุฝนฟ้าคะนองบางชั่วโมง</b><br>':''}🌡️ ${Math.round(Math.min(...tt))}–${Math.round(Math.max(...tt))}°C · ความชื้น ${Math.round(Math.min(...hu))}–${Math.round(Math.max(...hu))}% · ลมกระโชกสูงสุด ~${Math.round(Math.max(...gu))} กม./ชม.${uv.length?`<br>🔆 UV สูงสุด ${Math.max(...uv).toFixed(0)}${Math.max(...uv)>=8?' (สูงมาก ควรกันแดด)':''}`:''}<br>🌅 ดวงอาทิตย์ตก ${fT(fc.value.daily.sunset[0]+':00+07:00')} น.</p></div>`;
+    H+=`<div class="card"><h4>🕒 รายชั่วโมง</h4><table class="w"><tr><th>เวลา</th><th>อากาศ</th><th>°C</th><th>โอกาสฝน</th><th>มม.</th><th>เมฆ</th></tr>${I.map(i=>`<tr><td>${h.time[i].slice(11,16)}</td><td>${wmo(h.weather_code[i])[0]}</td><td>${Math.round(h.temperature_2m[i])}</td><td><span class="bar2" style="width:${Math.max(2,(h.precipitation_probability[i]||0)*.5)}px"></span> ${h.precipitation_probability[i]??'–'}%</td><td>${(h.precipitation[i]||0).toFixed(1)}</td><td>${h.cloud_cover[i]}%</td></tr>`).join('')}</table><p class="lgd">แหล่ง: Open-Meteo (รวมแบบจำลอง ECMWF, GFS ฯลฯ) ค่าคำนวณ ไม่ใช่การวัด</p></div>`;
+    say.push(`${name} วันที่ ${d} ช่วง ${R.window} ${sky} ${rainT} โอกาสฝนสูงสุด ${pmax} เปอร์เซ็นต์`)}
+  else H+=`<div class="card"><h4>🌦️ แบบจำลองพยากรณ์</h4><p>${lead<0?'วันที่เลือกผ่านมาแล้ว':lead>15?'วันที่เลือกเกิน 16 วันข้างหน้า แบบจำลองยังไม่ครอบคลุม ใช้สถิติย้อนหลังด้านล่างแทน':'ดึงข้อมูลพยากรณ์ไม่ได้ ('+esc(fc.reason&&fc.reason.message)+')'}</p></div>`;
+  if(cl.status==='fulfilled'&&cl.value.daily){const dd=cl.value.daily,md=d.slice(5),tgt=Date.parse('2001-'+md);const I=dd.time.map((t,i)=>i).filter(i=>{const x=Date.parse('2001-'+dd.time[i].slice(5));return Math.abs(x-tgt)<=3*864e5});
+    const wet=I.filter(i=>(dd.precipitation_sum[i]||0)>=1).length,av=k=>I.reduce((a,i)=>a+(dd[k][i]||0),0)/(I.length||1);R.climatology={source:'Open-Meteo archive (ERA5 reanalysis) 2016–2025',days:I.length,rain_days_ge_1mm:wet,pct:Math.round(wet/(I.length||1)*100),tmax_avg:+av('temperature_2m_max').toFixed(1),tmin_avg:+av('temperature_2m_min').toFixed(1)};
+    H+=`<div class="card"><h4>📊 สถิติย้อนหลัง 10 ปี (±3 วันรอบวันที่เลือก)</h4><p>จาก ${I.length} วันในปี 2016–2025 มีฝน ≥1 มม. <b>${wet} วัน (${R.climatology.pct}%)</b><br>อุณหภูมิเฉลี่ย สูงสุด ${R.climatology.tmax_avg}°C · ต่ำสุด ${R.climatology.tmin_avg}°C</p><p class="lgd">แหล่ง: ข้อมูลวิเคราะห์ย้อนหลัง ERA5 ผ่าน Open-Meteo (ความละเอียด ~25 กม.)</p></div>`}
+  if(aq.status==='fulfilled'){const a=aq.value.hourly,v=a.time.map((t,i)=>inWin(t)?a.pm2_5[i]:null).filter(x=>x!=null);if(v.length){const m=v.reduce((x,y)=>x+y,0)/v.length;R.pm25={avg:+m.toFixed(1),max:Math.max(...v)};H+=`<div class="card"><h4>😷 PM2.5 คาดการณ์</h4><p>เฉลี่ย ~<b>${Math.round(m)}</b> µg/m³ (${pmTxt(m)}) · สูงสุด ~${Math.round(Math.max(...v))}</p></div>`}}
+  else H+=`<div class="card"><h4>😷 PM2.5</h4><p>ค่าคาดการณ์ฝุ่นมีล่วงหน้าเพียงประมาณ 4–5 วัน กลับมาดูอีกครั้งเมื่อใกล้วัน</p></div>`;
+  const mp=moonPhase(Date.parse(d+'T20:00:00+07:00'));R.moon=mp;
+  let eqH='<p><b>แผ่นดินไหวทำนายล่วงหน้าไม่ได้</b> ไม่มีหน่วยงานใดในโลกทำนายวัน เวลา และสถานที่ของแผ่นดินไหวได้ จึงบอกได้เพียงความเสี่ยงจากประวัติ</p>';
+  if(eq.status==='fulfilled'){const F=eq.value.features.map(f=>{const[x,y]=f.geometry.coordinates;return{m:f.properties.mag,p:f.properties.place,t:f.properties.time,d:Math.round(hav(la,lo,y,x)),u:f.properties.url}});const big=F[0],near=[...F].sort((a,b)=>a.d-b.d)[0];
+    R.earthquake_history={source:'USGS FDSN 1976–ปัจจุบัน รัศมี 1,200 กม. M5.5+',count:F.length,largest:big&&{mag:big.m,place:big.p,date:iso(big.t),distance_km:big.d},nearest:near&&{mag:near.m,place:near.p,date:iso(near.t),distance_km:near.d}};
+    eqH+=`<p>ประวัติ USGS ตั้งแต่ปี 1976 ในรัศมี 1,200 กม. ขนาด 5.5 ขึ้นไป: <b>${F.length} ครั้ง</b>${big?`<br>แรงที่สุด M${big.m} ${esc(big.p)} (${fD(big.t)}) ห่าง ~${fmt(big.d)} กม.`:''}${near?`<br>ใกล้ที่สุด M${near.m} ${esc(near.p)} ห่าง ~${fmt(near.d)} กม.`:''}</p>`}
+  H+=`<div class="card"><h4>🔴 แผ่นดินไหว</h4>${eqH}<p class="lgd">ติดตามประกาศจริงจากกองเฝ้าระวังแผ่นดินไหว กรมอุตุนิยมวิทยา earthquake.tmd.go.th</p></div>`;
+  H+=`<div class="card"><h4>🌙 อื่น ๆ</h4><p>ดวงจันทร์คืนนั้น: ${mp.n} (สว่าง ~${mp.ill}%)</p></div>`;
+  H+=`<div class="card" style="border-color:rgba(251,191,36,.6)"><h4>⚠️ หมายเหตุการทำนาย</h4><p>ผลนี้คำนวณอัตโนมัติจากแบบจำลองคอมพิวเตอร์และสถิติย้อนหลัง <b>อาจคลาดเคลื่อนได้มาก</b> โดยเฉพาะเมื่อล่วงหน้าเกิน 7 วัน ฝนฟ้าคะนองเฉพาะจุดทำนายได้ยาก ควรกลับมาดูอีกครั้งเมื่อใกล้วันงาน (ผลจะแม่นขึ้นทุกวัน) และยึดประกาศของ<b>กรมอุตุนิยมวิทยา</b> (1182) เป็นหลัก แผ่นดินไหวทำนายไม่ได้</p><div class="brow"><button class="btn y" id="fcSave">💾 บันทึกการทำนายนี้เป็นหลักฐาน</button><button class="btn" id="fcSay">🔊 อ่านผล</button></div></div>`;
+  out.innerHTML=H;FC=R;
+  $('#fcSay').onclick=()=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance((say.join('. ')||'')+'. ผลการทำนายอาจคลาดเคลื่อน');u.lang='th-TH';speechSynthesis.speak(u)}catch(e){}};
+  $('#fcSave').onclick=async()=>{const r={record_id:'LEF-'+new Date(Date.now()+7*3600000).toISOString().slice(0,16).replace(/[-:T]/g,'').replace(/^(\d{8})(\d{4})$/,'$1-$2'),kind:'ทำนาย',created_utc:iso(Date.now()),created_th:fFull(Date.now()),
+      layers:[{layer:'พยากรณ์จุด '+FC.place,satellite:'แบบจำลอง Open-Meteo / ECMWF ensemble / ERA5',data_time_th:FC.date+' '+FC.window}],prediction:FC,disclaimer:'การทำนายอาจคลาดเคลื่อน ไม่ใช่ประกาศทางการ'};
+    r.sha256=await sha256(JSON.stringify(r));LOG.unshift(r);LS.set('log',LOG);renderLog();dl(r.record_id+'.json',new Blob([JSON.stringify(r,null,2)],{type:'application/json'}));toast('💾 บันทึก '+r.record_id+' แล้ว')}};
 /* ---------- สรุปสถานการณ์ ---------- */
 let SAY='';
 function renderSum(){const out=[];let say=[];
