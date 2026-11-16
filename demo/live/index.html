@@ -208,6 +208,9 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
     <div class="pane" id="p-log">
       <div class="card"><h4>📜 บันทึกหลักฐาน</h4><p>ทุกครั้งที่โหลดข้อมูล ระบบบันทึกว่าแต่ละภาพมาจาก<b>ดาวเทียมดวงไหน วันที่ เวลา</b> และลิงก์ต้นทาง พร้อมลายนิ้วมือดิจิทัล (SHA-256) เพื่อพิสูจน์ว่าบันทึกไม่ถูกแก้ไข</p><p style="margin-top:4px;color:var(--mu);font-size:13.5px">บันทึกเก็บในเครื่องนี้เท่านั้น (สูงสุด 200 รายการ) กด ⬇️ เพื่อเก็บเป็นไฟล์ถาวร</p>
         <div class="brow"><button class="btn y" id="bSnap2">📸 บันทึกหลักฐานตอนนี้</button><button class="btn" id="bExp">⬇️ ส่งออกทั้งหมด</button><button class="btn" id="bClr">🗑️ ล้าง</button></div></div>
+      <div class="card" id="central" style="border-color:rgba(94,234,212,.5)"><h4>🏛️ บันทึกกลางถาวร (GitHub)</h4><p>บอทของ CoreDash บันทึกหลักฐานอัตโนมัติทุก 30 นาที แม้ไม่มีใครเปิดหน้านี้ เก็บถาวรใน GitHub ทุกบันทึกต่อโซ่ลายนิ้วมือ SHA-256 กับบันทึกก่อนหน้า ถ้ามีใครแก้ย้อนหลัง โซ่จะขาดทันที</p><div id="centralList" style="margin-top:8px"><p style="color:var(--mu)">⏳ กำลังโหลดบันทึกกลาง…</p></div>
+        <div class="brow"><a class="btn" href="https://github.com/CoreDashTech/SCADAGateway/commits/main/demo/live/evidence" target="_blank" rel="noopener">📚 ประวัติทั้งหมดบน GitHub ↗</a><a class="btn" href="evidence/index.json" target="_blank" rel="noopener">🗂️ ดัชนีไฟล์</a></div></div>
+      <h4 style="margin:12px 4px 8px;font-size:15px">💻 บันทึกในเครื่องนี้</h4>
       <div id="logList"></div>
     </div>
     <div class="pane" id="p-src"></div>
@@ -268,7 +271,7 @@ const GIBS='https://gibs.earthdata.nasa.gov',WMSU=GIBS+'/wms/epsg3857/best/wms.c
 const wmts=(L,tms,ext,time)=>[0,1,2].map(i=>`https://gibs-${'abc'[i]}.earthdata.nasa.gov/wmts/epsg3857/best/${L}/default/${time||'default'}/${tms}/{z}/{y}/{x}.${ext}`);
 const wms=(L,time,f)=>[`${WMSU}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=${L}&STYLES=&FORMAT=${f||'image/png'}&TRANSPARENT=TRUE&SRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}${time?'&TIME='+time:''}`];
 const iso=t=>new Date(t).toISOString().slice(0,19)+'Z';
-const ATTR={gibs:'NASA GIBS',carto:'© OpenStreetMap © CARTO',rv:'RainViewer'};
+const ATTR={gibs:'NASA GIBS',carto:'© OpenStreetMap contributors',rv:'RainViewer'};
 const HIM='Himawari_AHI_Band13_Clean_Infrared',IMG='IMERG_Precipitation_Rate',TRUE='VIIRS_NOAA20_CorrectedReflectance_TrueColor';
 /* เวลาจริงของภาพแต่ละชั้น (ตรวจจากเซิร์ฟเวอร์ NASA) */
 const TIME={cloud:null,imerg:null,trueD:null,radar:null};
@@ -290,7 +293,7 @@ function lyRow(L){return `<div class="ly" id="ly-${L.id}"><span class="e">${L.e}
 $('#lyS').innerHTML=SAT.map(lyRow).join('');$('#lyE').innerHTML=EVL.map(lyRow).join('');
 const ON={};[...SAT,...EVL].forEach(L=>{ON[L.id]=LS.get('on_'+L.id,L.on);const b=$(`.sw[data-l=${L.id}]`);b.classList.toggle('on',ON[L.id]);b.setAttribute('aria-checked',ON[L.id]);$('#ly-'+L.id).classList.toggle('on',ON[L.id]);if(!ON[L.id])setSt(L.id,'','ปิดอยู่')});
 $('#lgdRain').hidden=!ON.radar;
-const BASEN={blue:'🌍 ภาพพื้นผิวโลก NASA Blue Marble (ภาพผสมปี 2004 ไม่ใช่ภาพปัจจุบัน) — ภาพปัจจุบันคือชั้นเมฆและภาพสีจริง',night:'🌃 แสงไฟยามค่ำคืน NASA Black Marble (ภาพผสมปี 2016 จากดาวเทียม Suomi NPP)',map:'🗺️ แผนที่ OpenStreetMap / CARTO'};
+const BASEN={blue:'🌍 ภาพพื้นผิวโลก NASA Blue Marble (ภาพผสมปี 2004 ไม่ใช่ภาพปัจจุบัน) — ภาพปัจจุบันคือชั้นเมฆและภาพสีจริง',night:'🌃 แสงไฟยามค่ำคืน NASA Black Marble (ภาพผสมปี 2016 จากดาวเทียม Suomi NPP)',map:'🗺️ แผนที่ OpenStreetMap'};
 
 /* ---------- ดาว (พื้นหลังอวกาศ) ---------- */
 const sc=$('#stars'),sx=sc.getContext('2d');let STARS=[];
@@ -309,8 +312,8 @@ const map=new maplibregl.Map({container:'map',center:[101,14],zoom:2.2,minZoom:1
   sources:{
    blue:{type:'raster',tiles:wmts('BlueMarble_ShadedRelief_Bathymetry','GoogleMapsCompatible_Level8','jpeg'),tileSize:256,maxzoom:8,attribution:ATTR.gibs},
    night:{type:'raster',tiles:wmts('VIIRS_Black_Marble','GoogleMapsCompatible_Level8','png'),tileSize:256,maxzoom:8,attribution:ATTR.gibs},
-   carto:{type:'raster',tiles:['a','b','c'].map(s=>`https://${s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png`),tileSize:256,maxzoom:18,attribution:ATTR.carto},
-   lbl:{type:'raster',tiles:['a','b','c'].map(s=>`https://${s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png`),tileSize:256,maxzoom:18,attribution:ATTR.carto},
+   carto:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,maxzoom:18,attribution:ATTR.carto},
+   lbl:{type:'raster',tiles:wmts('Reference_Labels_15m','GoogleMapsCompatible_Level13','png'),tileSize:256,maxzoom:13,attribution:ATTR.gibs},
    brd:{type:'raster',tiles:wmts('Reference_Features_15m','GoogleMapsCompatible_Level13','png'),tileSize:256,maxzoom:9,attribution:ATTR.gibs},
   },
   layers:[{id:'bg',type:'background',paint:{'background-color':'#0b1a3a'}},
@@ -326,7 +329,7 @@ const ALLMK=[];function farCheck(){const c=map.getCenter(),z=map.getZoom(),lim=z
 function addMk(el,ll,opt){const m=new maplibregl.Marker(Object.assign({element:el},opt||{})).setLngLat(ll).addTo(map);ALLMK.push(m);return m}
 function rmMk(arr){arr.forEach(m=>{m.remove();const i=ALLMK.indexOf(m);if(i>=0)ALLMK.splice(i,1)});arr.length=0}
 /* สำรอง WMTS → WMS */
-const ALT={blue:wms('BlueMarble_ShadedRelief_Bathymetry',null,'image/jpeg'),night:wms('VIIRS_Black_Marble'),brd:wms('Reference_Features_15m')};
+const ALT={blue:wms('BlueMarble_ShadedRelief_Bathymetry',null,'image/jpeg'),night:wms('VIIRS_Black_Marble'),brd:wms('Reference_Features_15m'),lbl:wms('Reference_Labels_15m')};
 const TOK={},TER={},FELL={};
 map.on('data',e=>{if(e.dataType==='source'&&e.tile&&e.sourceId)TOK[e.sourceId]=(TOK[e.sourceId]||0)+1});
 map.on('error',e=>{const id=e.sourceId;if(!id){console.warn(e.error);return}TER[id]=(TER[id]||0)+1;
@@ -509,7 +512,7 @@ $('#tsl').oninput=()=>{const v=+$('#tsl').value;anim=v!==NF-1;if(playT&&!anim){c
 
 /* ---------- ป้ายหลักฐานบนจอ ---------- */
 function stampItems(){const L=[];const t=FR[curF]&&(anim||TIME.cloud)?FR[curF]:null;
-  L.push(['🌍','พื้นผิวโลก',{blue:'NASA Blue Marble (ภาพผสมปี 2004 — ไม่ใช่ภาพปัจจุบัน)',night:'NASA Black Marble (ภาพผสมปี 2016)',map:'แผนที่ OpenStreetMap / CARTO'}[BASE],'']);
+  L.push(['🌍','พื้นผิวโลก',{blue:'NASA Blue Marble (ภาพผสมปี 2004 — ไม่ใช่ภาพปัจจุบัน)',night:'NASA Black Marble (ภาพผสมปี 2016)',map:'แผนที่ OpenStreetMap'}[BASE],'']);
   if(ON.cloud)L.push(['☁️','เมฆ','Himawari-9 (JMA) · กล้อง AHI ช่อง 13 อินฟราเรด',t?fFull(t)+' · '+fUTC(t):'ล่าสุดที่ NASA มี (ตรวจเวลาไม่ได้)']);
   if(ON.radar&&RV){const rt=RV.past[RI>=0?RI:RV.past.length-1].time*1000;L.push(['🌧️','เรดาร์ฝน','สถานีเรดาร์ภาคพื้นดิน รวบรวมโดย RainViewer',fFull(rt)+' · '+fUTC(rt)])}
   if(ON.imerg)L.push(['💧','ฝนดาวเทียม','GPM IMERG (NASA/JAXA)',TIME.imerg?fFull(TIME.imerg)+' · '+fUTC(TIME.imerg):'ล่าสุดที่ NASA มี']);
@@ -527,7 +530,7 @@ $('#stampX').onclick=()=>{$('#stamp').classList.toggle('min');$('#stampX').textC
 async function sha256(s){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return null}}
 function buildRecord(kind){const now=Date.now();const id='LE-'+new Date(now+7*3600000).toISOString().slice(0,16).replace(/[-:T]/g,'').replace(/^(\d{8})(\d{4})$/,'$1-$2')+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
   const layers=[];
-  layers.push({layer:'พื้นผิวโลก',source:BASE==='map'?'OpenStreetMap/CARTO':'NASA GIBS',satellite:{blue:'Blue Marble (Terra/Aqua MODIS composite 2004)',night:'Black Marble (Suomi NPP VIIRS composite 2016)',map:'—'}[BASE],data_time:BASE==='map'?null:(BASE==='blue'?'2004 composite':'2016 composite'),current:false});
+  layers.push({layer:'พื้นผิวโลก',source:BASE==='map'?'OpenStreetMap':'NASA GIBS',satellite:{blue:'Blue Marble (Terra/Aqua MODIS composite 2004)',night:'Black Marble (Suomi NPP VIIRS composite 2016)',map:'—'}[BASE],data_time:BASE==='map'?null:(BASE==='blue'?'2004 composite':'2016 composite'),current:false});
   if(ON.cloud)layers.push({layer:'เมฆ อินฟราเรด',source:'NASA GIBS',product:HIM,satellite:'Himawari-9 (JMA, geostationary 140.7°E)',instrument:'AHI Band 13 (10.4 µm)',data_time_utc:TIME.cloud?iso(TIME.cloud):null,data_time_th:TIME.cloud?fFull(TIME.cloud):'ตรวจเวลาไม่ได้',url:TIME.cloud?wmts(HIM,'GoogleMapsCompatible_Level6','png',iso(TIME.cloud))[0]:wmts(HIM,'GoogleMapsCompatible_Level6','png')[0]});
   if(ON.radar&&RV){const t=RV.past[RV.past.length-1].time*1000;layers.push({layer:'เรดาร์ฝน',source:'RainViewer (ground radar composite)',satellite:'— (สถานีเรดาร์ภาคพื้นดิน)',data_time_utc:iso(t),data_time_th:fFull(t),url:RV.host+RV.past[RV.past.length-1].path})}
   if(ON.imerg)layers.push({layer:'ฝนจากดาวเทียม',source:'NASA GIBS',product:IMG,satellite:'GPM constellation (NASA/JAXA)',data_time_utc:TIME.imerg?iso(TIME.imerg):null,data_time_th:TIME.imerg?fFull(TIME.imerg):'ล่าสุดที่มี'});
@@ -586,6 +589,15 @@ async function snap(){toast('📸 กำลังบันทึกหลัก�
   cv.toBlob(b=>{if(b)dl(r.record_id+'.png',b);dl(r.record_id+'.json',new Blob([JSON.stringify(r,null,2)],{type:'application/json'}));toast('✅ บันทึกหลักฐาน '+r.record_id+' แล้ว (ภาพ + ไฟล์ข้อมูล)')},'image/png')}
 $('#bSnap').onclick=snap;$('#bSnap2').onclick=snap;
 
+
+/* ---------- บันทึกกลาง (GitHub Actions) ---------- */
+async function loadCentral(){const box=$('#centralList');try{const idx=await getJSON('evidence/index.json',15000);const days=(idx.days||[]).slice(-2);let recs=[];
+  for(const d of days){const r=await fetch('evidence/'+d,{cache:'no-store'});if(!r.ok)continue;recs=recs.concat((await r.text()).split('\n').filter(Boolean).map(l=>JSON.parse(l)))}
+  let prev=null,okAll=true;const rows=[];for(const r of recs){const c=Object.assign({},r);const h=c.sha256;delete c.sha256;const ok=(await sha256(JSON.stringify(c)))===h;const chain=prev===null||r.prev_sha256===prev||days.length&&rows.length===0;if(!ok||!chain)okAll=false;rows.push({r,ok:ok&&chain});prev=h}
+  const L=rows.slice(-12).reverse();
+  box.innerHTML=`<p>${okAll?'✅ ตรวจลายนิ้วมือและโซ่ในเบราว์เซอร์นี้แล้ว: ถูกต้อง':'⚠️ พบบันทึกที่ลายนิ้วมือหรือโซ่ไม่ตรง โปรดแจ้ง CoreDash'} · ทั้งหมด ${fmt(idx.count||recs.length)} บันทึก · ล่าสุด ${idx.updated_utc?fFull(idx.updated_utc):'–'}</p>`+L.map(({r,ok})=>{const c=(r.sources||[]).find(s=>s.key==='cloud'),rd=(r.sources||[]).find(s=>s.key==='radar');return `<div class="rec" data-id="${esc(r.record_id)}"><b>${esc(r.record_id)}</b><span class="tag">${ok?'✅ ตรวจผ่าน':'⚠️ ไม่ผ่าน'}</span><small>${fFull(r.created_utc)} · ☁️ ${c&&c.data_time_utc?fT(c.data_time_utc):'–'} · 🌧️ ${rd&&rd.data_time_utc?fT(rd.data_time_utc):'–'} · 🔴 M4.5+ 24 ชม. ${r.earthquakes&&r.earthquakes.m45_24h!=null?r.earthquakes.m45_24h:'–'} · SHA ${esc((r.sha256||'').slice(0,12))}…</small></div>`}).join('');
+  $$('#centralList .rec').forEach(el=>el.onclick=()=>{const r=recs.find(x=>x.record_id===el.dataset.id);dl(r.record_id+'.json',new Blob([JSON.stringify(r,null,2)],{type:'application/json'}));toast('⬇️ ดาวน์โหลด '+r.record_id)})}
+ catch(e){box.innerHTML='<p style="color:var(--mu)">ยังไม่มีบันทึกกลาง (บอทจะเริ่มบันทึกหลังติดตั้ง GitHub Actions) หรือโหลดไม่ได้ในขณะนี้</p>'}}
 /* ---------- สรุปสถานการณ์ ---------- */
 let SAY='';
 function renderSum(){const out=[];let say=[];
@@ -624,10 +636,10 @@ $('#p-src').innerHTML=`
 <div class="card"><h4>🌀 พายุ — NASA EONET / JTWC</h4><p>ตำแหน่งและความเร็วลมจากศูนย์เตือนภัยไต้ฝุ่นร่วม (JTWC) ซึ่งวิเคราะห์จากภาพดาวเทียม อัปเดตทุก ~6 ชั่วโมง เส้นประคือเส้นทางที่ผ่านมา <b>ไม่ใช่เส้นทางพยากรณ์</b></p>${S('st')}</div>
 <div class="card"><h4>🌡️ อากาศ และ 😷 PM2.5 — แบบจำลอง</h4><p>Open-Meteo (รวมแบบจำลองพยากรณ์อากาศ เช่น ECMWF, NOAA GFS) และ Copernicus CAMS ของสหภาพยุโรป <b>เป็นค่าคำนวณ ไม่ใช่เครื่องวัดในพื้นที่</b> ค่าวัดจริง: air4thai.pcd.go.th</p>${S('wx')}</div>
 <div class="card" style="border-color:rgba(251,191,36,.55)"><h4>🤝 ความรับผิดชอบ</h4><p>CoreDash แสดงผลข้อมูลเปิดเพื่อการเรียนรู้และติดตามภาพรวม ทุกภาพระบุดาวเทียมและเวลา และเก็บบันทึกหลักฐานตรวจย้อนหลังได้ หากพบความคลาดเคลื่อน <b>CoreDash น้อมรับ</b> และพร้อมตรวจสอบกับแหล่งต้นทาง แจ้งได้ที่ <a href="tel:0819232380">081-923-2380</a><br><b>หน้านี้ไม่ใช่ประกาศเตือนภัย</b> · กรมอุตุนิยมวิทยา 1182 · ปภ. 1784 · 1669 · 191 · 199</p></div>
-<div class="card"><h4>🙏 ขอบคุณผู้ให้ข้อมูล</h4><p style="font-size:13.5px">NASA GIBS / EOSDIS · JMA Himawari-9 · NOAA · NASA/JAXA GPM · RainViewer · USGS · NASA EONET · JTWC · Open-Meteo (CC BY 4.0) · Copernicus CAMS · OpenStreetMap / CARTO · MapLibre</p></div>`}
+<div class="card"><h4>🙏 ขอบคุณผู้ให้ข้อมูล</h4><p style="font-size:13.5px">NASA GIBS / EOSDIS · JMA Himawari-9 · NOAA · NASA/JAXA GPM · RainViewer · USGS · NASA EONET · JTWC · Open-Meteo (CC BY 4.0) · Copernicus CAMS · OpenStreetMap · MapLibre</p></div>`}
 
 /* ---------- แท็บ / มือถือ ---------- */
-function tab(t){$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));if(t==='src')renderSrc();if(t==='log')renderLog();mobMin(false)}
+function tab(t){$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));if(t==='src')renderSrc();if(t==='log'){renderLog();loadCentral()}mobMin(false)}
 $$('#tabs button[data-t]').forEach(b=>b.onclick=()=>tab(b.dataset.t));
 const mq=matchMedia('(max-width:860px)');
 function place(){if(mq.matches)$('#p-lay').appendChild($('#layersBox'));else $('#left').appendChild($('#layersBox'))}mq.addEventListener?mq.addEventListener('change',place):mq.addListener(place);place();
