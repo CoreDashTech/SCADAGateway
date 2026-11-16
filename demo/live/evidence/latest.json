@@ -1,0 +1,123 @@
+{
+  "record_id": "LEG-20261116-224132",
+  "created_utc": "2026-11-16T15:41:32Z",
+  "generator": "CoreDash Live Earth evidence bot (GitHub Actions)",
+  "run": {
+    "repo": "CoreDashTech/SCADAGateway",
+    "run_id": "43899061087",
+    "commit_before": "d0c4a3966b2685f71a7d69c11e83dd22d9a58c43"
+  },
+  "sources": [
+    {
+      "key": "cloud",
+      "provider": "NASA GIBS",
+      "satellite": "Himawari-9 (JMA, geostationary 140.7E)",
+      "instrument": "AHI Band 13 clean IR 10.4um",
+      "data_time_utc": "2026-11-16T15:10:00Z",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Himawari_AHI_Band13_Clean_Infrared/default/2026-11-16T15:10:00Z/GoogleMapsCompatible_Level6/0/0/0.png",
+      "tile_sha256": "7d024432aafe53f96513f8bb6505655dde92269b9caeff66326b0045d9ddfe2a",
+      "status": "ok"
+    },
+    {
+      "key": "imerg",
+      "provider": "NASA GIBS",
+      "satellite": "GPM constellation (NASA/JAXA)",
+      "instrument": "IMERG precipitation rate",
+      "data_time_utc": null,
+      "tile_sha256": null,
+      "status": "not found"
+    },
+    {
+      "key": "radar",
+      "provider": "RainViewer",
+      "satellite": null,
+      "instrument": "ground weather radar composite",
+      "data_time_utc": "2026-11-16T15:40:00Z",
+      "url": "https://tilecache.rainviewer.com/v2/radar/d2cf5d33e57d",
+      "status": "ok"
+    }
+  ],
+  "earthquakes": {
+    "status": "ok",
+    "source": "USGS 2.5_week.geojson",
+    "feed_generated_utc": "2026-11-16T15:41:14Z",
+    "count_7d": 303,
+    "m45_24h": 9,
+    "near_thailand_1000km": [
+      {
+        "usgs_id": "us7000tyeu",
+        "mag": 4.4,
+        "place": "27 km SW of Minbu, Burma (Myanmar)",
+        "time_utc": "2026-11-15T14:32:03Z",
+        "depth_km": 81.6,
+        "lat": 19.9786,
+        "lon": 94.7157,
+        "nearest_city": "แม่ฮ่องสอน",
+        "distance_km": 349,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyeu"
+      },
+      {
+        "usgs_id": "us7000ty6n",
+        "mag": 5.2,
+        "place": "off the west coast of northern Sumatra",
+        "time_utc": "2026-11-14T02:59:29Z",
+        "depth_km": 10,
+        "lat": 3.304,
+        "lon": 92.8261,
+        "nearest_city": "ภูเก็ต",
+        "distance_km": 799,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000ty6n"
+      },
+      {
+        "usgs_id": "us7000txvw",
+        "mag": 4.9,
+        "place": "41 km N of Weining, China",
+        "time_utc": "2026-11-12T20:03:14Z",
+        "depth_km": 10,
+        "lat": 27.2239,
+        "lon": 104.1911,
+        "nearest_city": "เชียงราย",
+        "distance_km": 927,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000txvw"
+      },
+      {
+        "usgs_id": "us7000txf8",
+        "mag": 4.5,
+        "place": "61 km ENE of Blangpidie, Indonesia",
+        "time_utc": "2026-11-10T22:09:07Z",
+        "depth_km": 10,
+        "lat": 3.9179,
+        "lon": 97.359,
+        "nearest_city": "ภูเก็ต",
+        "distance_km": 455,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000txf8"
+      }
+    ]
+  },
+  "storms": {
+    "status": "ok",
+    "list": [
+      {
+        "eonet_id": "EONET_26463",
+        "title": "Tropical Cyclone Xavier",
+        "source": "JTWC",
+        "position_time_utc": "2026-11-15T08:00:00Z",
+        "lat": -8.2,
+        "lon": -158.9,
+        "wind_kt": 35,
+        "nearest_city": "อุบลราชธานี",
+        "distance_km": 10912
+      }
+    ]
+  },
+  "weather": {
+    "status": "fetch failed",
+    "source": "Open-Meteo (model, not station)",
+    "model_time_local": null,
+    "cities": null
+  },
+  "disclaimer": "ข้อมูลจากแหล่งเปิด บันทึกอัตโนมัติ อาจล่าช้า/คลาดเคลื่อน ไม่ใช่ประกาศทางการ",
+  "prev_record_id": null,
+  "prev_sha256": null,
+  "sha256": "ce987aeb6ad0373fe7f89d5169e939d03a9998308e4894bc4cff7dd6b4773738"
+}
