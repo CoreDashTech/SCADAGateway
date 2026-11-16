@@ -1,0 +1,39 @@
+# CoreDash Live Earth – บันทึกหลักฐานถาวรอัตโนมัติ ทุก 30 นาที (ฟรีสำหรับ repo สาธารณะ)
+name: Live Earth evidence log
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'   # ทุก 30 นาที (นาทีที่ 7 และ 37 ตามเวลา UTC) GitHub อาจเลื่อนเวลาไปบ้างช่วงคนใช้เยอะ
+  workflow_dispatch: {}       # กดสั่งรันเองได้ที่แท็บ Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-earth-evidence
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: บันทึกหลักฐาน
+        run: node scripts/live-earth-evidence.mjs
+      - name: ตรวจโซ่หลักฐาน
+        run: node scripts/verify-live-earth-evidence.mjs
+      - name: บันทึกลง repo
+        run: |
+          git config user.name  "CoreDash Live Earth bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add demo/live/evidence
+          if git diff --cached --quiet; then echo "ไม่มีอะไรใหม่"; exit 0; fi
+          ID=$(node -e "console.log(require('./demo/live/evidence/latest.json').record_id)")
+          SHA=$(node -e "console.log(require('./demo/live/evidence/latest.json').sha256.slice(0,16))")
+          git commit -m "evidence: $ID sha256 $SHA"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
+          exit 1
