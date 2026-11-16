@@ -53,6 +53,7 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
 .page{display:none}.page.on{display:block;animation:fi .3s}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}}
 /* banner */
+.simb{display:inline-block;font-size:.72em;font-weight:700;padding:1px 8px;border-radius:999px;background:#facc15;color:#1a1300;margin-right:6px;vertical-align:1px;letter-spacing:0}.simbar{margin:0 22px 10px;border-radius:12px;padding:9px 14px;background:#facc15;color:#1a1300;font-weight:600;font-size:14px;display:flex;gap:10px;align-items:center;line-height:1.4}.simbar[hidden]{display:none}@media(max-width:820px){.simbar{margin:0 12px 8px;font-size:13px}}
 .banner{display:none;margin:0 22px 8px;border-radius:14px;padding:11px 16px;background:linear-gradient(90deg,#ff2d55,#ff5a36);color:#fff;font-weight:500;cursor:pointer;align-items:center;gap:12px;box-shadow:0 10px 30px -10px #ff2d55;animation:pulse 1.4s infinite}
 .banner.on{display:flex}
 .banner b{font-weight:700}
@@ -254,6 +255,7 @@ body.big{font-size:17px}body.big .ev b{font-size:15.5px}body.big .ev p{font-size
         <button class="ibtn" id="bSet" aria-label="ตั้งค่า" title="ตั้งค่า">⚙️</button>
       </div>
     </header>
+    <div class="simbar" id="simbar" role="note"><span style="font-size:20px">⚠️</span><span><b>หน้าสาธิต — ไม่ใช่เหตุการณ์จริง</b> · เหตุการณ์ สถานที่ และตัวเลขทั้งหมดเป็นข้อมูลสมมติที่โปรแกรมสุ่มขึ้นเพื่อแสดงการทำงานของระบบ CoreDash</span></div>
     <div class="banner" id="banner" role="alert"><span style="font-size:22px">🚨</span><div><b id="bnT"></b><div id="bnS" style="font-size:13px;opacity:.9"></div></div><span style="margin-left:auto;font-size:13px">แตะเพื่อจัดการ ›</span></div>
 
     <div class="content">
@@ -369,28 +371,28 @@ const LVTXT={ok:'ปกติ',warn:'เฝ้าระวัง',bad:'วิก
 
 /* ================= สถานที่ ================= */
 const SITES=[
- ['sch1','โรงเรียนบ้านหนองนา','🏫','อุบลราชธานี',15.24,104.84,['lockdown','metalgate','cooler','gatezone','busleft','lightning']],
- ['kid1','ศูนย์พัฒนาเด็กเล็กบ้านดอน','🧒','ขอนแก่น',16.44,102.83,['busleft','gatezone','overload']],
- ['tmp1','วัดป่าสามัคคีธรรม','🛕','อุดรธานี',17.41,102.79,['crowd','metalgate','abandoned']],
- ['hos1','โรงพยาบาลชุมชนเมืองพล','🏥','ขอนแก่น',15.82,102.6,['metalgate','cctvai','surge','overload']],
- ['mkt1','ตลาดสดเทศบาลเชียงใหม่','🛒','เชียงใหม่',18.79,98.99,['cctvai','gunshot','crowd','floodsocket']],
- ['mall1','ห้างสรรพสินค้าใจกลางเมือง','🏬','กรุงเทพฯ',13.746,100.539,['xray','abandoned','crowd','cctvai']],
- ['bts1','สถานีรถไฟฟ้าสยาม','🚇','กรุงเทพฯ',13.745,100.534,['abandoned','crowd','metalgate']],
- ['apt1','ท่าอากาศยานสุวรรณภูมิ','✈️','สมุทรปราการ',13.69,100.75,['xray','drone','abandoned']],
- ['std1','สนามกีฬาจังหวัดนครราชสีมา','🏟️','นครราชสีมา',14.97,102.1,['lightning','crowd','drone','metalgate']],
- ['glf1','สนามกอล์ฟหัวหิน','⛳','ประจวบคีรีขันธ์',12.57,99.95,['lightning']],
- ['rst1','รีสอร์ทริมทะเลภูเก็ต','🏝️','ภูเก็ต',7.89,98.3,['pool','rcd','floodsocket','lightning']],
- ['rst2','โฮมสเตย์เกาะช้าง','🏡','ตราด',12.06,102.33,['rcd','pool']],
- ['rd1','ถนนสุขุมวิท ซอย 12','🏮','กรุงเทพฯ',13.737,100.556,['streetpole']],
- ['rd2','ถนนมิตรภาพ ช่วงน้ำท่วม','🌊','นครราชสีมา',14.88,102.02,['streetpole','floodsocket']],
- ['fct1','โรงงานนิคมฯ มาบตาพุด','🏭','ระยอง',12.68,101.15,['hotpanel','overload','surge','fence']],
- ['tx1','แท็กซี่ ทข 1234 (กำลังวิ่ง)','🚕','กรุงเทพฯ',13.76,100.5,['taxi']],
- ['eld1','บ้านคุณยายสมศรี (อยู่คนเดียว)','👵','นครสวรรค์',15.7,100.13,['fall','sos','stove']],
- ['eld2','บ้านคุณตาบุญมี','👴','สุรินทร์',14.88,103.49,['fall','sos']],
- ['dea1','บ้านครอบครัวคนหูหนวก','🧏','ชลบุรี',13.36,100.98,['firealarm','rcd']],
- ['frm1','กลุ่มเกษตรกรบ้านนา (ปลูกปั้น)','🌾','อุบลราชธานี',15.2,104.9,['awd','soilph','cropwater']],
- ['frm2','สหกรณ์ไร่มันโคกใหญ่','🥔','นครราชสีมา',15.1,101.9,['soilph','cropwater']],
- ['frm3','สวนยางห้วยทราย','🌳','สุราษฎร์ธานี',9.13,99.33,['lightning','soilph']],
+ ['sch1','โรงเรียนตัวอย่าง ก','🏫','แถบอุบลราชธานี',15.24,104.84,['lockdown','metalgate','cooler','gatezone','busleft','lightning']],
+ ['kid1','ศูนย์เด็กเล็กตัวอย่าง ข','🧒','แถบขอนแก่น',16.44,102.83,['busleft','gatezone','overload']],
+ ['tmp1','วัดตัวอย่าง ค','🛕','แถบอุดรธานี',17.41,102.79,['crowd','metalgate','abandoned']],
+ ['hos1','โรงพยาบาลตัวอย่าง ง','🏥','แถบขอนแก่น',15.82,102.6,['metalgate','cctvai','surge','overload']],
+ ['mkt1','ตลาดสดตัวอย่าง จ','🛒','แถบเชียงใหม่',18.79,98.99,['cctvai','gunshot','crowd','floodsocket']],
+ ['mall1','ห้างตัวอย่าง ฉ','🏬','แถบกรุงเทพฯ',13.746,100.539,['xray','abandoned','crowd','cctvai']],
+ ['bts1','สถานีรถไฟฟ้าตัวอย่าง ช','🚇','แถบกรุงเทพฯ',13.745,100.534,['abandoned','crowd','metalgate']],
+ ['apt1','สนามบินตัวอย่าง ซ','✈️','แถบสมุทรปราการ',13.69,100.75,['xray','drone','abandoned']],
+ ['std1','สนามกีฬาตัวอย่าง ฌ','🏟️','แถบนครราชสีมา',14.97,102.1,['lightning','crowd','drone','metalgate']],
+ ['glf1','สนามกอล์ฟตัวอย่าง ญ','⛳','แถบประจวบคีรีขันธ์',12.57,99.95,['lightning']],
+ ['rst1','รีสอร์ทตัวอย่าง ฎ','🏝️','แถบภูเก็ต',7.89,98.3,['pool','rcd','floodsocket','lightning']],
+ ['rst2','โฮมสเตย์ตัวอย่าง ฏ','🏡','แถบตราด',12.06,102.33,['rcd','pool']],
+ ['rd1','ถนนตัวอย่าง ฐ','🏮','แถบกรุงเทพฯ',13.737,100.556,['streetpole']],
+ ['rd2','ถนนตัวอย่าง ฑ (จำลองน้ำท่วม)','🌊','แถบนครราชสีมา',14.88,102.02,['streetpole','floodsocket']],
+ ['fct1','โรงงานตัวอย่าง ฒ','🏭','แถบระยอง',12.68,101.15,['hotpanel','overload','surge','fence']],
+ ['tx1','แท็กซี่ตัวอย่าง (ทะเบียนสมมติ)','🚕','แถบกรุงเทพฯ',13.76,100.5,['taxi']],
+ ['eld1','บ้านผู้สูงวัยตัวอย่าง 1 (อยู่คนเดียว)','👵','แถบนครสวรรค์',15.7,100.13,['fall','sos','stove']],
+ ['eld2','บ้านผู้สูงวัยตัวอย่าง 2','👴','แถบสุรินทร์',14.88,103.49,['fall','sos']],
+ ['dea1','บ้านครอบครัวคนหูหนวก (ตัวอย่าง)','🧏','แถบชลบุรี',13.36,100.98,['firealarm','rcd']],
+ ['frm1','กลุ่มเกษตรกรตัวอย่าง (ปลูกปั้น)','🌾','แถบอุบลราชธานี',15.2,104.9,['awd','soilph','cropwater']],
+ ['frm2','สหกรณ์ไร่มันตัวอย่าง','🥔','แถบนครราชสีมา',15.1,101.9,['soilph','cropwater']],
+ ['frm3','สวนยางตัวอย่าง','🌳','แถบสุราษฎร์ธานี',9.13,99.33,['lightning','soilph']],
 ];
 TY.fence=['รั้วกันบุกรุก','secure','🚧','%',5,45,88,'รั้วสั่นผิดปกติ','ตรวจพบการปีนรั้ว',['เปิดไฟส่องสว่างรั้ว','ดูกล้องโซนนั้น','ส่ง รปภ. ตรวจ'],'เซ็นเซอร์บนรั้วรู้ว่าการสั่นแบบนี้คือคนปีน ไม่ใช่ลมพัด','ไม่ปีนรั้วโรงเรียน','fence'];
 const DEV=[];SITES.forEach(s=>s[6].forEach(t=>{const T=TY[t];DEV.push({id:s[0]+'-'+t,site:s[0],t,v:T[4],hist:Array.from({length:40},()=>T[4]),lv:'ok',on:Math.random()>.03,bat:Math.round(rnd(55,100)),rssi:Math.round(rnd(-78,-48))})}));
@@ -402,10 +404,10 @@ let OP=LS.get('op','เจ้าหน้าที่เวร');
 function lvOf(T,v){const [,,,,ok,w,b]=T;const up=b>ok;return up?(v>=b?'bad':v>=w?'warn':'ok'):(v<=b?'bad':v<=w?'warn':'ok')}
 function mkEvent(d,lv,quiet,t0){const T=TY[d.t],s=siteOf(d.site);const v=lv==='bad'?T[6]*(T[6]>T[4]?rnd(1,1.15):rnd(.85,1)):T[5]*(T[5]>T[4]?rnd(1,1.08):rnd(.92,1));
   d.v=+v.toFixed(DEC(T));d.lv=lv;d.hist.push(d.v);d.hist.shift();
-  const e={id:uid(),dev:d.id,site:s[0],t:d.t,lv,v:d.v,msg:lv==='bad'?T[8]:T[7],ts:t0||Date.now(),st:'new',log:[{t:t0||Date.now(),x:'ระบบตรวจพบ · ส่งแจ้งเตือนเข้า CoreDash'}],sop:T[9].map(()=>false)};
+  const e={id:uid(),sim:true,dev:d.id,site:s[0],t:d.t,lv,v:d.v,msg:lv==='bad'?T[8]:T[7],ts:t0||Date.now(),st:'new',log:[{t:t0||Date.now(),x:'ระบบตรวจพบ · ส่งแจ้งเตือนเข้า CoreDash'}],sop:T[9].map(()=>false)};
   EV.unshift(e);if(EV.length>160)EV.pop();if(!t0){const h=new Date().getHours();HIST24[23][lv]++}
   if(!quiet)onNew(e);return e}
-function onNew(e){renderAll(e.id);if(e.lv==='bad'){const s=siteOf(e.site);showBanner(e);chime();speak(`เหตุวิกฤต ${s[1]}. ${TY[e.t][0]}. ${e.msg}`);notify('🚨 '+s[1],TY[e.t][0]+' · '+e.msg);$('#sr').textContent=`เหตุวิกฤต ${s[1]} ${e.msg}`}}
+function onNew(e){renderAll(e.id);if(e.lv==='bad'){const s=siteOf(e.site);showBanner(e);chime();const jp=e.sim?'เหตุการณ์จำลอง ':'';speak(`${jp}เหตุวิกฤต ${s[1]}. ${TY[e.t][0]}. ${e.msg}`);notify((e.sim?'🧪 [จำลอง] ':'🚨 ')+s[1],TY[e.t][0]+' · '+e.msg+(e.sim?' (ไม่ใช่เหตุการณ์จริง)':''));$('#sr').textContent=`${jp}เหตุวิกฤต ${s[1]} ${e.msg}`}}
 function seed(){const now=Date.now();const ds=[...DEV].sort(()=>Math.random()-.5).slice(0,16);ds.forEach((d,i)=>{const e=mkEvent(d,i%3===0?'bad':'warn',true,now-(i+1)*rnd(8,22)*60e3);
   if(i>3){e.st=i>8?'done':'prog';e.log.push({t:e.ts+rnd(1,4)*60e3,x:'รับทราบโดย '+pick(['ศูนย์ อบต.','รปภ. กะเช้า','ครูเวร','ช่างไฟฟ้า'])});if(e.st==='done'){e.log.push({t:e.ts+rnd(10,40)*60e3,x:'ปิดเหตุ · ตรวจสอบแล้วปลอดภัย'});d.lv='ok';d.v=TY[d.t][4]}}})}
 
@@ -430,14 +432,15 @@ function startData(){clearInterval(simT);clearInterval(tick.t);if(mq){try{mq.end
     let d=DEV.find(x=>x.id===devId);if(!d){d={id:devId,site:siteId,t:m.type,v:m.value,hist:Array(40).fill(m.value),lv:'ok',on:true,bat:m.bat||100,rssi:m.rssi||-60};DEV.push(d)}
     d.v=m.value;d.hist.push(m.value);d.hist.shift();d.on=true;const lv=m.level||lvOf(T,m.value);
     if(lv!=='ok'&&d.lv!==lv){d.lv=lv;const e={id:uid(),dev:d.id,site:siteId,t:m.type,lv,v:m.value,msg:m.msg||(lv==='bad'?T[8]:T[7]),ts:Date.now(),st:'new',log:[{t:Date.now(),x:'รับจากอุปกรณ์จริงผ่าน MQTT'}],sop:T[9].map(()=>false)};EV.unshift(e);onNew(e)}else{d.lv=lv;renderAll()}})}
-function setConn(live,t){const c=$('#conn');c.classList.toggle('live',live);c.querySelector('span').textContent=t}
+function setConn(live,t){const c=$('#conn');c.classList.toggle('live',live);c.querySelector('span').textContent=t;const b=$('#simbar');if(b)b.hidden=mode!=='demo'}
 
 /* ================= เสียง / แจ้งเตือน ================= */
 let soundOn=false,speakOn=false,actx=null;
 function chime(){if(!soundOn)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();[880,660,880].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.type='triangle';g.gain.setValueAtTime(.08,actx.currentTime+i*.22);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+i*.22+.2);o.connect(g).connect(actx.destination);o.start(actx.currentTime+i*.22);o.stop(actx.currentTime+i*.22+.21)})}catch(e){}}
 function speak(t,force){if(!speakOn&&!force)return;try{const u=new SpeechSynthesisUtterance(String(t).replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu,''));u.lang='th-TH';const v=speechSynthesis.getVoices().find(v=>/^th/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
 function notify(t,b){try{if(Notification.permission!=='granted')return;if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(t,{body:b,icon:'icon-192.png'}));else new Notification(t,{body:b,icon:'icon-192.png'})}catch(e){}}
-let bnE=null;function showBanner(e){bnE=e;const s=siteOf(e.site);$('#bnT').textContent=`${TY[e.t][2]} ${s[1]} — ${TY[e.t][0]}`;$('#bnS').textContent=e.msg;$('#banner').classList.add('on');clearTimeout(showBanner.t);showBanner.t=setTimeout(()=>$('#banner').classList.remove('on'),15000)}
+const SIMP=e=>e&&e.sim?'[จำลอง] ':'';const SIMB=e=>e&&e.sim?'<span class="simb">🧪 จำลอง</span>':'';
+let bnE=null;function showBanner(e){bnE=e;const s=siteOf(e.site);$('#bnT').textContent=`${SIMP(e)}${TY[e.t][2]} ${s[1]} — ${TY[e.t][0]}`;$('#bnS').textContent=e.msg+(e.sim?' · ข้อมูลสมมติเพื่อการสาธิต ไม่ใช่เหตุการณ์จริง':'');$('#banner').classList.add('on');clearTimeout(showBanner.t);showBanner.t=setTimeout(()=>$('#banner').classList.remove('on'),15000)}
 $('#banner').onclick=()=>{$('#banner').classList.remove('on');if(bnE)openEv(bnE.id)};
 
 /* ================= แผนที่ ================= */
@@ -474,8 +477,8 @@ function renderPins(only){['map1','map2'].forEach(id=>{if(only&&only!==id&&typeo
 
 /* ================= การแสดงผล ================= */
 let cur='ov',evF={st:'open',m:'all',q:''},dvF={m:'all',st:'all'},selDev=null;
-function evRow(e,isNew){const T=TY[e.t],s=siteOf(e.site),M=MODES[T[1]];return `<div class="ev ${isNew?'new':''}" style="--c:${M.hex}" data-e="${e.id}" tabindex="0" role="button" aria-label="${LVTXT[e.lv]} ${esc(s[1])} ${esc(T[0])}">
-  <div class="ei">${T[2]}</div><div class="eb"><b>${esc(s[1])} · ${esc(T[0])}</b><p>${esc(e.msg)}${T[3]?` <span class="mono">(${e.v} ${T[3]})</span>`:''}</p>
+function evRow(e,isNew){const T=TY[e.t],s=siteOf(e.site),M=MODES[T[1]];return `<div class="ev ${isNew?'new':''}" style="--c:${M.hex}" data-e="${e.id}" tabindex="0" role="button" aria-label="${SIMP(e)}${LVTXT[e.lv]} ${esc(s[1])} ${esc(T[0])}">
+  <div class="ei">${T[2]}</div><div class="eb"><b>${SIMB(e)}${esc(s[1])} · ${esc(T[0])}</b><p>${esc(e.msg)}${T[3]?` <span class="mono">(${e.v} ${T[3]})</span>`:''}</p>
   <div class="em"><span class="lv ${e.lv}">${LVTXT[e.lv]}</span><span class="stt ${e.st}">${STTXT[e.st]}</span><span class="stt">${M.ic} ${M.n}</span><span class="tm">${tfmt(e.ts)} · ${ago(e.ts)}</span></div></div></div>`}
 function bindEv(box){box.querySelectorAll('.ev').forEach(r=>{r.onclick=()=>openEv(r.dataset.e);r.onkeydown=k=>{if(k.key==='Enter')openEv(r.dataset.e)}})}
 function renderKPI(){const open=EV.filter(e=>e.st!=='done'),bad=open.filter(e=>e.lv==='bad').length,warn=open.length-bad,on=DEV.filter(d=>d.on).length;
@@ -525,9 +528,9 @@ function drawer(html,keep){const p=$('#dpanel'),sc=p.scrollTop;p.innerHTML=html;
 function closeDrawer(){$('#drawer').classList.remove('on');selEv=null;selDev=null}
 $('#drawer').onclick=e=>{if(e.target.id==='drawer')closeDrawer()};addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 function openEv(id,keep){const e=EV.find(x=>x.id===id);if(!e)return;selEv=id;selDev=null;const T=TY[e.t],s=siteOf(e.site),M=MODES[T[1]],d=DEV.find(x=>x.id===e.dev);
-  drawer(`<div class="dt" style="--c:${M.hex}"><div class="ei">${T[2]}</div><div><div style="display:flex;gap:6px;margin-bottom:4px"><span class="lv ${e.lv}">${LVTXT[e.lv]}</span><span class="stt ${e.st}">${STTXT[e.st]}</span></div><h2>${esc(T[0])}</h2><div style="color:var(--mut);font-size:13px">${s[2]} ${esc(s[1])} · ${s[3]}</div></div><button class="x" onclick="closeDrawer()" aria-label="ปิด">✕</button></div>
+  drawer(`<div class="dt" style="--c:${M.hex}"><div class="ei">${T[2]}</div><div><div style="display:flex;gap:6px;margin-bottom:4px"><span class="lv ${e.lv}">${LVTXT[e.lv]}</span><span class="stt ${e.st}">${STTXT[e.st]}</span>${SIMB(e)}</div><h2>${esc(T[0])}</h2><div style="color:var(--mut);font-size:13px">${s[2]} ${esc(s[1])} · ${s[3]}</div></div><button class="x" onclick="closeDrawer()" aria-label="ปิด">✕</button></div>
    <div class="bigv"><div><div class="v mono" style="color:var(--${e.lv})">${e.v}</div><div style="color:var(--mut);font-size:12px">${T[3]} · ${tfmt(e.ts)}</div></div><canvas id="evSp"></canvas></div>
-   <div style="font-size:15px;line-height:1.5">${esc(e.msg)}</div>
+   <div style="font-size:15px;line-height:1.5">${esc(e.msg)}</div>${e.sim?'<div style="margin-top:8px;padding:8px 12px;border-radius:10px;background:#facc1522;border:1px solid #facc15;font-size:13px">🧪 เหตุการณ์นี้เป็น<b>ข้อมูลสมมติ</b>เพื่อสาธิตการทำงาน ไม่ได้เกิดขึ้นจริง</div>':''}
    <div class="blk"><h4>✅ ขั้นตอนรับมือ (ติ๊กเมื่อทำแล้ว)</h4><div class="sop">${T[9].map((x,i)=>`<label class="${e.sop[i]?'dn':''}"><input type="checkbox" data-i="${i}" ${e.sop[i]?'checked':''}> ${esc(x)}</label>`).join('')}</div></div>
    <div class="acts">${e.st==='new'?`<button class="btn w" id="aAck">👋 รับทราบ</button>`:''}${e.st!=='done'&&e.st!=='prog'?`<button class="btn p" id="aProg">🚀 เริ่มดำเนินการ</button>`:''}${e.st!=='done'?`<button class="btn g" id="aDone">✔️ ปิดเหตุ</button>`:`<button class="btn o" id="aRe">↩️ เปิดเหตุใหม่</button>`}
      <a class="btn o" href="https://www.google.com/maps?q=${s[4]},${s[5]}" target="_blank" rel="noopener">🧭 นำทาง</a></div>
@@ -565,7 +568,7 @@ function clsPick(){const seen=new Set();clsList=EV.filter(e=>{if(seen.has(e.t))r
 function renderCls(){if(!clsList.length)clsPick();const e=clsList[clsI%clsList.length],T=TY[e.t],s=siteOf(e.site),M=MODES[T[1]];
   $('#story').style.borderTop=`4px solid ${M.hex}`;
   $('#story').innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span class="lv ${e.lv}" style="font-size:13px">${LVTXT[e.lv]}</span><span class="stt">${M.ic} ${M.n} · ${M.th}</span><span style="margin-left:auto;color:var(--mut);font-size:13px">${clsI%clsList.length+1} / ${clsList.length}</span></div>
-   <div style="display:flex;gap:18px;align-items:center;margin-top:16px"><div class="bigi">${T[2]}</div><div><h2>${esc(T[0])}</h2><div class="pl">${s[2]} ${esc(s[1])} · ${s[3]}</div></div></div>
+   <div style="display:flex;gap:18px;align-items:center;margin-top:16px"><div class="bigi">${T[2]}</div><div><h2>${esc(T[0])}</h2><div class="pl">${SIMB(e)}${s[2]} ${esc(s[1])} · ${s[3]}</div></div></div>
    <div class="qs"><div class="q"><span>🤔</span><div><b>เกิดอะไรขึ้น?</b><br>${esc(T[10])}</div></div>
    <div class="q"><span>📡</span><div><b>เซ็นเซอร์วัดได้</b> <span class="mono">${e.v} ${T[3]}</span> — ${esc(e.msg)}</div></div>
    <div class="q"><span>🙋</span><div><b>เราควรทำอย่างไร?</b><br>${esc(T[11])}</div></div></div>
