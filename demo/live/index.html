@@ -21,7 +21,7 @@ a{color:var(--cy)}
 #stars{position:fixed;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen}
 .glass{background:var(--pn);border:1px solid var(--ln);border-radius:18px;box-shadow:0 24px 60px -24px rgba(0,0,0,.85)}
 /* top */
-.top{position:fixed;top:12px;left:12px;right:12px;z-index:6;display:flex;gap:8px;align-items:center;padding:8px 10px 8px 10px}
+.top{position:fixed;top:36px;left:12px;right:12px;z-index:6;display:flex;gap:8px;align-items:center;padding:8px 10px 8px 10px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand img{height:50px;width:auto;flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
 .brand b{font-size:18px;display:block;white-space:nowrap;letter-spacing:.2px}.brand small{color:var(--mu);font-size:13px;display:block;white-space:nowrap}
@@ -35,12 +35,13 @@ a{color:var(--cy)}
 .ib.home{background:linear-gradient(135deg,#0f766e,#1d4ed8);border-color:transparent;font-weight:600}
 .ib.ev{background:rgba(251,191,36,.16);border-color:rgba(251,191,36,.55);color:#fde68a;font-weight:600}
 /* warn */
-.warn{position:fixed;top:82px;left:50%;transform:translateX(-50%);z-index:5;width:max-content;max-width:min(1000px,calc(100% - 24px));display:flex;gap:10px;align-items:center;padding:9px 16px;border-radius:14px;background:#fbbf24;color:#1a1200;font-size:14px;line-height:1.5;font-weight:500;box-shadow:0 10px 30px -12px rgba(251,191,36,.55)}
+.warn{position:fixed;top:0;left:0;right:0;z-index:8;display:flex;gap:8px;align-items:center;justify-content:center;padding:5px 14px;background:linear-gradient(90deg,#f59e0b,#fbbf24,#f59e0b);color:#1a1200;font-size:13px;line-height:1.35;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px -6px rgba(251,191,36,.6)}
+.warn #warnT{overflow:hidden;text-overflow:ellipsis}
 .warn b{font-weight:700}.warn button{background:none;border:none;font-size:15px;color:#1a1200;margin-left:4px}
 .warn.mini{cursor:pointer}
 /* panels */
-.left{position:fixed;left:12px;top:136px;bottom:150px;width:316px;z-index:4;display:flex;flex-direction:column;overflow:hidden}
-.right{position:fixed;right:12px;top:136px;bottom:16px;width:400px;z-index:4;display:flex;flex-direction:column;overflow:hidden}
+.left{position:fixed;left:12px;top:110px;bottom:16px;width:316px;z-index:4;display:flex;flex-direction:column;overflow:hidden}
+.right{position:fixed;right:12px;top:110px;bottom:16px;width:400px;z-index:4;display:flex;flex-direction:column;overflow:hidden}
 .ph{padding:14px 16px 8px;display:flex;align-items:center;gap:8px}.ph b{font-size:16px}.ph small{color:var(--mu);font-size:12.5px;margin-left:auto}
 .scroll{overflow:auto;padding:0 12px 14px;flex:1;scrollbar-width:thin;scrollbar-color:#3b4366 transparent}
 .grp{font-size:12px;letter-spacing:.06em;color:var(--mu);margin:14px 6px 7px;font-weight:600}
@@ -90,15 +91,20 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
 .tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;background:rgba(251,191,36,.18);color:#fde68a;margin-left:6px;font-family:Sarabun}
 /* evidence stamp + timeline */
 .dock{position:fixed;left:340px;right:424px;bottom:16px;z-index:4;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
-.dock>*{pointer-events:auto;width:100%;max-width:720px}
+.dock>*{pointer-events:auto;width:100%;max-width:640px}
+.tl.hide{display:none}.tlpill{display:none;align-self:flex-start;width:auto!important;border:1px solid var(--ln);background:rgba(8,12,28,.85);color:var(--tx);border-radius:999px;padding:8px 14px;font:600 13.5px Prompt,sans-serif;cursor:pointer;box-shadow:0 10px 24px -12px #000}.tlpill:hover{border-color:#5eead4}.tl.hide~.tlpill{display:inline-flex;gap:6px;align-items:center}
+.tl .x{background:none;border:none;color:var(--mu);font-size:16px;padding:4px 6px}
+body.clean .left,body.clean .right,body.clean .astro{display:none}body.clean .dock{left:12px;right:12px}body.clean .maplibregl-ctrl-bottom-right{right:0}
+.ib.view.on{background:rgba(94,234,212,.2);border-color:#5eead4}
 .stamp{padding:11px 14px}
 .stamp .hd{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:#fde68a;font-family:Prompt}
 .stamp .hd small{margin-left:auto;font-weight:500;color:var(--mu);font-family:Sarabun;font-size:12.5px}
-.stamp ul{list-style:none;margin-top:6px;display:grid;gap:3px}
+.stamp ul{list-style:none;margin-top:6px;display:grid;gap:3px;max-height:72px;overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:#5eead4 transparent;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}.stamp ul:hover{-webkit-mask-image:none;mask-image:none}
+.stamp{background:rgba(8,12,28,.78)}.stamp .more{font-size:11.5px;color:var(--mu);margin-top:2px;text-align:right}
 .stamp li{font-size:13.5px;line-height:1.45;color:#eef1ff;display:flex;gap:7px}
 .stamp li em{font-style:normal;color:var(--mu)}
 .stamp li .tm{font-family:'JetBrains Mono',monospace;color:#a7f3d0;font-size:12.5px;white-space:nowrap}
-.stamp.min ul{display:none}
+.stamp.min ul,.stamp.min .more{display:none}
 .tl{padding:10px 14px;display:flex;gap:12px;align-items:center}
 .tl .pb{width:46px;height:46px;border-radius:50%;border:none;background:linear-gradient(135deg,#0f766e,#4338ca);font-size:18px;flex:none}
 .tl input{flex:1;accent-color:var(--cy);height:28px;min-width:60px}
@@ -133,21 +139,25 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
 .mod table{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}.mod td,.mod th{border-bottom:1px solid var(--ln);padding:6px 4px;text-align:left;vertical-align:top}.mod th{color:var(--mu);font-weight:500}
 .mono{font-family:'JetBrains Mono',monospace;font-size:12.5px;word-break:break-all}
 .btnp{border:none;border-radius:14px;padding:13px 18px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#0f766e,#4338ca);width:100%;margin-top:14px;font-family:Prompt}
-.toast{position:fixed;left:50%;top:136px;transform:translateX(-50%);z-index:40;background:#0b1024;border:1px solid var(--ln);padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}.toast.on{opacity:1}
+.toast{position:fixed;left:50%;top:112px;transform:translateX(-50%);z-index:40;background:#0b1024;border:1px solid var(--ln);padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}.toast.on{opacity:1}
 .mob{display:none}
 @media(max-width:1250px){.left{width:280px}.right{width:360px}.dock{left:304px;right:384px}.astro{right:390px;width:120px}.maplibregl-ctrl-bottom-right{right:380px}.hideL{display:none}}
 @media(max-width:980px){.astro{display:none}.clk{display:none}}
 @media(max-width:860px){
   html,body{font-size:14px}
-  .top{top:8px;left:8px;right:8px;padding:6px 8px;gap:6px}.brand small,.hideM,.live span{display:none}.brand b{font-size:15px}.brand img{height:40px}.ib{height:38px;min-width:38px;padding:0 9px}.live{padding:5px 7px}
-  .warn{top:62px;left:8px;right:8px;transform:none;width:auto;max-width:none;font-size:12.5px;padding:7px 11px}
+  .top{top:30px;left:8px;right:8px;padding:6px 8px;gap:6px}.brand small,.hideM,.live span{display:none}.brand b{font-size:15px}.brand img{height:40px}.ib{height:38px;min-width:38px;padding:0 9px}.live{padding:5px 7px}
+  .warn{font-size:11.5px;padding:4px 10px;justify-content:flex-start}
   .left{display:none}
-  .right{left:8px;right:8px;width:auto;top:auto;bottom:8px;height:42vh;border-radius:20px 20px 16px 16px}
+  .card p,.card li{font-size:13.5px}.kp b{font-size:20px}
+  .right{left:8px;right:8px;width:auto;top:auto;bottom:8px;height:46vh;border-radius:20px 20px 16px 16px}
   .right.min{height:58px}
-  .dock{left:8px;right:8px;bottom:calc(42vh + 16px)}body.smin .dock{bottom:74px}
+  .dock{left:8px;right:8px;bottom:calc(46vh + 16px)}body.smin .dock{bottom:74px}
   .stamp{padding:8px 11px}.stamp li{font-size:12.5px}.tl{padding:6px 10px}.tl .pb{width:38px;height:38px}.tl .tt{min-width:110px}
   .mob{display:inline-block}
-  .maplibregl-ctrl-bottom-right{right:0;bottom:calc(42vh + 150px)}
+  .brand b,#bWorld,#bSay,.clk,.live{display:none!important}.brand img{height:36px}.top{justify-content:space-between}.top .sp{display:none}
+  .maplibregl-ctrl-bottom-right{right:0;bottom:calc(46vh + 130px)}
+  body.smin .maplibregl-ctrl-bottom-right{bottom:150px}
+  .tlpill{font-size:12.5px;padding:7px 12px}
 }
 </style>
 </head>
@@ -164,6 +174,7 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
   <button class="ib" id="bTH" title="ซูมไปประเทศไทย">🇹🇭<span class="hideM hideL">ไทย</span></button>
   <button class="ib" id="bWorld" title="ดูทั้งโลก">🌏<span class="hideM hideL">ทั้งโลก</span></button>
   <button class="ib ev" id="bSnap" title="บันทึกหลักฐานตอนนี้">📸<span class="hideM">บันทึกหลักฐาน</span></button>
+  <button class="ib view" id="bView" title="ซ่อนแผงข้อมูล ดูภาพโลกเต็มจอ">🖼️<span class="hideM hideL">ดูภาพเต็ม</span></button>
   <button class="ib" id="bSay" title="อ่านสรุปออกเสียง">🔊</button>
   <button class="ib hideM" id="bRef" title="โหลดข้อมูลใหม่">🔄</button>
 </div>
@@ -231,12 +242,14 @@ table.w tr[data-i]{cursor:pointer}table.w tr[data-i]:hover td{background:rgba(25
 </aside>
 
 <div class="dock">
-  <div class="stamp glass" id="stamp" role="status" aria-live="polite"><div class="hd">🛰️ ภาพบนจอนี้มาจาก<small id="stampT">กำลังตรวจสอบเวลาภาพ…</small><button class="ib mob" id="stampX" style="height:26px;min-width:26px;padding:0 6px;font-size:12px">▾</button></div><ul id="stampL"></ul></div>
+  <div class="stamp glass" id="stamp" role="status" aria-live="polite"><div class="hd">🛰️ ภาพบนจอนี้มาจาก<small id="stampT">กำลังตรวจสอบเวลาภาพ…</small><button class="ib mob" id="stampX" style="height:26px;min-width:26px;padding:0 6px;font-size:12px">▾</button></div><ul id="stampL"></ul><div class="more">เลื่อนในกรอบเพื่อดูเพิ่ม ▾</div></div>
   <div class="tl glass" id="tl">
     <button class="pb" id="play" aria-label="เล่นภาพเมฆย้อนหลัง 2 ชั่วโมง">▶</button>
     <input type="range" id="tsl" min="0" max="12" value="12" aria-label="เลือกเวลาภาพ">
     <div class="tt"><b id="tT">ภาพล่าสุด</b><small id="tS">เลื่อนเพื่อดูย้อนหลัง 2 ชม.</small></div>
+    <button class="x" id="tlX" title="ซ่อนแถบเล่นภาพ" aria-label="ซ่อนแถบเล่นภาพ">✕</button>
   </div>
+  <button class="tlpill" id="tlShow" title="เปิดแถบเล่นภาพย้อนหลัง">▶ ดูภาพเมฆย้อนหลัง 2 ชม.</button>
 </div>
 
 <div class="mod" id="intro" role="dialog" aria-modal="true" aria-labelledby="inT"><div class="box glass">
@@ -525,7 +538,7 @@ $('#tsl').oninput=()=>{const v=+$('#tsl').value;anim=v!==NF-1;if(playT&&!anim){c
 
 /* ---------- ป้ายหลักฐานบนจอ ---------- */
 function stampItems(){const L=[];const t=FR[curF]&&(anim||TIME.cloud)?FR[curF]:null;
-  L.push(['🌍','พื้นผิวโลก',{blue:'NASA Blue Marble (ภาพผสมปี 2004 — ไม่ใช่ภาพปัจจุบัน)',night:'NASA Black Marble (ภาพผสมปี 2016)',map:'แผนที่ OpenStreetMap'}[BASE],'']);
+
   if(ON.cloud)L.push(['☁️','เมฆ','Himawari-9 (JMA) · กล้อง AHI ช่อง 13 อินฟราเรด',t?fFull(t)+' · '+fUTC(t):'ล่าสุดที่ NASA มี (ตรวจเวลาไม่ได้)']);
   if(ON.radar&&RV){const rt=RV.past[RI>=0?RI:RV.past.length-1].time*1000;L.push(['🌧️','เรดาร์ฝน','สถานีเรดาร์ภาคพื้นดิน รวบรวมโดย RainViewer',fFull(rt)+' · '+fUTC(rt)])}
   if(ON.imerg)L.push(['💧','ฝนดาวเทียม','GPM IMERG (NASA/JAXA)',TIME.imerg?fFull(TIME.imerg)+' · '+fUTC(TIME.imerg):'ล่าสุดที่ NASA มี']);
@@ -534,6 +547,7 @@ function stampItems(){const L=[];const t=FR[curF]&&(anim||TIME.cloud)?FR[curF]:n
   if(ON.eq&&EQ)L.push(['🔴','แผ่นดินไหว','USGS (เครื่องวัดภาคพื้นดิน)','ข้อมูลออกเมื่อ '+fFull(EQ.metadata.generated)]);
   if(ON.st&&STM)L.push(['🌀','พายุ','NASA EONET / JTWC',STM.length?'ตำแหน่งล่าสุด '+fFull(Math.max(...STM.map(s=>s.t))):'ไม่มีพายุ']);
   if(ON.wx&&WX)L.push(['🌡️',ON.pm?'อากาศ/PM2.5':'อากาศ',ON.pm?'แบบจำลอง Open-Meteo + Copernicus CAMS':'แบบจำลอง Open-Meteo','ค่าประมาณ ณ '+fFull(wxTime())]);
+  L.push(['🌍','พื้นผิวโลก',{blue:'NASA Blue Marble (ภาพผสมปี 2004 — ไม่ใช่ภาพปัจจุบัน)',night:'NASA Black Marble (ภาพผสมปี 2016)',map:'แผนที่ OpenStreetMap'}[BASE],'']);
   return L}
 function renderStamp(){if(!READY)return;const L=stampItems();$('#stampL').innerHTML=L.map(x=>`<li><span>${x[0]}</span><span><b style="font-weight:600">${x[1]}:</b> ${esc(x[2])}${x[3]?` · <span class="tm">${esc(x[3])}</span>`:''}</span></li>`).join('');
   $('#stampT').textContent=lastLoad?'ตรวจสอบล่าสุด '+fT(lastLoad)+' น.':'กำลังตรวจสอบเวลาภาพ…'}
@@ -722,6 +736,12 @@ $('#bTH').onclick=()=>{stopSpin();map.flyTo({center:[100.8,13.2],zoom:mq.matches
 $('#bWorld').onclick=()=>{stopSpin();map.flyTo({center:[105,12],zoom:1.6,speed:.9})};
 setTimeout(()=>{if(spinning){spinning=false;map.flyTo({center:[100.8,13.2],zoom:mq.matches?4.4:4.8,speed:.5})}},9000);
 
+
+/* ---------- แถบเล่นภาพ / ดูภาพเต็ม ---------- */
+function tlVis(v){$('#tl').classList.toggle('hide',!v);LS.set('tl',v);if(!v&&playT){clearInterval(playT);playT=null;$('#play').textContent='▶'}}
+$('#tlX').onclick=()=>tlVis(false);$('#tlShow').onclick=()=>tlVis(true);tlVis(LS.get('tl',false));
+$('#bView').onclick=()=>{const on=!document.body.classList.contains('clean');document.body.classList.toggle('clean',on);$('#bView').classList.toggle('on',on);toast(on?'🖼️ ซ่อนแผงข้อมูลแล้ว กดอีกครั้งเพื่อแสดง':'แสดงแผงข้อมูลแล้ว')};
+if(mq.matches)setTimeout(()=>mobMin(true),400);
 if(!LS.get('ack',false))$('#intro').classList.add('on');
 $('#inOk').onclick=()=>{LS.set('ack',true);$('#intro').classList.remove('on')};
 renderSrc();renderLog();
