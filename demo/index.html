@@ -11,6 +11,14 @@
 <style>
 /* ---------- HERO ---------- */
 .hero{position:relative;background:radial-gradient(900px 600px at 80% 10%,rgba(59,130,246,.35),transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(34,211,238,.12),transparent 60%),#0a1745;color:#fff;overflow:hidden}
+.astro-l{position:absolute;z-index:5;left:41%;top:6px;width:132px;text-decoration:none;animation:astF 7s ease-in-out infinite;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}
+.astro-l img{width:100%;display:block}
+.astro-l .bub{position:absolute;left:84%;top:-4px;background:#fff;color:#0b1a3a;font:600 13px/1.35 Prompt,sans-serif;padding:8px 12px;border-radius:14px 14px 14px 4px;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.astro-l .bub small{display:block;font-weight:500;color:#475569;font-size:11.5px}
+.astro-l:hover{animation-play-state:paused}.astro-l:hover .bub{background:#fde68a}
+@keyframes astF{0%,100%{transform:translate(0,0) rotate(-5deg)}50%{transform:translate(-10px,-12px) rotate(4deg)}}
+@media(max-width:1100px){.astro-l{left:auto;right:14px;top:24px;width:96px}.astro-l .bub{left:auto;right:88%;border-radius:14px 14px 4px 14px}}
+@media(max-width:560px){.astro-l{width:70px;top:56px;right:10px}.astro-l .bub{display:none}}
 .hero:before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(148,180,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(148,180,255,.07) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(180deg,#000 60%,transparent)}
 .hero .wrap{position:relative;display:grid;grid-template-columns:1fr 1.12fr;gap:36px;align-items:center;padding-top:34px;padding-bottom:64px}
 .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.25);border-radius:30px;padding:6px 14px;font-size:13px;color:#dbe6ff;background:rgba(255,255,255,.04)}
@@ -175,6 +183,7 @@ const LINKS={cc:'command/index.html',lab:'lab/index.html',plook:'plookpun/index.
 
 <!-- HERO -->
 <section class="hero" id="top">
+  <a class="astro-l" data-l="live" href="#" aria-label="ดูสถานการณ์จริงจากดาวเทียม: CoreDash Live Earth"><span class="bub">🛰️ ดูสถานการณ์จริงจากดาวเทียม<small>Live Earth · ฟรี · ระบุที่มาทุกภาพ</small></span><img src="live/assets/astronaut.svg" alt="นักบินอวกาศ CoreDash เฝ้าดูโลก"></a>
   <div class="wrap">
     <div>
       <span class="pill"><i></i>Smart Facility · IIoT · SCADA-lite</span>
