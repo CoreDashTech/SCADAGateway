@@ -15,6 +15,10 @@ function hav(a,b,c,d){const R=6371,r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.c
 function nearTH(lat,lon){let b=null;for(const c of CITY){const d=hav(lat,lon,c[1],c[2]);if(!b||d<b.d)b={d,c:c[0]}}return b}
 
 async function get(url, kind = 'json', ms = 25000) {
+  let err; for (let i = 0; i < 3; i++) { try { return await get1(url, kind, ms); } catch (e) { err = e; if (String(e.message).startsWith('HTTP 4')) break; await new Promise(r => setTimeout(r, 2000 * (i + 1))); } }
+  throw err;
+}
+async function get1(url, kind, ms) {
   const c = new AbortController(); const t = setTimeout(() => c.abort(), ms);
   try { const r = await fetch(url, { headers: UA, signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status);
         return kind === 'json' ? await r.json() : Buffer.from(await r.arrayBuffer()); }
@@ -22,9 +26,9 @@ async function get(url, kind = 'json', ms = 25000) {
 }
 const gibs = (L, tms, ext, time) => `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${L}/default/${time}/${tms}/0/0/0.${ext}`;
 /* หาเวลาภาพล่าสุดที่มีจริง: ถามย้อนทีละช่วงเวลา ภาพที่มีเนื้อหาจริงต้องใหญ่กว่า 1,500 ไบต์ */
-async function findLatest(L, tms, ext, start, step, tries) {
+async function findLatest(L, tms, ext, start, step, tries, minBytes = 1500) {
   for (let i = 0; i < tries; i++) { const t = start - i * step;
-    try { const b = await get(gibs(L, tms, ext, iso(t)), 'buf', 15000); if (b.length > 1500) return { t, bytes: b.length, tile_sha256: sha(b) }; } catch (e) {} }
+    try { const b = await get1(gibs(L, tms, ext, iso(t)), 'buf', 15000); if (b.length > minBytes) return { t, bytes: b.length, tile_sha256: sha(b) }; } catch (e) {} }
   return null;
 }
 async function part(name, fn) { try { return await fn(); } catch (e) { return { error: String(e.message || e) }; } }
@@ -35,7 +39,7 @@ const cloud = await part('cloud', () => findLatest('Himawari_AHI_Band13_Clean_In
 sources.push({ key: 'cloud', provider: 'NASA GIBS', satellite: 'Himawari-9 (JMA, geostationary 140.7E)', instrument: 'AHI Band 13 clean IR 10.4um',
   data_time_utc: cloud && cloud.t ? iso(cloud.t) : null, url: cloud && cloud.t ? gibs('Himawari_AHI_Band13_Clean_Infrared', 'GoogleMapsCompatible_Level6', 'png', iso(cloud.t)) : null,
   tile_sha256: cloud && cloud.tile_sha256 || null, status: cloud && cloud.t ? 'ok' : (cloud && cloud.error) || 'not found' });
-const imerg = await part('imerg', () => findLatest('IMERG_Precipitation_Rate', 'GoogleMapsCompatible_Level6', 'png', Math.floor((now - 3 * 3600000) / 1800000) * 1800000, 1800000, 16));
+const imerg = await part('imerg', () => findLatest('IMERG_Precipitation_Rate', 'GoogleMapsCompatible_Level6', 'png', Math.floor((now - 3 * 3600000) / 1800000) * 1800000, 1800000, 24, 700));
 sources.push({ key: 'imerg', provider: 'NASA GIBS', satellite: 'GPM constellation (NASA/JAXA)', instrument: 'IMERG precipitation rate',
   data_time_utc: imerg && imerg.t ? iso(imerg.t) : null, tile_sha256: imerg && imerg.tile_sha256 || null, status: imerg && imerg.t ? 'ok' : (imerg && imerg.error) || 'not found' });
 const rv = await part('radar', () => get('https://api.rainviewer.com/public/weather-maps.json'));
