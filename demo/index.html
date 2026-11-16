@@ -11,14 +11,6 @@
 <style>
 /* ---------- HERO ---------- */
 .hero{position:relative;background:radial-gradient(900px 600px at 80% 10%,rgba(59,130,246,.35),transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(34,211,238,.12),transparent 60%),#0a1745;color:#fff;overflow:hidden}
-.astro-l{position:absolute;z-index:5;left:41%;top:6px;width:132px;text-decoration:none;animation:astF 7s ease-in-out infinite;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}
-.astro-l img{width:100%;display:block}
-.astro-l .bub{position:absolute;left:84%;top:-4px;background:#fff;color:#0b1a3a;font:600 13px/1.35 Prompt,sans-serif;padding:8px 12px;border-radius:14px 14px 14px 4px;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.astro-l .bub small{display:block;font-weight:500;color:#475569;font-size:11.5px}
-.astro-l:hover{animation-play-state:paused}.astro-l:hover .bub{background:#fde68a}
-@keyframes astF{0%,100%{transform:translate(0,0) rotate(-5deg)}50%{transform:translate(-10px,-12px) rotate(4deg)}}
-@media(max-width:1100px){.astro-l{left:auto;right:14px;top:24px;width:96px}.astro-l .bub{left:auto;right:88%;border-radius:14px 14px 4px 14px}}
-@media(max-width:560px){.astro-l{width:70px;top:56px;right:10px}.astro-l .bub{display:none}}
 .hero:before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(148,180,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(148,180,255,.07) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(180deg,#000 60%,transparent)}
 .hero .wrap{position:relative;display:grid;grid-template-columns:1fr 1.12fr;gap:36px;align-items:center;padding-top:34px;padding-bottom:64px}
 .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.25);border-radius:30px;padding:6px 14px;font-size:13px;color:#dbe6ff;background:rgba(255,255,255,.04)}
@@ -159,6 +151,30 @@
 @media (max-width:1100px){.hero .wrap{grid-template-columns:1fr;padding-top:24px}.demos{grid-template-columns:1fr 1fr}.dc.big{grid-row:auto;grid-column:span 2;min-height:320px}.sol{grid-template-columns:1fr 1fr}.flowline{grid-template-columns:1fr 1fr 1fr}.flowline:before{display:none}.soc{grid-template-columns:1fr}.soc .ill{min-height:340px}}
 @media (max-width:640px){.mini{display:none}.shead .sbox{display:none}.cursor{display:none}.tourbar{display:none}.kpis{grid-template-columns:1fr 1fr}.stats .wrap{grid-template-columns:1fr 1fr}.demos,.sol{grid-template-columns:1fr}.dc.big{grid-column:auto}.flowline{grid-template-columns:1fr 1fr}.soc .tx{padding:28px}.ctab{padding:30px}.callout{width:190px}.sfoot .leg{display:none}.shead .sbox small{display:none}.dn button span{display:none}}
 </style>
+<style id="cd-astro-css">
+.cd-astro{position:absolute;z-index:20;width:138px;text-decoration:none;cursor:pointer;outline:none;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cd-astro .fl{display:block;animation:cdAstF 7s ease-in-out infinite}
+.cd-astro img{width:100%;display:block;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55));transition:filter .35s,transform .35s cubic-bezier(.2,.8,.2,1)}
+.cd-astro .halo{position:absolute;left:50%;top:46%;width:150%;height:150%;transform:translate(-50%,-50%) scale(.6);border-radius:50%;background:radial-gradient(circle,rgba(94,234,212,.38) 0%,rgba(59,130,246,.18) 40%,rgba(59,130,246,0) 70%);opacity:0;transition:.4s;pointer-events:none}
+.cd-astro .ring{position:absolute;left:50%;top:46%;width:118%;height:118%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(94,234,212,.75);opacity:0;pointer-events:none}
+.cd-astro .bub{position:absolute;left:88%;top:-6px;background:#fff;color:#0b1a3a;font:600 14px/1.35 'Sarabun','Prompt',sans-serif;padding:9px 14px;border-radius:16px 16px 16px 4px;white-space:nowrap;box-shadow:0 12px 28px rgba(0,0,0,.4);transform-origin:0 100%;transition:.3s cubic-bezier(.2,.8,.2,1)}
+.cd-astro .bub small{display:block;font-weight:500;color:#475569;font-size:12px}
+.cd-astro .bub .go{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,#0f766e,#2563eb);color:#fff;font-size:12.5px;font-weight:700;max-height:0;opacity:0;overflow:hidden;transition:.3s}
+.cd-astro.near img{filter:drop-shadow(0 0 18px rgba(94,234,212,.75)) drop-shadow(0 14px 22px rgba(0,0,0,.5))}
+.cd-astro.near .halo{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.cd-astro.near .bub .go,.cd-astro:hover .bub .go,.cd-astro:focus-visible .bub .go{max-height:30px;opacity:1}
+.cd-astro:hover img,.cd-astro:focus-visible img{transform:scale(1.14) rotate(-4deg);filter:drop-shadow(0 0 26px rgba(94,234,212,.95)) drop-shadow(0 16px 26px rgba(0,0,0,.5))}
+.cd-astro:hover .halo,.cd-astro:focus-visible .halo{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+.cd-astro:hover .ring,.cd-astro:focus-visible .ring{animation:cdAstR 1.4s ease-out infinite}
+.cd-astro:hover .bub,.cd-astro:focus-visible .bub{background:#fde68a;transform:scale(1.05)}
+.cd-astro:active img{transform:scale(1.04)}
+.cd-astro.quiet .bub{opacity:0;transform:scale(.85);pointer-events:none}.cd-astro.quiet.near .bub,.cd-astro.quiet:hover .bub,.cd-astro.quiet:focus-visible .bub{opacity:1;transform:scale(1);pointer-events:auto}
+@keyframes cdAstF{0%,100%{transform:translate(0,0) rotate(-5deg)}50%{transform:translate(-10px,-12px) rotate(4deg)}}
+@keyframes cdAstR{0%{opacity:.9;transform:translate(-50%,-50%) scale(.85)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+@media(max-width:1100px){.cd-astro{width:104px}.cd-astro .bub{left:auto;right:92%;border-radius:16px 16px 4px 16px;transform-origin:100% 100%}}
+@media(max-width:1100px){.cd-astro.quiet{left:auto!important;right:16px;top:20px!important;width:92px!important}.cd-astro.quiet .bub{opacity:1;transform:none}}@media(max-width:600px){.cd-astro,.cd-astro.quiet{width:70px!important;top:52px!important;right:10px!important;left:auto!important}.cd-astro .bub,.cd-astro.quiet .bub{display:none}}
+@media(prefers-reduced-motion:reduce){.cd-astro .fl{animation:none}}
+</style>
 </head>
 <body>
 <script>
@@ -183,7 +199,7 @@ const LINKS={cc:'command/index.html',lab:'lab/index.html',plook:'plookpun/index.
 
 <!-- HERO -->
 <section class="hero" id="top">
-  <a class="astro-l" data-l="live" href="#" aria-label="ดูสถานการณ์จริงจากดาวเทียม: CoreDash Live Earth"><span class="bub">🛰️ ดูสถานการณ์จริงจากดาวเทียม<small>Live Earth · ฟรี · ระบุที่มาทุกภาพ</small></span><img src="live/assets/astronaut.svg" alt="นักบินอวกาศ CoreDash เฝ้าดูโลก"></a>
+<a class="cd-astro quiet" style="left:40%;top:16px;width:120px" href="live/index.html" aria-label="นักบินอวกาศ CoreDash: คลิกเพื่อดูสถานการณ์จริงจากดาวเทียม" title="นักบินอวกาศ CoreDash: คลิกเพื่อดูสถานการณ์จริงจากดาวเทียม"><span class="fl"><span class="halo"></span><span class="ring"></span><span class="bub">🛰️ ดูสถานการณ์จริงจากดาวเทียม<small>Live Earth · เมฆ ฝน แผ่นดินไหว พายุ · ฟรี</small><span class="go">คลิกเพื่อเข้าชม →</span></span><img src="live/assets/astronaut.svg" alt="นักบินอวกาศ CoreDash: คลิกเพื่อดูสถานการณ์จริงจากดาวเทียม"></span></a>
   <div class="wrap">
     <div>
       <span class="pill"><i></i>Smart Facility · IIoT · SCADA-lite</span>
@@ -416,5 +432,8 @@ if(innerWidth>=640)setTimeout(()=>show(0),900);else paused=true;
 /* ---------- flow highlight ---------- */
 const fsx=[...document.querySelectorAll('#flowline .fs')];let fk=0;setInterval(()=>{fsx.forEach((f,i)=>f.classList.toggle('lit',i===fk));fk=(fk+1)%fsx.length},900);
 </script>
+<script id="cd-astro-js">(function(){var a=document.querySelector('.cd-astro');if(!a)return;var f=a.querySelector('.fl'),raf=0,mx=0,my=0;
+document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;if(!raf)raf=requestAnimationFrame(function(){raf=0;var r=a.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=mx-cx,dy=my-cy,d=Math.sqrt(dx*dx+dy*dy);
+if(d<260){a.classList.add('near');var k=Math.max(0,1-d/260)*14;a.style.transform='translate('+(dx/d*k||0)+'px,'+(dy/d*k||0)+'px)'}else{a.classList.remove('near');a.style.transform=''}})},{passive:true});})();</script>
 </body>
 </html>
