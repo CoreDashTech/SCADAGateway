@@ -221,8 +221,12 @@ body.clean .left,body.clean .right,body.clean .astro{display:none}body.clean .do
     <div class="pane" id="p-wx"><div class="flt" id="wxF"><button data-f="now" class="on">🌧️ ตอนนี้</button><button data-f="pm">😷 PM2.5</button><button data-f="tmr">📅 พรุ่งนี้</button></div><div id="wxBox"></div><p class="lgd" style="margin-top:8px">ค่าจากแบบจำลองพยากรณ์อากาศ (Open-Meteo / Copernicus CAMS) ไม่ใช่เครื่องวัดในพื้นที่ · มาตรฐาน PM2.5 ของไทย: เฉลี่ย 24 ชม. ไม่เกิน 37.5 µg/m³</p></div>
     <div class="pane" id="p-fc">
       <div class="card"><h4>🔮 ทำนายสภาพอากาศ ณ จุดและช่วงเวลาที่เลือก</h4>
-        <label class="lgd" style="margin:6px 0 4px;display:block">สถานที่</label>
-        <select id="fcPlace" class="fci"><option value="13.8197,100.5146,มจพ. (มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ) บางซื่อ">มจพ. (มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ) บางซื่อ</option><option value="13.7563,100.5018,กรุงเทพฯ (ใจกลางเมือง)">กรุงเทพฯ (ใจกลางเมือง)</option><option value="18.7883,98.9853,เชียงใหม่">เชียงใหม่</option><option value="16.4419,102.8360,ขอนแก่น">ขอนแก่น</option><option value="7.8804,98.3923,ภูเก็ต">ภูเก็ต</option><option value="me">📍 ตำแหน่งของฉัน</option><option value="custom">✏️ กำหนดพิกัดเอง</option></select>
+        <label class="lgd" style="margin:6px 0 4px;display:block">🔎 พิมพ์ชื่อสถานที่ หรือพิกัด</label>
+        <div style="display:flex;gap:6px"><input id="fcQ" class="fci" placeholder="เช่น มจพ. ปราจีนบุรี, เซ็นทรัลเวิลด์, 13.82,100.51" autocomplete="off"><button class="btn p" id="fcFind" style="flex:none">ค้นหา</button></div>
+        <div id="fcRes" style="margin-top:6px"></div>
+        <button class="btn" id="fcPick" style="width:100%;margin-top:6px">🗺️ หรือแตะบนแผนที่เพื่อเลือกจุด</button>
+        <label class="lgd" style="margin:10px 0 4px;display:block">สถานที่ที่เลือก</label>
+        <select id="fcPlace" class="fci"><option value="13.8197,100.5146,มจพ. (มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ) บางซื่อ">มจพ. (มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ) บางซื่อ</option><option value="13.7563,100.5018,กรุงเทพฯ (ใจกลางเมือง)">กรุงเทพฯ (ใจกลางเมือง)</option><option value="18.7883,98.9853,เชียงใหม่">เชียงใหม่</option><option value="16.4419,102.8360,ขอนแก่น">ขอนแก่น</option><option value="7.8804,98.3923,ภูเก็ต">ภูเก็ต</option><option value="sel" id="fcSelOpt" hidden>–</option><option value="me">📍 ตำแหน่งของฉัน</option><option value="custom">✏️ กำหนดพิกัดเอง</option></select>
         <div id="fcCustom" style="display:none;gap:6px;margin-top:6px"><input id="fcLat" class="fci" placeholder="ละติจูด เช่น 13.8197"><input id="fcLon" class="fci" placeholder="ลองจิจูด เช่น 100.5146"></div>
         <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;margin-top:8px"><div><label class="lgd" style="margin:0 0 4px;display:block">วันที่</label><input type="date" id="fcDate" class="fci" value="2026-11-28"></div><div><label class="lgd" style="margin:0 0 4px;display:block">ตั้งแต่</label><select id="fcH1" class="fci"></select></div><div><label class="lgd" style="margin:0 0 4px;display:block">ถึง</label><select id="fcH2" class="fci"></select></div></div>
         <button class="btn p" id="fcGo" style="width:100%;margin-top:10px">🔮 วิเคราะห์และทำนาย</button>
@@ -633,6 +637,7 @@ let FC=null,fcMk=null;
 function moonPhase(ms){const syn=29.530588853,ref=Date.UTC(2000,0,6,18,14);const age=(((ms-ref)/864e5)%syn+syn)%syn;const ill=Math.round((1-Math.cos(2*Math.PI*age/syn))/2*100);
   const n=age<1.85?'จันทร์ดับ (เดือนมืด)':age<7.38?'ข้างขึ้น เสี้ยว':age<9.23?'ข้างขึ้น ครึ่งดวง':age<14.77?'ข้างขึ้น เกือบเต็มดวง':age<16.61?'จันทร์เต็มดวง':age<22.15?'ข้างแรม เกือบเต็มดวง':age<23.99?'ข้างแรม ครึ่งดวง':age<27.68?'ข้างแรม เสี้ยว':'จันทร์ดับ (เดือนมืด)';return{n,ill}}
 async function fcPlace(){const v=$('#fcPlace').value;if(v==='me'){return await new Promise((ok,no)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>ok([p.coords.latitude,p.coords.longitude,'ตำแหน่งของฉัน']),()=>no(new Error('ขอตำแหน่งไม่ได้')),{timeout:10000}):no(new Error('ไม่มี GPS')))}
+  if(v==='sel'&&FCSEL)return[FCSEL.lat,FCSEL.lon,FCSEL.name];
   if(v==='custom'){const la=+$('#fcLat').value,lo=+$('#fcLon').value;if(!isFinite(la)||!isFinite(lo)||!$('#fcLat').value)throw new Error('กรอกพิกัดให้ครบ');return[la,lo,`พิกัด ${la.toFixed(4)}, ${lo.toFixed(4)}`]}
   const [la,lo,...n]=v.split(',');return[+la,+lo,n.join(',')]}
 const relB=d=>d<0?['ผ่านมาแล้ว','#94a3b8']:d<=3?['ความเชื่อมั่นค่อนข้างสูง','#4ade80']:d<=7?['ความเชื่อมั่นปานกลาง','#fde047']:d<=15?['ความเชื่อมั่นต่ำ · ดูเป็นแนวโน้ม','#fb923c']:['เกินช่วงพยากรณ์ · ใช้สถิติย้อนหลัง','#f87171'];
@@ -678,6 +683,23 @@ $('#fcGo').onclick=async()=>{const out=$('#fcOut');let la,lo,name;try{[la,lo,nam
   $('#fcSave').onclick=async()=>{const r={record_id:'LEF-'+new Date(Date.now()+7*3600000).toISOString().slice(0,16).replace(/[-:T]/g,'').replace(/^(\d{8})(\d{4})$/,'$1-$2'),kind:'ทำนาย',created_utc:iso(Date.now()),created_th:fFull(Date.now()),
       layers:[{layer:'พยากรณ์จุด '+FC.place,satellite:'แบบจำลอง Open-Meteo / ECMWF ensemble / ERA5',data_time_th:FC.date+' '+FC.window}],prediction:FC,disclaimer:'การทำนายอาจคลาดเคลื่อน ไม่ใช่ประกาศทางการ'};
     r.sha256=await sha256(JSON.stringify(r));LOG.unshift(r);LS.set('log',LOG);renderLog();dl(r.record_id+'.json',new Blob([JSON.stringify(r,null,2)],{type:'application/json'}));toast('💾 บันทึก '+r.record_id+' แล้ว')}};
+
+/* ---------- ค้นหาสถานที่ (OpenStreetMap Nominatim + Open-Meteo Geocoding) ---------- */
+let FCSEL=null,picking=false;
+function fcChoose(lat,lon,name){FCSEL={lat:+lat,lon:+lon,name};const o=$('#fcSelOpt');o.hidden=false;o.textContent='📌 '+name;$('#fcPlace').value='sel';$('#fcCustom').style.display='none';$('#fcRes').innerHTML=`<div class="lgd" style="margin:0">✅ เลือกแล้ว: <b style="color:var(--tx)">${esc(name)}</b> (${(+lat).toFixed(4)}, ${(+lon).toFixed(4)})</div>`;
+  if(fcMk)fcMk.remove();const el=document.createElement('div');el.style.cssText='font-size:30px;filter:drop-shadow(0 0 8px #5eead4)';el.textContent='📍';fcMk=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([+lon,+lat]).addTo(map);stopSpin();map.flyTo({center:[+lon,+lat],zoom:Math.max(map.getZoom(),9),speed:.9})}
+async function fcFind(){const q=$('#fcQ').value.trim();if(!q)return;const m=q.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if(m){fcChoose(m[1],m[2],`พิกัด ${(+m[1]).toFixed(4)}, ${(+m[2]).toFixed(4)}`);return}
+  $('#fcRes').innerHTML='<div class="lgd" style="margin:0">⏳ กำลังค้นหา…</div>';let L=[];
+  try{const j=await getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&accept-language=th&q=${encodeURIComponent(q)}`,12000);L=j.map(r=>({lat:r.lat,lon:r.lon,name:r.name||r.display_name.split(',')[0],full:r.display_name}))}catch(e){}
+  if(!L.length){try{const j=await getJSON(`https://geocoding-api.open-meteo.com/v1/search?count=8&language=th&name=${encodeURIComponent(q)}`,12000);L=(j.results||[]).map(r=>({lat:r.latitude,lon:r.longitude,name:r.name,full:[r.name,r.admin1,r.country].filter(Boolean).join(', ')}))}catch(e){}}
+  if(!L.length){$('#fcRes').innerHTML='<div class="lgd" style="margin:0">ไม่พบสถานที่ ลองพิมพ์ชื่ออื่น เพิ่มชื่อจังหวัด หรือแตะบนแผนที่แทน</div>';return}
+  $('#fcRes').innerHTML=L.map((r,i)=>`<div class="it" data-i="${i}" style="margin-bottom:5px;padding:8px 10px"><span style="font-size:18px">📍</span><div class="t"><b>${esc(r.name)}</b><small>${esc(r.full)}</small></div></div>`).join('')+'<div class="lgd" style="margin:2px 0 0">ค้นหาจาก OpenStreetMap</div>';
+  $$('#fcRes .it').forEach(el=>el.onclick=()=>{const r=L[+el.dataset.i];fcChoose(r.lat,r.lon,r.name)})}
+$('#fcFind').onclick=fcFind;$('#fcQ').addEventListener('keydown',e=>{if(e.key==='Enter')fcFind()});
+$('#fcPick').onclick=()=>{picking=!picking;$('#fcPick').textContent=picking?'👆 แตะจุดบนแผนที่ได้เลย (กดอีกครั้งเพื่อยกเลิก)':'🗺️ หรือแตะบนแผนที่เพื่อเลือกจุด';map.getCanvas().style.cursor=picking?'crosshair':'';if(picking){toast('แตะจุดบนแผนที่ที่ต้องการทำนาย');mobMin(true)}};
+map.on('click',e=>{if(!picking)return;picking=false;$('#fcPick').textContent='🗺️ หรือแตะบนแผนที่เพื่อเลือกจุด';map.getCanvas().style.cursor='';const {lat,lng}=e.lngLat;fcChoose(lat,lng,`จุดที่เลือก ${lat.toFixed(4)}, ${lng.toFixed(4)}`);mobMin(false);
+  getJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=th&lat=${lat}&lon=${lng}`,10000).then(j=>{if(j&&j.display_name){const n=j.name||j.display_name.split(',').slice(0,2).join(',');FCSEL.name=n;$('#fcSelOpt').textContent='📌 '+n;$('#fcRes').innerHTML=`<div class="lgd" style="margin:0">✅ เลือกแล้ว: <b style="color:var(--tx)">${esc(n)}</b><br>${esc(j.display_name)}</div>`}}).catch(()=>{})});
 /* ---------- สรุปสถานการณ์ ---------- */
 let SAY='';
 function renderSum(){const out=[];let say=[];
