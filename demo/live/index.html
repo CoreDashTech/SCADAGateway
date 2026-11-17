@@ -140,7 +140,7 @@ body.clean .left,body.clean .right,body.clean .astro{display:none}body.clean .do
 .mono{font-family:'JetBrains Mono',monospace;font-size:12.5px;word-break:break-all}
 .btnp{border:none;border-radius:14px;padding:13px 18px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#0f766e,#4338ca);width:100%;margin-top:14px;font-family:Prompt}
 .toast{position:fixed;left:50%;top:112px;transform:translateX(-50%);z-index:40;background:#0b1024;border:1px solid var(--ln);padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}.toast.on{opacity:1}
-.mob{display:none}
+.mob{display:none}.grab,.showInfo{display:none}
 @media(max-width:1250px){.left{width:280px}.right{width:360px}.dock{left:304px;right:384px}.astro{right:390px;width:120px}.maplibregl-ctrl-bottom-right{right:380px}.hideL{display:none}}
 @media(max-width:980px){.astro{display:none}.clk{display:none}}
 @media(max-width:860px){
@@ -153,7 +153,15 @@ body.clean .left,body.clean .right,body.clean .astro{display:none}body.clean .do
   .right.min{height:58px}
   .dock{left:8px;right:8px;bottom:calc(46vh + 16px)}body.smin .dock{bottom:74px}
   .stamp{padding:8px 11px}.stamp li{font-size:12.5px}.tl{padding:6px 10px}.tl .pb{width:38px;height:38px}.tl .tt{min-width:110px}
-  .mob{display:inline-block}
+  .mob{display:inline-block}#bMin{display:none!important}
+  .grab{display:flex;align-items:center;gap:8px;padding:8px 12px 2px;position:relative;cursor:pointer;flex:none;touch-action:none}
+  .grab i{position:absolute;left:50%;top:5px;width:44px;height:5px;border-radius:3px;background:#64748b;transform:translateX(-50%)}
+  .grab span{font-size:11.5px;color:var(--mu);margin-top:8px}
+  .grab button{margin-left:auto;margin-top:6px;border:1px solid var(--ln);background:var(--pn2);color:var(--tx);border-radius:999px;padding:5px 12px;font:600 12.5px Prompt,sans-serif}
+  .right.min{height:104px}
+  body.smin .dock{bottom:118px}
+  body.clean .right,body.clean .dock{display:none}
+  body.clean .showInfo{display:block;position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9;border:none;border-radius:999px;padding:13px 22px;font:700 15px Prompt,sans-serif;color:#fff;background:linear-gradient(135deg,#0f766e,#4338ca);box-shadow:0 12px 30px -10px #000}
   .brand b,#bWorld,#bSay,.clk,.live{display:none!important}.brand img{height:36px}.top{justify-content:space-between}.top .sp{display:none}
   .maplibregl-ctrl-bottom-right{right:0;bottom:calc(46vh + 130px)}
   body.smin .maplibregl-ctrl-bottom-right{bottom:150px}
@@ -199,6 +207,7 @@ body.clean .left,body.clean .right,body.clean .astro{display:none}body.clean .do
 </aside>
 
 <aside class="right glass" id="right" aria-label="สรุปสถานการณ์">
+  <div class="grab" id="grab" role="button" aria-label="ย่อหรือขยายแผงข้อมูล"><i></i><span id="grabT">แตะหรือปัดลงเพื่อซ่อน</span><button id="sheetX" aria-label="ซ่อนแผงข้อมูล">▼ ซ่อน</button></div>
   <div class="tabs" id="tabs" role="tablist">
     <button data-t="sum" class="on">📋 สรุป</button>
     <button data-t="lay" class="mob">🗂️ ชั้นข้อมูล</button>
@@ -268,6 +277,7 @@ body.clean .left,body.clean .right,body.clean .astro{display:none}body.clean .do
   <button class="btnp" id="inOk">เข้าใจแล้ว เริ่มดูสถานการณ์</button>
 </div></div>
 <div class="mod" id="recM" role="dialog" aria-modal="true"><div class="box glass" id="recBox"></div></div>
+<button id="showInfo" class="showInfo">📋 แสดงข้อมูล</button>
 <div class="toast" id="toast" role="status"></div>
 
 <script src="vendor/maplibre-gl.js"></script>
@@ -745,7 +755,7 @@ function tab(t){$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.
 $$('#tabs button[data-t]').forEach(b=>b.onclick=()=>tab(b.dataset.t));
 const mq=matchMedia('(max-width:860px)');
 function place(){if(mq.matches)$('#p-lay').appendChild($('#layersBox'));else $('#left').appendChild($('#layersBox'))}mq.addEventListener?mq.addEventListener('change',place):mq.addListener(place);place();
-function mobMin(v){if(!mq.matches)return;$('#right').classList.toggle('min',v);document.body.classList.toggle('smin',v);$('#bMin').textContent=v?'▴':'▾'}
+function mobMin(v){if(!mq.matches)return;$('#right').classList.toggle('min',v);document.body.classList.toggle('smin',v);$('#bMin').textContent=v?'▴':'▾';$('#grabT').textContent=v?'แตะแท็บ หรือปัดขึ้นเพื่อดูข้อมูล':'แตะหรือปัดลงเพื่อซ่อน';$('#sheetX').textContent=v?'▲ แสดง':'▼ ซ่อน'}
 $('#bMin').onclick=()=>mobMin(!$('#right').classList.contains('min'));
 $('#warnX').onclick=e=>{e.stopPropagation();$('#warn').classList.add('mini');$('#warnT').innerHTML='<b>⚠️ ข้อมูลอาจล่าช้า/คลาดเคลื่อน · ไม่ใช่ประกาศทางการ</b> (แตะเพื่ออ่าน)';$('#warnX').hidden=true};
 $('#warn').onclick=()=>{if($('#warn').classList.contains('mini'))tab('src')};
@@ -764,6 +774,14 @@ function tlVis(v){$('#tl').classList.toggle('hide',!v);LS.set('tl',v);if(!v&&pla
 $('#tlX').onclick=()=>tlVis(false);$('#tlShow').onclick=()=>tlVis(true);tlVis(LS.get('tl',false));
 $('#bView').onclick=()=>{const on=!document.body.classList.contains('clean');document.body.classList.toggle('clean',on);$('#bView').classList.toggle('on',on);toast(on?'🖼️ ซ่อนแผงข้อมูลแล้ว กดอีกครั้งเพื่อแสดง':'แสดงแผงข้อมูลแล้ว')};
 if(mq.matches)setTimeout(()=>mobMin(true),400);
+
+/* ---------- มือถือ: แผงข้อมูลแบบปัดขึ้น/ลง ---------- */
+$('#grab').onclick=e=>{if(e.target.id==='sheetX')return;mobMin(!$('#right').classList.contains('min'))};
+$('#sheetX').onclick=e=>{e.stopPropagation();mobMin(!$('#right').classList.contains('min'))};
+(function(){let y0=null;const g=$('#grab');g.addEventListener('touchstart',e=>{y0=e.touches[0].clientY},{passive:true});g.addEventListener('touchend',e=>{if(y0==null)return;const dy=e.changedTouches[0].clientY-y0;if(dy>30)mobMin(true);else if(dy<-30)mobMin(false);y0=null},{passive:true})})();
+map.on('dragstart',()=>{if(mq.matches)mobMin(true)});
+map.on('click',e=>{if(!mq.matches||picking)return;const f=map.queryRenderedFeatures(e.point,{layers:['eqc'].filter(l=>map.getLayer(l))});if(!f.length)mobMin(true)});
+$('#showInfo').onclick=()=>{document.body.classList.remove('clean');$('#bView').classList.remove('on');mobMin(false)};
 if(!LS.get('ack',false))$('#intro').classList.add('on');
 $('#inOk').onclick=()=>{LS.set('ack',true);$('#intro').classList.remove('on')};
 renderSrc();renderLog();
