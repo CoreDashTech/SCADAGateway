@@ -1,0 +1,41 @@
+name: CoreDash ส่องโชค · ดึงผลสลากจากสำนักงานสลากฯ
+
+on:
+  schedule:
+    # วันออกรางวัล (เวลาไทย 15:00–16:50) ทุก 10 นาที
+    - cron: '*/10 8-9 1,2,16,17,30,31 * *'
+    # ทุกวัน 18:23 และ 22:23 น. เวลาไทย (กันงวดที่เลื่อนวัน)
+    - cron: '23 11,15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lotto-glo-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: ดึงผลจาก API ทางการ
+        id: sync
+        run: node scripts/lotto-glo-sync.mjs
+      - name: บันทึกเข้า repo
+        run: |
+          git config user.name "coredash-lotto-bot"
+          git config user.email "lotto-bot@users.noreply.github.com"
+          git add demo/lotto/data
+          if git diff --cached --quiet; then echo "ไม่มีงวดใหม่"; exit 0; fi
+          git commit -m "lotto: GLO results up to ${{ steps.sync.outputs.last }} (+${{ steps.sync.outputs.added }})"
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep $((i*7))
+          done
+          exit 1
