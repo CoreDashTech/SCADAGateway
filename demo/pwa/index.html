@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>CoreDash AquaGrid · ระบบมาตรวัดน้ำอัจฉริยะ</title>
+<meta name="theme-color" content="#eef5f8">
+<link rel="icon" href="../live/assets/logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('ag.theme');if(t&&t!=='pearl')document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+/* ---------- ธีมสี (ค่าเริ่มต้น: ไข่มุก โทนอ่อน) ---------- */
+:root{--r:18px;--ac:#0e9fb2;--ac2:#3b82f6;--acg:linear-gradient(135deg,#22c3d6,#4f8cff);--acTx:#fff;--gd:#b7791f;--ok:#059669;--am:#d97706;--rd:#e11d48;--vi:#7c3aed;
+ --tx:#15223a;--tx2:#33445f;--mu:#66758c;--pn:rgba(255,255,255,.86);--pn2:rgba(20,50,90,.045);--ln:rgba(14,159,178,.28);--ln2:rgba(30,55,95,.12);--in:#fff;--hd:rgba(255,255,255,.82);
+ --sh:0 10px 34px rgba(30,60,100,.09);--b1:rgba(173,232,244,.55);--b2:rgba(214,226,255,.6);--b3:#fbfcfd;--b4:#eef3f7;--grid:rgba(30,80,140,.05);--soft:rgba(14,159,178,.08)}
+[data-theme="aqua"]{--b1:rgba(125,211,252,.5);--b2:rgba(167,243,208,.45);--b3:#f4fbff;--b4:#e3f1f9;--hd:rgba(244,251,255,.85)}
+[data-theme="mint"]{--ac:#0f9d78;--acg:linear-gradient(135deg,#34d399,#14b8a6);--ln:rgba(16,157,120,.28);--soft:rgba(16,157,120,.08);--b1:rgba(167,243,208,.6);--b2:rgba(204,251,241,.6);--b3:#f6fcf9;--b4:#e6f4ee;--hd:rgba(246,252,249,.85)}
+[data-theme="cream"]{--ac:#b7791f;--acg:linear-gradient(135deg,#f6c453,#e8952f);--acTx:#2a1a00;--ln:rgba(183,121,31,.28);--soft:rgba(183,121,31,.08);--b1:rgba(253,230,170,.6);--b2:rgba(255,237,213,.65);--b3:#fffdf7;--b4:#f7efe0;--hd:rgba(255,253,247,.86)}
+[data-theme="lavender"]{--ac:#7c5cdb;--acg:linear-gradient(135deg,#a78bfa,#60a5fa);--ln:rgba(124,92,219,.26);--soft:rgba(124,92,219,.08);--b1:rgba(221,214,254,.65);--b2:rgba(219,234,254,.6);--b3:#fcfbff;--b4:#efecf9;--hd:rgba(252,251,255,.86)}
+[data-theme="night"]{--ac:#38e1d0;--acg:linear-gradient(135deg,#38e1d0,#4f8cff);--acTx:#04121f;--tx:#eef4ff;--tx2:#cdd8ec;--mu:#9fb0cc;--pn:rgba(12,24,46,.86);--pn2:rgba(255,255,255,.05);--ln:rgba(94,234,212,.24);--ln2:rgba(160,190,255,.15);--in:rgba(0,0,0,.3);--hd:rgba(5,12,26,.84);
+ --sh:0 20px 60px rgba(0,0,0,.4);--b1:rgba(56,225,208,.14);--b2:rgba(79,140,255,.12);--b3:#071428;--b4:#050c1a;--grid:rgba(120,170,255,.06);--soft:rgba(56,225,208,.08);--ok:#34d399;--am:#fbbf24;--rd:#fb7185;--gd:#f2c75c}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Sarabun,system-ui,sans-serif;color:var(--tx);background:var(--b4);font-size:16px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(1100px 650px at 85% -10%,var(--b1),transparent 60%),radial-gradient(900px 650px at -10% 25%,var(--b2),transparent 60%),linear-gradient(180deg,var(--b3),var(--b4) 70%)}
+body:after{content:"";position:fixed;inset:0;z-index:-1;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at 50% 25%,#000,transparent 75%)}
+h1,h2,h3,h4,.pf{font-family:Prompt,Sarabun,sans-serif;font-weight:600;letter-spacing:.2px}
+.mono{font-family:'JetBrains Mono',monospace}
+a{color:var(--ac)}
+.hidden{display:none!important}
+button{font-family:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--ln2);background:var(--pn);color:var(--tx);padding:9px 15px;border-radius:12px;font:600 15px Prompt,Sarabun,sans-serif;cursor:pointer;text-decoration:none;white-space:nowrap;transition:.15s}
+.btn:hover{border-color:var(--ac);background:var(--soft)}
+.btn.pri{background:var(--acg);color:var(--acTx);border-color:transparent;box-shadow:0 6px 18px rgba(14,159,178,.22)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.gold{background:linear-gradient(180deg,#f8d98a,#e3ae45);color:#2a1a00;border-color:transparent}
+.btn.dan{border-color:rgba(225,29,72,.4);color:var(--rd)}
+.btn.sm{padding:6px 11px;font-size:13.5px;border-radius:10px}
+.btn:disabled{opacity:.55;cursor:wait}
+input,select,textarea{font:500 16px Sarabun,sans-serif;color:var(--tx);background:var(--in);border:1px solid var(--ln2);border-radius:12px;padding:10px 12px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--soft)}
+label.f{display:block;font-size:14px;color:var(--mu);margin:10px 0 5px}
+.small{font-size:13.5px;color:var(--mu)}
+#gate{min-height:100vh;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:40px;max-width:1180px;margin:0 auto;padding:40px 22px}
+.gl h1{font-size:44px;line-height:1.15;margin:14px 0 12px}
+.gl h1 span{background:var(--acg);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gl p{color:var(--tx2);font-size:17px;max-width:560px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ln);background:var(--soft);color:var(--ac);border-radius:999px;padding:5px 13px;font:600 13.5px Prompt,sans-serif}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--ac);box-shadow:0 0 10px var(--ac)}
+.orgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;max-width:580px}
+.orgs span{border:1px solid var(--ln2);background:var(--pn);border-radius:999px;padding:6px 12px;font:600 14px Prompt,sans-serif;color:var(--tx2);box-shadow:var(--sh)}
+.drop{position:relative;width:min(220px,56vw);aspect-ratio:1;margin:0 auto -8px}
+.drop canvas{width:100%;height:100%}
+.lcard{background:var(--pn);border:1px solid var(--ln);border-radius:24px;padding:26px;box-shadow:var(--sh);backdrop-filter:blur(14px)}
+.lcard .brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.lcard .brand img{width:46px;height:46px;border-radius:12px;border:1px solid var(--ln)}
+.lcard .brand b{display:block;font:700 19px Prompt,sans-serif}
+.lock{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border:1px solid var(--ln);border-radius:14px;padding:10px 12px;font-size:14px;color:var(--tx2);margin-bottom:6px}
+.pwrow{position:relative}.pwrow button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--mu);font-size:18px;cursor:pointer}
+.err{color:var(--rd);background:rgba(225,29,72,.07);border:1px solid rgba(225,29,72,.3);border-radius:12px;padding:8px 12px;margin-top:10px;font-size:14.5px}
+.ok{color:var(--ok);background:rgba(5,150,105,.07);border:1px solid rgba(5,150,105,.3);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:14.5px}
+.prog{height:4px;border-radius:4px;background:var(--pn2);overflow:hidden;margin-top:12px}
+.prog i{display:block;height:100%;width:40%;background:var(--acg);animation:pg 1.1s infinite ease-in-out}
+@keyframes pg{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.gfoot{margin-top:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px}
+.thm{position:relative}
+.thPop{position:absolute;right:0;top:calc(100% + 8px);background:var(--b3);border:1px solid var(--ln);border-radius:16px;padding:12px;box-shadow:0 18px 40px rgba(0,0,0,.16);display:grid;grid-template-columns:repeat(3,88px);gap:8px;z-index:60}
+.thPop b{grid-column:1/-1;font:600 14px Prompt,sans-serif;color:var(--mu)}
+.thPop button{border:1px solid var(--ln2);background:transparent;border-radius:12px;padding:8px 4px;cursor:pointer;color:var(--tx);font:500 13px Sarabun,sans-serif;display:grid;justify-items:center;gap:5px}
+.thPop button i{width:32px;height:32px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}
+.thPop button.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--soft)}
+.gtheme{position:fixed;right:16px;top:14px;z-index:20}
+.modal{position:fixed;inset:0;z-index:80;background:rgba(15,25,45,.38);backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px}
+.mbox{width:min(720px,100%);max-height:92vh;overflow:auto;background:var(--b3);border:1px solid var(--ln);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+.mbox.wide{width:min(980px,100%)}
+.mhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.mhead h3{font-size:20px}
+.x{border:1px solid var(--ln2);background:var(--pn);color:var(--tx);width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#app header{position:sticky;top:0;z-index:40;background:var(--hd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--ln2)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 18px}
+.hd{display:flex;align-items:center;gap:10px;padding:10px 0}
+.hd img{width:42px;height:42px;border-radius:11px;border:1px solid var(--ln)}
+.hb b{display:block;font:700 18px Prompt,sans-serif;line-height:1.2}
+.hb b span{background:var(--acg);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hb small{color:var(--mu);font-size:12.5px}
+.sp{flex:1}
+.uchip{display:flex;align-items:center;gap:8px;border:1px solid var(--ln2);background:var(--pn);border-radius:999px;padding:4px 6px 4px 12px;font-size:13.5px;color:var(--tx2)}
+.uchip .rl{white-space:nowrap;font:700 11.5px Prompt;border-radius:999px;padding:2px 8px;background:var(--soft);color:var(--ac)}
+.uchip .rl.ad{background:rgba(183,121,31,.14);color:var(--gd)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(40px);opacity:0;background:var(--b3);border:1px solid var(--ac);color:var(--tx);padding:10px 16px;border-radius:12px;font-weight:600;transition:.25s;z-index:99;box-shadow:var(--sh);max-width:92vw}
+.toast.on{opacity:1;transform:translateX(-50%)}
+table.u{width:100%;border-collapse:collapse;font-size:14.5px}
+table.u th,table.u td{padding:8px 9px;border-bottom:1px solid var(--ln2);text-align:left;vertical-align:top}
+table.u th{color:var(--mu);font-weight:600;font-size:13px}
+.tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700}
+.tag.ad{background:rgba(183,121,31,.14);color:var(--gd)}.tag.vw{background:var(--soft);color:var(--ac)}.tag.nw{background:rgba(59,130,246,.12);color:var(--ac2)}
+.pwbox{display:flex;align-items:center;gap:8px;background:var(--in);border:1px dashed var(--gd);border-radius:12px;padding:10px 12px;font:700 20px 'JetBrains Mono',monospace;color:var(--gd);letter-spacing:1px;word-break:break-all}
+.steps{counter-reset:s;list-style:none;margin-top:8px}
+.steps li{counter-increment:s;position:relative;padding-left:34px;margin:8px 0;color:var(--tx2);font-size:14.5px}
+.steps li:before{content:counter(s);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--ac);font:700 13px Prompt;display:grid;place-items:center}
+.pend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid rgba(183,121,31,.4);background:rgba(183,121,31,.08);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:14.5px;color:var(--gd)}
+@media (max-width:920px){#gate{grid-template-columns:1fr;gap:16px;padding:60px 16px 24px}.gl h1{font-size:32px}.gl{order:2}}
+@media (max-width:600px){.g2{grid-template-columns:1fr}.hb small{display:none}.hb b{font-size:15px}.uchip .nm{display:none}.hd .btn span{display:none}.thPop{grid-template-columns:repeat(3,80px)}}
+</style>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="gtheme thm" id="gThm"><button class="btn sm" data-thbtn>🎨 สีพื้นหลัง</button><div class="thPop hidden"></div></div>
+
+<section id="gate">
+ <div class="gl">
+  <span class="pill"><i></i>พื้นที่เฉพาะผู้ได้รับสิทธิ์ · เข้ารหัส AES-256</span>
+  <h1>CoreDash <span>AquaGrid</span><br>ระบบมาตรวัดน้ำอัจฉริยะ</h1>
+  <p>อ่านมาตรทุก 15 นาที แจ้งเตือนน้ำรั่ว ออกบิลค่าน้ำ และส่งข้อมูลมาตรฐานเข้าระบบหน่วยงาน — ใช้ได้ตั้งแต่หอพักไม่กี่ห้อง ไปจนถึงเทศบาลทั้งเมือง</p>
+  <div class="orgs"><span>🏢 หอพัก</span><span>🏛️ เทศบาล</span><span>🌾 อบต.</span><span>🏘️ หมู่บ้าน · ชุมชน</span><span>🏥 โรงพยาบาล</span><span>🛕 วัด</span><span>🏫 โรงเรียน</span><span>🏭 บริษัท · โรงงาน</span></div>
+ </div>
+ <div>
+  <div class="drop"><canvas id="dropCv" aria-hidden="true"></canvas></div>
+  <div class="lcard">
+   <div class="brand"><img src="../live/assets/logo.webp" alt="CoreDash"><div><b>เข้าสู่ระบบ</b><span class="small">CoreDash Technology</span></div></div>
+   <div class="lock">🔒 <span>ข้อมูลทั้งหมดถูกเข้ารหัส ถอดได้เฉพาะในเครื่องของผู้ที่มีรหัสผ่านถูกต้อง</span></div>
+   <form id="lf" autocomplete="on">
+    <label class="f" for="lid">อีเมล หรือ ชื่อผู้ใช้</label>
+    <input id="lid" name="username" autocomplete="username" placeholder="name@company.com" required>
+    <label class="f" for="lpw">รหัสผ่าน</label>
+    <div class="pwrow"><input id="lpw" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required><button type="button" id="eye" aria-label="แสดงรหัสผ่าน">👁️</button></div>
+    <button class="btn pri" id="lgo" style="width:100%;margin-top:14px;padding:12px">🔓 เข้าสู่ระบบ</button>
+    <div class="prog hidden" id="lprog"><i></i></div>
+    <div class="err hidden" id="lerr"></div>
+   </form>
+   <div class="gfoot"><a href="#" id="reqBtn">✉️ ขอสิทธิ์เข้าใช้งาน</a><a href="../../index.html">← กลับหน้าหลัก CoreDash</a></div>
+  </div>
+ </div>
+</section>
+
+<div id="app" class="hidden">
+ <header>
+  <div class="wrap hd">
+   <img src="../live/assets/logo.webp" alt="CoreDash">
+   <div class="hb"><b>CoreDash <span>AquaGrid</span></b><small id="orgLine">ระบบมาตรวัดน้ำอัจฉริยะ</small></div>
+   <div class="sp"></div>
+   <div class="thm" id="aThm"><button class="btn sm" data-thbtn title="สีพื้นหลัง">🎨</button><div class="thPop hidden"></div></div>
+   <button class="btn sm gold hidden" id="admBtn">👥 <span>สิทธิ์ผู้ใช้</span></button>
+   <div class="uchip"><span class="nm" id="uName">–</span><span class="rl" id="uRole">–</span><button class="btn sm" id="outBtn" title="ออกจากระบบ">⏻</button></div>
+  </div>
+  <div class="wrap"><nav class="tabs" id="tabs"></nav></div>
+ </header>
+ <main id="appRoot" class="wrap"></main>
+</div>
+
+<div class="modal hidden" id="reqM"><div class="mbox">
+ <div class="mhead"><h3>✉️ ขอสิทธิ์เข้าใช้งาน</h3><button class="x" data-close>✕</button></div>
+ <p class="small">กรอกข้อมูลแล้วกด “ส่งคำขอทางอีเมล” ระบบจะเปิดโปรแกรมอีเมลพร้อมข้อความให้ ผู้ดูแลจะส่งรหัสผ่านให้ทางช่องทางที่ปลอดภัย</p>
+ <div class="g2">
+  <div><label class="f">ชื่อ–นามสกุล</label><input id="rqN"></div>
+  <div><label class="f">หน่วยงาน / ตำแหน่ง</label><input id="rqO"></div>
+  <div><label class="f">อีเมลที่ต้องการใช้เข้าระบบ</label><input id="rqE" type="email"></div>
+  <div><label class="f">เบอร์โทร</label><input id="rqP" inputmode="tel"></div>
+ </div>
+ <label class="f">วัตถุประสงค์การใช้งาน</label><textarea id="rqW" rows="3"></textarea>
+ <div class="err hidden" id="rqErr"></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn pri" id="rqGo">📧 ส่งคำขอทางอีเมล</button><button class="btn" id="rqCopy">📋 คัดลอกข้อความ</button></div>
+ <p class="small" id="rqTo" style="margin-top:10px"></p>
+</div></div>
+
+<div class="modal hidden" id="admM"><div class="mbox wide">
+ <div class="mhead"><h3>👥 จัดการสิทธิ์ผู้ใช้งาน</h3><button class="x" data-close>✕</button></div>
+ <div class="pend hidden" id="pend">⚠️ <span style="flex:1">มีการเปลี่ยนแปลงที่ยังไม่ได้อัปโหลด — ดาวน์โหลดไฟล์แล้วอัปโหลดไปที่ <b class="mono">demo/pwa/</b> ใน GitHub จึงจะมีผล</span><button class="btn sm gold" id="dlAcc">⬇️ ดาวน์โหลด access.json</button></div>
+ <div id="admBody"></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   CoreDash AquaGrid · ประตูเข้ารหัส
+   - โปรแกรมอยู่ใน vault.json · ข้อมูลที่เผยแพร่ให้ผู้ใช้อื่นอยู่ใน data.json (AES-256-GCM ทั้งคู่)
+   - กุญแจเนื้อหา (CK) ห่อแยกให้ผู้ใช้แต่ละคนด้วยรหัสผ่าน (PBKDF2-SHA256)
+   - access.json ไม่มีรหัสผ่านหรืออีเมลแบบอ่านได้
+   ===================================================================== */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const te=new TextEncoder(),td=new TextDecoder();
+function toast(t,ms=2600){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),ms)}
+function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
+function ub64(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+async function sha256h(s){return hex(await crypto.subtle.digest('SHA-256',te.encode(s)))}
+const idOf=login=>sha256h('coredash-pwa|'+String(login).trim().toLowerCase());
+async function kekOf(pw,salt,it){const k=await crypto.subtle.importKey('raw',te.encode(String(pw).normalize('NFC')),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations:it},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+const aesOf=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+async function enc(key,u8){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv:b64(iv),ct:b64(new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,u8)))}}
+async function dec(key,o){return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(o.iv)},key,ub64(o.ct)))}
+async function getJSON(u){const r=await fetch(u+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+function genPw(n=14){const A='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789',S='!@#$%&*?';const r=crypto.getRandomValues(new Uint32Array(n));let p='';for(let i=0;i<n;i++)p+=(i===4||i===9)?S[r[i]%S.length]:A[r[i]%A.length];return p}
+function dl(name,obj,type){const b=new Blob([typeof obj==='string'?obj:JSON.stringify(obj)],{type:type||'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800)}
+
+const S={acc:null,ck:null,ckRaw:null,me:null,meta:[],vaultPlain:null,dirty:false};
+
+/* ---------- ธีมสี ---------- */
+const THEMES=[['pearl','ไข่มุก','linear-gradient(135deg,#ffffff,#e8eef3)','#eef3f7'],['aqua','ฟ้าน้ำ','linear-gradient(135deg,#f4fbff,#bfe6f7)','#e3f1f9'],['mint','มิ้นต์','linear-gradient(135deg,#f6fcf9,#c4ecd9)','#e6f4ee'],['cream','ครีม','linear-gradient(135deg,#fffdf7,#f3dfb4)','#f7efe0'],['lavender','ลาเวนเดอร์','linear-gradient(135deg,#fcfbff,#ddd6fe)','#efecf9'],['night','กลางคืน','linear-gradient(135deg,#1b2347,#050c1a)','#050c1a']];
+function setTheme(k){const t=THEMES.find(x=>x[0]===k)||THEMES[0];if(t[0]==='pearl')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t[0];
+  try{localStorage.setItem('ag.theme',t[0])}catch(e){}document.querySelector('meta[name=theme-color]').content=t[3];$$('.thPop button').forEach(b=>b.classList.toggle('on',b.dataset.k===t[0]));
+  window.dispatchEvent(new CustomEvent('ag-theme',{detail:t[0]}))}
+$$('.thm').forEach(w=>{const pop=w.querySelector('.thPop');pop.innerHTML='<b>🎨 สีพื้นหลัง</b>'+THEMES.map(t=>`<button data-k="${t[0]}"><i style="background:${t[2]}"></i>${t[1]}</button>`).join('');
+  w.querySelector('[data-thbtn]').onclick=e=>{e.stopPropagation();pop.classList.toggle('hidden')};pop.querySelectorAll('button').forEach(b=>b.onclick=()=>{setTheme(b.dataset.k);pop.classList.add('hidden')})});
+document.addEventListener('click',e=>{if(!e.target.closest('.thm'))$$('.thPop').forEach(p=>p.classList.add('hidden'))});
+setTheme((()=>{try{return localStorage.getItem('ag.theme')}catch(e){return null}})()||'pearl');
+
+/* ---------- หยดน้ำ ---------- */
+(function drop(){const c=$('#dropCv'),x=c.getContext('2d');let t=0;
+ function fr(){if($('#gate').classList.contains('hidden'))return;const d=Math.min(2,devicePixelRatio||1),W=c.clientWidth,H=c.clientHeight;if(!W||!H)return requestAnimationFrame(fr);
+  if(c.width!==Math.round(W*d)||c.height!==Math.round(H*d)){c.width=Math.round(W*d);c.height=Math.round(H*d)}
+  x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,W,H);t+=.016;const cx=W/2,cy=H*.5,ac=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#0e9fb2';
+  for(let i=0;i<4;i++){const k=((t*.35+i/4)%1),r=k*W*.48;x.globalAlpha=(1-k)*.55;x.strokeStyle=ac;x.lineWidth=2;x.beginPath();x.ellipse(cx,cy+W*.24,r,r*.26,0,0,7);x.stroke()}x.globalAlpha=1;
+  const R=W*.19,g=x.createLinearGradient(cx,cy-R*1.9,cx,cy+R);g.addColorStop(0,'#bdf3fb');g.addColorStop(.55,'#38bdf8');g.addColorStop(1,'#2563eb');
+  x.save();x.translate(cx,cy+Math.sin(t*2)*4);x.fillStyle=g;x.shadowColor='rgba(56,189,248,.45)';x.shadowBlur=30;x.beginPath();x.moveTo(0,-R*1.9);x.bezierCurveTo(R*.9,-R*.8,R*1.05,-R*.1,R,R*.2);x.arc(0,R*.2,R,0,Math.PI);x.bezierCurveTo(-R*1.05,-R*.1,-R*.9,-R*.8,0,-R*1.9);x.fill();
+  x.shadowBlur=0;x.fillStyle='rgba(255,255,255,.6)';x.beginPath();x.ellipse(-R*.38,-R*.1,R*.14,R*.32,-.4,0,7);x.fill();x.restore();
+  requestAnimationFrame(fr)}fr()})();
+
+/* ---------- เข้าสู่ระบบ ---------- */
+$('#eye').onclick=()=>{const i=$('#lpw');i.type=i.type==='password'?'text':'password'};
+$('#lf').onsubmit=async e=>{e.preventDefault();const id=$('#lid').value.trim(),pw=$('#lpw').value;if(!id||!pw)return;
+  $('#lgo').disabled=true;$('#lprog').classList.remove('hidden');$('#lerr').classList.add('hidden');
+  try{await login(id,pw)}catch(err){console.warn(err);await new Promise(r=>setTimeout(r,900));$('#lerr').textContent=err.userMsg||'อีเมล/ชื่อผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง';$('#lerr').classList.remove('hidden')}
+  finally{$('#lgo').disabled=false;$('#lprog').classList.add('hidden')}};
+async function login(id,pw){
+  if(!window.crypto||!crypto.subtle){const e=new Error('nocrypto');e.userMsg='เบราว์เซอร์นี้ไม่รองรับการถอดรหัส กรุณาเปิดผ่าน https ด้วย Chrome/Edge/Safari รุ่นใหม่';throw e}
+  S.acc=await getJSON('access.json');const uid=await idOf(id),u=S.acc.users.find(x=>x.id===uid);
+  const kek=await kekOf(pw,ub64(u?u.salt:b64(crypto.getRandomValues(new Uint8Array(16)))),S.acc.kdf.it);
+  if(!u)throw new Error('nouser');
+  const raw=await dec(kek,{iv:u.iv,ct:u.wk});await openWith(raw,u,id);
+  try{sessionStorage.setItem('pwa.s',JSON.stringify({ck:b64(raw),id:u.id,login:id}))}catch(e){}
+}
+async function openWith(raw,u,login){
+  S.ckRaw=raw;S.ck=await aesOf(raw);
+  try{S.meta=JSON.parse(td.decode(await dec(S.ck,S.acc.meta)))}catch(e){S.meta=[]}
+  const m=S.meta.find(x=>x.id===u.id)||{};S.me={id:u.id,role:u.role,login,name:m.name||login,email:m.email||login};
+  const v=await getJSON('vault.json');S.vaultPlain=td.decode(await dec(S.ck,v));const app=JSON.parse(S.vaultPlain);
+  $('#gate').classList.add('hidden');$('#gThm').classList.add('hidden');$('#app').classList.remove('hidden');
+  $('#uName').textContent=S.me.name;$('#uRole').textContent=u.role==='admin'?'ผู้ดูแลระบบ':'ผู้ชม';$('#uRole').classList.toggle('ad',u.role==='admin');
+  $('#admBtn').classList.toggle('hidden',u.role!=='admin');
+  $('#appRoot').innerHTML=app.html;$('#tabs').innerHTML=app.tabs;
+  window.PWA={role:u.role,name:S.me.name,user:S.me.id,toast,esc,dl,openAdmin,getShared,publish,setTheme};
+  try{(new Function(app.js))()}catch(e){console.error(e);toast('เกิดข้อผิดพลาดในการแสดงผลบางส่วน')}
+}
+(async function resume(){try{const s=JSON.parse(sessionStorage.getItem('pwa.s')||'null');if(!s)return;S.acc=await getJSON('access.json');const u=S.acc.users.find(x=>x.id===s.id);if(!u)return sessionStorage.removeItem('pwa.s');await openWith(ub64(s.ck),u,s.login)}catch(e){sessionStorage.removeItem('pwa.s')}})();
+$('#outBtn').onclick=()=>{try{sessionStorage.removeItem('pwa.s')}catch(e){}location.reload()};
+async function getShared(){try{const o=await getJSON('data.json');return JSON.parse(td.decode(await dec(S.ck,o)))}catch(e){return null}}
+async function publish(obj){const o=await enc(S.ck,te.encode(JSON.stringify(obj)));dl('data.json',o);return true}
+
+$$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.add('hidden')}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal').forEach(m=>m.classList.add('hidden'))});
+
+function reqText(){return`เรียน ผู้ดูแลระบบ CoreDash AquaGrid\n\nขอสิทธิ์เข้าใช้งานระบบมาตรวัดน้ำอัจฉริยะ\n\nชื่อ–นามสกุล: ${$('#rqN').value}\nหน่วยงาน/ตำแหน่ง: ${$('#rqO').value}\nอีเมลที่ใช้เข้าระบบ: ${$('#rqE').value}\nเบอร์โทร: ${$('#rqP').value}\nวัตถุประสงค์: ${$('#rqW').value}\n\nขอบคุณครับ/ค่ะ`}
+$('#reqBtn').onclick=async e=>{e.preventDefault();$('#reqM').classList.remove('hidden');
+  try{if(!S.acc)S.acc=await getJSON('access.json')}catch(err){}const to=S.acc&&S.acc.contact;
+  $('#rqTo').innerHTML=to?`คำขอจะส่งไปที่ <b>${esc(to)}</b>`:'ยังไม่ได้ตั้งอีเมลผู้ดูแล — กด “คัดลอกข้อความ” แล้วส่งให้ CoreDash Technology โทร 081-923-2380'};
+$('#rqGo').onclick=()=>{if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test($('#rqE').value.trim())||!$('#rqN').value.trim()){$('#rqErr').textContent='กรุณากรอกชื่อ และอีเมลให้ถูกต้อง';$('#rqErr').classList.remove('hidden');return}
+  $('#rqErr').classList.add('hidden');const to=S.acc&&S.acc.contact;if(!to){navigator.clipboard&&navigator.clipboard.writeText(reqText());return toast('คัดลอกข้อความแล้ว โปรดส่งให้ผู้ดูแล')}
+  location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent('ขอสิทธิ์เข้าใช้ CoreDash AquaGrid · '+$('#rqN').value)}&body=${encodeURIComponent(reqText())}`};
+$('#rqCopy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(reqText()).then(()=>toast('คัดลอกข้อความแล้ว'))};
+
+function markDirty(){S.dirty=true;$('#pend').classList.remove('hidden')}
+$('#dlAcc').onclick=()=>{dl('access.json',S.acc);toast('ดาวน์โหลด access.json แล้ว — อัปโหลดไปที่ demo/pwa/',4000)};
+$('#admBtn').onclick=()=>openAdmin();
+async function saveMeta(){S.acc.meta=await enc(S.ck,te.encode(JSON.stringify(S.meta)))}
+async function wrapFor(pw){const salt=crypto.getRandomValues(new Uint8Array(16)),k=await kekOf(pw,salt,S.acc.kdf.it),w=await enc(k,S.ckRaw);return{salt:b64(salt),iv:w.iv,wk:w.ct}}
+function openAdmin(){if(!S.me||S.me.role!=='admin')return;$('#admM').classList.remove('hidden');renderAdmin()}
+function renderAdmin(note){const rows=S.acc.users.map(u=>{const m=S.meta.find(x=>x.id===u.id)||{};const me=u.id===S.me.id;
+   return`<tr><td><b>${esc(m.name||'(ไม่มีชื่อ)')}</b>${me?' <span class="tag nw">คุณ</span>':''}<br><span class="small">${esc(m.email||m.login||'')}</span></td><td><span class="tag ${u.role==='admin'?'ad':'vw'}">${u.role==='admin'?'ผู้ดูแล':'ผู้ชม'}</span></td><td class="small">${esc(m.org||'')}<br>${m.created?new Date(m.created).toLocaleDateString('th-TH',{dateStyle:'medium'}):''}</td><td style="text-align:right">${me?'':`<button class="btn sm" data-reset="${u.id}">🔁 รหัสใหม่</button> <button class="btn sm dan" data-del="${u.id}">🗑️</button>`}</td></tr>`}).join('');
+  $('#admBody').innerHTML=`${note||''}
+  <div class="g2" style="align-items:start">
+   <div><h4 style="margin-bottom:6px">➕ เพิ่มผู้ใช้ใหม่</h4>
+    <label class="f">อีเมล (ใช้เป็นชื่อผู้ใช้)</label><input id="nuE" type="email" placeholder="name@company.com">
+    <label class="f">ชื่อ–นามสกุล</label><input id="nuN">
+    <label class="f">หน่วยงาน</label><input id="nuO">
+    <label class="f">สิทธิ์</label><select id="nuR"><option value="viewer">ผู้ชม (ดูข้อมูลอย่างเดียว)</option><option value="admin">ผู้ดูแล (จัดการข้อมูลและผู้ใช้)</option></select>
+    <button class="btn pri" id="nuGo" style="margin-top:12px;width:100%">🔐 สร้างสิทธิ์และรหัสผ่าน</button></div>
+   <div><h4 style="margin-bottom:6px">⚙️ ตั้งค่า</h4>
+    <label class="f">อีเมลผู้ดูแลที่รับคำขอสิทธิ์ (แสดงบนหน้าเข้าใช้)</label><div style="display:flex;gap:8px"><input id="ctE" type="email" value="${esc(S.acc.contact||'')}" placeholder="admin@coredashtech.com"><button class="btn sm" id="ctGo">บันทึก</button></div>
+    <label class="f">เปลี่ยนรหัสผ่านของฉัน</label><div style="display:flex;gap:8px"><input id="myPw" type="password" placeholder="รหัสผ่านใหม่ (อย่างน้อย 10 ตัว)"><button class="btn sm" id="myGo">เปลี่ยน</button></div>
+    <div class="lock" style="margin-top:14px">🛡️ <span>ลบผู้ใช้แล้วเขาจะเข้าไม่ได้อีก ถ้าต้องการตัดสิทธิ์ให้ขาด (เผื่อเคยบันทึกไฟล์ไว้) ให้กด “หมุนกุญแจทั้งระบบ” ผู้ใช้ที่เหลือจะได้รหัสใหม่</span></div>
+    <button class="btn dan" id="rotGo" style="width:100%">🔄 หมุนกุญแจทั้งระบบ</button></div>
+  </div>
+  <h4 style="margin:16px 0 6px">รายชื่อผู้มีสิทธิ์ (${S.acc.users.length})</h4>
+  <div style="overflow:auto"><table class="u"><tr><th>ผู้ใช้</th><th>สิทธิ์</th><th>หน่วยงาน · วันที่ให้สิทธิ์</th><th></th></tr>${rows}</table></div>
+  <h4 style="margin:16px 0 4px">วิธีให้สิทธิ์มีผล</h4><ol class="steps"><li>เพิ่ม/ลบผู้ใช้ในหน้านี้</li><li>กด “ดาวน์โหลด access.json”</li><li>อัปโหลดไฟล์ไปที่ <b class="mono">demo/pwa/access.json</b> ใน GitHub แล้ว Commit (รอ 1–2 นาที)</li><li>ส่งอีเมลแจ้งลิงก์ให้ผู้ใช้ และส่งรหัสผ่านแยกทาง LINE หรือโทรศัพท์</li></ol>`;
+  $('#nuGo').onclick=addUser;$('#ctGo').onclick=()=>{S.acc.contact=$('#ctE').value.trim();markDirty();toast('บันทึกแล้ว · อย่าลืมดาวน์โหลด access.json')};
+  $('#myGo').onclick=changeMine;$('#rotGo').onclick=rotate;
+  $$('[data-del]').forEach(b=>b.onclick=async()=>{const m=S.meta.find(x=>x.id===b.dataset.del)||{};if(!confirm(`ลบสิทธิ์ของ ${m.name||m.email||'ผู้ใช้นี้'} ใช่ไหม?`))return;S.acc.users=S.acc.users.filter(u=>u.id!==b.dataset.del);S.meta=S.meta.filter(x=>x.id!==b.dataset.del);await saveMeta();markDirty();renderAdmin()});
+  $$('[data-reset]').forEach(b=>b.onclick=async()=>{const u=S.acc.users.find(x=>x.id===b.dataset.reset),m=S.meta.find(x=>x.id===u.id)||{};const pw=genPw();Object.assign(u,await wrapFor(pw));markDirty();renderAdmin(issued(m.email||m.login,m.name,pw,u.role,true))});
+}
+function issued(email,name,pw,role,reset){const link=location.href.split('#')[0];
+  const body=`เรียน คุณ${name||''}\n\nCoreDash Technology ${reset?'ได้ออกรหัสผ่านใหม่':'ได้ให้สิทธิ์เข้าใช้งาน'}ระบบมาตรวัดน้ำอัจฉริยะ CoreDash AquaGrid แก่ท่าน\n\nลิงก์เข้าใช้งาน: ${link}\nชื่อผู้ใช้: ${email}\nสิทธิ์: ${role==='admin'?'ผู้ดูแล':'ผู้ชม'}\n\nรหัสผ่านจะแจ้งแยกทาง LINE หรือโทรศัพท์ เพื่อความปลอดภัย\nสิทธิ์จะเริ่มใช้งานได้ภายในประมาณ 5 นาที\n\nขอแสดงความนับถือ\nCoreDash Technology · 081-923-2380`;
+  const mail=`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent('สิทธิ์เข้าใช้ CoreDash AquaGrid')}&body=${encodeURIComponent(body)}`;
+  return`<div class="ok" style="margin-bottom:12px"><b>✅ ${reset?'ออกรหัสผ่านใหม่':'สร้างสิทธิ์'}ให้ ${esc(name||email)} แล้ว</b> — รหัสผ่านแสดงครั้งเดียว โปรดคัดลอกเก็บไว้
+   <div class="pwbox" style="margin:8px 0"><span style="flex:1">${esc(pw)}</span><button class="btn sm" onclick="navigator.clipboard.writeText('${esc(pw)}').then(()=>toast('คัดลอกรหัสผ่านแล้ว'))">📋 คัดลอก</button></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm pri" href="${mail}">📧 ส่งอีเมลแจ้งลิงก์และชื่อผู้ใช้</a><button class="btn sm gold" onclick="document.getElementById('dlAcc').click()">⬇️ ดาวน์โหลด access.json</button></div>
+   <div class="small" style="margin-top:6px">อีเมลจะไม่มีรหัสผ่าน — ส่งรหัสผ่านแยกทาง LINE หรือโทรศัพท์</div></div>`}
+async function addUser(){const email=$('#nuE').value.trim().toLowerCase(),name=$('#nuN').value.trim(),org=$('#nuO').value.trim(),role=$('#nuR').value;
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return toast('กรุณากรอกอีเมลให้ถูกต้อง');const id=await idOf(email);if(S.acc.users.some(u=>u.id===id))return toast('อีเมลนี้มีสิทธิ์อยู่แล้ว');
+  $('#nuGo').disabled=true;const pw=genPw();const w=await wrapFor(pw);S.acc.users.push({id,role,...w});S.meta.push({id,email,name,org,role,created:Date.now()});await saveMeta();markDirty();$('#nuGo').disabled=false;renderAdmin(issued(email,name,pw,role))}
+async function changeMine(){const pw=$('#myPw').value;if(pw.length<10)return toast('รหัสผ่านต้องยาวอย่างน้อย 10 ตัว');const u=S.acc.users.find(x=>x.id===S.me.id);Object.assign(u,await wrapFor(pw));markDirty();$('#myPw').value='';toast('เปลี่ยนรหัสผ่านแล้ว · ดาวน์โหลดและอัปโหลด access.json เพื่อให้มีผล',4500)}
+async function rotate(){const mypw=prompt('หมุนกุญแจทั้งระบบ: ผู้ใช้อื่นทุกคนจะได้รหัสผ่านใหม่\nกรุณายืนยันด้วยรหัสผ่านปัจจุบันของคุณ');if(!mypw)return;
+  try{const me=S.acc.users.find(x=>x.id===S.me.id);await dec(await kekOf(mypw,ub64(me.salt),S.acc.kdf.it),{iv:me.iv,ct:me.wk})}catch(e){return toast('รหัสผ่านไม่ถูกต้อง')}
+  toast('กำลังเข้ารหัสใหม่…',6000);const shared=await getShared(),raw=crypto.getRandomValues(new Uint8Array(32)),key=await aesOf(raw);
+  const vault=await enc(key,te.encode(S.vaultPlain));S.ckRaw=raw;S.ck=key;const list=[];
+  for(const u of S.acc.users){const m=S.meta.find(x=>x.id===u.id)||{};const pw=u.id===S.me.id?mypw:genPw();Object.assign(u,await wrapFor(pw));if(u.id!==S.me.id)list.push([m.name||'',m.email||'',pw])}
+  await saveMeta();dl('vault.json',vault);if(shared)setTimeout(()=>publish(shared),400);setTimeout(()=>dl('access.json',S.acc),800);S.dirty=false;$('#pend').classList.add('hidden');
+  try{sessionStorage.setItem('pwa.s',JSON.stringify({ck:b64(raw),id:S.me.id,login:S.me.login}))}catch(e){}
+  renderAdmin(`<div class="ok" style="margin-bottom:12px"><b>✅ หมุนกุญแจแล้ว</b> — อัปโหลดไฟล์ที่ดาวน์โหลด (vault.json${shared?', data.json':''}, access.json) ไปที่ demo/pwa/ พร้อมกัน แล้วแจ้งรหัสใหม่ให้ผู้ใช้:<table class="u" style="margin-top:6px">${list.map(r=>`<tr><td>${esc(r[0])}</td><td class="small">${esc(r[1])}</td><td class="mono" style="color:var(--gd)">${esc(r[2])}</td></tr>`).join('')||'<tr><td>ไม่มีผู้ใช้อื่น</td></tr>'}</table></div>`)}
+</script>
+</body>
+</html>
