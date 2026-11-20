@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CoreDash ส่องโชค · ตรวจสลากกินแบ่งรัฐบาล ลุ้นอย่างมีสติ</title>
+<meta name="description" content="ตรวจสลากกินแบ่งรัฐบาลจากข้อมูล API ทางการของสำนักงานสลากกินแบ่งรัฐบาล สถิติย้อนหลัง ถ่ายทอดสดจากช่องทางการ และเลขเสี่ยงทายเพื่อความบันเทิง โดย CoreDash Technology (ไม่แสวงหากำไร)">
+<meta name="theme-color" content="#0b1022">
+<link rel="icon" href="../live/assets/logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b19;--pn:rgba(13,19,42,.92);--pn2:rgba(255,255,255,.05);--ln:rgba(214,190,120,.22);--ln2:rgba(170,185,255,.16);--tx:#f6f3ea;--mu:#b5b9cf;--gd:#f2c75c;--gd2:#c99a2e;--cy:#5eead4;--gr:#4ade80;--rd:#fb7185;--r:18px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Sarabun,Prompt,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:16.5px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(1100px 600px at 85% -10%,rgba(242,199,92,.13),transparent 60%),radial-gradient(900px 600px at -10% 20%,rgba(94,234,212,.07),transparent 60%),linear-gradient(180deg,#0a1028,#070b19 60%)}
+a{color:var(--gd)}
+h1,h2,h3,h4,.pf{font-family:Prompt,Sarabun,sans-serif;font-weight:600;letter-spacing:.2px}
+.mono{font-family:'JetBrains Mono',monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+/* แถบแจ้งเตือน */
+.note{background:linear-gradient(90deg,#f2c75c,#e8b33f);color:#2a1d00;font-size:14.5px;font-weight:600;text-align:center;padding:7px 40px 7px 14px;position:relative}
+.note b{font-weight:700}.note .st{display:none}.note button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.12);border:0;border-radius:8px;width:28px;height:28px;font-size:15px;cursor:pointer;color:#2a1d00}
+/* ส่วนหัว */
+header{position:sticky;top:0;z-index:30;background:rgba(7,11,25,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--ln)}
+.hd{display:flex;align-items:center;gap:12px;padding:10px 0}
+.hd img{width:44px;height:44px;border-radius:12px;border:1px solid var(--ln)}
+.brand b{display:block;font-family:Prompt,Sarabun,sans-serif;font-size:20px;line-height:1.2;background:linear-gradient(90deg,#fff3cf,#f2c75c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{color:var(--mu);font-size:13.5px}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--ln);background:var(--pn2);color:var(--tx);padding:9px 15px;border-radius:12px;font:600 15px Prompt,Sarabun,sans-serif;cursor:pointer;text-decoration:none;white-space:nowrap;transition:.15s}
+.btn:hover{border-color:var(--gd);background:rgba(242,199,92,.1)}
+.btn.gold{background:linear-gradient(180deg,#f6d27a,#d9a83b);color:#231800;border-color:#f6d27a}
+.btn.gold:hover{filter:brightness(1.07)}
+.btn.sm{padding:7px 12px;font-size:14px}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:none;border:1px solid var(--ln2);background:transparent;color:var(--mu);padding:8px 15px;border-radius:999px;font:600 15px Prompt,Sarabun,sans-serif;cursor:pointer}
+nav.tabs button.on{background:var(--gd);color:#231800;border-color:var(--gd)}
+/* การ์ด */
+main{padding:22px 0 40px}
+.card{background:var(--pn);border:1px solid var(--ln2);border-radius:var(--r);padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.card+.card{margin-top:16px}
+.card h3{font-size:19px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.mu{color:var(--mu)}.sm{font-size:14px}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.pane{display:none}.pane.on{display:block;animation:fd .25s ease}
+@keyframes fd{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* ฮีโร่ผลล่าสุด */
+.hero{position:relative;overflow:hidden;border-color:var(--ln)}
+.hero:after{content:"";position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(242,199,92,.18),transparent 70%)}
+.drawday{font-family:Prompt,Sarabun,sans-serif;font-size:15px;color:var(--gd);letter-spacing:.3px}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.first{display:flex;gap:7px;margin:12px 0 6px;flex-wrap:wrap}
+.first span{width:58px;height:74px;display:grid;place-items:center;font:700 42px 'JetBrains Mono',monospace;color:#2a1d00;border-radius:12px;background:linear-gradient(180deg,#fff1c4,#f2c75c 55%,#d9a83b);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 8px 22px rgba(242,199,92,.25)}
+.plab{font-size:14px;color:var(--mu)}
+.subs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.sub{background:var(--pn2);border:1px solid var(--ln2);border-radius:14px;padding:10px 12px}
+.sub b{display:block;font:700 22px 'JetBrains Mono',monospace;color:#fff;letter-spacing:1px}
+.sub .l2{font-size:34px;color:var(--gd)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.ver{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13.5px;color:var(--mu);background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:8px 11px}
+.ver.bad{background:rgba(251,113,133,.08);border-color:rgba(251,113,133,.3)}
+/* นับถอยหลัง */
+.cd{display:flex;gap:8px;margin:10px 0}
+.cd div{flex:1;text-align:center;background:var(--pn2);border:1px solid var(--ln2);border-radius:12px;padding:8px 0}
+.cd b{display:block;font:700 26px 'JetBrains Mono',monospace;color:var(--gd)}
+.cd small{color:var(--mu);font-size:12.5px}
+/* ตรวจสลาก */
+.inrow{display:flex;gap:8px;flex-wrap:wrap}
+input,select,textarea{font:600 17px Sarabun,sans-serif;color:var(--tx);background:rgba(0,0,0,.28);border:1px solid var(--ln2);border-radius:12px;padding:11px 13px;outline:none}
+input:focus,select:focus{border-color:var(--gd)}
+#tkIn{flex:1;min-width:200px;font:700 22px 'JetBrains Mono',monospace;letter-spacing:4px}
+.tks{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.tk{display:inline-flex;align-items:center;gap:6px;background:rgba(242,199,92,.1);border:1px dashed var(--gd2);border-radius:10px;padding:5px 6px 5px 11px;font:700 18px 'JetBrains Mono',monospace;letter-spacing:2px}
+.tk button{border:0;background:rgba(255,255,255,.08);color:var(--tx);border-radius:7px;width:24px;height:24px;cursor:pointer}
+.res{display:grid;gap:10px;margin-top:12px}
+.rs{display:flex;gap:12px;align-items:center;border-radius:14px;padding:12px 14px;border:1px solid var(--ln2);background:var(--pn2)}
+.rs .n{font:700 24px 'JetBrains Mono',monospace;letter-spacing:3px;min-width:120px}
+.rs.win{border-color:var(--gd);background:linear-gradient(90deg,rgba(242,199,92,.16),rgba(242,199,92,.04))}
+.rs.win .n{color:var(--gd)}
+.rs ul{list-style:none}.rs li{font-weight:600}
+.verify{margin-top:14px;border:1px solid var(--ln);border-radius:14px;padding:14px;background:rgba(242,199,92,.06)}
+.verify ol{padding-left:22px;margin-top:6px}.verify li{margin:3px 0}
+/* ตารางรางวัล */
+.pz{margin-top:14px}.pz h4{font-size:16px;margin-bottom:7px;color:var(--gd)}
+.pz h4 small{color:var(--mu);font-weight:500;font-family:Sarabun,sans-serif}
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.nums span{font:600 16px 'JetBrains Mono',monospace;text-align:center;background:var(--pn2);border:1px solid var(--ln2);border-radius:9px;padding:6px 0}
+.nums span.hit{background:var(--gd);color:#231800;border-color:var(--gd)}
+/* สถิติ */
+.heat{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.heat button{aspect-ratio:1;border:0;border-radius:8px;font:700 14px 'JetBrains Mono',monospace;color:#fff;cursor:pointer;position:relative}
+.heat button small{position:absolute;bottom:2px;left:0;right:0;font-size:9.5px;opacity:.8;font-weight:500}
+.heat button.sel{outline:2px solid #fff}
+.bars{display:grid;gap:5px}
+.bar{display:grid;grid-template-columns:52px 1fr 70px;gap:8px;align-items:center;font-size:14px}
+.bar i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--gd2),var(--gd))}
+.bar b{font-family:'JetBrains Mono',monospace}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--ln2);text-align:left}
+th{color:var(--mu);font-weight:600;font-size:13.5px}
+td.m{font-family:'JetBrains Mono',monospace;font-weight:600}
+.pos{display:grid;grid-template-columns:auto repeat(10,1fr);gap:3px;font-size:12.5px;text-align:center}
+.pos div{padding:4px 0;border-radius:6px}
+.edu{border-left:4px solid var(--cy);background:rgba(94,234,212,.06);padding:12px 14px;border-radius:0 12px 12px 0;margin-top:12px}
+.seg{display:inline-flex;border:1px solid var(--ln2);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--mu);padding:7px 12px;font:600 14px Prompt,Sarabun,sans-serif;cursor:pointer}
+.seg button.on{background:rgba(242,199,92,.18);color:var(--gd)}
+/* ฝัน */
+.dchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;max-height:230px;overflow:auto}
+.dchips button{border:1px solid var(--ln2);background:var(--pn2);color:var(--tx);padding:6px 12px;border-radius:999px;font:500 15px Sarabun,sans-serif;cursor:pointer}
+.dchips button:hover,.dchips button.on{border-color:var(--gd);color:var(--gd)}
+.dres{margin-top:14px;border:1px solid var(--ln);border-radius:16px;padding:16px;background:linear-gradient(135deg,rgba(242,199,92,.09),rgba(94,234,212,.04))}
+.lucky{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.lucky div{background:rgba(0,0,0,.25);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center}
+.lucky b{display:block;font:700 28px 'JetBrains Mono',monospace;color:var(--gd);letter-spacing:2px}
+.lucky small{color:var(--mu);font-size:12.5px}
+.fun{display:inline-block;font-size:12.5px;font-weight:700;color:#231800;background:var(--cy);border-radius:999px;padding:2px 10px;margin-left:6px;vertical-align:middle}
+.days{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+.days button{border:1px solid var(--ln2);background:var(--pn2);color:var(--tx);border-radius:12px;padding:8px;font:500 14.5px Sarabun,sans-serif;cursor:pointer}
+.days button b{display:block;font:700 22px 'JetBrains Mono',monospace;color:var(--gd)}
+.slot{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.slot span{width:46px;height:58px;display:grid;place-items:center;border-radius:10px;font:700 32px 'JetBrains Mono',monospace;background:rgba(0,0,0,.35);border:1px solid var(--ln);color:var(--gd)}
+/* ถ่ายทอดสด */
+.vbox{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000 radial-gradient(circle at 50% 40%,rgba(242,199,92,.18),transparent 60%);border:1px solid var(--ln);display:grid;place-items:center;text-align:center}
+.vbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vbox .ph{padding:20px}
+.vbox .ph b{display:block;font:600 21px Prompt,Sarabun,sans-serif;margin:8px 0}
+.play{width:74px;height:74px;border-radius:50%;border:0;background:linear-gradient(180deg,#f6d27a,#d9a83b);color:#231800;font-size:30px;cursor:pointer;box-shadow:0 0 0 8px rgba(242,199,92,.15)}
+.live{display:inline-flex;align-items:center;gap:6px;background:#e11d48;color:#fff;font:700 13px Prompt,Sarabun,sans-serif;border-radius:999px;padding:3px 10px}
+.live:before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;animation:pl 1.2s infinite}
+@keyframes pl{50%{opacity:.25}}
+.olist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.olist a{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--tx);border:1px solid var(--ln2);background:var(--pn2);border-radius:12px;padding:10px 12px}
+.olist a:hover{border-color:var(--gd)}
+.olist small{display:block;color:var(--mu);font-size:13px}
+/* ปลอดภัย */
+.safe{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.safe .card{margin:0!important}
+.safe h4{font-size:17px;margin-bottom:6px}
+.safe ul{padding-left:20px}.safe li{margin:4px 0}
+.disc{font-size:14.5px;color:#d9d5c8;line-height:1.75}
+footer{border-top:1px solid var(--ln2);padding:22px 0 40px;color:var(--mu);font-size:14px}
+footer a{color:var(--mu)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(40px);opacity:0;background:#11182f;border:1px solid var(--gd);color:var(--tx);padding:10px 16px;border-radius:12px;font-weight:600;transition:.25s;z-index:60}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.hidden{display:none!important}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.safe{grid-template-columns:1fr}.olist{grid-template-columns:1fr}}
+@media (max-width:600px){
+ body{font-size:16px}.wrap{padding:0 12px}
+ .hd img{width:38px;height:38px}.brand b{font-size:18px}.brand small{font-size:12px}
+ .hd .btn span{display:none}
+ .first span{width:calc((100vw - 92px)/6);height:62px;font-size:34px}
+ .subs{grid-template-columns:repeat(2,1fr)}
+ .card{padding:15px}
+ .days{grid-template-columns:repeat(2,1fr)}
+ .rs{flex-direction:column;align-items:flex-start}
+ .heat button small{display:none}
+ .note{font-size:13px}.vbox .ph{padding:12px}.vbox .ph b{font-size:16px;margin:6px 0}.vbox .ph span{display:none}.play{width:56px;height:56px;font-size:22px}.note .lg{display:none}.note .st{display:inline}.brand small{display:none}
+}
+</style>
+</head>
+<body>
+<div class="note" id="note"><span class="lg">⚠️ ผลการตรวจในหน้านี้ใช้เพื่อความสะดวกเบื้องต้น <b>โปรดตรวจกับประกาศของสำนักงานสลากกินแบ่งรัฐบาลก่อนขึ้นรางวัลทุกครั้ง</b> · CoreDash ไม่ใช่หน่วยงานรัฐ ไม่จำหน่าย ไม่รับซื้อสลาก</span><span class="st">⚠️ <b>ตรวจกับประกาศทางการก่อนขึ้นรางวัลทุกครั้ง</b> · ไม่ใช่หน่วยงานรัฐ</span><button aria-label="ปิด" onclick="this.parentNode.remove()">✕</button></div>
+<header>
+ <div class="wrap">
+  <div class="hd">
+   <img src="../live/assets/logo.webp" alt="CoreDash">
+   <div class="brand"><b>CoreDash ส่องโชค</b><small>ตรวจสลากกินแบ่งรัฐบาล · ลุ้นอย่างมีสติ</small></div>
+   <div class="sp"></div>
+   <a class="btn sm" href="https://www.glo.or.th" target="_blank" rel="noopener">🏛️ <span>เว็บทางการ</span></a>
+   <a class="btn sm gold" href="../../index.html">🏠 <span>หน้าหลัก</span></a>
+  </div>
+  <nav class="tabs" id="tabs">
+   <button data-t="check" class="on">🎫 ตรวจสลาก</button>
+   <button data-t="res">🏆 ผลรางวัล</button>
+   <button data-t="live">📺 ถ่ายทอดสด</button>
+   <button data-t="stat">📊 สถิติย้อนหลัง</button>
+   <button data-t="dream">🌙 ทำนายฝัน & เลขเสี่ยงทาย</button>
+   <button data-t="safe">🛡️ ลุ้นอย่างมีสติ</button>
+  </nav>
+ </div>
+</header>
+
+<main class="wrap">
+ <!-- ผลล่าสุด -->
+ <section class="grid2">
+  <div class="card hero" id="hero">
+   <div class="dhead"><div><div class="drawday" id="hDate">กำลังโหลดผลล่าสุด…</div><h2 style="font-size:20px">รางวัลที่ 1 <span class="mu sm" id="hPrice"></span></h2></div><span class="mu sm" id="hFetched"></span></div>
+   <div class="first" id="hFirst"><span>–</span><span>–</span><span>–</span><span>–</span><span>–</span><span>–</span></div>
+   <div class="subs">
+    <div class="sub"><span class="plab">เลขหน้า 3 ตัว</span><b id="hF3">–</b></div>
+    <div class="sub"><span class="plab">เลขท้าย 3 ตัว</span><b id="hB3">–</b></div>
+    <div class="sub"><span class="plab">เลขท้าย 2 ตัว</span><b class="l2" id="hL2">–</b></div>
+    <div class="sub"><span class="plab">ข้างเคียงรางวัลที่ 1</span><b id="hN1" style="font-size:16px">–</b></div>
+   </div>
+   <div class="chips" id="hBtns"></div>
+   <div class="ver" id="hVer">⏳ กำลังตรวจความถูกต้องของไฟล์ข้อมูล…</div>
+  </div>
+  <div class="card">
+   <h3>⏰ งวดถัดไป</h3>
+   <div class="drawday" id="nDate">–</div>
+   <div class="cd"><div><b id="cdD">–</b><small>วัน</small></div><div><b id="cdH">–</b><small>ชั่วโมง</small></div><div><b id="cdM">–</b><small>นาที</small></div><div><b id="cdS">–</b><small>วินาที</small></div></div>
+   <p class="mu sm">คาดการณ์จากปฏิทินปกติ (วันที่ 1 และ 16 ของเดือน ซึ่งอาจเลื่อนตามวันสำคัญ) โปรดยืนยันวันออกรางวัลกับสำนักงานสลากกินแบ่งรัฐบาล · ถ่ายทอดสดประมาณ 14:30 น.</p>
+   <div class="chips"><button class="btn sm gold" onclick="tab('live')">📺 ไปหน้าถ่ายทอดสด</button><button class="btn sm" onclick="tab('check')">🎫 ตรวจสลาก</button></div>
+  </div>
+ </section>
+
+ <!-- ตรวจสลาก -->
+ <section class="pane on" id="p-check" style="margin-top:16px">
+  <div class="card">
+   <h3>🎫 ตรวจสลากของคุณ</h3>
+   <div class="inrow">
+    <select id="ckDraw" aria-label="เลือกงวด"></select>
+    <input id="tkIn" inputmode="numeric" maxlength="6" placeholder="พิมพ์เลข 6 หลัก" autocomplete="off">
+    <button class="btn gold" id="tkAdd">➕ เพิ่มเลข</button>
+   </div>
+   <p class="mu sm" style="margin-top:6px">ใส่ได้หลายใบ (สูงสุด 30 ใบ) กด Enter หลังพิมพ์ครบ 6 หลัก หรือวางเลขหลายชุดพร้อมกันได้ · เลขจะถูกจำไว้ในเครื่องของคุณเท่านั้น</p>
+   <div class="tks" id="tks"></div>
+   <div class="chips" style="margin-top:0"><button class="btn gold" id="ckGo">🔍 ตรวจรางวัล</button><button class="btn sm" id="tkClr">🗑️ ล้างเลขทั้งหมด</button></div>
+   <div class="res" id="ckRes"></div>
+   <div class="verify" id="ckVerify">
+    <b>✅ ขั้นตอนยืนยันกับทางการก่อนขึ้นรางวัล</b>
+    <ol>
+     <li>เปิด <a id="vPdf" href="https://www.glo.or.th" target="_blank" rel="noopener">ใบประกาศผลรางวัลทางการ (PDF)</a> ของงวดนี้ แล้วเทียบเลขทีละหลัก</li>
+     <li>ตรวจซ้ำที่ <a href="https://www.glo.or.th" target="_blank" rel="noopener">เว็บไซต์สำนักงานสลากกินแบ่งรัฐบาล</a> หรือแอป <b>GLO Lottery Official</b></li>
+     <li>ตรวจงวดวันที่บนสลาก และสภาพสลาก (ไม่ขาด ไม่ปลอม) ก่อนนำไปขึ้นรางวัลตามช่องทางที่สำนักงานสลากฯ กำหนด</li>
+    </ol>
+   </div>
+  </div>
+ </section>
+
+ <!-- ผลรางวัล -->
+ <section class="pane" id="p-res" style="margin-top:16px">
+  <div class="card">
+   <div class="dhead"><h3>🏆 ผลรางวัลครบทุกรางวัล</h3><div class="inrow"><select id="rsDraw" aria-label="เลือกงวด"></select><input id="rsFind" inputmode="numeric" maxlength="6" placeholder="ค้นเลขในตาราง" style="width:170px"></div></div>
+   <div id="rsBox"><p class="mu">กำลังโหลด…</p></div>
+  </div>
+ </section>
+
+ <!-- ถ่ายทอดสด -->
+ <section class="pane" id="p-live" style="margin-top:16px">
+  <div class="grid2">
+   <div class="card">
+    <div class="dhead"><h3>📺 ถ่ายทอดสดการออกรางวัล</h3><span class="live hidden" id="liveTag">LIVE</span></div>
+    <div class="vbox" id="vbox">
+     <div class="ph"><button class="play" id="playLive" aria-label="เปิดชม">▶</button><b>ชมผ่านช่อง YouTube ทางการของสำนักงานสลากฯ</b><span class="mu sm">วิดีโอเล่นจากเครื่องเล่นของ YouTube โดยตรง · CoreDash ไม่ได้บันทึกหรือดัดแปลงสัญญาณ</span></div>
+    </div>
+    <div class="chips"><button class="btn sm" id="playReplay">⏮️ ดูวิดีโอการออกรางวัลงวดล่าสุด</button><a class="btn sm" href="https://www.youtube.com/channel/UC27Kd0oiWsODLhJ7pDl0T1Q" target="_blank" rel="noopener">▶ เปิดช่องบน YouTube</a></div>
+    <p class="mu sm" style="margin-top:8px">ถ้าเครื่องเล่นขึ้นว่า “วิดีโอไม่พร้อมใช้งาน” แปลว่ายังไม่เริ่มถ่ายทอด หรือช่องไม่อนุญาตให้ฝังวิดีโอในเว็บอื่น ให้เลือกช่องทางทางการด้านขวาได้เลย</p>
+   </div>
+   <div class="card">
+    <h3>📡 ช่องทางรับชมทางการ</h3>
+    <div class="olist">
+     <a href="https://www.glo.or.th" target="_blank" rel="noopener"><span style="font-size:24px">🏛️</span><span><b>เว็บไซต์สำนักงานสลากฯ</b><small>www.glo.or.th · ประมาณ 14:30 น.</small></span></a>
+     <a href="https://www.glo.or.th" target="_blank" rel="noopener"><span style="font-size:24px">📱</span><span><b>แอป GLO Lottery Official</b><small>iOS / Android</small></span></a>
+     <a href="https://www.amarintv.com" target="_blank" rel="noopener"><span style="font-size:24px">📺</span><span><b>อมรินทร์ทีวี ช่อง 34</b><small>ตามผังรายการของสถานี</small></span></a>
+     <a href="https://www.thairath.co.th" target="_blank" rel="noopener"><span style="font-size:24px">📺</span><span><b>ไทยรัฐทีวี ช่อง 32</b><small>ตามผังรายการของสถานี</small></span></a>
+     <a href="https://www.prd.go.th" target="_blank" rel="noopener"><span style="font-size:24px">📻</span><span><b>วิทยุ AM 891 kHz</b><small>สถานีวิทยุกระจายเสียงแห่งประเทศไทย</small></span></a>
+     <a href="#" onclick="tab('res');return false"><span style="font-size:24px">🏆</span><span><b>ผลรางวัลในหน้านี้</b><small>อัปเดตหลังสำนักงานสลากฯ ประกาศ (ช้ากว่าจอถ่ายทอดราว 10–30 นาที)</small></span></a>
+    </div>
+    <p class="mu sm" style="margin-top:10px">เวลาเริ่มถ่ายทอดของแต่ละช่องอาจเปลี่ยนตามผังของสถานี · บางงวดเป็นสลากสัญจรออกรางวัลต่างจังหวัด</p>
+   </div>
+  </div>
+ </section>
+
+ <!-- สถิติ -->
+ <section class="pane" id="p-stat" style="margin-top:16px">
+  <div class="card">
+   <div class="dhead"><h3>📊 สถิติย้อนหลังจากข้อมูลทางการ</h3><div class="seg" id="stRange"><button data-r="0" class="on">ทั้งหมด</button><button data-r="5">5 ปี</button><button data-r="2">2 ปี</button><button data-r="1">1 ปี</button></div></div>
+   <p class="mu sm" id="stInfo">–</p>
+   <div class="edu"><b>🧠 อ่านสถิติให้เป็น:</b> การออกรางวัลแต่ละงวดสุ่มใหม่ทั้งหมด เลขที่เคยออกบ่อยหรือไม่ออกนาน <b>ไม่ได้มีโอกาสมากขึ้นหรือน้อยลง</b> ในงวดถัดไป ทุกเลขท้าย 2 ตัวมีโอกาส 1 ใน 100 และรางวัลที่ 1 มีโอกาส 1 ใน 1,000,000 ต่อใบเท่ากันทุกงวด สถิตินี้มีไว้ดูเป็นความรู้ ไม่ใช่การทำนาย</div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+   <div class="card">
+    <h3>🔢 เลขท้าย 2 ตัว 00–99</h3>
+    <p class="mu sm">สีเข้ม = ออกบ่อยกว่าค่าเฉลี่ย · แตะช่องเพื่อดูรายละเอียด</p>
+    <div class="heat" id="heat" style="margin-top:8px"></div>
+    <div class="ver" id="heatInfo" style="background:var(--pn2);border-color:var(--ln2)">แตะเลขเพื่อดูว่าออกกี่ครั้ง และออกล่าสุดเมื่อไร</div>
+   </div>
+   <div class="card">
+    <h3>🏅 เลขท้าย 2 ตัวที่ออกบ่อย</h3><div class="bars" id="topL2"></div>
+    <h3 style="margin-top:16px">⏳ เลขท้าย 2 ตัวที่ไม่ออกนานที่สุด</h3><div class="bars" id="gapL2"></div>
+   </div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+   <div class="card"><h3>🎯 ตัวเลขแต่ละหลักของรางวัลที่ 1</h3><p class="mu sm">นับว่าแต่ละหลัก (หลักแสน → หลักหน่วย) ออกเลข 0–9 กี่ครั้ง</p><div class="pos" id="posTbl" style="margin-top:8px"></div></div>
+   <div class="card"><h3>🔁 เลขหน้า 3 ตัว / เลขท้าย 3 ตัว ที่ออกซ้ำบ่อย</h3><div id="top3"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>🗓️ ผล 24 งวดล่าสุด</h3><div style="overflow:auto"><table id="recent"></table></div></div>
+ </section>
+
+ <!-- ทำนายฝัน -->
+ <section class="pane" id="p-dream" style="margin-top:16px">
+  <div class="card" style="border-color:rgba(94,234,212,.35)"><p class="disc">🌙 <b>เพื่อความบันเทิงเท่านั้น</b> — คำทำนายฝันในหน้านี้เรียบเรียงจากความเชื่อพื้นบ้าน ส่วน “เลขเสี่ยงทาย” คำนวณจากชื่อความฝันด้วยสูตรคงที่ของ CoreDash (ใครพิมพ์คำเดียวกันก็ได้เลขเดียวกัน) <b>ไม่ใช่สถิติ ไม่ใช่การทำนายผล และไม่ใช่คำแนะนำให้ซื้อเลขใด</b> หากจะร่วมลุ้น โปรดซื้อเฉพาะสลากกินแบ่งรัฐบาลจากช่องทางที่ถูกต้อง ในงบที่ไม่กระทบชีวิตประจำวัน</p></div>
+  <div class="grid2" style="margin-top:16px">
+   <div class="card">
+    <h3>🌙 ทำนายฝัน <span class="fun">บันเทิง</span></h3>
+    <div class="inrow"><input id="drIn" placeholder="ฝันเห็นอะไร เช่น งู ช้าง ฟันหัก" style="flex:1;min-width:180px"><button class="btn gold" id="drGo">🔮 ทำนาย</button></div>
+    <div class="dchips" id="drChips"></div>
+    <div class="dres hidden" id="drRes"></div>
+   </div>
+   <div class="card">
+    <h3>🗓️ เลขมงคลตามวันเกิด <span class="fun">ความเชื่อ</span></h3>
+    <p class="mu sm">ตามตำราทักษาโบราณ แต่ละวันมีเลขประจำวัน</p>
+    <div class="days" id="days"></div>
+    <div class="dres hidden" id="dayRes"></div>
+    <h3 style="margin-top:18px">🎲 สุ่มเลขเสี่ยงทาย <span class="fun">บันเทิง</span></h3>
+    <div class="slot" id="slot"><span>?</span><span>?</span><span>?</span><span>?</span><span>?</span><span>?</span></div>
+    <div style="text-align:center"><button class="btn gold" id="spin">🎰 หมุนเลข</button></div>
+    <p class="mu sm" style="text-align:center;margin-top:6px">สุ่มด้วยตัวสุ่มของเครื่อง ทุกเลขมีโอกาสเท่ากัน ไม่ได้ “แม่น” กว่าเลขอื่น</p>
+   </div>
+  </div>
+ </section>
+
+ <!-- ลุ้นอย่างมีสติ -->
+ <section class="pane" id="p-safe" style="margin-top:16px">
+  <div class="safe">
+   <div class="card"><h4>🎟️ ซื้อให้ถูกช่องทาง</h4><ul>
+    <li>สนับสนุนเฉพาะ <b>สลากกินแบ่งรัฐบาล</b> ของสำนักงานสลากกินแบ่งรัฐบาลเท่านั้น</li>
+    <li>ราคาที่กำหนด <b>80 บาท</b> ต่อใบ · ซื้อได้จากสลากดิจิทัลในแอป <b>เป๋าตัง</b> หรือตัวแทนจำหน่ายที่ได้รับอนุญาต</li>
+    <li>ไม่สนับสนุนหวยใต้ดิน หวยออนไลน์ หรือเว็บพนัน ซึ่งผิดกฎหมาย</li></ul></div>
+   <div class="card"><h4>💰 ขึ้นรางวัลอย่างถูกต้อง</h4><ul>
+    <li>ผู้มีอายุต่ำกว่า <b>20 ปีบริบูรณ์</b> ไม่สามารถติดต่อขอรับรางวัลได้ ตามระเบียบสำนักงานสลากฯ</li>
+    <li>รับรางวัลที่สำนักงานสลากฯ หักอากรแสตมป์ 0.5% · รับผ่านแอปเป๋าตัง หักค่าธรรมเนียม 1% และอากรแสตมป์ 0.5%</li>
+    <li>ตรวจเงื่อนไขล่าสุดที่ <a href="https://www.glo.or.th" target="_blank" rel="noopener">www.glo.or.th</a> ก่อนเดินทาง</li></ul></div>
+   <div class="card"><h4>🧘 ลุ้นอย่างมีสติ</h4><ul>
+    <li>ตั้งงบที่เสียได้โดยไม่กระทบค่าใช้จ่ายจำเป็น และไม่กู้ยืมเพื่อซื้อสลาก</li>
+    <li>ระวังมิจฉาชีพ: เพจขาย “เลขเด็ด” ให้โอนเงินก่อน หรือเว็บที่แอบอ้างเป็นสำนักงานสลากฯ</li>
+    <li>ถ้าเริ่มเครียดหรือเสียเงินมากเกินไป ปรึกษาได้ที่ <b>สายด่วนสุขภาพจิต 1323</b></li></ul></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+   <h3>📜 ข้อจำกัดความรับผิดชอบ</h3>
+   <p class="disc">CoreDash ส่องโชค จัดทำโดย CoreDash Technology เพื่อบริการข้อมูลแก่ประชาชนโดยไม่แสวงหากำไร ผลรางวัลดึงจาก API ที่สำนักงานสลากกินแบ่งรัฐบาลเปิดเผยผ่าน GLO Data Catalog และแสดงตามที่ได้รับโดยไม่แก้ไขค่า อย่างไรก็ดี ระหว่างการรับส่งและแสดงผลอาจเกิดความคลาดเคลื่อนได้ <b>ผลการตรวจในหน้านี้จึงใช้เพื่อความสะดวกเบื้องต้นเท่านั้น และไม่สามารถใช้อ้างอิงเพื่อขอรับเงินรางวัลได้</b> ท่านควรตรวจสอบกับประกาศผลอย่างเป็นทางการของสำนักงานสลากกินแบ่งรัฐบาลทุกครั้ง CoreDash ขอสงวนสิทธิ์ไม่รับผิดชอบต่อความเสียหายใด ๆ อันเกิดจากการใช้ข้อมูลในหน้านี้</p>
+   <p class="disc" style="margin-top:8px">CoreDash ไม่ใช่หน่วยงานของรัฐ ไม่ได้รับการแต่งตั้งจากสำนักงานสลากกินแบ่งรัฐบาล ไม่จำหน่าย ไม่รับฝาก ไม่รับซื้อ และไม่รับขึ้นเงินรางวัลสลากใด ๆ ทั้งสิ้น ส่วนคำทำนายฝันและเลขเสี่ยงทายเป็นเนื้อหาเพื่อความบันเทิง ไม่มีเจตนาชักชวนหรือชี้นำให้เล่นการพนัน</p>
+  </div>
+ </section>
+</main>
+
+<footer>
+ <div class="wrap">
+  <p>ข้อมูลผลรางวัล: <a href="https://www.glo.or.th" target="_blank" rel="noopener">สำนักงานสลากกินแบ่งรัฐบาล</a> ผ่าน <a href="https://gdcatalog.glo.or.th/dataset/dataset_c4-9_01" target="_blank" rel="noopener">GLO Data Catalog</a> · ระบบอัตโนมัติของ CoreDash ดึงผลและบันทึกพร้อมลายนิ้วมือ SHA-256 ทุกงวด · <span id="fUpd"></span></p>
+  <p style="margin-top:6px">© CoreDash Technology · www.coredashtech.com · 081-923-2380 · บริการไม่แสวงหากำไร</p>
+ </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={get(k,d){try{const v=localStorage.getItem('lotto.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('lotto.'+k,JSON.stringify(v))}catch(e){}}};
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200)}
+const TH_M=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TH_D=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const pd=d=>{const[y,m,dd]=d.split('-').map(Number);return{y,m,d:dd}};
+const thDate=d=>{const p=pd(d);return`${p.d} ${TH_M[p.m-1]} ${p.y+543}`};
+const thShort=d=>{const p=pd(d);return`${p.d} ${TH_MS[p.m-1]} ${String(p.y+543).slice(2)}`};
+const money=v=>Number(v||0).toLocaleString('th-TH');
+const fmtTime=iso=>{try{return new Date(iso).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'})+' น.'}catch(e){return iso}};
+
+/* ---------- แท็บ ---------- */
+function tab(t,go=true){$$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));LS.set('tab',t);if(t==='stat')renderStats();
+  const p=$('#p-'+t),hh=$('header').offsetHeight+10;if(p&&(go||window.scrollY>p.offsetTop-hh))window.scrollTo({top:p.offsetTop-hh,behavior:'smooth'});if(history.replaceState)history.replaceState(null,'','#'+t)}
+$$('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
+
+/* ---------- ข้อมูล ---------- */
+let IDX=null;const CACHE={};
+async function getJSON(u){const r=await fetch(u,{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+async function loadDraw(d){if(CACHE[d])return CACHE[d];const rec=await getJSON(`data/draws/${d.slice(0,4)}/${d}.json`);CACHE[d]=rec;return rec}
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+const nums=(r,k)=>((r.data?.[k]?.number)||[]).map(x=>String(x.value));
+const price=(r,k)=>Number(r.data?.[k]?.price||0);
+const PZ=[['first','รางวัลที่ 1'],['near1','รางวัลข้างเคียงรางวัลที่ 1'],['second','รางวัลที่ 2'],['third','รางวัลที่ 3'],['fourth','รางวัลที่ 4'],['fifth','รางวัลที่ 5'],['last3f','รางวัลเลขหน้า 3 ตัว'],['last3b','รางวัลเลขท้าย 3 ตัว'],['last2','รางวัลเลขท้าย 2 ตัว']];
+
+async function init(){
+  try{IDX=await getJSON('data/index.json')}catch(e){
+    $('#hDate').textContent='ยังไม่มีข้อมูลผลรางวัล';$('#hVer').className='ver bad';$('#hVer').innerHTML='⏳ ระบบอัตโนมัติกำลังดึงผลจากสำนักงานสลากฯ เป็นครั้งแรก กรุณากลับมาใหม่ภายหลัง หรือดูผลที่ <a href="https://www.glo.or.th" target="_blank" rel="noopener">www.glo.or.th</a>';
+    $('#rsBox').innerHTML='<p class="mu">ยังไม่มีข้อมูล</p>';countdown();return}
+  const ds=[...IDX.draws].reverse(),opt=ds.map(x=>`<option value="${x.d}">งวด ${thDate(x.d)}</option>`).join('');
+  $('#ckDraw').innerHTML=opt;$('#rsDraw').innerHTML=opt;
+  $('#fUpd').textContent='อัปเดตล่าสุด '+fmtTime(IDX.updated_at)+' · มีข้อมูล '+IDX.draws.length+' งวด';
+  await showHero(ds[0].d);renderRes(ds[0].d);countdown();
+}
+async function showHero(d){
+  const e=IDX.draws.find(x=>x.d===d);$('#hDate').textContent='งวดวันที่ '+thDate(d);
+  $('#hFirst').innerHTML=[...e.f].map(c=>`<span>${c}</span>`).join('');
+  $('#hF3').textContent=e.f3.join('  ');$('#hB3').textContent=e.b3.join('  ');$('#hL2').textContent=e.l2;$('#hN1').textContent=e.n1.join(' · ');
+  const b=[];if(e.pdf)b.push(`<a class="btn sm gold" href="${esc(e.pdf)}" target="_blank" rel="noopener">📄 ใบประกาศผลทางการ</a>`);
+  if(e.yt)b.push(`<button class="btn sm" onclick="tab('live');playVideo('${esc(ytId(e.yt))}')">▶ วิดีโอการออกรางวัล</button>`);
+  b.push(`<button class="btn sm" onclick="tab('res')">🏆 ดูครบทุกรางวัล</button>`);$('#hBtns').innerHTML=b.join('');
+  if(e.pdf)$('#vPdf').href=e.pdf;
+  try{const rec=await loadDraw(d);$('#hPrice').textContent='· รางวัลละ '+money(price(rec.result,'first'))+' บาท';
+    const h=await sha256(JSON.stringify(rec.result)),ok=h===rec.sha256;
+    $('#hVer').className='ver'+(ok?'':' bad');
+    $('#hVer').innerHTML=ok?`🔒 <span>ข้อมูลจาก API สำนักงานสลากกินแบ่งรัฐบาล ดึงเมื่อ ${fmtTime(rec.retrieved_at)} · ลายนิ้วมือ SHA-256 ตรงกับที่บันทึก (<span class="mono">${h.slice(0,12)}…</span>) แปลว่าไฟล์ไม่ถูกแก้ไขหลังดึงมา</span>`:'⚠️ ลายนิ้วมือข้อมูลไม่ตรง โปรดตรวจผลที่ www.glo.or.th โดยตรง';
+    $('#hFetched').textContent='';
+  }catch(err){$('#hVer').className='ver bad';$('#hVer').textContent='⚠️ โหลดรายละเอียดงวดนี้ไม่สำเร็จ โปรดลองใหม่'}
+}
+const ytId=u=>{const m=String(u||'').match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/);return m?m[1]:''};
+
+/* ---------- งวดถัดไป ---------- */
+function drawCandidates(y){const L=[];for(let m=1;m<=12;m++){
+    let a=1,b=16;if(m===1){a=null;b=17}if(m===5)a=2;
+    if(a)L.push(new Date(Date.UTC(y,m-1,a,7,30)));L.push(new Date(Date.UTC(y,m-1,b,7,30)));
+    if(m===12)L.push(new Date(Date.UTC(y,11,30,7,30)))}return L.sort((p,q)=>p-q)}
+function nextDraw(){const now=Date.now(),last=IDX&&IDX.draws.length?IDX.draws.at(-1).d:'',y=new Date().getUTCFullYear();
+  const c=[...drawCandidates(y),...drawCandidates(y+1)];
+  for(const t of c){const ds=t.toISOString().slice(0,10);if(ds<=last)continue;if(t.getTime()+3*3600e3<now)continue;return t}return c.at(-1)}
+let ND=null;
+function countdown(){ND=nextDraw();const ds=ND.toISOString().slice(0,10),wd=TH_D[new Date(ds+'T12:00:00Z').getUTCDay()];
+  $('#nDate').textContent=`วัน${wd}ที่ ${thDate(ds)} (คาดการณ์)`;tick();clearInterval(window._cd);window._cd=setInterval(tick,1000)}
+function tick(){let s=Math.max(0,Math.floor((ND-Date.now())/1000));const live=s===0&&Date.now()<ND.getTime()+2.5*3600e3;
+  $('#liveTag').classList.toggle('hidden',!live);
+  const D=Math.floor(s/86400);s%=86400;const H=Math.floor(s/3600);s%=3600;const M=Math.floor(s/60);s%=60;
+  $('#cdD').textContent=D;$('#cdH').textContent=String(H).padStart(2,'0');$('#cdM').textContent=String(M).padStart(2,'0');$('#cdS').textContent=String(s).padStart(2,'0');
+  if(live&&!tick.done){tick.done=1;$('#nDate').innerHTML+=' <span class="live">กำลังถ่ายทอด</span>'}}
+
+/* ---------- ตรวจสลาก ---------- */
+let TK=LS.get('tickets',[]);
+function renderTk(){$('#tks').innerHTML=TK.map((n,i)=>`<span class="tk">${n}<button aria-label="ลบ" data-i="${i}">✕</button></span>`).join('')||'<span class="mu sm">ยังไม่มีเลข — พิมพ์เลขสลาก 6 หลักด้านบน</span>';
+  $$('#tks .tk button').forEach(b=>b.onclick=()=>{TK.splice(+b.dataset.i,1);LS.set('tickets',TK);renderTk()})}
+function addTk(raw){const found=String(raw).replace(/[^\d\s,]/g,' ').match(/\d{6}/g)||[];let n=0;
+  for(const x of found){if(TK.length>=30){toast('ใส่ได้สูงสุด 30 ใบ');break}if(!TK.includes(x)){TK.push(x);n++}}
+  LS.set('tickets',TK);renderTk();return n}
+$('#tkIn').addEventListener('input',e=>{const v=e.target.value;if(/\D/.test(v)&&/\d{6}/.test(v)){const n=addTk(v);e.target.value='';if(n)toast(`เพิ่ม ${n} เลขแล้ว`)}else e.target.value=v.replace(/\D/g,'').slice(0,6)});
+$('#tkIn').addEventListener('paste',e=>{const t=(e.clipboardData||window.clipboardData).getData('text');if((t.match(/\d{6}/g)||[]).length>1){e.preventDefault();toast(`เพิ่ม ${addTk(t)} เลขแล้ว`)}});
+$('#tkIn').addEventListener('keydown',e=>{if(e.key==='Enter'){if(e.target.value.length===6){addTk(e.target.value);e.target.value=''}else if(!e.target.value&&TK.length)check();else toast('กรุณาพิมพ์ให้ครบ 6 หลัก')}});
+$('#tkAdd').onclick=()=>{const v=$('#tkIn').value;if(v.length!==6)return toast('กรุณาพิมพ์ให้ครบ 6 หลัก');addTk(v);$('#tkIn').value='';$('#tkIn').focus()};
+$('#tkClr').onclick=()=>{TK=[];LS.set('tickets',TK);renderTk();$('#ckRes').innerHTML=''};
+$('#ckGo').onclick=()=>check();
+function matchPrizes(r,n){const out=[];for(const[k,name]of PZ){const L=nums(r,k);let hit=false;
+    if(k==='last3f')hit=L.includes(n.slice(0,3));else if(k==='last3b')hit=L.includes(n.slice(-3));else if(k==='last2')hit=L.includes(n.slice(-2));else hit=L.includes(n);
+    if(hit)out.push({k,name,price:price(r,k)})}return out}
+async function check(){const v=$('#tkIn').value;if(v.length===6){addTk(v);$('#tkIn').value=''}
+  if(!TK.length)return toast('ยังไม่มีเลขให้ตรวจ');if(!IDX)return toast('ยังไม่มีข้อมูลผลรางวัล');
+  const d=$('#ckDraw').value;$('#ckRes').innerHTML='<p class="mu">⏳ กำลังตรวจ…</p>';
+  let rec;try{rec=await loadDraw(d)}catch(e){$('#ckRes').innerHTML='<p class="mu">โหลดผลงวดนี้ไม่สำเร็จ โปรดลองใหม่</p>';return}
+  const r=rec.result,e=IDX.draws.find(x=>x.d===d);if(e&&e.pdf)$('#vPdf').href=e.pdf;
+  let win=0,sum=0;
+  const html=TK.map(n=>{const m=matchPrizes(r,n);if(m.length){win++;const s=m.reduce((a,b)=>a+b.price,0);sum+=s;
+      return`<div class="rs win"><span class="n">${n}</span><div><ul>${m.map(x=>`<li>🎉 ${x.name} · ${money(x.price)} บาท</li>`).join('')}</ul><span class="mu sm">ยินดีด้วย! โปรดยืนยันกับประกาศทางการก่อนขึ้นรางวัล</span></div></div>`}
+    return`<div class="rs"><span class="n">${n}</span><span class="mu">ไม่ถูกรางวัลในงวดนี้ · ขอให้โชคดีในงวดหน้า</span></div>`}).join('');
+  $('#ckRes').innerHTML=`<div class="ver" style="margin:0 0 4px"><span>${win?`🎉 พบเลขที่ตรงกับผลรางวัล <b>${win}</b> ใบ จาก ${TK.length} ใบ · ยอดรวมโดยประมาณ <b>${money(sum)} บาท</b> (ก่อนหักอากรและค่าธรรมเนียม)`:`ตรวจ ${TK.length} ใบ กับงวด ${thDate(d)} แล้ว ไม่พบเลขที่ตรงกับผลรางวัล`}</span></div>`+html+
+    `<p class="mu sm" style="margin-top:4px">ผลตรวจนี้อ้างอิงข้อมูลที่ดึงจาก API สำนักงานสลากฯ เมื่อ ${fmtTime(rec.retrieved_at)} — ใช้เพื่อความสะดวกเบื้องต้นเท่านั้น</p>`;
+  $('#ckVerify').scrollIntoView({behavior:'smooth',block:'nearest'})}
+renderTk();
+
+/* ---------- ผลรางวัลทุกรางวัล ---------- */
+async function renderRes(d){$('#rsDraw').value=d;const box=$('#rsBox');box.innerHTML='<p class="mu">⏳ กำลังโหลด…</p>';let rec;
+  try{rec=await loadDraw(d)}catch(e){box.innerHTML='<p class="mu">โหลดไม่สำเร็จ</p>';return}
+  const r=rec.result,q=$('#rsFind').value.replace(/\D/g,''),e=IDX.draws.find(x=>x.d===d);
+  const hit=(k,n)=>q.length>=2&&(k==='last2'?q.slice(-2)===n:k==='last3b'?q.length>=3&&q.slice(-3)===n:k==='last3f'?q.length>=3&&q.slice(0,3)===n:n.includes(q));
+  let h=`<p class="drawday" style="margin-top:6px">งวดวันที่ ${thDate(d)}</p>`;
+  for(const[k,name]of PZ){const L=nums(r,k);if(!L.length)continue;
+    h+=`<div class="pz"><h4>${name} <small>· ${L.length} รางวัล · รางวัลละ ${money(price(r,k))} บาท</small></h4><div class="nums"${k==='first'?' style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))"':''}>${L.map(n=>`<span class="${hit(k,n)?'hit':''}"${k==='first'?' style="font-size:26px;color:var(--gd)"':''}>${n}</span>`).join('')}</div></div>`}
+  if(r.n3&&r.n3.straight3){const g=(o,t)=>o&&o.number&&o.number.length?`<div class="sub"><span class="plab">${t} · ${money(o.price)} บาท</span><b>${o.number.map(x=>x.value).join(' ')}</b></div>`:'';
+    h+=`<div class="pz"><h4>สลากกินแบ่งรัฐบาลตัวเลขสามหลัก (N3) <small>· แยกจากสลาก 6 หลัก</small></h4><div class="subs" style="grid-template-columns:repeat(3,1fr)">${g(r.n3.straight3,'3 ตัวตรง')}${g(r.n3.shuffle3,'3 ตัวสลับ')}${g(r.n3.straight2,'2 ตัวตรง')}</div></div>`}
+  h+=`<div class="chips">${e&&e.pdf?`<a class="btn sm gold" href="${esc(e.pdf)}" target="_blank" rel="noopener">📄 ใบประกาศผลทางการ (PDF)</a>`:''}${e&&e.yt?`<button class="btn sm" onclick="tab('live');playVideo('${esc(ytId(e.yt))}')">▶ วิดีโอการออกรางวัล</button>`:''}</div>
+   <p class="mu sm" style="margin-top:8px">ที่มา: API สำนักงานสลากกินแบ่งรัฐบาล · ดึงเมื่อ ${fmtTime(rec.retrieved_at)} · SHA-256 <span class="mono">${esc(rec.sha256.slice(0,16))}…</span></p>`;
+  box.innerHTML=h}
+$('#rsDraw').onchange=e=>renderRes(e.target.value);
+$('#rsFind').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);clearTimeout(e.target._t);e.target._t=setTimeout(()=>renderRes($('#rsDraw').value),250)});
+
+/* ---------- ถ่ายทอดสด ---------- */
+const CH='UC27Kd0oiWsODLhJ7pDl0T1Q';
+function embed(src){$('#vbox').innerHTML=`<iframe src="${src}" title="วิดีโอการออกรางวัล" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`}
+function playVideo(id){if(!id)return toast('งวดนี้ยังไม่มีวิดีโอ');embed(`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=0&autoplay=1`);$('#vbox').scrollIntoView({behavior:'smooth',block:'center'})}
+$('#playLive').onclick=()=>embed(`https://www.youtube.com/embed/live_stream?channel=${CH}&autoplay=1&rel=0`);
+$('#playReplay').onclick=()=>{const e=IDX&&[...IDX.draws].reverse().find(x=>x.yt);e?playVideo(ytId(e.yt)):toast('ยังไม่มีวิดีโอย้อนหลัง')};
+
+/* ---------- สถิติ ---------- */
+let SR=0,SEL=null;
+$$('#stRange button').forEach(b=>b.onclick=()=>{SR=+b.dataset.r;$$('#stRange button').forEach(x=>x.classList.toggle('on',x===b));renderStats()});
+function renderStats(){if(!IDX)return;const all=IDX.draws;let D=all;
+  if(SR){const c=new Date();c.setFullYear(c.getFullYear()-SR);const cs=c.toISOString().slice(0,10);D=all.filter(x=>x.d>=cs)}
+  const N=D.length;$('#stInfo').innerHTML=`ข้อมูล <b>${N}</b> งวด ตั้งแต่ ${thDate(D[0].d)} ถึง ${thDate(D.at(-1).d)} · ที่มา: API สำนักงานสลากกินแบ่งรัฐบาล`;
+  const cnt=Array(100).fill(0),last=Array(100).fill(null);D.forEach((x,i)=>{const k=+x.l2;cnt[k]++;last[k]=i});
+  const exp=N/100,mx=Math.max(...cnt,1);
+  $('#heat').innerHTML=cnt.map((c,i)=>{const t=c/mx,bg=`rgba(242,199,92,${(.08+t*.85).toFixed(2)})`,col=t>.55?'#231800':'#fff';return`<button data-n="${i}" style="background:${bg};color:${col}" class="${SEL===i?'sel':''}">${String(i).padStart(2,'0')}<small>${c}</small></button>`}).join('');
+  $$('#heat button').forEach(b=>b.onclick=()=>{SEL=+b.dataset.n;$$('#heat button').forEach(x=>x.classList.toggle('sel',x===b));const i=SEL,c=cnt[i],l=last[i];
+    $('#heatInfo').innerHTML=`<span>เลขท้าย 2 ตัว <b class="mono" style="color:var(--gd);font-size:18px">${String(i).padStart(2,'0')}</b> ออก <b>${c}</b> ครั้งใน ${N} งวด (ค่าเฉลี่ยทางทฤษฎี ${exp.toFixed(1)} ครั้ง)${l!=null?` · ออกล่าสุดงวด ${thDate(D[l].d)} (${N-1-l} งวดที่แล้ว)`:' · ไม่ออกเลยในช่วงนี้'}</span>`});
+  const order=cnt.map((c,i)=>({i,c})).sort((a,b)=>b.c-a.c||a.i-b.i).slice(0,10);
+  $('#topL2').innerHTML=order.map(o=>`<div class="bar"><b>${String(o.i).padStart(2,'0')}</b><i style="width:${(o.c/mx*100).toFixed(0)}%"></i><span>${o.c} ครั้ง</span></div>`).join('');
+  const gaps=last.map((l,i)=>({i,g:l==null?N:N-1-l,never:l==null})).sort((a,b)=>b.g-a.g).slice(0,8),gm=Math.max(...gaps.map(g=>g.g),1);
+  $('#gapL2').innerHTML=gaps.map(o=>`<div class="bar"><b>${String(o.i).padStart(2,'0')}</b><i style="width:${(o.g/gm*100).toFixed(0)}%;background:linear-gradient(90deg,#3b8f86,var(--cy))"></i><span>${o.never?'ยังไม่ออก':o.g+' งวด'}</span></div>`).join('');
+  const P=Array.from({length:6},()=>Array(10).fill(0));D.forEach(x=>[...x.f].forEach((c,j)=>P[j][+c]++));const pm=Math.max(...P.flat(),1);
+  const pn=['แสน','หมื่น','พัน','ร้อย','สิบ','หน่วย'];
+  $('#posTbl').innerHTML='<div></div>'+[...Array(10).keys()].map(i=>`<div class="mu"><b>${i}</b></div>`).join('')+P.map((row,j)=>`<div class="mu" style="text-align:right;padding-right:6px">${pn[j]}</div>`+row.map(c=>`<div style="background:rgba(94,234,212,${(.06+c/pm*.6).toFixed(2)})">${c}</div>`).join('')).join('');
+  const c3=(key)=>{const m={};D.forEach(x=>x[key].forEach(n=>m[n]=(m[n]||0)+1));return Object.entries(m).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,6)};
+  const t3=(L,t)=>`<p class="mu sm" style="margin:8px 0 4px">${t}</p><div class="nums">${L.map(([n,c])=>`<span title="${c} ครั้ง">${n} <small class="mu">×${c}</small></span>`).join('')}</div>`;
+  $('#top3').innerHTML=t3(c3('f3'),'เลขหน้า 3 ตัว')+t3(c3('b3'),'เลขท้าย 3 ตัว')+`<p class="mu sm" style="margin-top:8px">เลข 3 ตัวมี 1,000 แบบ ในช่วง ${N} งวดจึงซ้ำกันได้น้อยมากโดยธรรมชาติ</p>`;
+  $('#recent').innerHTML='<tr><th>งวด</th><th>รางวัลที่ 1</th><th>หน้า 3 ตัว</th><th>ท้าย 3 ตัว</th><th>ท้าย 2 ตัว</th></tr>'+[...all].reverse().slice(0,24).map(x=>`<tr><td>${thShort(x.d)}</td><td class="m" style="color:var(--gd)">${x.f}</td><td class="m">${x.f3.join(' ')}</td><td class="m">${x.b3.join(' ')}</td><td class="m">${x.l2}</td></tr>`).join('')}
+
+/* ---------- ทำนายฝัน (ความเชื่อพื้นบ้าน · เพื่อความบันเทิง) ---------- */
+const DREAMS=[
+ ['งู','งูใหญ่ งูเห่า งูเหลือม','ตามความเชื่อเก่า ฝันเห็นงูมักหมายถึงเรื่องความรักหรือคู่ครองที่กำลังเข้ามา ถ้างูรัดตัว เชื่อว่าจะได้พบคนที่ผูกพันกันยาวนาน'],
+ ['ช้าง','ช้างเผือก','เชื่อกันว่าเป็นนิมิตดี มีผู้ใหญ่ให้การสนับสนุน งานมั่นคง มีบารมีในหมู่คนรอบข้าง'],
+ ['ปลา','ปลาตัวใหญ่ จับปลา','หมายถึงความอุดมสมบูรณ์ มีกินมีใช้ ถ้าจับปลาได้เชื่อว่าจะมีโชคเล็ก ๆ น้อย ๆ'],
+ ['พระ','พระสงฆ์ หลวงพ่อ','สิ่งศักดิ์สิทธิ์คุ้มครอง ใจสงบ เป็นช่วงเหมาะกับการทำบุญและทำสิ่งดี'],
+ ['พระพุทธรูป','พระเครื่อง','เชื่อว่าจะมีผู้ใหญ่ใจดีเมตตา และพ้นจากเรื่องร้ายที่กังวลอยู่'],
+ ['ฟันหัก','ฟันหลุด ฟันโยก','ความเชื่อเก่าให้หมั่นดูแลสุขภาพคนในครอบครัว ส่วนนักจิตวิทยามองว่าอาจสะท้อนความกังวลในใจ'],
+ ['น้ำท่วม','น้ำหลาก','เชื่อกันว่าเงินทองหรือโอกาสจะไหลเข้ามามาก แต่ควรวางแผนใช้จ่ายให้ดี'],
+ ['ไฟไหม้','ไฟ','หมายถึงการเปลี่ยนแปลงครั้งใหญ่ เรื่องเก่าจบลงและมีจุดเริ่มต้นใหม่'],
+ ['ทอง','สร้อยทอง ทองคำ','บางตำราว่าได้ของมีค่า บางตำราว่าให้ระวังการใช้จ่าย ถือเป็นเครื่องเตือนให้มีสติเรื่องเงิน'],
+ ['เงิน','ธนบัตร ได้เงิน','สะท้อนความหวังเรื่องการเงิน เป็นโอกาสดีที่จะทบทวนการออมและรายจ่าย'],
+ ['เด็กทารก','เด็ก ลูก','สิ่งใหม่ที่สดใส โครงการใหม่ หรือข่าวดีในครอบครัว'],
+ ['ตั้งครรภ์','ท้อง','เชื่อว่าจะมีสิ่งใหม่งอกงาม ความคิดหรืองานใหม่กำลังก่อตัว'],
+ ['งานแต่งงาน','แต่งงาน','ความสัมพันธ์ก้าวหน้า หรือมีงานมงคลในหมู่ญาติมิตร'],
+ ['คนตาย','ศพ งานศพ','ความเชื่อพื้นบ้านถือว่ากลับด้าน หมายถึงอายุยืนหรือการปิดเรื่องเก่าเพื่อเริ่มใหม่'],
+ ['ญาติที่ล่วงลับ','พ่อแม่ที่เสียไปแล้ว ปู่ย่าตายาย','เชื่อกันว่าท่านมาเยี่ยมด้วยความห่วงใย เป็นโอกาสดีที่จะทำบุญอุทิศส่วนกุศล'],
+ ['ผี','วิญญาณ','สะท้อนความกังวลที่ค้างใจ ลองจัดการเรื่องที่ค้างอยู่ทีละเรื่อง'],
+ ['บ้านใหม่','ย้ายบ้าน','ความมั่นคงในชีวิต มีโอกาสขยับขยายหรือเปลี่ยนสภาพแวดล้อมในทางที่ดี'],
+ ['รถ','รถยนต์ ขับรถ','การควบคุมทิศทางชีวิต ถ้าขับได้ราบรื่นเชื่อว่างานจะเดินหน้าดี'],
+ ['เครื่องบิน','บิน ขึ้นเครื่องบิน','ความก้าวหน้า การเดินทาง หรือเป้าหมายที่สูงขึ้น'],
+ ['ทะเล','ชายหาด คลื่น','ใจกว้าง มีโอกาสใหม่ ๆ ถ้าคลื่นสงบเชื่อว่าชีวิตจะราบรื่น'],
+ ['ภูเขา','ปีนเขา','อุปสรรคที่ผ่านได้ด้วยความพยายาม ปีนถึงยอดคือความสำเร็จ'],
+ ['ฝนตก','ฝน','ความชุ่มชื้น เรื่องหนักใจจะคลี่คลาย'],
+ ['ดอกไม้','ดอกบัว ดอกกุหลาบ','ความรัก ความงาม และข่าวดี ดอกบัวถือเป็นมงคลเป็นพิเศษ'],
+ ['แหวน','ได้แหวน','คำมั่นสัญญา ความสัมพันธ์ที่มั่นคง'],
+ ['ไก่','ไก่ชน ไก่ขัน','ความขยัน ได้ข่าวคราวที่รอคอย'],
+ ['หมา','สุนัข','มิตรภาพและความซื่อสัตย์ จะมีเพื่อนคอยช่วยเหลือ'],
+ ['แมว','แมวดำ','ความละเอียดอ่อน เชื่อว่าให้ระวังเรื่องเล็กน้อยที่อาจมองข้าม'],
+ ['เสือ','เสือโคร่ง','อำนาจ ความกล้า ได้รับความเกรงใจ แต่ควรใช้อย่างนุ่มนวล'],
+ ['ม้า','ขี่ม้า','ความเร็ว ความก้าวหน้า งานเดินหน้าเร็วกว่าที่คิด'],
+ ['วัว','ควาย','ความขยันอดทน ผลจากความเพียรจะออกดอกออกผล'],
+ ['เต่า','','ความมั่นคงยั่งยืน อายุยืน ค่อยเป็นค่อยไปแต่ถึงจุดหมาย'],
+ ['จระเข้','','ให้รอบคอบเรื่องคนรอบตัวและสัญญาต่าง ๆ อ่านให้ละเอียดก่อนตัดสินใจ'],
+ ['พญานาค','นาค','สิ่งศักดิ์สิทธิ์และความอุดมสมบูรณ์ ตามความเชื่อลุ่มน้ำโขง'],
+ ['ไข่','ไข่ไก่','สิ่งใหม่กำลังจะเกิด ไอเดียที่รอวันฟักตัว'],
+ ['ข้าว','นาข้าว หุงข้าว','ความอิ่มหนำ ครอบครัวอบอุ่น มีกินมีใช้'],
+ ['มะม่วง','ผลไม้','ผลของความตั้งใจกำลังสุกงอม'],
+ ['ตกจากที่สูง','ตกตึก ตกเหว','สะท้อนความกังวลหรือความเหนื่อยล้า ลองพักผ่อนให้เพียงพอ'],
+ ['บินได้','ลอยตัว','ความรู้สึกเป็นอิสระ มั่นใจในตัวเอง'],
+ ['สอบ','ทำข้อสอบ','กำลังถูกทดสอบในเรื่องสำคัญ เตรียมตัวให้พร้อมแล้วจะผ่านไปได้'],
+ ['ถูกไล่','หนี ถูกไล่ล่า','มีเรื่องที่อยากหลีกเลี่ยง ลองหันกลับไปเผชิญทีละน้อย'],
+ ['แฟนเก่า','คนรักเก่า','ความทรงจำเก่ายังค้างใจ เป็นสัญญาณให้ปล่อยวางและก้าวต่อ'],
+ ['พระจันทร์','จันทร์เต็มดวง','ความอ่อนโยน ความรักสมหวัง ความงามในชีวิต'],
+ ['พระอาทิตย์','แสงแดด','พลังและความสำเร็จ ชื่อเสียงเปิดเผย'],
+ ['รุ้งกินน้ำ','สายรุ้ง','ความหวังหลังพายุ เรื่องร้ายจะผ่านไป'],
+ ['ร้องไห้','น้ำตา','ความเชื่อเก่าว่ากลับด้าน จะได้หัวเราะและพบเรื่องสบายใจ'],
+ ['วัด','โบสถ์ เจดีย์','ความสงบ เหมาะกับการทำบุญ ใจจะเบาสบาย']
+];
+function fnv(s){let h=2166136261;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0}return h>>>0}
+function luckyOf(word){const w=word.replace(/\s+/g,'').replace(/^ฝัน(เห็น|ว่า)?/,'')||word;const a=fnv('CoreDash|'+w),b=fnv(w+'|ส่องโชค'),c=fnv('3|'+w);
+  return{w,two:[String(a%100).padStart(2,'0'),String(b%100).padStart(2,'0')],three:String(c%1000).padStart(3,'0'),one:String((a>>>9)%10)}}
+function showDream(q){q=q.trim();if(!q)return toast('พิมพ์สิ่งที่ฝันเห็นก่อน');
+  const nq=q.replace(/^ฝัน(เห็น|ว่า)?/,'').trim();const hit=DREAMS.find(([k,al])=>nq.includes(k)||k.includes(nq)||(al&&al.split(' ').some(a=>a&&(nq.includes(a)||a.includes(nq)))));
+  const key=hit?hit[0]:nq,L=luckyOf(key);
+  $$('#drChips button').forEach(b=>b.classList.toggle('on',b.textContent===key));
+  const el=$('#drRes');el.classList.remove('hidden');
+  el.innerHTML=`<h4 class="pf" style="font-size:18px">🌙 ฝันเห็น “${esc(key)}”</h4><p style="margin-top:6px">${hit?esc(hit[2]):'ยังไม่มีคำทำนายของสิ่งนี้ในตำราของเรา แต่ยังคำนวณเลขเสี่ยงทายจากชื่อได้'}</p>
+   <div class="lucky"><div><b>${L.two[0]}</b><small>เลข 2 ตัว</small></div><div><b>${L.two[1]}</b><small>เลข 2 ตัว</small></div><div><b>${L.three}</b><small>เลข 3 ตัว</small></div><div><b>${L.one}</b><small>เลขเดี่ยว</small></div></div>
+   <p class="mu sm" style="margin-top:10px">เลขคำนวณจากคำว่า “${esc(L.w)}” ด้วยสูตรคงที่ · เพื่อความบันเทิง ไม่ใช่สถิติหรือการชี้นำ ทุกเลขมีโอกาสถูกรางวัลเท่ากัน</p>`}
+$('#drChips').innerHTML=DREAMS.map(d=>`<button>${d[0]}</button>`).join('');
+$$('#drChips button').forEach(b=>b.onclick=()=>{$('#drIn').value=b.textContent;showDream(b.textContent)});
+$('#drGo').onclick=()=>showDream($('#drIn').value);$('#drIn').addEventListener('keydown',e=>{if(e.key==='Enter')showDream(e.target.value)});
+const DAYS=[['อาทิตย์',1,'#ef4444'],['จันทร์',2,'#facc15'],['อังคาร',3,'#f472b6'],['พุธ (กลางวัน)',4,'#22c55e'],['พุธ (กลางคืน)',8,'#64748b'],['พฤหัสบดี',5,'#f97316'],['ศุกร์',6,'#38bdf8'],['เสาร์',7,'#a855f7']];
+$('#days').innerHTML=DAYS.map(([d,n,c],i)=>`<button data-i="${i}" style="border-top:3px solid ${c}">${d}<b>${n}</b></button>`).join('');
+$$('#days button').forEach(b=>b.onclick=()=>{const[d,n]=DAYS[+b.dataset.i];const el=$('#dayRes');el.classList.remove('hidden');
+  el.innerHTML=`<b>เกิดวัน${esc(d)}</b> · เลขประจำวันตามตำราทักษาคือ <b class="mono" style="color:var(--gd);font-size:20px">${n}</b><p class="mu sm" style="margin-top:4px">เป็นความเชื่อทางโหราศาสตร์ไทย ใช้เป็นสีสันและกำลังใจ ไม่มีผลต่อโอกาสถูกรางวัล</p>`});
+$('#spin').onclick=()=>{const S=$$('#slot span'),fin=[...crypto.getRandomValues(new Uint32Array(6))].map(x=>x%10);let t=0;$('#spin').disabled=true;
+  const iv=setInterval(()=>{t++;S.forEach((s,i)=>{if(t<12+i*4)s.textContent=Math.floor(Math.random()*10);else s.textContent=fin[i]});if(t>=12+5*4){clearInterval(iv);$('#spin').disabled=false}},55)};
+
+/* ---------- เริ่ม ---------- */
+const start=(location.hash||'').slice(1);if(['check','res','live','stat','dream','safe'].includes(start))tab(start,false);
+init().then(()=>{if($('#p-stat').classList.contains('on'))renderStats()});
+</script>
+</body>
+</html>
