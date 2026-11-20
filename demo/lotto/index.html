@@ -156,6 +156,40 @@ td.m{font-family:'JetBrains Mono',monospace;font-weight:600}
 .disc{font-size:14.5px;color:var(--tx2);line-height:1.75}
 footer{border-top:1px solid var(--ln2);padding:22px 0 40px;color:var(--mu);font-size:14px}
 footer a{color:var(--mu)}
+/* เสี่ยงทายงวดหน้า */
+.globeWrap{position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:4px auto 0}
+#globe{width:100%;height:100%;display:block}
+.gcap{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:600 13px Prompt,Sarabun,sans-serif;color:var(--mu)}
+.mchips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 8px}
+.mchip{border:1px solid var(--ln2);background:var(--pn2);color:var(--tx);border-radius:999px;padding:7px 13px;font:600 14.5px Prompt,Sarabun,sans-serif;cursor:pointer}
+.mchip.on{background:var(--gdF);color:#231800;border-color:var(--gdF)}
+.bigspin{width:100%;justify-content:center;font-size:18px;padding:14px;margin-top:8px}
+.bigspin:disabled{opacity:.6;cursor:wait}
+.tframe{position:relative;border-radius:20px;padding:22px 18px 18px;background:linear-gradient(160deg,rgba(255,244,214,.55),rgba(255,255,255,.08));border:2px solid var(--gd2);box-shadow:0 0 0 6px rgba(242,199,92,.16),0 0 0 7px var(--gd2),0 18px 40px rgba(150,110,20,.18)}
+[data-theme="night"] .tframe{background:linear-gradient(160deg,rgba(242,199,92,.12),rgba(13,19,42,.6))}
+.tframe:before,.tframe:after{content:"✦";position:absolute;font-size:20px;color:var(--gd2)}
+.tframe:before{left:10px;top:6px}.tframe:after{right:10px;top:6px}
+.ribbon{position:absolute;left:50%;top:-15px;transform:translateX(-50%);white-space:nowrap;background:linear-gradient(180deg,#f6d27a,#d9a83b);color:#231800;font:700 14px Prompt,Sarabun,sans-serif;padding:4px 16px;border-radius:999px;box-shadow:0 4px 12px rgba(150,110,20,.3)}
+.six{display:flex;justify-content:center;gap:6px;margin:8px 0 4px}
+.six span{width:48px;height:62px;display:grid;place-items:center;font:700 34px 'JetBrains Mono',monospace;color:#2a1d00;border-radius:11px;background:linear-gradient(180deg,#fff1c4,#f2c75c 55%,#d9a83b);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.six span.roll{filter:blur(.6px) brightness(1.08)}
+.prow{display:grid;grid-template-columns:1.2fr 1.2fr .8fr;gap:8px;margin-top:12px}
+.pbox{background:var(--in);border:1px solid var(--ln);border-radius:12px;padding:8px;text-align:center}
+.pbox small{display:block;color:var(--mu);font-size:12.5px}
+.pbox b{display:block;font:700 22px 'JetBrains Mono',monospace;color:var(--gd);letter-spacing:1px}
+.pbox .big{font-size:30px}
+.prob{width:100%;margin-top:12px;font-size:14px}
+.prob td{padding:5px 6px}.prob td:last-child{text-align:right;font-weight:700}
+.steps{display:grid;gap:10px}
+.step{border:1px solid var(--ln2);background:var(--pn2);border-radius:14px;padding:12px 14px}
+.step h4{font-size:16px;margin-bottom:4px}
+.step code{font:600 14.5px 'JetBrains Mono',monospace;background:var(--in);border:1px solid var(--ln2);border-radius:7px;padding:1px 6px}
+.step p{margin:3px 0}
+.logi{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border-bottom:1px dashed var(--ln2);padding:8px 0}
+.logi .mono{font-size:16px}
+.tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12.5px;font-weight:700}
+.tag.w{background:rgba(22,163,74,.15);color:var(--gr)}.tag.n{background:var(--pn2);color:var(--mu)}.tag.p{background:rgba(242,199,92,.2);color:var(--gd)}
+@media (max-width:600px){.six span{width:calc((100vw - 110px)/6);height:54px;font-size:28px}.prow{grid-template-columns:1fr 1fr}.prow .pbox:last-child{grid-column:1/-1}}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(40px);opacity:0;background:var(--pn);box-shadow:var(--sh);border:1px solid var(--gd);color:var(--tx);padding:10px 16px;border-radius:12px;font-weight:600;transition:.25s;z-index:60}
 .thm{position:relative}.thPop{position:absolute;right:0;top:calc(100% + 8px);background:var(--pn);border:1px solid var(--ln);border-radius:16px;padding:12px;box-shadow:0 18px 40px rgba(0,0,0,.18);display:grid;grid-template-columns:repeat(3,92px);gap:8px;z-index:50;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .thPop b{grid-column:1/-1;font:600 14px Prompt,Sarabun,sans-serif;color:var(--mu)}
@@ -175,7 +209,7 @@ footer a{color:var(--mu)}
  .days{grid-template-columns:repeat(2,1fr)}
  .rs{flex-direction:column;align-items:flex-start}
  .heat button small{display:none}
- .note{font-size:13px}.vbox .ph{padding:12px}.vbox .ph b{font-size:16px;margin:6px 0}.vbox .ph span{display:none}.play{width:56px;height:56px;font-size:22px}.note .lg{display:none}.note .st{display:inline}.brand small{display:none}
+ .note{font-size:13px}.vbox .ph{padding:12px}.vbox .ph b{font-size:16px;margin:6px 0}.vbox .ph span{display:none}.play{width:56px;height:56px;font-size:22px}.note .lg{display:none}.note .st{display:inline}.brand small{display:none}.brand b{font-size:17px;white-space:nowrap}
 }
 </style>
 </head>
@@ -193,6 +227,7 @@ footer a{color:var(--mu)}
   </div>
   <nav class="tabs" id="tabs">
    <button data-t="check" class="on">🎫 ตรวจสลาก</button>
+   <button data-t="luck">🔮 เสี่ยงทายงวดหน้า</button>
    <button data-t="res">🏆 ผลรางวัล</button>
    <button data-t="live">📺 ถ่ายทอดสด</button>
    <button data-t="stat">📊 สถิติย้อนหลัง</button>
@@ -222,7 +257,7 @@ footer a{color:var(--mu)}
    <div class="drawday" id="nDate">–</div>
    <div class="cd"><div><b id="cdD">–</b><small>วัน</small></div><div><b id="cdH">–</b><small>ชั่วโมง</small></div><div><b id="cdM">–</b><small>นาที</small></div><div><b id="cdS">–</b><small>วินาที</small></div></div>
    <p class="mu sm">คาดการณ์จากปฏิทินปกติ (วันที่ 1 และ 16 ของเดือน ซึ่งอาจเลื่อนตามวันสำคัญ) โปรดยืนยันวันออกรางวัลกับสำนักงานสลากกินแบ่งรัฐบาล · ถ่ายทอดสดประมาณ 14:30 น.</p>
-   <div class="chips"><button class="btn sm gold" onclick="tab('live')">📺 ไปหน้าถ่ายทอดสด</button><button class="btn sm" onclick="tab('check')">🎫 ตรวจสลาก</button></div>
+   <div class="chips"><button class="btn sm gold" onclick="tab('live')">📺 ไปหน้าถ่ายทอดสด</button><button class="btn sm" onclick="tab('luck')">🔮 เสี่ยงทายงวดหน้า</button></div>
   </div>
  </section>
 
@@ -248,6 +283,48 @@ footer a{color:var(--mu)}
     </ol>
    </div>
   </div>
+ </section>
+
+ <!-- เสี่ยงทายงวดหน้า -->
+ <section class="pane" id="p-luck" style="margin-top:16px">
+  <div class="card" style="border-color:rgba(94,234,212,.45)"><p class="disc">🔮 <b>เสี่ยงทายเพื่อความบันเทิง</b> — เลขในหน้านี้ได้จากสถิติย้อนหลัง ความฝัน สูตรคำนวณพื้นบ้าน และการสุ่ม <b>ไม่มีวิธีใดทำนายผลสลากได้จริง</b> ผลออกรางวัลสุ่มด้วยวงล้อของสำนักงานสลากฯ ทุกเลขมีโอกาสเท่ากันเสมอ ไม่ใช่การชี้นำหรือชักชวนให้ซื้อเลขใด หากร่วมลุ้น โปรดซื้อเฉพาะสลากกินแบ่งรัฐบาลในราคาที่กำหนด และในงบที่ไม่เดือดร้อน</p></div>
+  <div class="grid2" style="margin-top:16px">
+   <div class="card">
+    <h3>🌏 ลูกโลกเสี่ยงโชค <span class="fun">บันเทิง</span></h3>
+    <p class="mu sm" id="lkFor">งวดถัดไป</p>
+    <div class="globeWrap"><canvas id="globe" aria-label="ลูกโลกหมุนเสี่ยงโชค"></canvas><div class="gcap" id="gcap">เลือกวิธีคิด แล้วกดหมุนลูกโลก</div></div>
+    <div class="mchips" id="mchips">
+     <button class="mchip on" data-m="stat">📊 สถิติย้อนหลัง</button>
+     <button class="mchip on" data-m="dream">🌙 ความฝัน</button>
+     <button class="mchip on" data-m="calc">🧮 สูตร บวก ลบ คูณ หาร</button>
+     <button class="mchip on" data-m="rand">🎲 สุ่มดวง</button>
+    </div>
+    <div class="inrow" id="lkDreamRow"><input id="lkDream" placeholder="เมื่อคืนฝันเห็นอะไร เช่น งู ช้าง ปลา" style="flex:1;min-width:160px"></div>
+    <button class="btn gold bigspin" id="lkSpin">🎰 หมุนลูกโลกเสี่ยงโชค</button>
+   </div>
+   <div class="card">
+    <div class="tframe" id="tframe">
+     <div class="ribbon" id="lkRib">เลขเสี่ยงทาย</div>
+     <div class="six" id="lkSix"><span>?</span><span>?</span><span>?</span><span>?</span><span>?</span><span>?</span></div>
+     <div class="plab" style="text-align:center">เลข 6 หลัก (รางวัลที่ 1)</div>
+     <div class="prow">
+      <div class="pbox"><small>เลขหน้า 3 ตัว</small><b id="lkF3">– –</b></div>
+      <div class="pbox"><small>เลขท้าย 3 ตัว</small><b id="lkB3">– –</b></div>
+      <div class="pbox"><small>เลขท้าย 2 ตัว</small><b class="big" id="lkL2">–</b></div>
+     </div>
+    </div>
+    <table class="prob">
+     <tr><td colspan="2" class="mu sm" style="padding-top:2px">📐 ความน่าจะเป็นจริงต่อสลาก 1 ใบ (เท่ากันทุกเลข)</td></tr>
+     <tr><td>รางวัลที่ 1 (ตรงทั้ง 6 หลัก)</td><td>1 ใน 1,000,000</td></tr>
+     <tr><td>เลขหน้า 3 ตัว (มี 2 รางวัล)</td><td>1 ใน 500</td></tr>
+     <tr><td>เลขท้าย 3 ตัว (มี 2 รางวัล)</td><td>1 ใน 500</td></tr>
+     <tr><td>เลขท้าย 2 ตัว</td><td>1 ใน 100</td></tr>
+    </table>
+    <div class="chips"><button class="btn sm gold" id="lkSave">📒 จดลงสมุดเสี่ยงทาย</button><button class="btn sm" onclick="document.getElementById('lkSteps').scrollIntoView({behavior:'smooth',block:'start'})">🧮 ดูวิธีคิด</button></div>
+   </div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>🧮 วิธีคิด ทีละขั้น</h3><div class="steps" id="lkSteps"><p class="mu">กดหมุนลูกโลกเพื่อดูวิธีคิดของแต่ละสูตร</p></div></div>
+  <div class="card" style="margin-top:16px"><h3>📒 สมุดเสี่ยงทายของฉัน</h3><p class="mu sm">เก็บไว้ในเครื่องนี้เท่านั้น · เมื่องวดนั้นออกผลแล้ว ระบบจะเทียบให้อัตโนมัติ เพื่อดูตามจริงว่าเสี่ยงทายตรงบ้างไหม</p><div id="lkLog"></div></div>
  </section>
 
  <!-- ผลรางวัล -->
@@ -380,7 +457,7 @@ const money=v=>Number(v||0).toLocaleString('th-TH');
 const fmtTime=iso=>{try{return new Date(iso).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'})+' น.'}catch(e){return iso}};
 
 /* ---------- แท็บ ---------- */
-function tab(t,go=true){$$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));LS.set('tab',t);if(t==='stat')renderStats();
+function tab(t,go=true){$$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));LS.set('tab',t);if(t==='stat')renderStats();if(t==='luck')startGlobe();
   const p=$('#p-'+t),hh=$('header').offsetHeight+10;if(p&&(go||window.scrollY>p.offsetTop-hh))window.scrollTo({top:p.offsetTop-hh,behavior:'smooth'});if(history.replaceState)history.replaceState(null,'','#'+t)}
 $$('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
 
@@ -582,6 +659,84 @@ $$('#days button').forEach(b=>b.onclick=()=>{const[d,n]=DAYS[+b.dataset.i];const
 $('#spin').onclick=()=>{const S=$$('#slot span'),fin=[...crypto.getRandomValues(new Uint32Array(6))].map(x=>x%10);let t=0;$('#spin').disabled=true;
   const iv=setInterval(()=>{t++;S.forEach((s,i)=>{if(t<12+i*4)s.textContent=Math.floor(Math.random()*10);else s.textContent=fin[i]});if(t>=12+5*4){clearInterval(iv);$('#spin').disabled=false}},55)};
 
+
+/* ---------- เสี่ยงทายงวดหน้า (บันเทิง) ---------- */
+const LK={m:new Set(['stat','dream','calc','rand']),res:null,spin:0};
+$$('#mchips .mchip').forEach(b=>b.onclick=()=>{const m=b.dataset.m;if(LK.m.has(m)){if(LK.m.size===1)return toast('ต้องเลือกอย่างน้อย 1 วิธี');LK.m.delete(m)}else LK.m.add(m);b.classList.toggle('on',LK.m.has(m));$('#lkDreamRow').classList.toggle('hidden',!LK.m.has('dream'))});
+const pad=(n,w)=>String(n).padStart(w,'0');
+const digs=s=>[...s].map(Number);
+function rnd(n){return crypto.getRandomValues(new Uint32Array(1))[0]%n}
+function wpick(items,weights){const t=weights.reduce((a,b)=>a+b,0);let r=crypto.getRandomValues(new Uint32Array(1))[0]/4294967296*t;for(let i=0;i<items.length;i++){r-=weights[i];if(r<=0)return items[i]}return items.at(-1)}
+function mStat(){const D=IDX.draws.slice(-120),c=Array(100).fill(1);D.forEach(x=>c[+x.l2]++);
+  const P=Array.from({length:6},()=>Array(10).fill(1));D.forEach(x=>digs(x.f).forEach((d,j)=>P[j][d]++));
+  const pos3=key=>{const Q=Array.from({length:3},()=>Array(10).fill(1));D.forEach(x=>x[key].forEach(n=>digs(n).forEach((d,j)=>Q[j][d]++)));return()=>Q.map(q=>wpick([...Array(10).keys()],q)).join('')};
+  const f=pos3('f3'),b=pos3('b3'),l2=pad(wpick([...Array(100).keys()],c),2),six=P.map(q=>wpick([...Array(10).keys()],q)).join('');
+  const top=c.map((v,i)=>({i,v:v-1})).sort((a,b)=>b.v-a.v).slice(0,3).map(o=>pad(o.i,2)+' ('+o.v+' ครั้ง)').join(', ');
+  return{six,f3:[f(),f()],b3:[b(),b()],l2,h:'📊 สถิติย้อนหลัง',t:`<p>ใช้ผลจริง <b>${D.length}</b> งวดล่าสุด สุ่มแบบถ่วงน้ำหนัก เลขที่เคยออกบ่อยถูกจับได้ง่ายขึ้นเล็กน้อย</p><p>เลขท้าย 2 ตัวที่ออกบ่อยในช่วงนี้: ${top}</p><p>เลข 6 หลักและ 3 ตัว: สุ่มทีละหลักตามความถี่ของแต่ละหลักในอดีต → <code>${six}</code> · ท้าย 2 ตัว <code>${l2}</code></p>`}}
+function mDream(){const q=$('#lkDream').value.trim();const w=q||'ฝันดี';const nq=w.replace(/^ฝัน(เห็น|ว่า)?/,'').trim();
+  const hit=DREAMS.find(([k,al])=>nq.includes(k)||k.includes(nq)||(al&&al.split(' ').some(a=>a&&(nq.includes(a)||a.includes(nq)))));const key=hit?hit[0]:nq;
+  const h=[fnv('6|'+key),fnv('f|'+key),fnv('b|'+key),fnv('x|'+key)],L=luckyOf(key);
+  const six=pad(h[0]%1000000,6),f3=[pad(h[1]%1000,3),pad((h[1]>>>10)%1000,3)],b3=[L.three,pad(h[2]%1000,3)];
+  return{six,f3,b3,l2:L.two[0],h:'🌙 ความฝัน',t:`<p>${q?`ฝันเห็น “<b>${esc(key)}</b>”${hit?' · '+esc(hit[2]):''}`:'ยังไม่ได้พิมพ์ความฝัน จึงใช้คำว่า “ฝันดี”'}</p><p>แปลงชื่อความฝันเป็นตัวเลขด้วยสูตรคงที่ (คำเดิมได้เลขเดิมเสมอ) → 6 หลัก <code>${six}</code> · ท้าย 2 ตัว <code>${L.two[0]}</code></p>`}}
+function mCalc(){const a=IDX.draws.at(-1),b=IDX.draws.at(-2)||a,F=digs(a.f),S=F.reduce((x,y)=>x+y,0),L=+a.l2,Lp=+b.l2;
+  const plus=(S+L)%100,front=+a.f.slice(0,2),back=+a.f.slice(-2),minus=Math.abs(front-back),mul=(L*Lp)%1000,mul3=(S*37)%1000,div=Math.floor(+a.f/7),six=pad(div%1000000,6),divF=(+a.f/7).toFixed(2);
+  const l2=pad((plus+minus)%100,2);
+  return{six,f3:[pad(mul3,3),pad((front*back)%1000,3)],b3:[pad(mul,3),pad((+a.b3[0]+ +a.b3[1])%1000,3)],l2,h:'🧮 สูตร บวก ลบ คูณ หาร',
+   t:`<p>ตั้งต้นจากผลงวดล่าสุด <b>${thDate(a.d)}</b>: รางวัลที่ 1 <code>${a.f}</code> ท้าย 2 ตัว <code>${a.l2}</code> และงวดก่อนหน้าท้าย 2 ตัว <code>${b.l2}</code></p>
+   <p>➕ <b>บวก</b>: ผลรวมทุกหลัก ${F.join('+')} = <code>${S}</code> แล้วบวกท้าย 2 ตัว ${S} + ${L} = ${S+L} → เอา 2 หลักท้าย <code>${pad(plus,2)}</code></p>
+   <p>➖ <b>ลบ</b>: 2 หลักหน้า ลบ 2 หลักท้าย |${pad(front,2)} − ${pad(back,2)}| = <code>${pad(minus,2)}</code></p>
+   <p>✖️ <b>คูณ</b>: ท้าย 2 ตัวสองงวด ${L} × ${Lp} = ${L*Lp} → 3 หลักท้าย <code>${pad(mul,3)}</code> · ผลรวมหลัก ${S} × 37 = ${S*37} → <code>${pad(mul3,3)}</code></p>
+   <p>➗ <b>หาร</b>: ${a.f} ÷ 7 = ${divF} → ปัดเศษทิ้งแล้วเติมให้ครบ 6 หลัก <code>${six}</code></p>
+   <p>ท้าย 2 ตัวของสูตรนี้ = (บวก + ลบ) ${pad(plus,2)} + ${pad(minus,2)} → <code>${l2}</code> · สูตรพื้นบ้านแบบนี้ไม่มีหลักคณิตศาสตร์รองรับว่าช่วยให้ถูกมากขึ้น</p>`}}
+function mRand(){const r=n=>pad(rnd(10**n),n);const o={six:r(6),f3:[r(3),r(3)],b3:[r(3),r(3)],l2:r(2)};return Object.assign(o,{h:'🎲 สุ่มดวง',t:`<p>สุ่มด้วยตัวสุ่มเข้ารหัสของเครื่อง (crypto) แบบเดียวกับการจับฉลากที่ยุติธรรม → 6 หลัก <code>${o.six}</code> · ท้าย 2 ตัว <code>${o.l2}</code></p>`})}
+function mixDigits(list,w){return list[0].split('').map((_,j)=>list.reduce((a,x)=>a+ +x[j],0)%10).join('')}
+function generate(){const M=[...LK.m],need=['stat','calc'].filter(m=>LK.m.has(m));
+  if(!IDX&&need.length){toast('ยังไม่มีข้อมูลผลย้อนหลัง จึงใช้ได้เฉพาะความฝันและสุ่มดวง');need.forEach(m=>LK.m.delete(m));$$('#mchips .mchip').forEach(b=>b.classList.toggle('on',LK.m.has(b.dataset.m)));if(!LK.m.size){LK.m.add('rand');$('#mchips [data-m=rand]').classList.add('on')}}
+  const F={stat:mStat,dream:mDream,calc:mCalc,rand:mRand},parts=[...LK.m].map(m=>F[m]());
+  const out={six:mixDigits(parts.map(p=>p.six)),f3:[0,1].map(i=>mixDigits(parts.map(p=>p.f3[i]))),b3:[0,1].map(i=>mixDigits(parts.map(p=>p.b3[i]))),l2:mixDigits(parts.map(p=>p.l2))};
+  const mix=parts.length>1?`<div class="step" style="border-color:var(--ln)"><h4>🔗 รวมทุกวิธีเข้าด้วยกัน</h4><p>นำเลขจากทุกวิธีมา<b>บวกกันทีละหลัก แล้วเก็บเฉพาะหลักหน่วย</b> เช่น 6 หลัก: ${parts.map(p=>`<code>${p.six}</code>`).join(' + ')} → <code>${out.six}</code></p><p>ท้าย 2 ตัว: ${parts.map(p=>`<code>${p.l2}</code>`).join(' + ')} (ทีละหลัก) → <code>${out.l2}</code></p></div>`:'';
+  out.steps=parts.map(p=>`<div class="step"><h4>${p.h}</h4>${p.t}</div>`).join('')+mix;out.methods=parts.map(p=>p.h).join(' + ');return out}
+function showLuck(o,roll){const S=$$('#lkSix span');S.forEach((s,i)=>{s.textContent=o.six[i];s.classList.toggle('roll',!!roll)});
+  $('#lkF3').textContent=o.f3.join('  ');$('#lkB3').textContent=o.b3.join('  ');$('#lkL2').textContent=o.l2}
+$('#lkSpin').onclick=()=>{const o=generate();LK.res=null;$('#lkSpin').disabled=true;GL.boost=1;$('#gcap').textContent='🌏 ลูกโลกกำลังหมุน…';
+  const t0=performance.now(),dur=2600;const R=n=>pad(rnd(10**n),n);
+  (function fr(t){const k=(t-t0)/dur;if(k<1){const fixed=Math.floor(k*7);const six=o.six.split('').map((c,i)=>i<fixed-1?c:String(rnd(10))).join('');
+      showLuck({six,f3:[R(3),R(3)],b3:[R(3),R(3)],l2:k>.85?o.l2:R(2)},true);requestAnimationFrame(fr)}
+    else{showLuck(o,false);LK.res=o;$('#lkSteps').innerHTML=o.steps;$('#lkSpin').disabled=false;$('#gcap').textContent='✨ ได้เลขเสี่ยงทายแล้ว · กดหมุนใหม่ได้เรื่อย ๆ';
+      $('#tframe').animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:450})}})(t0);
+  if(innerWidth<900)setTimeout(()=>{const y=$('#tframe').getBoundingClientRect().top+scrollY-$('header').offsetHeight-24;scrollTo({top:y,behavior:'smooth'})},dur*.55)};
+$('#lkSave').onclick=()=>{if(!LK.res)return toast('หมุนลูกโลกก่อนแล้วค่อยจดนะ');const log=LS.get('luckLog',[]),d=ND?ND.toISOString().slice(0,10):'';
+  log.unshift({for:d,six:LK.res.six,f3:LK.res.f3,b3:LK.res.b3,l2:LK.res.l2,m:LK.res.methods,at:Date.now()});LS.set('luckLog',log.slice(0,40));renderLog();toast('จดลงสมุดเสี่ยงทายแล้ว')};
+function renderLog(){const log=LS.get('luckLog',[]);if(!log.length){$('#lkLog').innerHTML='<p class="mu sm" style="margin-top:6px">ยังไม่มีบันทึก</p>';return}
+  $('#lkLog').innerHTML=log.map((e,i)=>{const dr=IDX&&IDX.draws.find(x=>x.d===e.for);let st='<span class="tag p">รอผล</span>';
+    if(dr){const h=[];if(e.six===dr.f)h.push('รางวัลที่ 1');if(dr.f3.some(n=>e.f3.includes(n)))h.push('เลขหน้า 3 ตัว');if(dr.b3.some(n=>e.b3.includes(n)))h.push('เลขท้าย 3 ตัว');if(e.l2===dr.l2)h.push('ท้าย 2 ตัว');
+      st=h.length?`<span class="tag w">ตรง: ${h.join(', ')}</span>`:`<span class="tag n">ไม่ตรง · ผลจริง ${dr.f} / ${dr.l2}</span>`}
+    return`<div class="logi"><span class="mu sm">งวด<br>${e.for?thShort(e.for):'–'}</span><span><b class="mono">${e.six}</b> · หน้า ${e.f3.join(' ')} · ท้าย ${e.b3.join(' ')} · <b class="mono">${e.l2}</b><br><span class="mu sm">${esc(e.m)}</span></span><span>${st} <button class="btn sm" data-del="${i}" aria-label="ลบ" style="padding:3px 8px">✕</button></span></div>`}).join('');
+  $$('#lkLog [data-del]').forEach(b=>b.onclick=()=>{const l=LS.get('luckLog',[]);l.splice(+b.dataset.del,1);LS.set('luckLog',l);renderLog()})}
+
+/* ลูกโลก (canvas) */
+const GL={a:0,boost:0,pts:[],digits:[]};
+(function(){const n=520,g=Math.PI*(3-Math.sqrt(5));for(let i=0;i<n;i++){const y=1-2*(i+.5)/n,r=Math.sqrt(1-y*y),t=g*i;GL.pts.push([Math.cos(t)*r,y,Math.sin(t)*r])}
+  for(let i=0;i<14;i++)GL.digits.push({d:i%10,ph:i/14*Math.PI*2,tilt:(i%3-1)*.35,rr:1.25+(i%4)*.06})})();
+function drawGlobe(){const c=$('#globe');if(!c||!$('#p-luck').classList.contains('on')){GL.raf=0;return}
+  const dpr=Math.min(2,devicePixelRatio||1),W=c.clientWidth,H=c.clientHeight;if(c.width!==W*dpr){c.width=W*dpr;c.height=H*dpr}
+  const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  const cx=W/2,cy=H/2-6,R=Math.min(W,H)*.33,night=document.documentElement.dataset.theme==='night';
+  GL.boost*=.985;GL.a+=.004+GL.boost*.09;const a=GL.a,tl=.38;
+  const halo=x.createRadialGradient(cx,cy,R*.6,cx,cy,R*1.6);halo.addColorStop(0,'rgba(242,199,92,.28)');halo.addColorStop(1,'rgba(242,199,92,0)');x.fillStyle=halo;x.beginPath();x.arc(cx,cy,R*1.6,0,7);x.fill();
+  const sea=x.createRadialGradient(cx-R*.35,cy-R*.4,R*.1,cx,cy,R);sea.addColorStop(0,night?'#3a5bd0':'#8fd3ff');sea.addColorStop(.55,night?'#18306f':'#2f7fd1');sea.addColorStop(1,night?'#0a1638':'#123f86');
+  x.fillStyle=sea;x.beginPath();x.arc(cx,cy,R,0,7);x.fill();
+  const P=(p)=>{let[X,Y,Z]=p;const ca=Math.cos(a),sa=Math.sin(a);[X,Z]=[X*ca+Z*sa,-X*sa+Z*ca];const ct=Math.cos(tl),st=Math.sin(tl);[Y,Z]=[Y*ct-Z*st,Y*st+Z*ct];return[cx+X*R,cy+Y*R,Z]};
+  x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=1;for(let k=-2;k<=2;k++){x.beginPath();for(let i=0;i<=60;i++){const t=i/60*Math.PI*2,y=k*.33,r=Math.sqrt(1-y*y),q=P([Math.cos(t)*r,y,Math.sin(t)*r]);if(q[2]<0){x.moveTo(q[0],q[1]);continue}i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1])}x.stroke()}
+  for(const p of GL.pts){const q=P(p);if(q[2]<-.05)continue;const land=Math.sin(p[0]*5.1+p[1]*3.3)+Math.cos(p[2]*4.2-p[1]*2.4)>.55;x.fillStyle=land?`rgba(255,226,140,${.35+q[2]*.6})`:`rgba(255,255,255,${.08+q[2]*.25})`;x.beginPath();x.arc(q[0],q[1],land?1.9:1.1,0,7);x.fill()}
+  const shine=x.createRadialGradient(cx-R*.45,cy-R*.5,0,cx-R*.45,cy-R*.5,R*.9);shine.addColorStop(0,'rgba(255,255,255,.35)');shine.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=shine;x.beginPath();x.arc(cx,cy,R,0,7);x.fill();
+  x.strokeStyle='rgba(242,199,92,.55)';x.lineWidth=1.4;x.beginPath();x.ellipse(cx,cy,R*1.32,R*.36,-.18,0,7);x.stroke();
+  const sp=.01+GL.boost*.12;for(const d of GL.digits){d.ph+=sp;const t=d.ph,X=Math.cos(t)*R*d.rr,Y=Math.sin(t)*R*.36*d.rr+d.tilt*R*.4,Z=Math.sin(t);
+    const rx=cx+X*Math.cos(-.18)-Y*Math.sin(-.18),ry=cy+X*Math.sin(-.18)+Y*Math.cos(-.18);if(Z<0&&Math.hypot(rx-cx,ry-cy)<R)continue;
+    const s=11+Z*5+GL.boost*4;x.save();x.globalAlpha=.55+Z*.45;x.fillStyle='rgba(255,241,196,.95)';x.strokeStyle='#c99a2e';x.lineWidth=1.2;x.beginPath();x.arc(rx,ry,s,0,7);x.fill();x.stroke();
+    x.fillStyle='#5a3d00';x.font=`700 ${Math.round(s*1.2)}px "JetBrains Mono",monospace`;x.textAlign='center';x.textBaseline='middle';x.fillText(GL.boost>.05?String(rnd(10)):d.d,rx,ry+1);x.restore()}
+  GL.raf=requestAnimationFrame(drawGlobe)}
+function startGlobe(){if(!GL.raf)GL.raf=requestAnimationFrame(drawGlobe);$('#lkFor').textContent=ND?'สำหรับงวดวันที่ '+thDate(ND.toISOString().slice(0,10))+' (คาดการณ์)':'งวดถัดไป';$('#lkRib').textContent=ND?'เลขเสี่ยงทาย · งวด '+thShort(ND.toISOString().slice(0,10)):'เลขเสี่ยงทาย';renderLog()}
 /* ---------- ธีมสีพื้นหลัง ---------- */
 const THEMES=[['pearl','ไข่มุก','linear-gradient(135deg,#ffffff,#efe9dc)','#f6f4ee'],['cream','ครีมทอง','linear-gradient(135deg,#fff8e6,#f1dcae)','#f8f0de'],['sky','ฟ้าอ่อน','linear-gradient(135deg,#f7fbff,#cfe2f6)','#eef4fb'],['mint','เขียวมิ้นต์','linear-gradient(135deg,#f6fcf9,#c9ecd9)','#edf7f1'],['blush','ชมพูอ่อน','linear-gradient(135deg,#fff8f9,#f3d3da)','#faf0f2'],['night','กลางคืน','linear-gradient(135deg,#1b2347,#070b19)','#070b19']];
 function setTheme(k){const t=THEMES.find(x=>x[0]===k)||THEMES[0];if(t[0]==='pearl')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t[0];
@@ -593,8 +748,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.thm'))$('#thPop').c
 setTheme(LS.get('theme','pearl'));
 
 /* ---------- เริ่ม ---------- */
-const start=(location.hash||'').slice(1);if(['check','res','live','stat','dream','safe'].includes(start))tab(start,false);
-init().then(()=>{if($('#p-stat').classList.contains('on'))renderStats()});
+const start=(location.hash||'').slice(1);if(['check','luck','res','live','stat','dream','safe'].includes(start))tab(start,false);
+init().then(()=>{if($('#p-stat').classList.contains('on'))renderStats();if($('#p-luck').classList.contains('on'))startGlobe()});
 </script>
 </body>
 </html>
