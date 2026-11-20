@@ -5,16 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CoreDash ส่องโชค · ตรวจสลากกินแบ่งรัฐบาล ลุ้นอย่างมีสติ</title>
 <meta name="description" content="ตรวจสลากกินแบ่งรัฐบาลจากข้อมูล API ทางการของสำนักงานสลากกินแบ่งรัฐบาล สถิติย้อนหลัง ถ่ายทอดสดจากช่องทางการ และเลขเสี่ยงทายเพื่อความบันเทิง โดย CoreDash Technology (ไม่แสวงหากำไร)">
-<meta name="theme-color" content="#0b1022">
+<meta name="theme-color" content="#f6f4ee">
+<script>try{var t=JSON.parse(localStorage.getItem("lotto.theme"));if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="icon" href="../live/assets/logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#070b19;--pn:rgba(13,19,42,.92);--pn2:rgba(255,255,255,.05);--ln:rgba(214,190,120,.22);--ln2:rgba(170,185,255,.16);--tx:#f6f3ea;--mu:#b5b9cf;--gd:#f2c75c;--gd2:#c99a2e;--cy:#5eead4;--gr:#4ade80;--rd:#fb7185;--r:18px}
+/* ธีมสี: ค่าเริ่มต้นคือ ไข่มุก (สว่าง) · เลือกได้จากปุ่ม 🎨 */
+:root{--r:18px;--gdF:#f2c75c;--gd2:#c99a2e;--cy:#5eead4;--gr:#16a34a;--rd:#e11d48;
+ --pn:rgba(255,255,255,.9);--pn2:rgba(40,46,80,.045);--ln:rgba(176,138,52,.30);--ln2:rgba(40,50,90,.13);--tx:#1d2130;--tx2:#3b4052;--mu:#5f6579;--gd:#94660b;--strong:#141724;--in:#fff;
+ --hd:rgba(255,255,255,.82);--sh:0 10px 30px rgba(70,55,20,.08);--brand:linear-gradient(90deg,#7a4f00,#c08a22);--heatTx:#1d2130;--vtx:#fff;
+ --b1:rgba(255,226,170,.55);--b2:rgba(205,220,255,.45);--b3:#fbfaf6;--b4:#f1eee6;--bg:#f6f4ee}
+[data-theme="cream"]{--b1:rgba(255,214,140,.55);--b2:rgba(255,236,205,.6);--b3:#fdf8ec;--b4:#f6ecd6;--bg:#f8f0de;--hd:rgba(253,248,236,.85)}
+[data-theme="sky"]{--b1:rgba(190,220,255,.6);--b2:rgba(220,240,255,.6);--b3:#f5f9fe;--b4:#e6eff9;--bg:#eef4fb;--hd:rgba(245,249,254,.85);--ln:rgba(70,120,190,.25)}
+[data-theme="mint"]{--b1:rgba(180,240,215,.55);--b2:rgba(225,247,236,.6);--b3:#f5fbf8;--b4:#e5f3eb;--bg:#edf7f1;--hd:rgba(245,251,248,.85);--ln:rgba(40,140,100,.25)}
+[data-theme="blush"]{--b1:rgba(255,205,215,.5);--b2:rgba(255,232,236,.6);--b3:#fdf7f8;--b4:#f7e8eb;--bg:#faf0f2;--hd:rgba(253,247,248,.85);--ln:rgba(190,90,120,.22)}
+[data-theme="night"]{--pn:rgba(13,19,42,.92);--pn2:rgba(255,255,255,.05);--ln:rgba(214,190,120,.22);--ln2:rgba(170,185,255,.16);--tx:#f6f3ea;--tx2:#d9d5c8;--mu:#b5b9cf;--gd:#f2c75c;--strong:#fff;--in:rgba(0,0,0,.28);
+ --hd:rgba(7,11,25,.86);--sh:0 18px 50px rgba(0,0,0,.35);--brand:linear-gradient(90deg,#fff3cf,#f2c75c);--heatTx:#fff;--gr:#4ade80;--rd:#fb7185;
+ --b1:rgba(242,199,92,.13);--b2:rgba(94,234,212,.07);--b3:#0a1028;--b4:#070b19;--bg:#070b19}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:Sarabun,Prompt,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:16.5px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
-body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(1100px 600px at 85% -10%,rgba(242,199,92,.13),transparent 60%),radial-gradient(900px 600px at -10% 20%,rgba(94,234,212,.07),transparent 60%),linear-gradient(180deg,#0a1028,#070b19 60%)}
+body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(1100px 600px at 85% -10%,var(--b1),transparent 60%),radial-gradient(900px 600px at -10% 20%,var(--b2),transparent 60%),linear-gradient(180deg,var(--b3),var(--b4) 60%)}
 a{color:var(--gd)}
 h1,h2,h3,h4,.pf{font-family:Prompt,Sarabun,sans-serif;font-weight:600;letter-spacing:.2px}
 .mono{font-family:'JetBrains Mono',monospace}
@@ -23,10 +35,10 @@ h1,h2,h3,h4,.pf{font-family:Prompt,Sarabun,sans-serif;font-weight:600;letter-spa
 .note{background:linear-gradient(90deg,#f2c75c,#e8b33f);color:#2a1d00;font-size:14.5px;font-weight:600;text-align:center;padding:7px 40px 7px 14px;position:relative}
 .note b{font-weight:700}.note .st{display:none}.note button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.12);border:0;border-radius:8px;width:28px;height:28px;font-size:15px;cursor:pointer;color:#2a1d00}
 /* ส่วนหัว */
-header{position:sticky;top:0;z-index:30;background:rgba(7,11,25,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--ln)}
+header{position:sticky;top:0;z-index:30;background:var(--hd);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--ln)}
 .hd{display:flex;align-items:center;gap:12px;padding:10px 0}
 .hd img{width:44px;height:44px;border-radius:12px;border:1px solid var(--ln)}
-.brand b{display:block;font-family:Prompt,Sarabun,sans-serif;font-size:20px;line-height:1.2;background:linear-gradient(90deg,#fff3cf,#f2c75c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand b{display:block;font-family:Prompt,Sarabun,sans-serif;font-size:20px;line-height:1.2;background:var(--brand);-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand small{color:var(--mu);font-size:13.5px}
 .sp{flex:1}
 .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--ln);background:var(--pn2);color:var(--tx);padding:9px 15px;border-radius:12px;font:600 15px Prompt,Sarabun,sans-serif;cursor:pointer;text-decoration:none;white-space:nowrap;transition:.15s}
@@ -37,10 +49,10 @@ header{position:sticky;top:0;z-index:30;background:rgba(7,11,25,.86);backdrop-fi
 nav.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 10px}
 nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{flex:none;border:1px solid var(--ln2);background:transparent;color:var(--mu);padding:8px 15px;border-radius:999px;font:600 15px Prompt,Sarabun,sans-serif;cursor:pointer}
-nav.tabs button.on{background:var(--gd);color:#231800;border-color:var(--gd)}
+nav.tabs button.on{background:var(--gdF);color:#231800;border-color:var(--gdF)}
 /* การ์ด */
 main{padding:22px 0 40px}
-.card{background:var(--pn);border:1px solid var(--ln2);border-radius:var(--r);padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.card{background:var(--pn);border:1px solid var(--ln2);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
 .card+.card{margin-top:16px}
 .card h3{font-size:19px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .mu{color:var(--mu)}.sm{font-size:14px}
@@ -57,7 +69,7 @@ main{padding:22px 0 40px}
 .plab{font-size:14px;color:var(--mu)}
 .subs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
 .sub{background:var(--pn2);border:1px solid var(--ln2);border-radius:14px;padding:10px 12px}
-.sub b{display:block;font:700 22px 'JetBrains Mono',monospace;color:#fff;letter-spacing:1px}
+.sub b{display:block;font:700 22px 'JetBrains Mono',monospace;color:var(--strong);letter-spacing:1px}
 .sub .l2{font-size:34px;color:var(--gd)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .ver{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13.5px;color:var(--mu);background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:8px 11px}
@@ -69,12 +81,12 @@ main{padding:22px 0 40px}
 .cd small{color:var(--mu);font-size:12.5px}
 /* ตรวจสลาก */
 .inrow{display:flex;gap:8px;flex-wrap:wrap}
-input,select,textarea{font:600 17px Sarabun,sans-serif;color:var(--tx);background:rgba(0,0,0,.28);border:1px solid var(--ln2);border-radius:12px;padding:11px 13px;outline:none}
+input,select,textarea{font:600 17px Sarabun,sans-serif;color:var(--tx);background:var(--in);border:1px solid var(--ln2);border-radius:12px;padding:11px 13px;outline:none}
 input:focus,select:focus{border-color:var(--gd)}
 #tkIn{flex:1;min-width:200px;font:700 22px 'JetBrains Mono',monospace;letter-spacing:4px}
 .tks{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .tk{display:inline-flex;align-items:center;gap:6px;background:rgba(242,199,92,.1);border:1px dashed var(--gd2);border-radius:10px;padding:5px 6px 5px 11px;font:700 18px 'JetBrains Mono',monospace;letter-spacing:2px}
-.tk button{border:0;background:rgba(255,255,255,.08);color:var(--tx);border-radius:7px;width:24px;height:24px;cursor:pointer}
+.tk button{border:0;background:var(--pn2);color:var(--tx);border-radius:7px;width:24px;height:24px;cursor:pointer}
 .res{display:grid;gap:10px;margin-top:12px}
 .rs{display:flex;gap:12px;align-items:center;border-radius:14px;padding:12px 14px;border:1px solid var(--ln2);background:var(--pn2)}
 .rs .n{font:700 24px 'JetBrains Mono',monospace;letter-spacing:3px;min-width:120px}
@@ -88,12 +100,12 @@ input:focus,select:focus{border-color:var(--gd)}
 .pz h4 small{color:var(--mu);font-weight:500;font-family:Sarabun,sans-serif}
 .nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
 .nums span{font:600 16px 'JetBrains Mono',monospace;text-align:center;background:var(--pn2);border:1px solid var(--ln2);border-radius:9px;padding:6px 0}
-.nums span.hit{background:var(--gd);color:#231800;border-color:var(--gd)}
+.nums span.hit{background:var(--gdF);color:#231800;border-color:var(--gdF)}
 /* สถิติ */
 .heat{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
-.heat button{aspect-ratio:1;border:0;border-radius:8px;font:700 14px 'JetBrains Mono',monospace;color:#fff;cursor:pointer;position:relative}
+.heat button{aspect-ratio:1;border:1px solid var(--ln2);border-radius:8px;font:700 14px 'JetBrains Mono',monospace;color:var(--heatTx);cursor:pointer;position:relative}
 .heat button small{position:absolute;bottom:2px;left:0;right:0;font-size:9.5px;opacity:.8;font-weight:500}
-.heat button.sel{outline:2px solid #fff}
+.heat button.sel{outline:2px solid var(--tx)}
 .bars{display:grid;gap:5px}
 .bar{display:grid;grid-template-columns:52px 1fr 70px;gap:8px;align-items:center;font-size:14px}
 .bar i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--gd2),var(--gd))}
@@ -114,7 +126,7 @@ td.m{font-family:'JetBrains Mono',monospace;font-weight:600}
 .dchips button:hover,.dchips button.on{border-color:var(--gd);color:var(--gd)}
 .dres{margin-top:14px;border:1px solid var(--ln);border-radius:16px;padding:16px;background:linear-gradient(135deg,rgba(242,199,92,.09),rgba(94,234,212,.04))}
 .lucky{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-.lucky div{background:rgba(0,0,0,.25);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center}
+.lucky div{background:var(--in);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center}
 .lucky b{display:block;font:700 28px 'JetBrains Mono',monospace;color:var(--gd);letter-spacing:2px}
 .lucky small{color:var(--mu);font-size:12.5px}
 .fun{display:inline-block;font-size:12.5px;font-weight:700;color:#231800;background:var(--cy);border-radius:999px;padding:2px 10px;margin-left:6px;vertical-align:middle}
@@ -122,9 +134,9 @@ td.m{font-family:'JetBrains Mono',monospace;font-weight:600}
 .days button{border:1px solid var(--ln2);background:var(--pn2);color:var(--tx);border-radius:12px;padding:8px;font:500 14.5px Sarabun,sans-serif;cursor:pointer}
 .days button b{display:block;font:700 22px 'JetBrains Mono',monospace;color:var(--gd)}
 .slot{display:flex;gap:6px;justify-content:center;margin:10px 0}
-.slot span{width:46px;height:58px;display:grid;place-items:center;border-radius:10px;font:700 32px 'JetBrains Mono',monospace;background:rgba(0,0,0,.35);border:1px solid var(--ln);color:var(--gd)}
+.slot span{width:46px;height:58px;display:grid;place-items:center;border-radius:10px;font:700 32px 'JetBrains Mono',monospace;background:var(--in);border:1px solid var(--ln);color:var(--gd)}
 /* ถ่ายทอดสด */
-.vbox{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000 radial-gradient(circle at 50% 40%,rgba(242,199,92,.18),transparent 60%);border:1px solid var(--ln);display:grid;place-items:center;text-align:center}
+.vbox{color:var(--vtx);position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000 radial-gradient(circle at 50% 40%,rgba(242,199,92,.18),transparent 60%);border:1px solid var(--ln);display:grid;place-items:center;text-align:center}
 .vbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .vbox .ph{padding:20px}
 .vbox .ph b{display:block;font:600 21px Prompt,Sarabun,sans-serif;margin:8px 0}
@@ -141,10 +153,15 @@ td.m{font-family:'JetBrains Mono',monospace;font-weight:600}
 .safe .card{margin:0!important}
 .safe h4{font-size:17px;margin-bottom:6px}
 .safe ul{padding-left:20px}.safe li{margin:4px 0}
-.disc{font-size:14.5px;color:#d9d5c8;line-height:1.75}
+.disc{font-size:14.5px;color:var(--tx2);line-height:1.75}
 footer{border-top:1px solid var(--ln2);padding:22px 0 40px;color:var(--mu);font-size:14px}
 footer a{color:var(--mu)}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(40px);opacity:0;background:#11182f;border:1px solid var(--gd);color:var(--tx);padding:10px 16px;border-radius:12px;font-weight:600;transition:.25s;z-index:60}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(40px);opacity:0;background:var(--pn);box-shadow:var(--sh);border:1px solid var(--gd);color:var(--tx);padding:10px 16px;border-radius:12px;font-weight:600;transition:.25s;z-index:60}
+.thm{position:relative}.thPop{position:absolute;right:0;top:calc(100% + 8px);background:var(--pn);border:1px solid var(--ln);border-radius:16px;padding:12px;box-shadow:0 18px 40px rgba(0,0,0,.18);display:grid;grid-template-columns:repeat(3,92px);gap:8px;z-index:50;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.thPop b{grid-column:1/-1;font:600 14px Prompt,Sarabun,sans-serif;color:var(--mu)}
+.thPop button{border:1px solid var(--ln2);background:transparent;border-radius:12px;padding:8px 4px;cursor:pointer;color:var(--tx);font:500 13.5px Sarabun,sans-serif;display:grid;justify-items:center;gap:5px}
+.thPop button i{width:34px;height:34px;border-radius:50%;border:1px solid rgba(0,0,0,.15);box-shadow:inset 0 2px 6px rgba(255,255,255,.6)}
+.thPop button.on{border-color:var(--gd2);box-shadow:0 0 0 2px var(--gdF)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .hidden{display:none!important}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}.safe{grid-template-columns:1fr}.olist{grid-template-columns:1fr}}
@@ -170,6 +187,7 @@ footer a{color:var(--mu)}
    <img src="../live/assets/logo.webp" alt="CoreDash">
    <div class="brand"><b>CoreDash ส่องโชค</b><small>ตรวจสลากกินแบ่งรัฐบาล · ลุ้นอย่างมีสติ</small></div>
    <div class="sp"></div>
+   <div class="thm"><button class="btn sm" id="thBtn" aria-label="เลือกสีพื้นหลัง">🎨 <span>สีพื้นหลัง</span></button><div class="thPop hidden" id="thPop"></div></div>
    <a class="btn sm" href="https://www.glo.or.th" target="_blank" rel="noopener">🏛️ <span>เว็บทางการ</span></a>
    <a class="btn sm gold" href="../../index.html">🏠 <span>หน้าหลัก</span></a>
   </div>
@@ -479,7 +497,7 @@ function renderStats(){if(!IDX)return;const all=IDX.draws;let D=all;
   const N=D.length;$('#stInfo').innerHTML=`ข้อมูล <b>${N}</b> งวด ตั้งแต่ ${thDate(D[0].d)} ถึง ${thDate(D.at(-1).d)} · ที่มา: API สำนักงานสลากกินแบ่งรัฐบาล`;
   const cnt=Array(100).fill(0),last=Array(100).fill(null);D.forEach((x,i)=>{const k=+x.l2;cnt[k]++;last[k]=i});
   const exp=N/100,mx=Math.max(...cnt,1);
-  $('#heat').innerHTML=cnt.map((c,i)=>{const t=c/mx,bg=`rgba(242,199,92,${(.08+t*.85).toFixed(2)})`,col=t>.55?'#231800':'#fff';return`<button data-n="${i}" style="background:${bg};color:${col}" class="${SEL===i?'sel':''}">${String(i).padStart(2,'0')}<small>${c}</small></button>`}).join('');
+  $('#heat').innerHTML=cnt.map((c,i)=>{const t=c/mx,bg=`rgba(242,199,92,${(.08+t*.85).toFixed(2)})`,col=t>.55?'#231800':'var(--heatTx)';return`<button data-n="${i}" style="background:${bg};color:${col}" class="${SEL===i?'sel':''}">${String(i).padStart(2,'0')}<small>${c}</small></button>`}).join('');
   $$('#heat button').forEach(b=>b.onclick=()=>{SEL=+b.dataset.n;$$('#heat button').forEach(x=>x.classList.toggle('sel',x===b));const i=SEL,c=cnt[i],l=last[i];
     $('#heatInfo').innerHTML=`<span>เลขท้าย 2 ตัว <b class="mono" style="color:var(--gd);font-size:18px">${String(i).padStart(2,'0')}</b> ออก <b>${c}</b> ครั้งใน ${N} งวด (ค่าเฉลี่ยทางทฤษฎี ${exp.toFixed(1)} ครั้ง)${l!=null?` · ออกล่าสุดงวด ${thDate(D[l].d)} (${N-1-l} งวดที่แล้ว)`:' · ไม่ออกเลยในช่วงนี้'}</span>`});
   const order=cnt.map((c,i)=>({i,c})).sort((a,b)=>b.c-a.c||a.i-b.i).slice(0,10);
@@ -563,6 +581,16 @@ $$('#days button').forEach(b=>b.onclick=()=>{const[d,n]=DAYS[+b.dataset.i];const
   el.innerHTML=`<b>เกิดวัน${esc(d)}</b> · เลขประจำวันตามตำราทักษาคือ <b class="mono" style="color:var(--gd);font-size:20px">${n}</b><p class="mu sm" style="margin-top:4px">เป็นความเชื่อทางโหราศาสตร์ไทย ใช้เป็นสีสันและกำลังใจ ไม่มีผลต่อโอกาสถูกรางวัล</p>`});
 $('#spin').onclick=()=>{const S=$$('#slot span'),fin=[...crypto.getRandomValues(new Uint32Array(6))].map(x=>x%10);let t=0;$('#spin').disabled=true;
   const iv=setInterval(()=>{t++;S.forEach((s,i)=>{if(t<12+i*4)s.textContent=Math.floor(Math.random()*10);else s.textContent=fin[i]});if(t>=12+5*4){clearInterval(iv);$('#spin').disabled=false}},55)};
+
+/* ---------- ธีมสีพื้นหลัง ---------- */
+const THEMES=[['pearl','ไข่มุก','linear-gradient(135deg,#ffffff,#efe9dc)','#f6f4ee'],['cream','ครีมทอง','linear-gradient(135deg,#fff8e6,#f1dcae)','#f8f0de'],['sky','ฟ้าอ่อน','linear-gradient(135deg,#f7fbff,#cfe2f6)','#eef4fb'],['mint','เขียวมิ้นต์','linear-gradient(135deg,#f6fcf9,#c9ecd9)','#edf7f1'],['blush','ชมพูอ่อน','linear-gradient(135deg,#fff8f9,#f3d3da)','#faf0f2'],['night','กลางคืน','linear-gradient(135deg,#1b2347,#070b19)','#070b19']];
+function setTheme(k){const t=THEMES.find(x=>x[0]===k)||THEMES[0];if(t[0]==='pearl')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t[0];
+  LS.set('theme',t[0]);document.querySelector('meta[name=theme-color]').content=t[3];$$('#thPop button').forEach(b=>b.classList.toggle('on',b.dataset.k===t[0]));if($('#p-stat').classList.contains('on'))renderStats()}
+$('#thPop').innerHTML='<b>🎨 เลือกสีพื้นหลัง</b>'+THEMES.map(t=>`<button data-k="${t[0]}"><i style="background:${t[2]}"></i>${t[1]}</button>`).join('');
+$$('#thPop button').forEach(b=>b.onclick=()=>{setTheme(b.dataset.k);toast('เปลี่ยนเป็นสี'+b.textContent.trim()+'แล้ว')});
+$('#thBtn').onclick=e=>{e.stopPropagation();$('#thPop').classList.toggle('hidden')};
+document.addEventListener('click',e=>{if(!e.target.closest('.thm'))$('#thPop').classList.add('hidden')});
+setTheme(LS.get('theme','pearl'));
 
 /* ---------- เริ่ม ---------- */
 const start=(location.hash||'').slice(1);if(['check','res','live','stat','dream','safe'].includes(start))tab(start,false);
