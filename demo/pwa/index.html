@@ -106,6 +106,9 @@ table.u th{color:var(--mu);font-weight:600;font-size:13px}
 @media (max-width:600px){.g2{grid-template-columns:1fr}.hb small{display:none}.hb b{font-size:15px}.uchip .nm{display:none}.hd .btn span{display:none}.thPop{grid-template-columns:repeat(3,80px)}}
 </style>
 <link rel="stylesheet" href="app.css">
+<style>.ghcard{margin-top:16px;border:1px solid rgba(14,159,178,.35);background:rgba(14,159,178,.06);border-radius:16px;padding:12px 14px}.ghcard.on{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.06)}
+.ghprog{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:120;background:#0b3a5b;color:#fff;border-radius:16px;padding:12px 16px;min-width:300px;box-shadow:0 18px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px}
+.ghprog .bar{height:6px;background:rgba(255,255,255,.2);border-radius:6px;overflow:hidden}.ghprog .bar i{display:block;height:100%;width:0;background:#22d3ee;transition:width .3s}</style>
 </head>
 <body>
 
@@ -169,7 +172,7 @@ table.u th{color:var(--mu);font-weight:600;font-size:13px}
 
 <div class="modal hidden" id="admM"><div class="mbox wide">
  <div class="mhead"><h3>👥 จัดการสิทธิ์ผู้ใช้งาน</h3><button class="x" data-close>✕</button></div>
- <div class="pend hidden" id="pend">⚠️ <span style="flex:1">มีการเปลี่ยนแปลงที่ยังไม่ได้อัปโหลด — ดาวน์โหลดไฟล์แล้วอัปโหลดไปที่ <b class="mono">demo/pwa/</b> ใน GitHub จึงจะมีผล</span><button class="btn sm gold" id="dlAcc">⬇️ ดาวน์โหลด access.json</button></div>
+ <div class="pend hidden" id="pend">⚠️ <span style="flex:1">มีการเปลี่ยนแปลงที่ยังไม่ได้อัปโหลด — ดาวน์โหลดไฟล์แล้วอัปโหลดไปที่ <b class="mono">demo/pwa/</b> ใน GitHub จึงจะมีผล</span><button class="btn sm pri" id="upAcc">☁️ อัปโหลดขึ้นเว็บ</button><button class="btn sm gold" id="dlAcc">⬇️ ดาวน์โหลด access.json</button></div>
  <div id="admBody"></div>
 </div></div>
 
@@ -231,10 +234,10 @@ $('#lf').onsubmit=async e=>{e.preventDefault();const id=$('#lid').value.trim(),p
   finally{$('#lgo').disabled=false;$('#lprog').classList.add('hidden')}};
 async function login(id,pw){
   if(!window.crypto||!crypto.subtle){const e=new Error('nocrypto');e.userMsg='เบราว์เซอร์นี้ไม่รองรับการถอดรหัส กรุณาเปิดผ่าน https ด้วย Chrome/Edge/Safari รุ่นใหม่';throw e}
-  S.acc=await getJSON('access.json');const uid=await idOf(id),u=S.acc.users.find(x=>x.id===uid);
+  S.acc=pendMerge(await getJSON('access.json'));const uid=await idOf(id),u=S.acc.users.find(x=>x.id===uid);
   const kek=await kekOf(pw,ub64(u?u.salt:b64(crypto.getRandomValues(new Uint8Array(16)))),S.acc.kdf.it);
   if(!u)throw new Error('nouser');
-  const raw=await dec(kek,{iv:u.iv,ct:u.wk});await openWith(raw,u,id);
+  const raw=await dec(kek,{iv:u.iv,ct:u.wk});await openWith(raw,u,id);pendWarn();
   try{sessionStorage.setItem('pwa.s',JSON.stringify({ck:b64(raw),id:u.id,login:id}))}catch(e){}
 }
 async function openWith(raw,u,login){
@@ -246,14 +249,32 @@ async function openWith(raw,u,login){
   $('#uName').textContent=S.me.name;$('#uRole').textContent=u.role==='admin'?'ผู้ดูแลระบบ':'ผู้ชม';$('#uRole').classList.toggle('ad',u.role==='admin');
   $('#admBtn').classList.toggle('hidden',u.role!=='admin');
   $('#appRoot').innerHTML=app.html;$('#tabs').innerHTML=app.tabs;
-  window.PWA={role:u.role,name:S.me.name,user:S.me.id,toast,esc,dl,openAdmin,getShared,publish,setTheme};
+  window.PWA={role:u.role,name:S.me.name,user:S.me.id,toast,esc,dl,openAdmin,getShared,publish,setTheme,ghOn,ghBegin,ghEnd};
   try{(new Function(app.js))()}catch(e){console.error(e);toast('เกิดข้อผิดพลาดในการแสดงผลบางส่วน')}
 }
-(async function resume(){try{const s=JSON.parse(sessionStorage.getItem('pwa.s')||'null');if(!s)return;S.acc=await getJSON('access.json');const u=S.acc.users.find(x=>x.id===s.id);if(!u)return sessionStorage.removeItem('pwa.s');await openWith(ub64(s.ck),u,s.login)}catch(e){sessionStorage.removeItem('pwa.s')}})();
+(async function resume(){try{const s=JSON.parse(sessionStorage.getItem('pwa.s')||'null');if(!s)return;S.acc=pendMerge(await getJSON('access.json'));const u=S.acc.users.find(x=>x.id===s.id);if(!u)return sessionStorage.removeItem('pwa.s');await openWith(ub64(s.ck),u,s.login);pendWarn()}catch(e){sessionStorage.removeItem('pwa.s')}})();
 $('#outBtn').onclick=()=>{try{sessionStorage.removeItem('pwa.s')}catch(e){}location.reload()};
 async function zip(u8,inv){const cs=inv?new DecompressionStream('gzip'):new CompressionStream('gzip');return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(cs)).arrayBuffer())}
 async function getShared(f){try{const o=await getJSON(f||'data.json');let u=await dec(S.ck,o);if(o.z)u=await zip(u,1);return JSON.parse(td.decode(u))}catch(e){return null}}
-async function publish(obj,f){let u=te.encode(JSON.stringify(obj)),z=0;if(window.CompressionStream){u=await zip(u);z=1}const o=await enc(S.ck,u);if(z)o.z=1;dl(f||'data.json',o);return true}
+async function publish(obj,f){let u=te.encode(JSON.stringify(obj)),z=0;if(window.CompressionStream){u=await zip(u);z=1}const o=await enc(S.ck,u);if(z)o.z=1;
+  if(S.ghq){S.ghq.push({path:f||'data.json',content:JSON.stringify(o)});return true}dl(f||'data.json',o);return true}
+/* ===== เผยแพร่อัตโนมัติผ่าน GitHub (Git Data API · คอมมิตเดียวหลายไฟล์) ===== */
+const GH={get(){try{return JSON.parse(localStorage.getItem('pwa.gh')||sessionStorage.getItem('pwa.gh')||'null')}catch(e){return null}},
+  set(c,remember){try{localStorage.removeItem('pwa.gh');sessionStorage.removeItem('pwa.gh');if(c)(remember?localStorage:sessionStorage).setItem('pwa.gh',JSON.stringify(c))}catch(e){}}};
+const ghOn=()=>{const c=GH.get();return!!(c&&c.token&&c.repo)&&S.me&&S.me.role==='admin'};
+function u8b64(u){let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
+async function gh(path,opt={},c=GH.get()){const r=await fetch('https://api.github.com'+path,{...opt,headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token,'X-GitHub-Api-Version':'2022-11-28',...(opt.body?{'Content-Type':'application/json'}:{})}});
+  if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}const e=new Error(`GitHub ${r.status}${m?' · '+m:''}`);e.status=r.status;throw e}return r.status===204?null:r.json()}
+async function ghCommit(files,msg,onp){const c=GH.get(),R=`/repos/${c.repo}`,repo=await gh(R),br=c.branch||repo.default_branch,dir=(c.dir||'demo/pwa').replace(/^\/|\/$/g,'');
+  const ref=await gh(`${R}/git/ref/heads/${br}`),base=ref.object.sha,bc=await gh(`${R}/git/commits/${base}`),tree=[];let i=0;
+  for(const f of files){const u=typeof f.content==='string'?te.encode(f.content):f.content;const bl=await gh(`${R}/git/blobs`,{method:'POST',body:JSON.stringify({content:u8b64(u),encoding:'base64'})});tree.push({path:dir+'/'+f.path,mode:'100644',type:'blob',sha:bl.sha});onp&&onp(++i,files.length,f.path)}
+  const t=await gh(`${R}/git/trees`,{method:'POST',body:JSON.stringify({base_tree:bc.tree.sha,tree})}),cm=await gh(`${R}/git/commits`,{method:'POST',body:JSON.stringify({message:msg,tree:t.sha,parents:[base]})});
+  await gh(`${R}/git/refs/heads/${br}`,{method:'PATCH',body:JSON.stringify({sha:cm.sha})});return cm.sha}
+function ghBegin(){if(!ghOn())return false;S.ghq=[];return true}
+async function ghEnd(msg){const q=S.ghq||[];S.ghq=null;if(!q.length)return 0;const box=document.createElement('div');box.className='ghprog';box.innerHTML='<b>☁️ กำลังอัปโหลดขึ้นเว็บ…</b><div class="bar"><i></i></div><span class="small"></span>';document.body.appendChild(box);
+  try{await ghCommit(q,msg,(i,n,f)=>{box.querySelector('i').style.width=(i/n*100)+'%';box.querySelector('span').textContent=`${i}/${n} · ${f}`});box.remove();return q.length}catch(e){box.remove();q.forEach(f=>dl(f.path,f.content));throw e}}
+async function pushAcc(silent){if(!ghOn())return false;try{await ghCommit([{path:'access.json',content:JSON.stringify(S.acc)}],'AquaGrid: ปรับปรุงสิทธิ์ผู้ใช้');S.dirty=false;try{localStorage.removeItem('pwa.pend')}catch(e){}$('#pend').classList.add('hidden');toast('☁️ อัปโหลดสิทธิ์ผู้ใช้ขึ้นเว็บแล้ว · มีผลภายใน 1–2 นาที',5000);return true}
+  catch(e){if(!silent)toast('อัปโหลดอัตโนมัติไม่สำเร็จ: '+e.message+' — กดดาวน์โหลด access.json แทน',7000);return false}}
 
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.add('hidden')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal').forEach(m=>m.classList.add('hidden'))});
@@ -267,13 +288,30 @@ $('#rqGo').onclick=()=>{if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test($('#rqE').value.tr
   location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent('ขอสิทธิ์เข้าใช้ CoreDash AquaGrid · '+$('#rqN').value)}&body=${encodeURIComponent(reqText())}`};
 $('#rqCopy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(reqText()).then(()=>toast('คัดลอกข้อความแล้ว'))};
 
-function markDirty(){S.dirty=true;$('#pend').classList.remove('hidden')}
+function markDirty(){S.dirty=true;$('#pend').classList.remove('hidden');try{localStorage.setItem('pwa.pend',JSON.stringify(S.acc))}catch(e){}if(ghOn()&&!S.ghq)setTimeout(()=>pushAcc(),50)}
+function pendMerge(srv){try{const p=localStorage.getItem('pwa.pend');if(!p)return srv;if(p===JSON.stringify(srv)){localStorage.removeItem('pwa.pend');return srv}const a=JSON.parse(p);if(a&&Array.isArray(a.users)){S.dirty=true;return a}}catch(e){}return srv}
+function pendWarn(){if(S.dirty&&S.me&&S.me.role==='admin'){$('#pend').classList.remove('hidden');setTimeout(()=>toast('⚠️ มีการเปลี่ยนแปลงสิทธิ์ผู้ใช้ที่ยังไม่ได้อัปโหลด — กด “สิทธิ์ผู้ใช้” แล้วดาวน์โหลด access.json ไปอัปโหลดที่ GitHub',8000),1500)}}
+window.addEventListener('beforeunload',e=>{if(S.dirty){e.preventDefault();e.returnValue=''}});
 $('#dlAcc').onclick=()=>{dl('access.json',S.acc);toast('ดาวน์โหลด access.json แล้ว — อัปโหลดไปที่ demo/pwa/',4000)};
 $('#admBtn').onclick=()=>openAdmin();
+$('#upAcc').onclick=async()=>{if(!ghOn()){toast('ยังไม่ได้เชื่อม GitHub — ตั้งค่าในส่วน “เผยแพร่อัตโนมัติ” ด้านล่าง');return}$('#upAcc').disabled=true;await pushAcc();$('#upAcc').disabled=false};
 async function saveMeta(){S.acc.meta=await enc(S.ck,te.encode(JSON.stringify(S.meta)))}
 async function wrapFor(pw){const salt=crypto.getRandomValues(new Uint8Array(16)),k=await kekOf(pw,salt,S.acc.kdf.it),w=await enc(k,S.ckRaw);return{salt:b64(salt),iv:w.iv,wk:w.ct}}
 function openAdmin(){if(!S.me||S.me.role!=='admin')return;$('#admM').classList.remove('hidden');renderAdmin()}
-function renderAdmin(note){const rows=S.acc.users.map(u=>{const m=S.meta.find(x=>x.id===u.id)||{};const me=u.id===S.me.id;
+function ghCard(){const c=GH.get()||{};const on=ghOn();return`<div class="ghcard ${on?'on':''}"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h4 style="margin:0;flex:1">☁️ เผยแพร่อัตโนมัติขึ้นเว็บ (GitHub)</h4><span class="tag ${on?'nw':''}">${on?'✅ เชื่อมแล้ว · '+esc(c.repo):'ยังไม่เชื่อม'}</span></div>
+  <p class="small" style="margin:6px 0">เชื่อมครั้งเดียว แล้วการเพิ่ม/ลบผู้ใช้ และปุ่ม “เผยแพร่” จะส่งไฟล์ขึ้น GitHub ให้เอง ไม่ต้องดาวน์โหลด–อัปโหลดเอง ผู้ชมเห็นข้อมูลใหม่ภายใน 1–2 นาที</p>
+  <div class="g2" style="gap:8px"><div><label class="f">Repository</label><input id="ghR" value="${esc(c.repo||'CoreDashTech/SCADAGateway')}"></div><div><label class="f">โฟลเดอร์</label><input id="ghD" value="${esc(c.dir||'demo/pwa')}"></div></div>
+  <label class="f">รหัสเชื่อมต่อ GitHub (Fine-grained token)</label><input id="ghT" type="password" placeholder="${c.token?'••••••••  (บันทึกไว้แล้ว — เว้นว่างเพื่อใช้ตัวเดิม)':'github_pat_…'}">
+  <label class="small" style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="ghM" ${!c.token||localStorage.getItem('pwa.gh')?'checked':''} style="width:16px;height:16px"> จำไว้ในเครื่องนี้ (ไม่ติ๊ก = ลืมเมื่อปิดเบราว์เซอร์)</label>
+  <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm pri" id="ghGo">🔗 ทดสอบและเชื่อม</button>${on?'<button class="btn sm dan" id="ghX">ยกเลิกการเชื่อม</button>':''}</div><div class="small" id="ghMsg" style="margin-top:6px"></div>
+  <details style="margin-top:8px"><summary class="small" style="cursor:pointer">วิธีสร้างรหัสเชื่อมต่อ (ทำครั้งเดียว)</summary><ol class="steps small"><li>เปิด <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a> (ล็อกอินบัญชีเจ้าของ repo)</li><li>ตั้งชื่อ เช่น “AquaGrid publish” · กำหนดวันหมดอายุ (แนะนำ 90 วัน)</li><li>Repository access → <b>Only select repositories</b> → เลือก <b>SCADAGateway</b></li><li>Permissions → Repository permissions → <b>Contents: Read and write</b> (อย่างเดียวพอ)</li><li>กด Generate token แล้วคัดลอกมาวางช่องด้านบน</li></ol><p class="small">🛡️ รหัสนี้เก็บเฉพาะในเบราว์เซอร์เครื่องนี้ ไม่ถูกส่งไปที่อื่นนอกจาก GitHub และเขียนได้เฉพาะ repo ที่เลือก ถ้าเครื่องหาย ให้ลบ token ที่หน้า GitHub ได้ทันที</p></details></div>`}
+function bindGh(){const go=$('#ghGo');if(!go)return;go.onclick=async()=>{const old=GH.get()||{},c={repo:$('#ghR').value.trim().replace(/^https?:\/\/github.com\//,'').replace(/\/$/,''),dir:$('#ghD').value.trim()||'demo/pwa',token:$('#ghT').value.trim()||old.token};
+   if(!/^[\w.-]+\/[\w.-]+$/.test(c.repo)||!c.token){$('#ghMsg').textContent='กรอก Repository (เช่น CoreDashTech/SCADAGateway) และรหัสเชื่อมต่อ';return}
+   go.disabled=true;$('#ghMsg').textContent='กำลังตรวจสอบ…';try{const r=await gh(`/repos/${c.repo}`,{},c);if(!r.permissions||!r.permissions.push)throw new Error('รหัสนี้ไม่มีสิทธิ์เขียน (Contents: Read and write)');
+     c.branch=r.default_branch;GH.set(c,$('#ghM').checked);toast('✅ เชื่อม GitHub แล้ว — การเผยแพร่ครั้งต่อไปจะอัปโหลดให้อัตโนมัติ',6000);renderAdmin();if(S.dirty)pushAcc()}
+   catch(e){$('#ghMsg').innerHTML=`<span style="color:var(--rd)">❌ ${esc(e.status===401?'รหัสเชื่อมต่อไม่ถูกต้องหรือหมดอายุ':e.status===404?'ไม่พบ repository หรือรหัสนี้ไม่ได้รับสิทธิ์ repo นี้':e.message)}</span>`}finally{go.disabled=false}};
+  const x=$('#ghX');if(x)x.onclick=()=>{if(!confirm('ยกเลิกการเชื่อม GitHub ในเครื่องนี้?'))return;GH.set(null);renderAdmin();toast('ยกเลิกการเชื่อมแล้ว')}}
+function renderAdmin(note){setTimeout(bindGh,0);const rows=S.acc.users.map(u=>{const m=S.meta.find(x=>x.id===u.id)||{};const me=u.id===S.me.id;
    return`<tr><td><b>${esc(m.name||'(ไม่มีชื่อ)')}</b>${me?' <span class="tag nw">คุณ</span>':''}<br><span class="small">${esc(m.email||m.login||'')}</span></td><td><span class="tag ${u.role==='admin'?'ad':'vw'}">${u.role==='admin'?'ผู้ดูแล':'ผู้ชม'}</span></td><td class="small">${esc(m.org||'')}<br>${m.created?new Date(m.created).toLocaleDateString('th-TH',{dateStyle:'medium'}):''}</td><td style="text-align:right">${me?'':`<button class="btn sm" data-reset="${u.id}">🔁 รหัสใหม่</button> <button class="btn sm dan" data-del="${u.id}">🗑️</button>`}</td></tr>`}).join('');
   $('#admBody').innerHTML=`${note||''}
   <div class="g2" style="align-items:start">
@@ -289,6 +327,7 @@ function renderAdmin(note){const rows=S.acc.users.map(u=>{const m=S.meta.find(x=
     <div class="lock" style="margin-top:14px">🛡️ <span>ลบผู้ใช้แล้วเขาจะเข้าไม่ได้อีก ถ้าต้องการตัดสิทธิ์ให้ขาด (เผื่อเคยบันทึกไฟล์ไว้) ให้กด “หมุนกุญแจทั้งระบบ” ผู้ใช้ที่เหลือจะได้รหัสใหม่</span></div>
     <button class="btn dan" id="rotGo" style="width:100%">🔄 หมุนกุญแจทั้งระบบ</button></div>
   </div>
+  ${ghCard()}
   <h4 style="margin:16px 0 6px">รายชื่อผู้มีสิทธิ์ (${S.acc.users.length})</h4>
   <div style="overflow:auto"><table class="u"><tr><th>ผู้ใช้</th><th>สิทธิ์</th><th>หน่วยงาน · วันที่ให้สิทธิ์</th><th></th></tr>${rows}</table></div>
   <h4 style="margin:16px 0 4px">วิธีให้สิทธิ์มีผล</h4><ol class="steps"><li>เพิ่ม/ลบผู้ใช้ในหน้านี้</li><li>กด “ดาวน์โหลด access.json”</li><li>อัปโหลดไฟล์ไปที่ <b class="mono">demo/pwa/access.json</b> ใน GitHub แล้ว Commit (รอ 1–2 นาที)</li><li>ส่งอีเมลแจ้งลิงก์ให้ผู้ใช้ และส่งรหัสผ่านแยกทาง LINE หรือโทรศัพท์</li></ol>`;
