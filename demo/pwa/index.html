@@ -251,8 +251,9 @@ async function openWith(raw,u,login){
 }
 (async function resume(){try{const s=JSON.parse(sessionStorage.getItem('pwa.s')||'null');if(!s)return;S.acc=await getJSON('access.json');const u=S.acc.users.find(x=>x.id===s.id);if(!u)return sessionStorage.removeItem('pwa.s');await openWith(ub64(s.ck),u,s.login)}catch(e){sessionStorage.removeItem('pwa.s')}})();
 $('#outBtn').onclick=()=>{try{sessionStorage.removeItem('pwa.s')}catch(e){}location.reload()};
-async function getShared(){try{const o=await getJSON('data.json');return JSON.parse(td.decode(await dec(S.ck,o)))}catch(e){return null}}
-async function publish(obj){const o=await enc(S.ck,te.encode(JSON.stringify(obj)));dl('data.json',o);return true}
+async function zip(u8,inv){const cs=inv?new DecompressionStream('gzip'):new CompressionStream('gzip');return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(cs)).arrayBuffer())}
+async function getShared(f){try{const o=await getJSON(f||'data.json');let u=await dec(S.ck,o);if(o.z)u=await zip(u,1);return JSON.parse(td.decode(u))}catch(e){return null}}
+async function publish(obj,f){let u=te.encode(JSON.stringify(obj)),z=0;if(window.CompressionStream){u=await zip(u);z=1}const o=await enc(S.ck,u);if(z)o.z=1;dl(f||'data.json',o);return true}
 
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.add('hidden')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal').forEach(m=>m.classList.add('hidden'))});
@@ -309,10 +310,10 @@ async function addUser(){const email=$('#nuE').value.trim().toLowerCase(),name=$
 async function changeMine(){const pw=$('#myPw').value;if(pw.length<10)return toast('รหัสผ่านต้องยาวอย่างน้อย 10 ตัว');const u=S.acc.users.find(x=>x.id===S.me.id);Object.assign(u,await wrapFor(pw));markDirty();$('#myPw').value='';toast('เปลี่ยนรหัสผ่านแล้ว · ดาวน์โหลดและอัปโหลด access.json เพื่อให้มีผล',4500)}
 async function rotate(){const mypw=prompt('หมุนกุญแจทั้งระบบ: ผู้ใช้อื่นทุกคนจะได้รหัสผ่านใหม่\nกรุณายืนยันด้วยรหัสผ่านปัจจุบันของคุณ');if(!mypw)return;
   try{const me=S.acc.users.find(x=>x.id===S.me.id);await dec(await kekOf(mypw,ub64(me.salt),S.acc.kdf.it),{iv:me.iv,ct:me.wk})}catch(e){return toast('รหัสผ่านไม่ถูกต้อง')}
-  toast('กำลังเข้ารหัสใหม่…',6000);const shared=await getShared(),raw=crypto.getRandomValues(new Uint8Array(32)),key=await aesOf(raw);
+  toast('กำลังเข้ารหัสใหม่…',6000);const shared=await getShared(),extra=[];if(shared&&Array.isArray(shared.sites))for(const x of shared.sites){const d=await getShared('data-'+x.id+'.json');if(d)extra.push(['data-'+x.id+'.json',d])}const raw=crypto.getRandomValues(new Uint8Array(32)),key=await aesOf(raw);
   const vault=await enc(key,te.encode(S.vaultPlain));S.ckRaw=raw;S.ck=key;const list=[];
   for(const u of S.acc.users){const m=S.meta.find(x=>x.id===u.id)||{};const pw=u.id===S.me.id?mypw:genPw();Object.assign(u,await wrapFor(pw));if(u.id!==S.me.id)list.push([m.name||'',m.email||'',pw])}
-  await saveMeta();dl('vault.json',vault);if(shared)setTimeout(()=>publish(shared),400);setTimeout(()=>dl('access.json',S.acc),800);S.dirty=false;$('#pend').classList.add('hidden');
+  await saveMeta();dl('vault.json',vault);if(shared)setTimeout(()=>publish(shared),400);extra.forEach(([f,d],i)=>setTimeout(()=>publish(d,f),1200+i*500));setTimeout(()=>dl('access.json',S.acc),800);S.dirty=false;$('#pend').classList.add('hidden');
   try{sessionStorage.setItem('pwa.s',JSON.stringify({ck:b64(raw),id:S.me.id,login:S.me.login}))}catch(e){}
   renderAdmin(`<div class="ok" style="margin-bottom:12px"><b>✅ หมุนกุญแจแล้ว</b> — อัปโหลดไฟล์ที่ดาวน์โหลด (vault.json${shared?', data.json':''}, access.json) ไปที่ demo/pwa/ พร้อมกัน แล้วแจ้งรหัสใหม่ให้ผู้ใช้:<table class="u" style="margin-top:6px">${list.map(r=>`<tr><td>${esc(r[0])}</td><td class="small">${esc(r[1])}</td><td class="mono" style="color:var(--gd)">${esc(r[2])}</td></tr>`).join('')||'<tr><td>ไม่มีผู้ใช้อื่น</td></tr>'}</table></div>`)}
 </script>

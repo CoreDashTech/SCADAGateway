@@ -163,3 +163,29 @@ textarea#rlIn{width:100%;font-size:12.5px;border:1px solid var(--ln2);border-rad
  .pk{left:50%;top:0}.nd{display:grid;grid-template-columns:52px 1fr;text-align:left;column-gap:10px;align-items:center;padding:10px 12px}.nd .ic{grid-row:span 3;width:48px;height:48px;font-size:24px;margin:0}
  .kpis.ck{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:600px){.fgrid{grid-template-columns:1fr}.seg button{padding:7px 10px;font-size:13px}.flow b{width:100%}}
+
+/* ===== หลายสถานที่ ===== */
+nav.tabs .sitebtn{flex:none;display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 8px;border-radius:999px;cursor:pointer;background:linear-gradient(135deg,#fff7dd,#fde9b0);border:1px solid #f1cf6e;color:#5b4300;font:600 14px Prompt,sans-serif;max-width:340px}
+nav.tabs .sitebtn span{font-size:18px}nav.tabs .sitebtn b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav.tabs .sitebtn em{font-style:normal;font-size:11.5px;background:#fff;border-radius:999px;padding:1px 8px;white-space:nowrap}
+nav.tabs .sitebtn i{font-style:normal;font-size:11px;opacity:.7}
+.sitesov{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);display:flex;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow:auto;animation:fd .2s}
+.sitebox{background:var(--b3);border:1px solid var(--ln);border-radius:24px;padding:20px;width:min(1080px,100%);box-shadow:0 30px 80px rgba(0,0,0,.3)}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.scard{background:var(--pn);border:1px solid var(--ln2);border-radius:18px;padding:14px;transition:.2s}.scard:hover{border-color:var(--ac);transform:translateY(-2px);box-shadow:var(--sh)}
+.scard.cur{border:2px solid var(--ac);background:linear-gradient(160deg,var(--soft),var(--pn))}
+.sic{font-size:26px;width:46px;height:46px;border-radius:14px;background:var(--soft);display:grid;place-items:center;flex:none}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smini{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.smini div{background:var(--b3);border:1px solid var(--ln2);border-radius:10px;padding:6px 4px;text-align:center;font-size:11.5px;color:var(--mu)}
+.smini b{display:block;font:700 15px Prompt,sans-serif;color:var(--tx)}
+.optc{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--ln2);border-radius:14px;padding:12px;cursor:pointer;background:var(--pn)}.optc input[type=radio]{width:18px;height:18px;margin-top:3px}
+.optc b{display:block}.optc small{color:var(--mu);font-size:13px}
+.sitepin{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.sitepin i{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 12px rgba(255,255,255,.7)}
+.sitepin b{margin-top:4px;background:rgba(255,255,255,.94);color:#0b2540;font:600 12px Prompt,sans-serif;padding:3px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.sitepin small{background:rgba(4,10,24,.75);color:#e2e8f0;font-size:10.5px;padding:1px 7px;border-radius:999px;margin-top:2px;white-space:nowrap}
+.sitepin:hover b{background:#ffd75e}.sitepin.busy{opacity:.5}
+@media (max-width:900px){.sgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.sgrid{grid-template-columns:1fr}.sitebox{padding:14px;border-radius:18px}nav.tabs .sitebtn{max-width:230px}}
+.sitepin.mini b{padding:2px 6px;font-size:14px}.sitepin.mini .nm,.sitepin.mini small{display:none}
+.sitepin.mini:hover{z-index:5}.sitepin.mini:hover b{font-size:12px;padding:3px 9px}.sitepin.mini:hover .nm{display:inline}.sitepin.mini:hover small{display:block}
