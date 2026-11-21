@@ -189,3 +189,9 @@ nav.tabs .sitebtn i{font-style:normal;font-size:11px;opacity:.7}
 @media (max-width:600px){.sgrid{grid-template-columns:1fr}.sitebox{padding:14px;border-radius:18px}nav.tabs .sitebtn{max-width:230px}}
 .sitepin.mini b{padding:2px 6px;font-size:14px}.sitepin.mini .nm,.sitepin.mini small{display:none}
 .sitepin.mini:hover{z-index:5}.sitepin.mini:hover b{font-size:12px;padding:3px 9px}.sitepin.mini:hover .nm{display:inline}.sitepin.mini:hover small{display:block}
+/* ป้ายข้อมูลสมมติ */
+.fk{display:inline-block;font:700 11px Prompt,sans-serif;font-style:normal;color:#9a3412;background:#ffedd5;border:1px solid #fdba74;border-radius:999px;padding:1px 8px;vertical-align:1px;white-space:nowrap}
+.fic{margin:8px 0;background:#fff7ed;border:1px dashed #fb923c;color:#9a3412;border-radius:10px;padding:6px 10px;font-size:12.5px;line-height:1.45}
+.ficbox{background:#fff7ed;border:1px solid #fdba74;color:#7c2d12;border-radius:14px;padding:10px 12px;font-size:13.5px;line-height:1.55;margin-bottom:12px}
+nav.tabs .sitebtn em.fk{background:#ffedd5}
+.orgpin b .fk{font-size:10px;padding:0 6px;margin-left:3px}
