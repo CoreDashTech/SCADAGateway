@@ -3,8 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CoreDash ส่องโชค · ตรวจสลากกินแบ่งรัฐบาล ลุ้นอย่างมีสติ</title>
-<meta name="description" content="ตรวจสลากกินแบ่งรัฐบาลจากข้อมูล API ทางการของสำนักงานสลากกินแบ่งรัฐบาล สถิติย้อนหลัง ถ่ายทอดสดจากช่องทางการ และเลขเสี่ยงทายเพื่อความบันเทิง โดย CoreDash Technology (ไม่แสวงหากำไร)">
+<title>CoreDash · พื้นที่ส่วนตัว</title>
+<meta name="robots" content="noindex,nofollow">
+<style id="gate-css">html.locked body>*:not(#gate){display:none!important}
+#gate{position:fixed;inset:0;display:grid;place-items:center;background:#0b1020;color:#e7ecf7;font-family:Sarabun,system-ui,sans-serif;z-index:99999}
+#gate form{background:#141b33;border:1px solid #2a3558;border-radius:14px;padding:28px 26px;width:min(340px,90vw);text-align:center}
+#gate h1{font-size:20px;margin:0 0 6px}#gate p{margin:0 0 16px;color:#8f9bbd;font-size:14px}
+#gate input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2a3558;background:#0b1020;color:#fff;font-size:17px}
+#gate button{margin-top:12px;width:100%;padding:12px;border:0;border-radius:10px;background:#1f5fff;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+#gate .err{color:#f87171;min-height:20px;margin-top:8px;font-size:14px}</style>
+<script>
+/* ประตูหน้าส่วนตัว: ซ่อนหน้าจากผู้เยี่ยมชมทั่วไป เก็บเฉพาะค่าแฮชของรหัส ไม่เก็บรหัสจริง
+   หมายเหตุ: เว็บนี้เป็นไฟล์สาธารณะ จึงเป็นแค่ม่านกั้น ไม่ใช่ระบบความปลอดภัย */
+(function(){
+  var H='f5dbd255653baddfa44d681c89ef8b2172d8ec8fdeb44fa8d7e4bc66d6c4eed0',K='cd.private.ok';
+  var ok=false;try{ok=localStorage.getItem(K)===H}catch(e){}
+  if(ok)return;
+  document.documentElement.classList.add('locked');
+  async function sha(t){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  document.addEventListener('DOMContentLoaded',function(){
+    var g=document.createElement('div');g.id='gate';
+    g.innerHTML='<form><h1>🔒 พื้นที่ส่วนตัว</h1><p>ใส่รหัสเพื่อเข้าดู</p><input type="password" autocomplete="current-password" aria-label="รหัสผ่าน" autofocus><button type="submit">เข้าดู</button><div class="err" role="alert"></div><p style="margin:14px 0 0"><a href="../../" style="color:#8f9bbd">← กลับหน้าแรก</a></p></form>';
+    document.body.appendChild(g);
+    var f=g.querySelector('form'),i=g.querySelector('input'),e=g.querySelector('.err');
+    f.addEventListener('submit',async function(ev){ev.preventDefault();
+      if(await sha(i.value)===H){try{localStorage.setItem(K,H)}catch(x){}document.documentElement.classList.remove('locked');g.remove()}
+      else{e.textContent='รหัสไม่ถูกต้อง';i.value='';i.focus()}});
+  });
+})();
+</script>
 <meta name="theme-color" content="#f6f4ee">
 <script>try{var t=JSON.parse(localStorage.getItem("lotto.theme"));if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="icon" href="../live/assets/logo.webp">
