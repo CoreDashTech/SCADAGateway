@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoreDash Watch — แจ้งเตือนปั๊มหยุด ไฟดับ และวัดไฟผ่านมือถือ</title>
+<meta name="description" content="โปรแกรมฟรีสำหรับ ESP32 + PZEM-004T แจ้งเตือนทาง Telegram และ LINE เมื่อปั๊มหยุด ไฟดับ หรืออุปกรณ์ขาดการติดต่อ ทดลองใช้ฟรี 90 วัน">
+<meta property="og:title" content="CoreDash Watch · ปั๊มหยุด ไฟดับ รู้ทันทีผ่านมือถือ">
+<meta name="theme-color" content="#050C26">
+<link rel="icon" href="../app/icons/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="watch.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+  <a class="brand" href="../"><span class="lm" aria-hidden="true">⚡</span>CoreDash <span style="color:var(--cyan)">Watch</span></a>
+  <span class="sp"></span>
+  <a class="nl" href="#how">วิธีใช้</a><a class="nl" href="#price">ราคา</a><a class="nl" href="#faq">คำถาม</a>
+  <a class="btn pri sm" href="app/">เข้าสู่ระบบ / ทดลองฟรี</a>
+</div></header>
+
+<main>
+<div class="wrap hero">
+  <div>
+    <span class="eyebrow">CoreDash Watch · โปรแกรมฟรี</span>
+    <h1 style="margin-top:12px">ปั๊มหยุด ไฟดับ<br><span class="hl">รู้ทันทีผ่านมือถือ</span></h1>
+    <p class="lead">ต่อชุด ESP32 ราคาประหยัดเข้ากับโปรแกรมฟรีของ CoreDash แจ้งเตือนทาง Telegram และ LINE ดูกำลังไฟ หน่วยไฟ และค่าไฟรายเครื่องได้ตลอดเวลา</p>
+    <div class="prices">
+      <div><b data-cfg="trial">ฟรี 90 วัน</b><small>ทุกฟีเจอร์ ไม่ต้องผูกบัตร</small></div>
+      <div><b data-cfg="month">99 ฿</b><small>ต่อเดือน ต่ออุปกรณ์</small></div>
+      <div><b data-cfg="year">990 ฿</b><small>ต่อปี ประหยัดกว่า</small></div>
+    </div>
+    <div class="cta">
+      <a class="btn pri" href="app/">เริ่มทดลองฟรี</a>
+      <button class="btn ghost" type="button" data-dl>ดาวน์โหลดโปรแกรม ESP32</button>
+    </div>
+  </div>
+  <div class="phone" aria-label="ตัวอย่างข้อความแจ้งเตือนบนมือถือ">
+    <div class="bar"><span class="av" aria-hidden="true"></span><div><b>CoreDash Watch</b><div class="small">บอทแจ้งเตือน</div></div></div>
+    <div class="bub">🛑 ปั๊มบ่อหลังบ้าน: ปั๊มหยุดทำงาน (กระแส 0.02 A)<span class="t">06:12</span></div>
+    <div class="bub">⚡ ร้านกาแฟ: ไฟฟ้าดับ (ไม่พบแรงดันไฟเมน)<span class="t">13:40</span></div>
+    <div class="bub">💡 ร้านกาแฟ: ไฟฟ้ากลับมาแล้ว 229 V<span class="t">13:58</span></div>
+    <div class="bub">📴 ห้องเย็น: ขาดการติดต่อเกิน 3 นาที อาจไฟดับทั้งบ้าน หรืออินเทอร์เน็ตหลุด<span class="t">22:05</span></div>
+  </div>
+</div>
+
+<section class="alt feat">
+  <div class="wrap">
+    <div class="center"><span class="eyebrow">ใช้ทำอะไรได้</span><h2 style="margin-top:8px">อุปกรณ์ชุดเดียว ใช้ได้หลายงาน</h2></div>
+    <div class="grid3" style="margin-top:26px">
+      <div class="card"><div class="ic">💧</div><h3>เฝ้าปั๊มน้ำ</h3><p class="muted">ปั๊มบ่อ ปั๊มรดน้ำสวน ปั๊มประปาหมู่บ้าน แจ้งทันทีเมื่อปั๊มหยุดหรือเริ่มทำงาน</p></div>
+      <div class="card"><div class="ic">⚡</div><h3>แจ้งไฟดับ</h3><p class="muted">ร้านค้า ตู้แช่ ห้องเย็น ฟาร์ม รู้ทันทีเมื่อไฟเมนดับและเมื่อไฟกลับมา</p></div>
+      <div class="card"><div class="ic">📊</div><h3>วัดไฟรายเครื่อง</h3><p class="muted">ดูวัตต์ โวลต์ แอมป์ หน่วยไฟสะสม และค่าไฟเดือนนี้ผ่านมือถือ</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap grid2" style="align-items:start">
+    <div>
+      <span class="eyebrow">ต้องใช้อุปกรณ์อะไร</span>
+      <h2 style="margin-top:8px">ฮาร์ดแวร์ราคาประหยัด หาซื้อได้ทั่วไป</h2>
+      <p class="lead">โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่หน้างาน ระบบถึงจะรู้ว่าปั๊มหยุดหรือไฟดับ ซื้อเองตามรายการ หรือสั่งชุดประกอบเสร็จจาก CoreDash</p>
+      <div class="warnbox">⚠ PZEM-004T ต่อกับไฟบ้าน 220V โดยตรง อันตรายถึงชีวิต ปิดเบรกเกอร์ก่อนต่อทุกครั้ง และให้ช่างไฟที่มีความรู้เป็นผู้ต่อฝั่งไฟฟ้า</div>
+    </div>
+    <div class="parts">
+      <div class="part"><b>ESP32 DevKit</b><span class="q">1 ตัว</span><span class="small">บอร์ดหลัก ต่อ Wi-Fi และส่งข้อมูล</span></div>
+      <div class="part"><b>PZEM-004T v3.0 พร้อม CT คล้องสาย</b><span class="q">1 ชุด</span><span class="small">วัดแรงดัน กระแส กำลังไฟ หน่วยสะสม</span></div>
+      <div class="part"><b>สายจัมเปอร์ เมีย–เมีย</b><span class="q">4 เส้น</span><span class="small">5V→5V · GND→GND · PZEM TX→GPIO16 · PZEM RX→GPIO17</span></div>
+      <div class="part"><b>อะแดปเตอร์ 5V + สาย USB</b><span class="q">1 ชุด</span><span class="small">ไฟเลี้ยง ESP32</span></div>
+      <div class="part"><b>กล่องกันน้ำ</b><span class="q">1 ใบ</span><span class="small">ติดข้างตู้ไฟหรือโรงสูบ</span></div>
+      <div class="part"><b>พาวเวอร์แบงก์ (ไม่บังคับ)</b><span class="q">1 ก้อน</span><span class="small">ให้แจ้ง “ไฟดับ” ได้ทันที แทนการแจ้งขาดการติดต่อ</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="how">
+  <div class="wrap">
+    <div class="center"><span class="eyebrow">เริ่มใช้งาน</span><h2 style="margin-top:8px">5 ขั้นตอน ใช้เวลาราวครึ่งวัน</h2></div>
+    <div class="steps">
+      <div class="step"><div><h3>สมัครและเพิ่มอุปกรณ์</h3><p>กด “เริ่มทดลองฟรี” สมัครด้วยอีเมล แล้วกดเพิ่มอุปกรณ์ ระบบจะให้ไฟล์โปรแกรมที่ฝังรหัสอุปกรณ์มาให้แล้ว</p></div></div>
+      <div class="step"><div><h3>ลงโปรแกรมใน ESP32</h3><p>เปิดไฟล์ด้วย Arduino IDE ติดตั้งไลบรารี WiFiManager และ PZEM004Tv30 เลือกบอร์ด ESP32 Dev Module แล้วกด Upload</p></div></div>
+      <div class="step"><div><h3>ต่อสายและติดตั้ง</h3><p>ต่อ PZEM กับ ESP32 ตามรายการด้านบน ส่วนสายไฟ 220V และการคล้อง CT ที่สายไฟเส้นเดียวของปั๊ม ให้ช่างไฟต่อ</p></div></div>
+      <div class="step"><div><h3>ตั้งค่า Wi-Fi ผ่านมือถือ</h3><p>เสียบไฟ ต่อมือถือเข้า Wi-Fi “CoreDash-Watch-…” (รหัส coredash) เลือก Wi-Fi บ้าน ใส่รหัส แล้วบันทึก</p></div></div>
+      <div class="step"><div><h3>ผูกช่องทางแจ้งเตือน</h3><p>ในหน้าอุปกรณ์ กดผูก Telegram หรือเพิ่มเพื่อน LINE แล้วส่งรหัสผูก จากนั้นกด “ส่งข้อความทดสอบ”</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="price">
+  <div class="wrap">
+    <div class="center"><span class="eyebrow">ราคา</span><h2 style="margin-top:8px">ลองฟรีก่อน ถูกใจค่อยจ่าย</h2></div>
+    <div class="grid3" style="margin-top:30px">
+      <div class="card tier"><h3>ทดลองใช้</h3><div class="pr">ฟรี</div><p class="muted" data-cfg="trialtxt">90 วันต่ออุปกรณ์ ทุกฟีเจอร์ ไม่ต้องผูกบัตร</p></div>
+      <div class="card tier best"><span class="ribbon">แนะนำ</span><h3>รายปี</h3><div class="pr" data-cfg="year">990 ฿</div><p class="muted">ต่ออุปกรณ์ต่อปี</p></div>
+      <div class="card tier"><h3>รายเดือน</h3><div class="pr" data-cfg="month">99 ฿</div><p class="muted">ต่ออุปกรณ์ต่อเดือน</p></div>
+    </div>
+    <div class="card" style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+      <div><h3>อยากได้ชุดประกอบเสร็จ หรือให้ทีมไปติดตั้ง?</h3><p class="muted" style="margin:4px 0 0">โทรหรือ LINE <b data-cfg="phone">081-923-2380</b> แจ้งงาน เช่น เฝ้าปั๊มบ่อ วัดไฟร้าน หรือเฝ้าตู้แช่ ประเมินราคาให้ฟรี</p></div>
+      <a class="btn pri" data-cfg="tel" href="tel:0819232380">โทรเลย</a>
+    </div>
+  </div>
+</section>
+
+<section class="alt faq" id="faq">
+  <div class="wrap" style="max-width:860px">
+    <div class="center"><span class="eyebrow">คำถามที่พบบ่อย</span><h2 style="margin-top:8px">ตอบตรง ๆ ก่อนตัดสินใจ</h2></div>
+    <details><summary>ต้องมีฮาร์ดแวร์ไหม?</summary><p>ต้องมีครับ โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่ปั๊มหรือเครื่องใช้จริง ระบบถึงจะรู้ว่าไฟดับหรือปั๊มหยุด</p></details>
+    <details><summary>ไฟดับทั้งบ้าน แจ้งเตือนได้อย่างไร?</summary><p>ถ้า ESP32 และเราเตอร์มีไฟสำรอง ระบบจะแจ้ง “ไฟฟ้าดับ” ภายในราว 1 นาที ถ้าไม่มีไฟสำรอง อุปกรณ์จะเงียบไป และระบบจะแจ้ง “ขาดการติดต่อ” เมื่อเงียบเกิน 3 นาที</p></details>
+    <details><summary>Telegram กับ LINE ต่างกันอย่างไร?</summary><p>Telegram ส่งได้ฟรีไม่จำกัด แนะนำให้ใช้เป็นหลัก ส่วน LINE ส่งผ่านบัญชีทางการ ซึ่งมีโควตาข้อความฟรีต่อเดือนจำกัด</p></details>
+    <details><summary>หมดช่วงทดลองแล้วเกิดอะไรขึ้น?</summary><p>อุปกรณ์ยังส่งข้อมูลและเห็นค่าล่าสุดได้ แต่ระบบหยุดเก็บประวัติและหยุดแจ้งเตือนจนกว่าจะต่ออายุ ไม่มีการตัดเงินอัตโนมัติ</p></details>
+    <details><summary>ข้อมูลของฉันปลอดภัยไหม?</summary><p>อุปกรณ์แต่ละตัวมีรหัสเฉพาะ ระบบเก็บแบบเข้ารหัสทางเดียว เจ้าของบัญชีเห็นเฉพาะอุปกรณ์ของตัวเอง ทำรหัสหายออกรหัสใหม่ได้ทันที</p></details>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><b style="color:#fff">CoreDash Technology</b><span>·</span><a href="../">coredashtech.com</a><span>·</span><span>โทร <span data-cfg="phone">081-923-2380</span></span><span style="margin-left:auto">© 2026 CoreDash Technology</span></div></footer>
+
+<script src="dl.js"></script>
+<script>
+(function () {
+  var C = window.CD_WATCH || {}
+  var set = function (k, t) { document.querySelectorAll('[data-cfg="' + k + '"]').forEach(function (e) { e.textContent = t }) }
+  if (C.trialDays) { set('trial', 'ฟรี ' + C.trialDays + ' วัน'); set('trialtxt', C.trialDays + ' วันต่ออุปกรณ์ ทุกฟีเจอร์ ไม่ต้องผูกบัตร') }
+  if (C.priceMonth) set('month', C.priceMonth + ' ฿')
+  if (C.priceYear) set('year', C.priceYear + ' ฿')
+  if (C.phone) set('phone', C.phone)
+  document.querySelectorAll('[data-cfg="tel"]').forEach(function (a) { if (C.tel) a.href = 'tel:' + C.tel })
+  document.querySelectorAll('[data-dl]').forEach(function (b) { b.addEventListener('click', function () { cdDownloadFirmware('') }) })
+})()
+</script>
+</body>
+</html>
