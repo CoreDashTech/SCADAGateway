@@ -1,4 +1,5 @@
 /* CoreDash Watch · ธีมเดียวกับ HydroLink */
+[hidden]{display:none!important}
 :root{--bg:#050C26;--bg2:#081640;--card:#0C1A45;--card2:#102255;--line:rgba(140,170,255,.18);--ink:#EEF3FF;--mute:#A9B8DA;--blue:#2E6BFF;--cyan:#22D3EE;--teal:#14B8A6;--amber:#F5C76A;--red:#F87171;--green:#34D399}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
