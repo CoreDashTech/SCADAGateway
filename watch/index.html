@@ -12,12 +12,132 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="watch.css">
 <script src="config.js"></script>
+<style>
+/* ───── สาธิตสด ───── */
+.dm{display:grid;grid-template-columns:1.15fr .9fr .95fr;gap:18px;margin-top:28px;align-items:stretch}
+.dm .card{padding:18px}
+.dm-scene svg{width:100%;height:auto;display:block}
+.dm-ctl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.tg{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font:inherit;cursor:pointer;text-align:left;transition:background .15s,border-color .15s}
+.tg:hover{border-color:var(--cyan)}
+.tg b{font-size:15px}.tg span{font-size:13px;color:var(--green)}
+.tg.off{background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.5)}.tg.off span{color:var(--red)}
+.dm-opt{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14.5px;color:var(--mute);cursor:pointer}
+.dm-opt input{width:18px;height:18px;accent-color:var(--cyan)}
+.st{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:700;font-size:14.5px;background:rgba(52,211,153,.12);color:var(--green)}
+.st::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+.st.warn{background:rgba(245,199,106,.12);color:var(--amber)}.st.bad{background:rgba(248,113,113,.12);color:var(--red)}
+.rd{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.rd div{background:#071233;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rd b{display:block;font:800 28px 'Space Grotesk',sans-serif;line-height:1.1;transition:color .3s}
+.rd small{color:var(--mute)}
+.rd .dim b{color:#4B5B86}
+.spark{margin-top:12px;background:#071233;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.spark svg{width:100%;height:70px;display:block}
+.dm-phone{position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:440px}
+.dm-phone .chat{flex:1;overflow-y:auto;max-height:380px;padding-right:4px;scroll-behavior:smooth}
+.dm-phone .bub{animation:pop .35s ease-out}
+.dm-phone .bub.sys{background:rgba(34,211,238,.08);border:1px dashed rgba(34,211,238,.35);color:var(--mute);font-size:14px}
+.dm-phone .bub small{display:block;color:var(--amber);font-size:12.5px;margin-top:3px}
+.toast{position:absolute;left:12px;right:12px;top:-90px;background:#F4F7FF;color:#0B1536;border-radius:16px;padding:10px 12px;box-shadow:0 14px 30px -10px rgba(0,0,0,.7);font-size:14px;transition:top .35s cubic-bezier(.2,.9,.3,1.2);z-index:2}
+.toast b{display:block;font-size:12.5px;color:#4B5B86}
+.toast.show{top:12px}
+.shake{animation:shake .45s}
+@keyframes pop{from{transform:translateY(10px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+/* ฉาก */
+.flow{stroke-dasharray:7 7;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-14}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.blink{animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.sc.m-off .mains .flow,.sc.m-off .pumpflow .flow,.sc.p-off .pumpflow .flow{animation:none;stroke:#2A3966}
+.sc.m-off .spin,.sc.p-off .spin{animation:none}
+.sc.m-off .bulb{fill:#2A3966}
+.sc.n-off .net .flow{animation:none;stroke:#2A3966}.sc .netx{display:none}.sc.n-off .netx{display:block}
+.sc .batt{display:none}.sc.bk .batt{display:block}
+.sc .wifi path{transition:stroke .3s}.sc.n-off .wifi path{stroke:#2A3966}
+.sc.dead .wifi path{stroke:#2A3966}.sc.dead .net .flow{animation:none;stroke:#2A3966}
+.sc text{font-family:'Sarabun',sans-serif}
+/* ───── ฮาร์ดแวร์ 3D ───── */
+.hw{display:grid;grid-template-columns:1.35fr .9fr;gap:22px;margin-top:26px;align-items:start}
+.hw-stage{perspective:1400px;background:radial-gradient(circle at 50% 35%,rgba(46,107,255,.18),transparent 65%),#071233;border:1px solid var(--line);border-radius:18px;padding:10px;position:relative}
+.hw-stage svg{width:100%;height:auto;display:block;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out}
+.hw-stage .hint{position:absolute;left:14px;bottom:10px;font-size:12.5px;color:var(--mute)}
+.hw svg .grp{transition:opacity .3s}
+.hw svg.focus .grp{opacity:.2}.hw svg.focus .grp.on{opacity:1}
+.hw svg .w.on{stroke-dasharray:8 6;animation:flow .8s linear infinite}
+.hw svg .lb{font:700 12.5px 'Sarabun',sans-serif;fill:#EEF3FF;paint-order:stroke;stroke:#071233;stroke-width:4px}
+.hw svg .lb.s{font-size:11.5px;font-weight:600;fill:#A9B8DA}
+.hw svg .lb.danger{fill:#FCA5A5}
+.hws{display:grid;gap:8px}
+.hws button{display:grid;grid-template-columns:34px 1fr;gap:4px 12px;text-align:left;font:inherit;color:#fff;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.hws button:hover{border-color:rgba(34,211,238,.6)}
+.hws button.on{background:rgba(46,107,255,.16);border-color:var(--cyan)}
+.hws .n{grid-row:span 2;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:800 16px 'Space Grotesk',sans-serif;background:linear-gradient(135deg,#2E6BFF,#22D3EE)}
+.hws b{font-size:16px}.hws p{margin:0;color:var(--mute);font-size:14px;line-height:1.5}
+.badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;vertical-align:2px}
+.badge.ok{background:rgba(52,211,153,.14);color:var(--green)}.badge.dg{background:rgba(248,113,113,.16);color:#FCA5A5}
+.sw{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:3px;margin-right:4px}
+/* ───── ลงโปรแกรม (สไลด์) ───── */
+.up{display:grid;grid-template-columns:.85fr 1.15fr;gap:24px;margin-top:28px;align-items:center}
+.up-tabs{display:grid;gap:8px}
+.up-tabs button{display:flex;gap:12px;align-items:flex-start;text-align:left;font:inherit;color:#fff;background:transparent;border:1px solid transparent;border-radius:14px;padding:12px 14px;cursor:pointer;position:relative;overflow:hidden}
+.up-tabs button .n{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:800 15px 'Space Grotesk',sans-serif;background:#13245C;color:var(--mute)}
+.up-tabs button b{display:block;font-size:16.5px}.up-tabs button span.d{color:var(--mute);font-size:14px}
+.up-tabs button.on{background:rgba(46,107,255,.14);border-color:var(--line)}
+.up-tabs button.on .n{background:linear-gradient(135deg,#2E6BFF,#22D3EE);color:#fff}
+.up-tabs button .pg{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--cyan)}
+.up-tabs button.on .pg{animation:pg var(--dur,5s) linear forwards}
+@keyframes pg{to{width:100%}}
+.up-screen{background:#071233;border:1px solid var(--line);border-radius:18px;padding:18px;min-height:360px;display:grid;place-items:center}
+.scr{display:none;width:100%}.scr.on{display:block;animation:pop .4s ease-out}
+.win{background:#0E1838;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14px}
+.win .tb{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#0A1230;border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px}
+.win .tb i{width:10px;height:10px;border-radius:50%;background:#2A3966;display:inline-block}
+.win .bd{padding:14px}
+.ide-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ide-bar .ib{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#173B7A;font-weight:800}
+.ide-bar .ib.go{background:#0F766E;box-shadow:0 0 0 0 rgba(34,211,238,.6);animation:ring 1.6s infinite}
+@keyframes ring{70%{box-shadow:0 0 0 12px rgba(34,211,238,0)}}
+.ide-bar .sel{margin-left:6px;padding:5px 10px;border-radius:8px;background:#0A1230;border:1px solid var(--line);font-size:13px}
+.code{font:13px/1.65 ui-monospace,Consolas,monospace;color:#9FB3E6;background:#0A1230;border-radius:8px;padding:10px 12px;white-space:pre;overflow:hidden}
+.code .k{color:#7DD3FC}.code .s{color:#FCD34D}
+.cons{margin-top:10px;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:#A7F3D0;background:#03081C;border-radius:8px;padding:8px 12px}
+.pbar{height:8px;border-radius:4px;background:#13245C;overflow:hidden;margin:6px 0}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2E6BFF,#22D3EE)}
+.scr.on .pbar i{animation:fill 3.2s ease-out .4s forwards}
+@keyframes fill{to{width:100%}}
+.scr .late{opacity:0}.scr.on .late{animation:pop .4s ease-out forwards;animation-delay:var(--d,3.6s)}
+.mini-ph{width:250px;margin:0 auto;background:#0A1233;border:1px solid var(--line);border-radius:26px;padding:14px}
+.mini-ph .hd{text-align:center;font-size:12.5px;color:var(--mute);margin-bottom:8px}
+.wl{display:grid;gap:6px}
+.wl div{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:10px;background:#101D4A;font-size:14px}
+.wl div.hi{background:rgba(34,211,238,.16);border:1px solid var(--cyan)}
+.fm{display:grid;gap:7px;margin-top:4px}
+.fm label{font-size:12.5px;color:var(--mute)}
+.fm .in{background:#EAF0FF;color:#0B1536;border-radius:8px;padding:7px 10px;font-size:13.5px}
+.fm .bt{text-align:center;background:linear-gradient(90deg,#2E6BFF,#22D3EE);border-radius:8px;padding:8px;font-weight:700}
+.app-card{display:grid;gap:10px}
+.app-card .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:#101D4A;border-radius:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(52,211,153,.12);color:var(--green);font-size:13px;font-weight:700}
+.kbd{font:700 13px ui-monospace,Consolas,monospace;color:var(--amber);background:rgba(245,199,106,.1);padding:3px 8px;border-radius:6px}
+.easy{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.easy span{padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:14.5px}
+.mtoast{position:fixed;left:12px;right:12px;bottom:-120px;z-index:50;background:#F4F7FF;color:#0B1536;border-radius:16px;padding:10px 14px;box-shadow:0 14px 34px -8px rgba(0,0,0,.8);font-size:15px;transition:bottom .35s cubic-bezier(.2,.9,.3,1.2);display:none}
+.mtoast b{display:block;font-size:12.5px;color:#4B5B86}.mtoast.show{bottom:14px}
+@media (max-width:1050px){.mtoast{display:block}.dm{grid-template-columns:1fr 1fr}.dm-phone{grid-column:1/-1;min-height:360px}}
+@media (max-width:900px){.hw,.up{grid-template-columns:1fr}}
+@media (max-width:640px){.dm{grid-template-columns:1fr}.dm-ctl{grid-template-columns:1fr 1fr 1fr}.tg{padding:8px}.tg b{font-size:13.5px}.rd b{font-size:23px}}
+@media (prefers-reduced-motion:reduce){.flow,.spin,.blink,.w.on,.ide-bar .ib.go{animation:none!important}}
+</style>
 </head>
 <body>
 <header class="nav"><div class="wrap">
   <a class="brand" href="../"><span class="lm" aria-hidden="true">⚡</span>CoreDash <span style="color:var(--cyan)">Watch</span></a>
   <span class="sp"></span>
-  <a class="nl" href="#how">วิธีใช้</a><a class="nl" href="#price">ราคา</a><a class="nl" href="#faq">คำถาม</a>
+  <a class="nl" href="#demo">ลองกดดู</a><a class="nl" href="#hw">ต่อสาย</a><a class="nl" href="#how">วิธีใช้</a><a class="nl" href="#price">ราคา</a>
   <a class="btn pri sm" href="app/">เข้าสู่ระบบ / ทดลองฟรี</a>
 </div></header>
 
@@ -33,8 +153,8 @@
       <div><b data-cfg="year">990 ฿</b><small>ต่อปี ประหยัดกว่า</small></div>
     </div>
     <div class="cta">
-      <a class="btn pri" href="app/">เริ่มทดลองฟรี</a>
-      <button class="btn ghost" type="button" data-dl>ดาวน์โหลดโปรแกรม ESP32</button>
+      <a class="btn pri" href="#demo">▶ ลองกดดูการทำงาน</a>
+      <a class="btn ghost" href="app/">เริ่มทดลองฟรี</a>
     </div>
   </div>
   <div class="phone" aria-label="ตัวอย่างข้อความแจ้งเตือนบนมือถือ">
@@ -46,7 +166,94 @@
   </div>
 </div>
 
-<section class="alt feat">
+<!-- ═══════════ สาธิตสด ═══════════ -->
+<section class="alt" id="demo">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">ลองกดดูได้เลย</span>
+      <h2 style="margin-top:8px">ลองเป็นเจ้าของปั๊ม: ตัดไฟ ปิดปั๊ม แล้วดูมือถือ</h2>
+      <p class="lead">กดปุ่มด้านล่าง หน้าจอจะทำงานเหมือนระบบจริงทุกอย่าง ทั้งค่าที่วัดได้และข้อความแจ้งเตือน (สาธิตบนหน้าเว็บ ไม่ได้ต่ออุปกรณ์จริง)</p>
+    </div>
+    <div class="dm">
+      <div class="card dm-scene">
+        <svg id="sc" class="sc" viewBox="0 0 380 250" role="img" aria-label="ภาพจำลองหน้างาน ไฟเมน ปั๊ม ESP32 และเราเตอร์">
+          <rect x="0" y="0" width="380" height="250" rx="14" fill="#071233"/>
+          <g class="mains">
+            <rect x="14" y="40" width="8" height="120" rx="2" fill="#4B5B86"/><rect x="4" y="44" width="28" height="5" rx="2" fill="#4B5B86"/>
+            <text x="6" y="176" fill="#A9B8DA" font-size="11">การไฟฟ้า</text>
+            <path class="flow" d="M30 50 C60 50 62 120 70 120" fill="none" stroke="#F5C76A" stroke-width="3"/>
+            <rect x="70" y="102" width="34" height="44" rx="6" fill="#13245C" stroke="#2A3966"/>
+            <text x="87" y="160" fill="#A9B8DA" font-size="11" text-anchor="middle">ตู้ไฟ</text>
+            <circle class="bulb" cx="87" cy="118" r="6" fill="#F5C76A"/>
+            <path class="flow" d="M104 128 H170" fill="none" stroke="#F5C76A" stroke-width="3"/>
+            <path class="flow" d="M200 128 H262 V168" fill="none" stroke="#F5C76A" stroke-width="3"/>
+          </g>
+          <g>
+            <rect x="150" y="112" width="54" height="34" rx="7" fill="#0F2A6B" stroke="#22D3EE" stroke-width="1.5"/>
+            <text x="177" y="126" fill="#fff" font-size="10.5" font-weight="700" text-anchor="middle">ESP32</text>
+            <text x="177" y="139" fill="#A9B8DA" font-size="9.5" text-anchor="middle">+ PZEM</text>
+            <circle id="led" class="blink" cx="197" cy="119" r="3.5" fill="#34D399"/>
+            <g class="batt"><rect x="156" y="150" width="20" height="10" rx="2" fill="none" stroke="#34D399" stroke-width="1.5"/><rect x="176" y="153" width="2.5" height="4" fill="#34D399"/><rect x="158" y="152" width="13" height="6" fill="#34D399"/><text x="184" y="159" fill="#34D399" font-size="9">แบตสำรอง</text></g>
+            <g class="wifi" fill="none" stroke-width="2" stroke-linecap="round"><path d="M170 104 a10 10 0 0 1 14 0" stroke="#22D3EE"/><path d="M165 99 a17 17 0 0 1 24 0" stroke="#22D3EE"/></g>
+          </g>
+          <g class="pumpflow">
+            <rect x="236" y="168" width="52" height="40" rx="10" fill="#13245C" stroke="#2A3966"/>
+            <g class="spin"><circle cx="262" cy="188" r="11" fill="none" stroke="#22D3EE" stroke-width="2"/><path d="M262 177 V199 M251 188 H273" stroke="#22D3EE" stroke-width="2"/></g>
+            <text x="262" y="222" fill="#A9B8DA" font-size="11" text-anchor="middle">ปั๊มน้ำ</text>
+            <path class="flow" d="M288 188 H330 V150" fill="none" stroke="#38BDF8" stroke-width="4"/>
+            <rect x="314" y="96" width="40" height="54" rx="6" fill="#0A1A44" stroke="#2A3966"/>
+            <rect x="316" y="118" width="36" height="30" rx="4" fill="#38BDF8" opacity=".35"/>
+            <text x="334" y="90" fill="#A9B8DA" font-size="11" text-anchor="middle">ถังน้ำ</text>
+          </g>
+          <g class="net">
+            <rect x="140" y="22" width="44" height="22" rx="6" fill="#13245C" stroke="#2A3966"/>
+            <text x="162" y="37" fill="#A9B8DA" font-size="9.5" text-anchor="middle">เราเตอร์</text>
+            <path class="flow" d="M184 33 H240" fill="none" stroke="#22D3EE" stroke-width="2.5"/>
+            <path d="M246 40 a12 12 0 0 1 4 -23 a16 16 0 0 1 30 -2 a11 11 0 0 1 8 25 z" fill="#13245C" stroke="#22D3EE"/>
+            <text x="268" y="56" fill="#A9B8DA" font-size="9.5" text-anchor="middle">coredashtech.com</text>
+            <path class="netx" d="M204 26 l12 14 M216 26 l-12 14" stroke="#F87171" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <div class="dm-ctl">
+          <button class="tg" type="button" data-t="mains"><b>⚡ ไฟเมน</b><span>มีไฟ · กดเพื่อตัด</span></button>
+          <button class="tg" type="button" data-t="pump"><b>💧 ปั๊ม</b><span>ทำงาน · กดเพื่อปิด</span></button>
+          <button class="tg" type="button" data-t="net"><b>📶 เน็ต</b><span>ปกติ · กดให้หลุด</span></button>
+        </div>
+        <label class="dm-opt"><input type="checkbox" id="bk" checked> บอร์ดมีแบตสำรอง (แจ้ง “ไฟดับ” ได้ทันที)</label>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <b style="font-size:17px">ปั๊มบ่อหลังบ้าน</b><span id="st" class="st">ปั๊มทำงาน</span>
+        </div>
+        <div class="rd" id="rd">
+          <div><b id="rW">—</b><small>วัตต์</small></div>
+          <div><b id="rV">—</b><small>โวลต์</small></div>
+          <div><b id="rA">—</b><small>แอมป์</small></div>
+          <div><b id="rK">—</b><small>หน่วยสะสม</small></div>
+        </div>
+        <div class="spark"><div class="small" style="color:var(--mute)">กำลังไฟ 60 วินาทีล่าสุด</div>
+          <svg viewBox="0 0 300 70" preserveAspectRatio="none"><path id="sp" fill="none" stroke="#22D3EE" stroke-width="2"/><path id="spf" fill="rgba(34,211,238,.12)"/></svg></div>
+        <p class="small" style="color:var(--mute);margin:10px 0 0">ของจริงอัปเดตทุก 60 วินาที หน้านี้เร่งให้ดูเร็วขึ้น</p>
+      </div>
+
+      <div class="card phone dm-phone" id="ph">
+        <div class="toast" id="toast"><b>Telegram · CoreDash Watch</b><span id="toastT"></span></div>
+        <div class="bar"><span class="av" aria-hidden="true"></span><div><b>CoreDash Watch</b><div class="small">บอทแจ้งเตือน · ออนไลน์</div></div></div>
+        <div class="chat" id="chat" aria-live="polite">
+          <div class="bub sys">👋 ลองกดปุ่มทางซ้าย ข้อความแจ้งเตือนจะเด้งมาที่นี่ เหมือนเข้า Telegram ของคุณจริง</div>
+        </div>
+      </div>
+    </div>
+    <div class="center" style="margin-top:26px">
+      <p class="muted" style="margin:0 0 12px">อยากได้ข้อความเข้ามือถือ<b style="color:#fff">ของจริง</b>? สมัครฟรี เพิ่มอุปกรณ์ แล้วกด “ส่งข้อความทดสอบ” ข้อความเข้า Telegram ภายในไม่กี่วินาที แม้ยังไม่ได้ต่อบอร์ด</p>
+      <a class="btn pri" href="app/">สมัครทดลองฟรี 90 วัน</a>
+      <button class="btn ghost" type="button" id="dmReset">เริ่มสาธิตใหม่</button>
+    </div>
+  </div>
+</section>
+
+<section class="feat">
   <div class="wrap">
     <div class="center"><span class="eyebrow">ใช้ทำอะไรได้</span><h2 style="margin-top:8px">อุปกรณ์ชุดเดียว ใช้ได้หลายงาน</h2></div>
     <div class="grid3" style="margin-top:26px">
@@ -57,39 +264,105 @@
   </div>
 </section>
 
-<section>
-  <div class="wrap grid2" style="align-items:start">
-    <div>
-      <span class="eyebrow">ต้องใช้อุปกรณ์อะไร</span>
-      <h2 style="margin-top:8px">ฮาร์ดแวร์ราคาประหยัด หาซื้อได้ทั่วไป</h2>
-      <p class="lead">โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่หน้างาน ระบบถึงจะรู้ว่าปั๊มหยุดหรือไฟดับ ซื้อเองตามรายการ หรือสั่งชุดประกอบเสร็จจาก CoreDash</p>
-      <div class="warnbox">⚠ PZEM-004T ต่อกับไฟบ้าน 220V โดยตรง อันตรายถึงชีวิต ปิดเบรกเกอร์ก่อนต่อทุกครั้ง และให้ช่างไฟที่มีความรู้เป็นผู้ต่อฝั่งไฟฟ้า</div>
-    </div>
-    <div class="parts">
-      <div class="part"><b>ESP32 DevKit</b><span class="q">1 ตัว</span><span class="small">บอร์ดหลัก ต่อ Wi-Fi และส่งข้อมูล</span></div>
-      <div class="part"><b>PZEM-004T v3.0 พร้อม CT คล้องสาย</b><span class="q">1 ชุด</span><span class="small">วัดแรงดัน กระแส กำลังไฟ หน่วยสะสม</span></div>
-      <div class="part"><b>สายจัมเปอร์ เมีย–เมีย</b><span class="q">4 เส้น</span><span class="small">5V→5V · GND→GND · PZEM TX→GPIO16 · PZEM RX→GPIO17</span></div>
-      <div class="part"><b>อะแดปเตอร์ 5V + สาย USB</b><span class="q">1 ชุด</span><span class="small">ไฟเลี้ยง ESP32</span></div>
-      <div class="part"><b>กล่องกันน้ำ</b><span class="q">1 ใบ</span><span class="small">ติดข้างตู้ไฟหรือโรงสูบ</span></div>
-      <div class="part"><b>พาวเวอร์แบงก์ (ไม่บังคับ)</b><span class="q">1 ก้อน</span><span class="small">ให้แจ้ง “ไฟดับ” ได้ทันที แทนการแจ้งขาดการติดต่อ</span></div>
-    </div>
-  </div>
-</section>
-
-<section class="alt" id="how">
+<!-- ═══════════ ฮาร์ดแวร์ 3D ═══════════ -->
+<section class="alt" id="hw">
   <div class="wrap">
-    <div class="center"><span class="eyebrow">เริ่มใช้งาน</span><h2 style="margin-top:8px">5 ขั้นตอน ใช้เวลาราวครึ่งวัน</h2></div>
-    <div class="steps">
-      <div class="step"><div><h3>สมัครและเพิ่มอุปกรณ์</h3><p>กด “เริ่มทดลองฟรี” สมัครด้วยอีเมล แล้วกดเพิ่มอุปกรณ์ ระบบจะให้ไฟล์โปรแกรมที่ฝังรหัสอุปกรณ์มาให้แล้ว</p></div></div>
-      <div class="step"><div><h3>ลงโปรแกรมใน ESP32</h3><p>เปิดไฟล์ด้วย Arduino IDE ติดตั้งไลบรารี WiFiManager และ PZEM004Tv30 เลือกบอร์ด ESP32 Dev Module แล้วกด Upload</p></div></div>
-      <div class="step"><div><h3>ต่อสายและติดตั้ง</h3><p>ต่อ PZEM กับ ESP32 ตามรายการด้านบน ส่วนสายไฟ 220V และการคล้อง CT ที่สายไฟเส้นเดียวของปั๊ม ให้ช่างไฟต่อ</p></div></div>
-      <div class="step"><div><h3>ตั้งค่า Wi-Fi ผ่านมือถือ</h3><p>เสียบไฟ ต่อมือถือเข้า Wi-Fi “CoreDash-Watch-…” (รหัส coredash) เลือก Wi-Fi บ้าน ใส่รหัส แล้วบันทึก</p></div></div>
-      <div class="step"><div><h3>ผูกช่องทางแจ้งเตือน</h3><p>ในหน้าอุปกรณ์ กดผูก Telegram หรือเพิ่มเพื่อน LINE แล้วส่งรหัสผูก จากนั้นกด “ส่งข้อความทดสอบ”</p></div></div>
+    <div class="center">
+      <span class="eyebrow">ต่อสายอย่างไร</span>
+      <h2 style="margin-top:8px">ดูการต่อจริงทีละขั้น สายแค่ 4 เส้นฝั่งบอร์ด</h2>
+      <p class="lead">กดขั้นตอนทางขวา ภาพจะไฮไลต์สายที่ต้องต่อ ขยับเมาส์บนภาพเพื่อเอียงดูมุมได้</p>
+    </div>
+    <div class="hw">
+      <div class="hw-stage" id="hwStage"><svg id="hwSvg" viewBox="0 0 760 470" role="img" aria-label="ภาพสามมิติการต่อ ESP32 กับ PZEM-004T และ CT"></svg><span class="hint">🖱 ขยับเมาส์เพื่อเอียงภาพ</span></div>
+      <div class="hws" id="hwSteps">
+        <button type="button" data-s="0"><span class="n">0</span><b>ภาพรวมชุดอุปกรณ์</b><p>ESP32 DevKit + PZEM-004T v3.0 + CT คล้องสาย + อะแดปเตอร์ 5V</p></button>
+        <button type="button" data-s="1"><span class="n">1</span><b>ไฟเลี้ยง 2 เส้น <span class="badge ok">ทำเองได้</span></b><p><span class="sw" style="background:#EF4444"></span>5V → 5V &nbsp; <span class="sw" style="background:#94A3B8"></span>GND → GND</p></button>
+        <button type="button" data-s="2"><span class="n">2</span><b>สายข้อมูล 2 เส้น <span class="badge ok">ทำเองได้</span></b><p><span class="sw" style="background:#FACC15"></span>PZEM TX → GPIO16 &nbsp; <span class="sw" style="background:#22C55E"></span>PZEM RX → GPIO17</p></button>
+        <button type="button" data-s="3"><span class="n">3</span><b>คล้อง CT ที่สาย L ของปั๊ม <span class="badge dg">ช่างไฟเท่านั้น</span></b><p>คล้องเฉพาะสายไฟเส้นเดียว (L) ถ้าคล้องทั้ง L และ N พร้อมกัน ค่าจะอ่านได้ 0</p></button>
+        <button type="button" data-s="4"><span class="n">4</span><b>ต่อแรงดัน L/N เข้า PZEM <span class="badge dg">ช่างไฟเท่านั้น</span></b><p>ปิดเบรกเกอร์ก่อนทุกครั้ง ต่อขั้วตามป้ายบนบอร์ดจริง</p></button>
+        <button type="button" data-s="5"><span class="n">5</span><b>เสียบไฟ พร้อมใช้งาน</b><p>ไฟ LED ติด ข้อมูลขึ้นหน้าแอปภายใน 1 นาที</p></button>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:26px;align-items:start">
+      <div>
+        <h3>รายการอุปกรณ์ ราคาประหยัด หาซื้อได้ทั่วไป</h3>
+        <p class="muted" style="margin:6px 0 0">ซื้อเองตามรายการ หรือสั่ง<b style="color:#fff">ชุดประกอบเสร็จ</b>จาก CoreDash ที่ลงโปรแกรมและต่อสายฝั่งบอร์ดให้แล้ว เหลือแค่ให้ช่างไฟต่อฝั่ง 220V</p>
+        <div class="warnbox">⚠ PZEM-004T ต่อกับไฟบ้าน 220V โดยตรง อันตรายถึงชีวิต ปิดเบรกเกอร์ก่อนต่อทุกครั้ง และให้ช่างไฟที่มีความรู้เป็นผู้ต่อฝั่งไฟฟ้า</div>
+      </div>
+      <div class="parts">
+        <div class="part"><b>ESP32 DevKit</b><span class="q">1 ตัว</span><span class="small">บอร์ดหลัก มี Wi-Fi ในตัว</span></div>
+        <div class="part"><b>PZEM-004T v3.0 พร้อม CT คล้องสาย</b><span class="q">1 ชุด</span><span class="small">วัดแรงดัน กระแส กำลังไฟ หน่วยสะสม</span></div>
+        <div class="part"><b>สายจัมเปอร์ เมีย–เมีย</b><span class="q">4 เส้น</span><span class="small">5V · GND · TX→GPIO16 · RX→GPIO17</span></div>
+        <div class="part"><b>อะแดปเตอร์ 5V + สาย USB</b><span class="q">1 ชุด</span><span class="small">ไฟเลี้ยง ESP32</span></div>
+        <div class="part"><b>กล่องกันน้ำ + พาวเวอร์แบงก์ (ไม่บังคับ)</b><span class="q">1 ชุด</span><span class="small">ติดข้างตู้ไฟ · แบตสำรองช่วยให้แจ้ง “ไฟดับ” ได้ทันที</span></div>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="price">
+<!-- ═══════════ ลงโปรแกรม ═══════════ -->
+<section id="how">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">เริ่มใช้งาน</span>
+      <h2 style="margin-top:8px">ไม่ต้องเขียนโค้ด 4 ขั้นก็ใช้ได้</h2>
+      <p class="lead">ไฟล์โปรแกรมที่ดาวน์โหลดจากแอปฝังรหัสอุปกรณ์ไว้ให้แล้ว แค่กด Upload ครั้งเดียว ที่เหลือตั้งผ่านมือถือ</p>
+    </div>
+    <div class="up">
+      <div class="up-tabs" id="upTabs">
+        <button type="button" data-u="0"><span class="n">1</span><span><b>สมัคร แล้วกดเพิ่มอุปกรณ์</b><span class="d">ได้ไฟล์โปรแกรมที่ฝังรหัสให้แล้ว</span></span><i class="pg"></i></button>
+        <button type="button" data-u="1"><span class="n">2</span><span><b>เปิดไฟล์ แล้วกด Upload</b><span class="d">Arduino IDE เลือกบอร์ด ESP32 Dev Module</span></span><i class="pg"></i></button>
+        <button type="button" data-u="2"><span class="n">3</span><span><b>ตั้ง Wi-Fi ด้วยมือถือ</b><span class="d">ต่อ Wi-Fi “CoreDash-Watch” แล้วเลือก Wi-Fi บ้าน</span></span><i class="pg"></i></button>
+        <button type="button" data-u="3"><span class="n">4</span><span><b>ผูก Telegram รับแจ้งเตือน</b><span class="d">ส่งรหัสผูกครั้งเดียว ได้ข้อความทดสอบทันที</span></span><i class="pg"></i></button>
+      </div>
+      <div class="up-screen">
+        <div class="scr" data-u="0">
+          <div class="win"><div class="tb"><i></i><i></i><i></i>&nbsp; coredashtech.com/watch/app</div>
+            <div class="bd app-card">
+              <div class="row"><b>＋ เพิ่มอุปกรณ์</b><span class="small" style="color:var(--mute)">ปั๊มบ่อหลังบ้าน · เฝ้าปั๊ม</span></div>
+              <div class="row late" style="--d:.9s"><span>รหัสอุปกรณ์</span><span class="kbd">cdw_7KQ2…X9MF</span></div>
+              <div class="row late" style="--d:1.8s"><span>📄 coredash-watch.ino</span><span class="chip">✓ ฝังรหัสแล้ว · ดาวน์โหลด</span></div>
+              <div class="late small" style="--d:2.6s;color:var(--mute)">ทดลองฟรีเหลือ 90 วัน · ไม่ต้องผูกบัตร</div>
+            </div></div>
+        </div>
+        <div class="scr" data-u="1">
+          <div class="win"><div class="tb"><i></i><i></i><i></i>&nbsp; coredash-watch | Arduino IDE</div>
+            <div class="bd">
+              <div class="ide-bar"><span class="ib">✓</span><span class="ib go">→</span><span class="sel">ESP32 Dev Module · COM3</span></div>
+              <div class="code"><span class="k">static const char*</span> DEVICE_KEY = <span class="s">"cdw_7KQ2…X9MF"</span>;
+<span class="k">void</span> setup() {
+  startPortal();   <span style="color:#64748B">// ตั้ง Wi-Fi ผ่านมือถือ</span>
+}</div>
+              <div class="cons">Writing at 0x000d4000… <div class="pbar"><i></i></div><span class="late" style="--d:3.7s">✔ Done uploading. พร้อมใช้งาน</span></div>
+            </div></div>
+        </div>
+        <div class="scr" data-u="2">
+          <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+            <div class="mini-ph"><div class="hd">ตั้งค่า › Wi-Fi</div>
+              <div class="wl"><div class="hi"><b>CoreDash-Watch-3F2A</b><span>🔒</span></div><div>บ้านสวน_2.4G<span>📶</span></div><div>TrueGigatex_5G<span>📶</span></div></div>
+              <p class="small" style="color:var(--mute);margin:8px 0 0">รหัส: <span class="kbd">coredash</span></p></div>
+            <div class="mini-ph late" style="--d:1.4s"><div class="hd">หน้าตั้งค่าเด้งขึ้นเอง</div>
+              <div class="fm"><label>Wi-Fi บ้าน</label><div class="in">บ้านสวน_2.4G ▾</div><label>รหัสผ่าน</label><div class="in">••••••••</div><div class="bt">บันทึก</div></div></div>
+          </div>
+        </div>
+        <div class="scr" data-u="3">
+          <div class="mini-ph" style="width:290px"><div class="hd">Telegram · CoreDash Watch</div>
+            <div class="bub" style="margin-left:40px;border-radius:16px 16px 4px 16px;background:#1E3A8A">/start CD-PWJG-G6FD</div>
+            <div class="bub late" style="--d:1s">✅ ผูกกับ “ปั๊มบ่อหลังบ้าน” สำเร็จ</div>
+            <div class="bub late" style="--d:2s">🔔 ข้อความทดสอบ: ระบบแจ้งเตือนพร้อมใช้งาน</div>
+            <div class="bub late" style="--d:3s">▶️ ปั๊มบ่อหลังบ้าน: ปั๊มเริ่มทำงาน (กระแส 3.10 A)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="easy" style="justify-content:center">
+      <span>✓ ไม่ต้องเขียนโค้ด</span><span>✓ ไม่ต้องมีเซิร์ฟเวอร์</span><span>✓ ตั้ง Wi-Fi ผ่านมือถือ</span><span>✓ ย้ายบ้านตั้งใหม่ได้เอง</span><span>✓ ชุดประกอบเสร็จ ข้ามขั้น 2 ได้เลย</span>
+    </div>
+    <div class="center" style="margin-top:18px"><button class="btn ghost" type="button" data-dl>ดาวน์โหลดโปรแกรม ESP32 (ไม่ฝังรหัส)</button></div>
+  </div>
+</section>
+
+<section class="alt" id="price">
   <div class="wrap">
     <div class="center"><span class="eyebrow">ราคา</span><h2 style="margin-top:8px">ลองฟรีก่อน ถูกใจค่อยจ่าย</h2></div>
     <div class="grid3" style="margin-top:30px">
@@ -104,11 +377,12 @@
   </div>
 </section>
 
-<section class="alt faq" id="faq">
+<section class="faq" id="faq">
   <div class="wrap" style="max-width:860px">
     <div class="center"><span class="eyebrow">คำถามที่พบบ่อย</span><h2 style="margin-top:8px">ตอบตรง ๆ ก่อนตัดสินใจ</h2></div>
-    <details><summary>ต้องมีฮาร์ดแวร์ไหม?</summary><p>ต้องมีครับ โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่ปั๊มหรือเครื่องใช้จริง ระบบถึงจะรู้ว่าไฟดับหรือปั๊มหยุด</p></details>
-    <details><summary>ไฟดับทั้งบ้าน แจ้งเตือนได้อย่างไร?</summary><p>ถ้า ESP32 และเราเตอร์มีไฟสำรอง ระบบจะแจ้ง “ไฟฟ้าดับ” ภายในราว 1 นาที ถ้าไม่มีไฟสำรอง อุปกรณ์จะเงียบไป และระบบจะแจ้ง “ขาดการติดต่อ” เมื่อเงียบเกิน 3 นาที</p></details>
+    <details><summary>ต้องมีฮาร์ดแวร์ไหม?</summary><p>ต้องมีครับ โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่ปั๊มหรือเครื่องใช้จริง ระบบถึงจะรู้ว่าไฟดับหรือปั๊มหยุด ไม่สะดวกต่อเอง สั่งชุดประกอบเสร็จได้</p></details>
+    <details><summary>ไม่เคยลงโปรแกรมบอร์ดเลย ทำได้ไหม?</summary><p>ได้ครับ ไฟล์ที่ดาวน์โหลดจากแอปตั้งค่าไว้ครบแล้ว ติดตั้ง Arduino IDE เลือกบอร์ด แล้วกด Upload ครั้งเดียว ถ้าติดตรงไหนโทรถามได้ หรือสั่งชุดที่ลงโปรแกรมมาให้แล้ว</p></details>
+    <details><summary>ไฟดับทั้งบ้าน แจ้งเตือนได้อย่างไร?</summary><p>ถ้า ESP32 และเราเตอร์มีไฟสำรอง ระบบจะแจ้ง “ไฟฟ้าดับ” ภายในราว 1 นาที ถ้าไม่มีไฟสำรอง อุปกรณ์จะเงียบไป และระบบจะแจ้ง “ขาดการติดต่อ” เมื่อเงียบเกิน 3 นาที ลองกดดูในส่วนสาธิตด้านบนได้</p></details>
     <details><summary>Telegram กับ LINE ต่างกันอย่างไร?</summary><p>Telegram ส่งได้ฟรีไม่จำกัด แนะนำให้ใช้เป็นหลัก ส่วน LINE ส่งผ่านบัญชีทางการ ซึ่งมีโควตาข้อความฟรีต่อเดือนจำกัด</p></details>
     <details><summary>หมดช่วงทดลองแล้วเกิดอะไรขึ้น?</summary><p>อุปกรณ์ยังส่งข้อมูลและเห็นค่าล่าสุดได้ แต่ระบบหยุดเก็บประวัติและหยุดแจ้งเตือนจนกว่าจะต่ออายุ ไม่มีการตัดเงินอัตโนมัติ</p></details>
     <details><summary>ข้อมูลของฉันปลอดภัยไหม?</summary><p>อุปกรณ์แต่ละตัวมีรหัสเฉพาะ ระบบเก็บแบบเข้ารหัสทางเดียว เจ้าของบัญชีเห็นเฉพาะอุปกรณ์ของตัวเอง ทำรหัสหายออกรหัสใหม่ได้ทันที</p></details>
@@ -117,6 +391,7 @@
 </main>
 
 <footer><div class="wrap"><b style="color:#fff">CoreDash Technology</b><span>·</span><a href="../">coredashtech.com</a><span>·</span><span>โทร <span data-cfg="phone">081-923-2380</span></span><span style="margin-left:auto">© 2026 CoreDash Technology</span></div></footer>
+<div class="mtoast" id="mtoast" aria-hidden="true"><b>🔔 Telegram · CoreDash Watch</b><span id="mtoastT"></span></div>
 
 <script src="dl.js"></script>
 <script>
@@ -129,6 +404,222 @@
   if (C.phone) set('phone', C.phone)
   document.querySelectorAll('[data-cfg="tel"]').forEach(function (a) { if (C.tel) a.href = 'tel:' + C.tel })
   document.querySelectorAll('[data-dl]').forEach(function (b) { b.addEventListener('click', function () { cdDownloadFirmware('') }) })
+})()
+</script>
+
+<script>
+/* ═══════════ สาธิตสด: ตรรกะเดียวกับเซิร์ฟเวอร์จริง ═══════════ */
+(function () {
+  var NAME = 'ปั๊มบ่อหลังบ้าน'
+  var $ = function (id) { return document.getElementById(id) }
+  var sc = $('sc'), chat = $('chat'), toast = $('toast'), ph = $('ph'), bk = $('bk')
+  var s, srv, hist, offTimer, toastTimer
+
+  function reset() {
+    s = { mains: true, pump: true, net: true, kwh: 1284.35 }
+    srv = { online: true, mains: true, pump: true, offAlerted: false }
+    hist = []
+    for (var i = 0; i < 40; i++) hist.push(700 + Math.random() * 20)
+    clearTimeout(offTimer); offTimer = null
+    chat.innerHTML = '<div class="bub sys">👋 ลองกดปุ่มทางซ้าย ข้อความแจ้งเตือนจะเด้งมาที่นี่ เหมือนเข้า Telegram ของคุณจริง</div>'
+    bk.checked = true
+    render(); tick()
+  }
+  var online = function () { return s.net && (s.mains || bk.checked) }
+  function now() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] }) }
+
+  function notify(msg, note) {
+    var b = document.createElement('div')
+    b.className = 'bub'
+    b.innerHTML = esc(msg) + (note ? '<small>' + esc(note) + '</small>' : '') + '<span class="t">' + now() + '</span>'
+    chat.appendChild(b); chat.scrollTop = chat.scrollHeight
+    $('toastT').textContent = msg
+    toast.classList.add('show'); ph.classList.remove('shake'); void ph.offsetWidth; ph.classList.add('shake')
+    $('mtoastT').textContent = msg; $('mtoast').classList.add('show')
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.remove('show'); $('mtoast').classList.remove('show') }, 2600)
+  }
+
+  // จำลองการส่งข้อมูลขึ้นเซิร์ฟเวอร์ แล้วให้เซิร์ฟเวอร์ตัดสินว่าต้องแจ้งอะไร (เหมือน watch_ingest)
+  function ingest() {
+    if (!online()) {
+      if (srv.online && !offTimer) {
+        offTimer = setTimeout(function () {
+          offTimer = null
+          if (online()) return
+          srv.online = false; srv.offAlerted = true
+          notify('📴 ' + NAME + ': ขาดการติดต่อเกิน 3 นาที อาจไฟดับทั้งบ้าน หรืออินเทอร์เน็ตหลุด', 'ของจริงรอ 3 นาที สาธิตย่อเหลือ 3 วินาที')
+        }, 3000)
+      }
+      return
+    }
+    clearTimeout(offTimer); offTimer = null
+    var msgs = []
+    if (srv.offAlerted) { msgs.push('✅ ' + NAME + ': กลับมาออนไลน์แล้ว'); srv.offAlerted = false }
+    srv.online = true
+    if (srv.mains && !s.mains) msgs.push('⚡ ' + NAME + ': ไฟฟ้าดับ · ทำงานด้วยแบตสำรอง')
+    if (!srv.mains && s.mains) msgs.push('💡 ' + NAME + ': ไฟฟ้ากลับมาแล้ว 229 V')
+    if (s.mains) {
+      if (srv.pump && !s.pump) msgs.push('🛑 ' + NAME + ': ปั๊มหยุดทำงาน (กระแส 0.02 A)')
+      if (!srv.pump && s.pump && srv.mains !== false) msgs.push('▶️ ' + NAME + ': ปั๊มเริ่มทำงาน (กระแส 3.10 A)')
+      srv.pump = s.pump
+    }
+    srv.mains = s.mains
+    msgs.forEach(function (m, i) { setTimeout(function () { notify(m) }, 700 + i * 900) })
+  }
+
+  function reading() {
+    if (!online()) return null
+    if (!s.mains) return { v: 0, a: 0, w: 0 }
+    var v = 228.5 + Math.random() * 1.6
+    var a = s.pump ? 3.05 + Math.random() * 0.1 : 0.02
+    return { v: v, a: a, w: s.pump ? v * a * 0.93 : 3 }
+  }
+
+  function render() {
+    sc.classList.toggle('m-off', !s.mains); sc.classList.toggle('p-off', !s.pump)
+    sc.classList.toggle('n-off', !s.net); sc.classList.toggle('bk', bk.checked)
+    sc.classList.toggle('dead', !s.mains && !bk.checked)
+    $('led').setAttribute('fill', !online() ? '#475569' : !s.mains ? '#F5C76A' : '#34D399')
+    document.querySelectorAll('.tg').forEach(function (b) {
+      var k = b.dataset.t, on = s[k]
+      var t = { mains: ['มีไฟ · กดเพื่อตัด', 'ไฟดับ · กดให้กลับมา'], pump: ['ทำงาน · กดเพื่อปิด', 'หยุด · กดเพื่อเปิด'], net: ['ปกติ · กดให้หลุด', 'หลุด · กดให้กลับมา'] }[k]
+      b.classList.toggle('off', !on); b.querySelector('span').textContent = on ? t[0] : t[1]
+    })
+    var st = $('st')
+    if (!online()) { st.className = 'st bad'; st.textContent = 'ขาดการติดต่อ' }
+    else if (!s.mains) { st.className = 'st warn'; st.textContent = 'ไฟดับ · ใช้แบตสำรอง' }
+    else if (!s.pump) { st.className = 'st warn'; st.textContent = 'ปั๊มหยุด' }
+    else { st.className = 'st'; st.textContent = 'ปั๊มทำงาน' }
+  }
+
+  function tick() {
+    var r = reading()
+    $('rd').classList.toggle('dim', !r)
+    document.querySelectorAll('#rd div').forEach(function (d) { d.classList.toggle('dim', !r) })
+    if (r) {
+      s.kwh += r.w / 3600 / 1000 * 60
+      $('rW').textContent = Math.round(r.w); $('rV').textContent = r.v ? r.v.toFixed(1) : '0'
+      $('rA').textContent = r.a.toFixed(2); $('rK').textContent = s.kwh.toFixed(2)
+      hist.push(r.w)
+    } else {
+      ['rW', 'rV', 'rA'].forEach(function (k) { $(k).textContent = '—' })
+      hist.push(null)
+    }
+    if (hist.length > 40) hist.shift()
+    var max = 900, d = '', started = false
+    hist.forEach(function (w, i) {
+      var x = (i / 39 * 300).toFixed(1)
+      if (w == null) { started = false; return }
+      var y = (66 - w / max * 60).toFixed(1)
+      d += (started ? 'L' : 'M') + x + ' ' + y + ' '; started = true
+    })
+    $('sp').setAttribute('d', d)
+    $('spf').setAttribute('d', d ? d + 'L300 70 L0 70 Z' : '')
+  }
+
+  document.querySelectorAll('.tg').forEach(function (b) {
+    b.addEventListener('click', function () { s[b.dataset.t] = !s[b.dataset.t]; render(); tick(); ingest() })
+  })
+  bk.addEventListener('change', function () { render(); tick(); ingest() })
+  $('dmReset').addEventListener('click', reset)
+  setInterval(tick, 1500)
+  reset()
+})()
+
+/* ═══════════ ภาพ 3 มิติ (isometric) ═══════════ */
+;(function () {
+  var SC = 2.55, OX = 318, OY = 92, CS = Math.cos(Math.PI / 6)
+  function P(x, y, z) { return [OX + (x - y) * CS * SC, OY + (x + y) * 0.5 * SC - (z || 0) * SC] }
+  function pts(a) { return a.map(function (p) { var q = P(p[0], p[1], p[2]); return q[0].toFixed(1) + ',' + q[1].toFixed(1) }).join(' ') }
+  function box(x, y, z, w, d, h, c) {
+    return '<polygon points="' + pts([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]]) + '" fill="' + c[1] + '"/>' +
+      '<polygon points="' + pts([[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]]) + '" fill="' + c[2] + '"/>' +
+      '<polygon points="' + pts([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]) + '" fill="' + c[0] + '"/>'
+  }
+  function wire(a, col, w) { return '<polyline class="w" points="' + pts(a) + '" fill="none" stroke="' + col + '" stroke-width="' + (w || 3.2) + '" stroke-linecap="round" stroke-linejoin="round"/>' }
+  function lab(x, y, z, t, cls, anchor) { var q = P(x, y, z); return '<text class="lb ' + (cls || '') + '" x="' + q[0].toFixed(1) + '" y="' + q[1].toFixed(1) + '" text-anchor="' + (anchor || 'middle') + '">' + t + '</text>' }
+  function dot(x, y, z, col, r) { var q = P(x, y, z); return '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="' + (r || 2.6) + '" fill="' + col + '"/>' }
+  function ring(cx, cy, cz, r) { var a = []; for (var i = 0; i <= 28; i++) { var t = i / 28 * Math.PI * 2; a.push([cx, cy + r * Math.cos(t), cz + r * Math.sin(t)]) } return a }
+  var PCB = ['#123A8C', '#0B2560', '#0E2E75'], DARK = ['#1E293B', '#0F172A', '#111C33'], SIL = ['#CBD5E1', '#7C8BA5', '#94A3B8']
+  var g = ''
+  // แผ่นฐาน
+  g += box(-34, -6, -3, 214, 112, 3, ['#0C1A45', '#081236', '#0A163E'])
+  // ── ไฟ 220V + ปั๊ม (กลุ่ม ac) ──
+  var ac = box(-26, 74, 0, 12, 22, 26, ['#475569', '#334155', '#3B4A63']) + lab(-20, 85, 34, 'เบรกเกอร์', 's')
+  ac += wire([[-14, 80, 8], [156, 80, 8]], '#B45309', 4) + wire([[-14, 90, 8], [156, 90, 8]], '#2563EB', 4)
+  ac += lab(30, 80, 14, 'L', 's') + lab(30, 90, 4, 'N', 's')
+  ac += box(156, 72, 0, 22, 24, 20, ['#1D4ED8', '#1E3A8A', '#1E40AF']) + lab(167, 84, 30, 'ปั๊มน้ำ')
+  // ── แรงดันเข้า PZEM (กลุ่ม vt) ──
+  var vt = wire([[122, 80, 8], [122, 60, 14], [128, 36, 14], [128, 34, 9]], '#B45309', 3) + wire([[126, 90, 8], [126, 62, 12], [130, 30, 12], [130, 29, 9]], '#2563EB', 3)
+  vt += lab(140, 50, 18, '⚠ L/N เข้า PZEM', 'danger', 'start')
+  // ── CT (กลุ่ม ct) ──
+  var ct = '<polyline class="w" points="' + pts(ring(106, 80, 8, 6.5)) + '" fill="none" stroke="#F59E0B" stroke-width="5"/>'
+  ct += wire([[106, 74, 12], [106, 52, 18], [128, 16, 18], [128, 14, 9]], '#F8FAFC', 2.4) + wire([[108, 74, 10], [108, 54, 16], [128, 21, 16], [128, 20, 9]], '#64748B', 2.4)
+  ct += lab(96, 80, 24, '⚠ CT คล้องสาย L', 'danger', 'end')
+  // ── PZEM ──
+  var pz = box(86, 8, 0, 46, 36, 5, ['#0F766E', '#0B4F4A', '#0D5F58']) + box(98, 16, 5, 14, 12, 7, ['#E2E8F0', '#94A3B8', '#CBD5E1'])
+  pz += box(124, 10, 5, 7, 28, 4, ['#16A34A', '#14532D', '#166534']) + box(87, 12, 5, 4, 18, 3, DARK)
+  pz += lab(108, 26, 22, 'PZEM-004T v3.0') + lab(89, 33, 8, '5V RX TX GND', 's', 'end')
+  // ── ESP32 ──
+  var es = box(4, 12, 0, 54, 24, 3, PCB) + box(12, 16, 3, 20, 16, 2.5, SIL) + box(6, 34, 3, 50, 2.5, 2, DARK) + box(6, 11.5, 3, 50, 2.5, 2, DARK) + box(0, 20, 0.6, 5, 7, 2.2, SIL)
+  es += '<circle id="hwLed" cx="' + P(52, 17, 3)[0].toFixed(1) + '" cy="' + P(52, 17, 3)[1].toFixed(1) + '" r="3.2" fill="#334155"/>'
+  es += lab(30, 22, 16, 'ESP32 DevKit') + lab(26, 40, 2, 'VIN GND … G16 G17', 's')
+  // ── ไฟเลี้ยง (กลุ่ม pw) ──
+  var pw = box(-30, 16, 0, 13, 13, 15, ['#F8FAFC', '#CBD5E1', '#E2E8F0']) + lab(-24, 22, 22, 'อะแดปเตอร์ 5V', 's') + wire([[-17, 23, 4], [-6, 23, 2], [0, 23, 1.6]], '#475569', 3)
+  pw += wire([[12, 36, 5], [12, 50, 16], [70, 50, 20], [89, 14, 20], [89, 13.5, 8]], '#EF4444') + wire([[16, 36, 5], [16, 54, 9], [74, 54, 11], [89, 27, 11], [89, 26.5, 8]], '#94A3B8')
+  pw += dot(12, 36, 5, '#EF4444') + dot(16, 36, 5, '#94A3B8')
+  // ── ข้อมูล (กลุ่ม dt) ──
+  var dt = wire([[40, 36, 5], [40, 46, 13], [72, 46, 16], [89, 22, 16], [89, 22, 8]], '#FACC15') + wire([[44, 36, 5], [44, 44, 10], [76, 44, 13.5], [89, 18, 13.5], [89, 18, 8]], '#22C55E')
+  dt += dot(40, 36, 5, '#FACC15') + dot(44, 36, 5, '#22C55E')
+  // ── Wi-Fi ──
+  var wq = P(30, 22, 34)
+  var wf = '<g id="hwWifi" opacity="0"><path d="M' + (wq[0] - 12) + ' ' + wq[1] + ' a17 17 0 0 1 24 0" fill="none" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round"/><path d="M' + (wq[0] - 20) + ' ' + (wq[1] - 7) + ' a28 28 0 0 1 40 0" fill="none" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round"/><text class="lb s" x="' + wq[0] + '" y="' + (wq[1] - 16) + '" text-anchor="middle">ส่งขึ้น coredashtech.com</text></g>'
+
+  var grp = function (id, html) { return '<g class="grp" data-g="' + id + '">' + html + '</g>' }
+  g += grp('ac', ac) + grp('pz', pz) + grp('es', es) + grp('vt', vt) + grp('ct', ct) + grp('pw', pw) + grp('dt', dt) + wf
+  var svg = document.getElementById('hwSvg')
+  svg.innerHTML = g
+  try { var bb = svg.getBBox(); svg.setAttribute('viewBox', [bb.x - 14, bb.y - 14, bb.width + 28, bb.height + 40].map(function (v) { return v.toFixed(0) }).join(' ')) } catch (e) {}
+
+  var SHOW = { 0: null, 1: ['pw', 'es', 'pz'], 2: ['dt', 'es', 'pz'], 3: ['ct', 'ac', 'pz'], 4: ['vt', 'ac', 'pz'], 5: null }
+  var FLOW = { 1: ['pw'], 2: ['dt'], 3: ['ct'], 4: ['vt'], 5: ['pw', 'dt', 'vt', 'ct', 'ac'] }
+  function step(n) {
+    document.querySelectorAll('#hwSteps button').forEach(function (b) { b.classList.toggle('on', +b.dataset.s === n) })
+    svg.classList.toggle('focus', !!SHOW[n])
+    svg.querySelectorAll('.grp').forEach(function (e) {
+      var id = e.dataset.g
+      e.classList.toggle('on', !!(SHOW[n] && SHOW[n].indexOf(id) >= 0))
+      var fl = (FLOW[n] || []).indexOf(id) >= 0
+      e.querySelectorAll('.w').forEach(function (w) { w.classList.toggle('on', fl) })
+    })
+    document.getElementById('hwLed').setAttribute('fill', n === 5 ? '#34D399' : '#334155')
+    document.getElementById('hwWifi').setAttribute('opacity', n === 5 ? 1 : 0)
+  }
+  document.querySelectorAll('#hwSteps button').forEach(function (b) { b.addEventListener('click', function () { step(+b.dataset.s) }) })
+  step(0)
+  var st = document.getElementById('hwStage')
+  st.addEventListener('pointermove', function (e) {
+    var r = st.getBoundingClientRect()
+    st.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 14).toFixed(1) + 'deg')
+    st.style.setProperty('--rx', (-((e.clientY - r.top) / r.height - 0.5) * 10).toFixed(1) + 'deg')
+  })
+  st.addEventListener('pointerleave', function () { st.style.setProperty('--ry', '0deg'); st.style.setProperty('--rx', '0deg') })
+})()
+
+/* ═══════════ สไลด์ลงโปรแกรม ═══════════ */
+;(function () {
+  var tabs = document.querySelectorAll('#upTabs button'), scr = document.querySelectorAll('.scr'), cur = 0, timer, DUR = 5200
+  function show(n) {
+    cur = n
+    tabs.forEach(function (b) { var on = +b.dataset.u === n; b.classList.remove('on'); if (on) { void b.offsetWidth; b.classList.add('on') } b.style.setProperty('--dur', DUR + 'ms') })
+    scr.forEach(function (s) { s.classList.remove('on'); if (+s.dataset.u === n) { void s.offsetWidth; s.classList.add('on') } })
+    clearTimeout(timer); timer = setTimeout(function () { show((cur + 1) % tabs.length) }, DUR)
+  }
+  tabs.forEach(function (b) { b.addEventListener('click', function () { show(+b.dataset.u) }) })
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) { if (es[0].isIntersecting) { show(cur); io.disconnect() } }, { threshold: .3 }) : null
+  if (io) io.observe(document.getElementById('how')); else show(0)
+  show(0)
 })()
 </script>
 </body>
