@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CoreDash Watch — แจ้งเตือนปั๊มหยุด ไฟดับ และวัดไฟผ่านมือถือ</title>
-<meta name="description" content="โปรแกรมฟรีสำหรับ ESP32 + PZEM-004T แจ้งเตือนทาง Telegram และ LINE เมื่อปั๊มหยุด ไฟดับ หรืออุปกรณ์ขาดการติดต่อ ทดลองใช้ฟรี 90 วัน">
-<meta property="og:title" content="CoreDash Watch · ปั๊มหยุด ไฟดับ รู้ทันทีผ่านมือถือ">
+<title>CoreDash Watch — ผู้ช่วยเฝ้าระวัง 24 ชม. ไฟดับ ปั๊ม ไฟรั่ว ตู้แช่ ระดับน้ำ แจ้งเตือนเข้ามือถือ</title>
+<meta name="description" content="ผู้ช่วยเฝ้าระวังบ้าน ร้าน ฟาร์ม หอพัก แจ้งเตือนทาง Telegram และ LINE เมื่อไฟดับ ปั๊มหยุด ไฟรั่ว ตู้แช่ร้อน น้ำในถังต่ำ หรือค่าไฟผิดปกติ ทดลองใช้ฟรี 90 วัน">
+<meta property="og:title" content="CoreDash Watch · อะไรผิดปกติ รู้ทันทีผ่านมือถือ">
 <meta name="theme-color" content="#050C26">
 <link rel="icon" href="../app/icons/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -178,6 +178,10 @@
 .wd svg text{font-family:'Sarabun',sans-serif}
 @media (max-width:900px){.bm-sum{grid-template-columns:1fr}}
 @media (max-width:700px){.wd{overflow-x:auto}.wd svg{min-width:820px}.wd::before{content:'← เลื่อนดูด้านข้าง →';display:block;font-size:13px;color:var(--mute);text-align:center;margin-bottom:6px}}
+.uses{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}.uses span{padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:14.5px}
+.uc{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}.uc .card{display:flex;flex-direction:column;gap:6px}.uc .card p{margin:0;flex:1}
+.tag2{align-self:flex-start;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag2.ok{background:rgba(52,211,153,.14);color:var(--green)}.tag2.link{background:rgba(34,211,238,.14);color:var(--cyan)}
+@media (max-width:1000px){.uc{grid-template-columns:1fr 1fr}}@media (max-width:560px){.uc{grid-template-columns:1fr}}
 .mtoast{position:fixed;left:12px;right:12px;bottom:-120px;z-index:50;background:#F4F7FF;color:#0B1536;border-radius:16px;padding:10px 14px;box-shadow:0 14px 34px -8px rgba(0,0,0,.8);font-size:15px;transition:bottom .35s cubic-bezier(.2,.9,.3,1.2);display:none}
 .mtoast b{display:block;font-size:12.5px;color:#4B5B86}.mtoast.show{bottom:14px}
 @media (max-width:1050px){.mtoast{display:block}.dm{grid-template-columns:1fr 1fr}.dm-phone{grid-column:1/-1;min-height:360px}}
@@ -197,9 +201,10 @@
 <main>
 <div class="wrap hero">
   <div>
-    <span class="eyebrow">CoreDash Watch · โปรแกรมฟรี</span>
-    <h1 style="margin-top:12px">ปั๊มหยุด ไฟดับ<br><span class="hl">รู้ทันทีผ่านมือถือ</span></h1>
-    <p class="lead">ต่อชุด ESP32 ราคาประหยัดเข้ากับโปรแกรมฟรีของ CoreDash แจ้งเตือนทาง Telegram และ LINE ดูกำลังไฟ หน่วยไฟ และค่าไฟรายเครื่องได้ตลอดเวลา</p>
+    <span class="eyebrow">CoreDash Watch · ผู้ช่วยเฝ้าระวัง 24 ชม.</span>
+    <h1 style="margin-top:12px">อะไรผิดปกติ<br><span class="hl">รู้ทันทีผ่านมือถือ</span></h1>
+    <p class="lead">เฝ้าบ้าน ร้าน ฟาร์ม หอพัก แทนคุณตลอดเวลา ไม่ว่าไฟดับ ปั๊มหยุด ไฟรั่ว ตู้แช่ร้อน น้ำในถังต่ำ หรือค่าไฟพุ่ง ระบบแจ้งเข้า Telegram และ LINE ทันที</p>
+    <div class="uses"><span>⚡ ไฟดับ</span><span>💧 ปั๊มน้ำ</span><span>🔌 ไฟรั่ว</span><span>📊 ค่าไฟ</span><span>🧊 ตู้แช่</span><span>🌊 ระดับน้ำ</span><span>🏠 หอพัก</span><span>☀️ โซลาร์</span><span>🌩 ฟ้าผ่าใกล้</span></div>
     <div class="prices">
       <div><b data-cfg="trial">ฟรี 90 วัน</b><small>ทุกฟีเจอร์ ไม่ต้องผูกบัตร</small></div>
       <div><b data-cfg="month">99 ฿</b><small>ต่อเดือน ต่ออุปกรณ์</small></div>
@@ -213,9 +218,10 @@
   <div class="phone" aria-label="ตัวอย่างข้อความแจ้งเตือนบนมือถือ">
     <div class="bar"><span class="av" aria-hidden="true"></span><div><b>CoreDash Watch</b><div class="small">บอทแจ้งเตือน</div></div></div>
     <div class="bub">🛑 ปั๊มบ่อหลังบ้าน: ปั๊มหยุดทำงาน (กระแส 0.02 A)<span class="t">06:12</span></div>
-    <div class="bub">⚡ ร้านกาแฟ: ไฟฟ้าดับ (ไม่พบแรงดันไฟเมน)<span class="t">13:40</span></div>
-    <div class="bub">💡 ร้านกาแฟ: ไฟฟ้ากลับมาแล้ว 229 V<span class="t">13:58</span></div>
-    <div class="bub">📴 ห้องเย็น: ขาดการติดต่อเกิน 3 นาที อาจไฟดับทั้งบ้าน หรืออินเทอร์เน็ตหลุด<span class="t">22:05</span></div>
+    <div class="bub">🧊 ร้านกาแฟ: ตู้แช่ 9.5°C สูงกว่าที่ตั้งไว้ 6°C นาน 20 นาที<span class="t">11:05</span></div>
+    <div class="bub">⚡ ร้านกาแฟ: ไฟฟ้าดับ · ทำงานด้วยแบตสำรอง<span class="t">13:40</span></div>
+    <div class="bub">🟠 ห้องปั๊ม: ไฟรั่ว 9 mA สูงกว่าปกติ ควรให้ช่างตรวจ<span class="t">16:22</span></div>
+    <div class="bub">📊 บ้านสวน: ค่าไฟเดือนนี้ 1,240 บาท สูงกว่าเดือนก่อน 18%<span class="t">20:00</span></div>
   </div>
 </div>
 
@@ -433,12 +439,19 @@
 
 <section class="feat">
   <div class="wrap">
-    <div class="center"><span class="eyebrow">ใช้ทำอะไรได้</span><h2 style="margin-top:8px">อุปกรณ์ชุดเดียว ใช้ได้หลายงาน</h2></div>
-    <div class="grid3" style="margin-top:26px">
-      <div class="card"><div class="ic">💧</div><h3>เฝ้าปั๊มน้ำ</h3><p class="muted">ปั๊มบ่อ ปั๊มรดน้ำสวน ปั๊มประปาหมู่บ้าน แจ้งทันทีเมื่อปั๊มหยุดหรือเริ่มทำงาน</p></div>
-      <div class="card"><div class="ic">⚡</div><h3>แจ้งไฟดับ</h3><p class="muted">ร้านค้า ตู้แช่ ห้องเย็น ฟาร์ม รู้ทันทีเมื่อไฟเมนดับและเมื่อไฟกลับมา</p></div>
-      <div class="card"><div class="ic">📊</div><h3>วัดไฟรายเครื่อง</h3><p class="muted">ดูวัตต์ โวลต์ แอมป์ หน่วยไฟสะสม และค่าไฟเดือนนี้ผ่านมือถือ</p></div>
+    <div class="center"><span class="eyebrow">ใช้ทำอะไรได้</span><h2 style="margin-top:8px">ระบบเดียว เฝ้าได้หลายเรื่อง</h2>
+      <p class="lead">เริ่มจากเรื่องที่ห่วงที่สุดก่อน แล้วค่อยเพิ่มอุปกรณ์ทีหลัง ดูทุกอย่างในแอปเดียว</p></div>
+    <div class="uc">
+      <div class="card"><div class="ic">⚡</div><h3>ไฟดับ / ไฟกลับ</h3><p class="muted">ร้านค้า ห้องเย็น ฟาร์ม รู้ทันทีเมื่อไฟเมนดับและเมื่อไฟกลับมา</p><span class="tag2 ok">ชุด ESP32 + PZEM</span></div>
+      <div class="card"><div class="ic">💧</div><h3>ปั๊มน้ำ</h3><p class="muted">ปั๊มบ่อ ปั๊มสวน ประปาหมู่บ้าน แจ้งเมื่อปั๊มหยุดหรือเดินนานผิดปกติ</p><span class="tag2 ok">ชุด ESP32 + PZEM</span></div>
+      <div class="card"><div class="ic">📊</div><h3>ค่าไฟรายเครื่อง</h3><p class="muted">วัตต์ หน่วยไฟ และค่าไฟเป็นบาท เห็นเครื่องที่กินไฟผิดปกติ</p><span class="tag2 ok">ชุด ESP32 + PZEM</span></div>
+      <div class="card"><div class="ic">🔌</div><h3>ไฟรั่ว</h3><p class="muted">เฝ้าค่ารั่วรายวัน เตือนตอนเริ่มสูงขึ้น ก่อนเบรกเกอร์ตัดหรือมีคนโดนไฟดูด</p><span class="tag2 link">บอร์ด Link + CT วัดรั่ว</span></div>
+      <div class="card"><div class="ic">🧊</div><h3>ตู้แช่ / ห้องเย็น</h3><p class="muted">อุณหภูมิสูงเกินนานเท่าไรก็ตั้งได้ ของสดไม่เสียตอนกลางคืน</p><span class="tag2 link">บอร์ด Link + หัววัดอุณหภูมิ</span></div>
+      <div class="card"><div class="ic">🌊</div><h3>ระดับน้ำในถัง / บ่อ</h3><p class="muted">ดูเปอร์เซ็นต์น้ำ เตือนน้ำต่ำหรือล้น วางแผนสูบได้</p><span class="tag2 link">บอร์ด Link + เซนเซอร์ 4–20 mA</span></div>
+      <div class="card"><div class="ic">🏠</div><h3>หอพัก / ห้องเช่า</h3><p class="muted">จดมิเตอร์รายห้องอัตโนมัติ สรุปค่าไฟส่งเข้า LINE ทุกสิ้นเดือน</p><span class="tag2 link">บอร์ด Link + มิเตอร์ RS485</span></div>
+      <div class="card"><div class="ic">☀️</div><h3>โซลาร์รูฟท็อป</h3><p class="muted">ไฟที่ผลิตได้ ไฟขายคืน เงินที่ประหยัด และเตือนอินเวอร์เตอร์หยุดผลิต</p><span class="tag2 link">บอร์ด Link + มิเตอร์สองทาง</span></div>
     </div>
+    <p class="small center" style="color:var(--mute);margin-top:14px">ป้ายสีเขียวใช้ชุด ESP32 ทำเองได้วันนี้ · ป้ายสีฟ้าใช้บอร์ด CoreDash Link ที่กำลังทดสอบ สนใจลองก่อนใครโทร <span data-cfg="phone">081-923-2380</span></p>
   </div>
 </section>
 
@@ -848,7 +861,7 @@
 <section class="faq" id="faq">
   <div class="wrap" style="max-width:860px">
     <div class="center"><span class="eyebrow">คำถามที่พบบ่อย</span><h2 style="margin-top:8px">ตอบตรง ๆ ก่อนตัดสินใจ</h2></div>
-    <details><summary>ต้องมีฮาร์ดแวร์ไหม?</summary><p>ต้องมีครับ โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่ปั๊มหรือเครื่องใช้จริง ระบบถึงจะรู้ว่าไฟดับหรือปั๊มหยุด ไม่สะดวกต่อเอง สั่งชุดประกอบเสร็จได้</p></details>
+    <details><summary>ต้องมีฮาร์ดแวร์ไหม?</summary><p>ต้องมีครับ โปรแกรมฟรี แต่ต้องมีเซนเซอร์วัดไฟติดที่ปั๊มหรือเครื่องใช้จริง ระบบถึงจะรู้ว่าไฟดับ ปั๊มหยุด หรือค่าอื่นผิดปกติ ไม่สะดวกต่อเอง สั่งชุดประกอบเสร็จได้</p></details>
     <details><summary>ไม่เคยลงโปรแกรมบอร์ดเลย ทำได้ไหม?</summary><p>ได้ครับ ไฟล์ที่ดาวน์โหลดจากแอปตั้งค่าไว้ครบแล้ว ติดตั้ง Arduino IDE เลือกบอร์ด แล้วกด Upload ครั้งเดียว ถ้าติดตรงไหนโทรถามได้ หรือสั่งชุดที่ลงโปรแกรมมาให้แล้ว</p></details>
     <details><summary>ไฟดับทั้งบ้าน แจ้งเตือนได้อย่างไร?</summary><p>ถ้า ESP32 และเราเตอร์มีไฟสำรอง ระบบจะแจ้ง “ไฟฟ้าดับ” ภายในราว 1 นาที ถ้าไม่มีไฟสำรอง อุปกรณ์จะเงียบไป และระบบจะแจ้ง “ขาดการติดต่อ” เมื่อเงียบเกิน 3 นาที ลองกดดูในส่วนสาธิตด้านบนได้</p></details>
     <details><summary>Telegram กับ LINE ต่างกันอย่างไร?</summary><p>Telegram ส่งได้ฟรีไม่จำกัด แนะนำให้ใช้เป็นหลัก ส่วน LINE ส่งผ่านบัญชีทางการ ซึ่งมีโควตาข้อความฟรีต่อเดือนจำกัด</p></details>
