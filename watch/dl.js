@@ -1,7 +1,7 @@
 // สร้างไฟล์โปรแกรม ESP32 ที่กรอกค่าเชื่อมต่อ (และรหัสอุปกรณ์ ถ้ามี) ให้อัตโนมัติ แล้วดาวน์โหลด
 // ทำในเบราว์เซอร์ทั้งหมด รหัสอุปกรณ์ไม่ถูกส่งไปที่ไหน
 window.cdDownloadFirmware = async function (deviceKey, file) {
-  file = file === 'coredash-link.ino' ? file : 'coredash-watch.ino'
+  file = (file === 'coredash-link.ino' || file === 'coredash-leak.ino') ? file : 'coredash-watch.ino'
   var C = window.CD_WATCH || {}
   var base = (document.querySelector('script[src$="dl.js"]') || {}).src || location.href
   var url = new URL(file, base).href

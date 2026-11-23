@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoreDash Leak Lab · แลปวัดไฟรั่วและเบรกเกอร์ตัด ส่งเข้ามือถือ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../../app/icons/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050C26;--bg2:#081640;--card:#0C1A45;--card2:#102255;--line:rgba(140,170,255,.18);--tx:#EEF3FF;--mu:#A9B8DA;--a1:#2E6BFF;--a2:#22D3EE;--amber:#F5C76A;--red:#F87171;--green:#34D399;--lbg:rgba(5,12,38,.92);--ltx:#EEF3FF;--lln:rgba(255,255,255,.55)}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:'Sarabun','Space Grotesk',system-ui,sans-serif;font-size:16.5px;line-height:1.65;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(700px 420px at 85% -5%,rgba(46,107,255,.2),transparent 70%)}
+a{color:var(--a2)}
+.wrap{width:min(1180px,92vw);margin:0 auto}
+h1,h2,h3{font-family:'Space Grotesk','Sarabun',sans-serif;line-height:1.25;color:#fff}
+h2{font-size:clamp(24px,3vw,34px);margin:8px 0 10px}
+h3{font-size:18.5px;margin-bottom:6px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a2)}
+.eyebrow::before{content:"";width:22px;height:2px;background:currentColor;border-radius:2px}
+.mu{color:var(--mu)}
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:16px;padding:20px}
+section{padding:54px 0}
+.alt{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.head{max-width:820px;margin-bottom:24px}.head p{color:var(--mu)}
+.nav{position:sticky;top:0;z-index:30;background:rgba(5,12,38,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:14px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:#fff;text-decoration:none}
+.brand i{font-style:normal;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#2E6BFF,#22D3EE)}
+.nav .links{margin-left:auto;display:flex;gap:2px}
+.nav .links a{color:var(--mu);text-decoration:none;font-weight:600;font-size:14.5px;padding:7px 9px;border-radius:8px}
+.nav .links a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:10px;font:inherit;font-weight:700;font-size:14.5px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#DCE6FF;text-decoration:none}
+.btn.pri{background:linear-gradient(135deg,#2E6BFF,#1BB5E8);border-color:transparent;color:#fff}
+.hero{display:grid;grid-template-columns:.85fr 1.15fr;gap:30px;align-items:center;padding:36px 0 26px}
+.hero h1{font-family:'Sarabun',sans-serif;font-weight:800;font-size:clamp(30px,4.2vw,48px);margin:10px 0}
+.hero h1 span{background:linear-gradient(90deg,#22D3EE,#2E6BFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{color:var(--mu);font-size:17.5px}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.kp div{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.035)}
+.kp b{display:block;font-family:'Space Grotesk';font-size:19px;color:#fff;white-space:nowrap}
+.kp span{font-size:13px;color:var(--mu)}
+.stage{position:relative;height:470px;border-radius:18px;border:1px solid var(--line);overflow:hidden;cursor:grab;touch-action:pan-y;user-select:none;background:radial-gradient(110% 90% at 50% 20%,rgba(46,107,255,.16),transparent 62%),var(--bg2)}
+.stage svg{display:block;width:100%;height:100%}
+.hint{font-size:13px;color:var(--mu);margin-top:6px}
+.lb rect{fill:var(--lbg);stroke:rgba(34,211,238,.5);stroke-width:1}
+.lb text{fill:var(--ltx);font-size:11.5px;font-family:'Sarabun',sans-serif;font-weight:600}
+.lb path{stroke:var(--lln);stroke-width:1;fill:none}.lb circle{fill:var(--a2)}
+.wf{fill:none;stroke:var(--a2);stroke-width:2;stroke-linecap:round;animation:wf 1.8s ease-in-out infinite}.wf:nth-child(2){animation-delay:.25s}.wf:nth-child(3){animation-delay:.5s}
+@keyframes wf{0%,100%{opacity:.15}50%{opacity:1}}
+.flow{stroke-dasharray:5 5;animation:fl 1s linear infinite}@keyframes fl{to{stroke-dashoffset:-20}}
+.safety{border:1px solid rgba(248,113,113,.5);background:linear-gradient(90deg,rgba(248,113,113,.12),rgba(248,113,113,.03));border-radius:16px;padding:18px 20px}
+.safety h3{color:#fca5a5}
+.safety ul{padding-left:20px;display:grid;gap:5px;margin-top:6px}
+.path{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+.path .n{flex:1;min-width:120px;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:13.5px}
+.path .n b{display:block;color:#fff;font-size:14.5px;margin-bottom:2px}
+.path .n.hv{border-top:3px solid var(--red)}.path .n.pr{border-top:3px solid var(--amber)}.path .n.ss{border-top:3px solid var(--a2)}
+.path .ar{display:grid;place-items:center;color:var(--mu)}
+.leg{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;color:var(--mu);margin-top:12px}
+.leg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mu);font-weight:600;font-size:13.5px}
+td b{color:#fff}
+td.pr{white-space:nowrap;font-family:'Space Grotesk';color:#fff}
+.est{font-size:11.5px;color:var(--amber);display:block}
+tfoot td{font-weight:700;color:#fff;border-bottom:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.92em;background:#071233;border:1px solid var(--line);padding:1px 7px;border-radius:6px;color:var(--amber)}
+pre{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;background:#071233;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;color:#dfe7ff;line-height:1.55}
+.steps{list-style:none;counter-reset:s;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:40px 1fr;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.steps li::before{content:counter(s);width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,#2E6BFF,#22D3EE)}
+.steps b{color:#fff}
+.steps p{font-size:14.5px;color:var(--mu)}
+.tests{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.test .no{font-family:'Space Grotesk';font-weight:700;color:var(--a2);font-size:13px;letter-spacing:.1em}
+.test ol{padding-left:20px;font-size:14.5px;color:#dfe7ff;display:grid;gap:3px;margin:8px 0}
+.bub{background:rgba(46,107,255,.22);border-radius:12px;padding:9px 12px;margin-top:6px;font-size:14px}
+.bub small{display:block;color:var(--mu);font-size:12px}
+.box{border-radius:14px;padding:14px 16px;border:1px solid;font-size:15px;margin-top:14px}
+.box.warn{background:rgba(245,199,106,.08);border-color:rgba(245,199,106,.4)}
+.box.ok{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.4)}
+.up{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.up .card p{font-size:14.5px;color:var(--mu)}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--mu);font-size:14px}
+@media(max-width:980px){.hero,.g2,.tests,.up{grid-template-columns:1fr}.nav .links{display:none}.stage{height:360px}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+ <a class="brand" href="../../"><i>⚡</i>CoreDash <span style="color:var(--a2)">Leak Lab</span></a>
+ <nav class="links"><a href="#safety">ความปลอดภัย</a><a href="#diagram">ผังวงจร</a><a href="#parts">อุปกรณ์</a><a href="#wiring">การต่อสาย</a><a href="#software">ซอฟต์แวร์</a><a href="#tests">ทดลอง</a><a href="#upgrade">ต่อยอด</a></nav>
+ <a class="btn pri" href="../../">← หน้าหลัก</a>
+</div></header>
+
+<main>
+<div class="wrap hero">
+ <div>
+  <span class="eyebrow">แลปทำได้จริง · ไฟรั่ว & เบรกเกอร์ตัด</span>
+  <h1>วัดไฟรั่วเป็น mA<br><span>รู้ทันทีว่าเบรกเกอร์ตัดเพราะอะไร</span></h1>
+  <p class="lead">ต่อชุดทดลองบนโต๊ะด้วยอุปกรณ์ราคาประหยัด วัดไฟรั่ว กระแส แรงดัน ไฟดับ และจับเหตุเบรกเกอร์ตัด ส่งเข้าแอป CoreDash Watch และแจ้งเตือนเข้า Telegram / LINE จริง พร้อมจำลองไฟรั่วอย่างปลอดภัยด้วยปุ่มกด</p>
+  <div class="kp"><div><b>2,100–3,600 ฿</b><span>งบอุปกรณ์โดยประมาณ</span></div><div><b>1 วัน</b><span>ประกอบ + ทดลองครบ</span></div><div><b>7 การทดลอง</b><span>เห็นผลในมือถือจริง</span></div></div>
+ </div>
+ <div><div class="stage" id="bench"></div><div class="hint">ภาพ 3D ชุดทดลองบนโต๊ะ · ลากเพื่อหมุน</div></div>
+</div>
+
+<section id="safety" style="padding-top:10px">
+ <div class="wrap">
+  <div class="safety">
+   <h3>⚠️ อ่านก่อนเริ่ม: แลปนี้มีไฟ 220V</h3>
+   <ul>
+    <li>ส่วนที่ต่อไฟ 220V ให้ <b>ช่างไฟฟ้าที่มีความรู้</b> ประกอบและตรวจ ก่อนเสียบปลั๊กทุกครั้ง</li>
+    <li>ชุดทดลองต้องเสียบเข้ากับเต้ารับที่ <b>มีสายดินจริง</b> และมี <b>RCBO 30 mA</b> ในชุดเสมอ RCBO คือตัวป้องกันชีวิต ส่วน CoreDash เป็นตัวเฝ้าระวังเพิ่ม</li>
+    <li>ขั้วไฟ 220V ทุกจุดต้องอยู่ในกล่องปิด มีฝาครอบ นิ้วแตะไม่ถึง ห้ามจับบอร์ดขณะเสียบไฟ</li>
+    <li><b>ห้ามทดลองลัดวงจรจริง</b> (เอาสายมาแตะกัน) เพราะเกิดประกายไฟ ไฟลวก และอุปกรณ์เสียหาย ในแลปนี้ใช้ “กระแสเกิน” แทน ให้ผลในแอปแบบเดียวกัน</li>
+    <li>ปุ่มจำลองไฟรั่วใช้กระแสไม่เกิน 12 mA ผ่านตัวต้านทานลงสายดิน หลักการเดียวกับปุ่ม T บนเบรกเกอร์กันดูด กดเฉพาะตอนทดลอง</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<section class="alt" id="diagram">
+ <div class="wrap">
+  <div class="head"><span class="eyebrow">ผังวงจร</span><h2>ไฟเดินผ่านอะไรบ้าง</h2><p>หัวใจคือ “ZMCT103C ให้สาย L และ N ลอดผ่านพร้อมกัน” ปกติกระแสไปกับกลับเท่ากัน หักล้างกันเป็นศูนย์ ถ้ามีไฟรั่วลงดิน กระแสจะไม่เท่ากัน ส่วนต่างคือไฟรั่ว (หลักการเดียวกับเบรกเกอร์กันดูด)</p></div>
+  <div class="path">
+   <div class="n hv"><b>① ปลั๊ก 3 ขา</b>L · N · สายดิน (PE)</div><div class="ar">→</div>
+   <div class="n ss"><b>② ไฟเข้า</b>อะแดปเตอร์ USB (เลี้ยง ESP32) + โมดูลตรวจไฟ #1</div><div class="ar">→</div>
+   <div class="n pr"><b>③ RCBO 30 mA</b>ตัดเองเมื่อรั่ว / ลัดวงจร</div><div class="ar">→</div>
+   <div class="n ss"><b>④ ZMCT103C</b>L + N ลอดผ่านพร้อมกัน</div><div class="ar">→</div>
+   <div class="n pr"><b>⑤ MCB C2</b>สำหรับทดลองกระแสเกิน</div><div class="ar">→</div>
+   <div class="n ss"><b>⑥ PZEM-004T</b>V · A · W · kWh (CT คล้อง L)</div><div class="ar">→</div>
+   <div class="n ss"><b>⑦ โมดูลตรวจไฟ #2</b>วงจรหลังเบรกเกอร์มีไฟไหม</div><div class="ar">→</div>
+   <div class="n hv"><b>⑧ เต้ารับโหลด</b>หลอดไฟ / กาต้มน้ำ</div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3>ปุ่มจำลองไฟรั่ว (ต่อหลังจุด ⑤ ก่อนเต้ารับ)</h3>
+   <p class="mu" style="font-size:15px">สาย L ฝั่งโหลด → ปุ่มกดติดปล่อยดับ → ตัวต้านทาน 3 ตัวต่ออนุกรม → ขั้วสายดิน (PE) · กระแสไหลออกทาง L ผ่าน ZMCT แต่กลับทางสายดิน จึงวัดเป็นไฟรั่วได้</p>
+   <table style="margin-top:6px"><tr><th>ปุ่ม</th><th>ตัวต้านทาน (2W ×3 อนุกรม)</th><th>ความต้านทานรวม</th><th>กระแสที่ 230 V</th></tr>
+    <tr><td><b>🟢 3 mA</b></td><td>27 kΩ × 3</td><td>81 kΩ</td><td>≈ 2.8 mA</td></tr>
+    <tr><td><b>🟠 7 mA</b></td><td>11 kΩ × 3</td><td>33 kΩ</td><td>≈ 7.0 mA</td></tr>
+    <tr><td><b>🔴 12 mA</b></td><td>6.2 kΩ × 3</td><td>18.6 kΩ</td><td>≈ 12.4 mA</td></tr></table>
+   <p class="mu" style="font-size:13.5px;margin-top:8px">ใช้ 3 ตัวอนุกรมเพื่อแบ่งแรงดันและความร้อน กระแสจริง = แรงดันที่ PZEM อ่านได้ ÷ ความต้านทานรวม (ใช้ค่านี้ตอนสอบเทียบ)</p>
+  </div>
+  <div class="leg"><span><i style="background:var(--red)"></i>ไฟ 220V</span><span><i style="background:var(--amber)"></i>อุปกรณ์ป้องกัน</span><span><i style="background:var(--a2)"></i>เซนเซอร์ / CoreDash</span></div>
+ </div>
+</section>
+
+<section id="parts">
+ <div class="wrap">
+  <div class="head"><span class="eyebrow">รายการอุปกรณ์</span><h2>ของที่ต้องซื้อ ราคาเข้าถึงได้</h2><p>3 รายการแรกใช้ตัวเดียวกับชุด CoreDash Watch (ราคาสำรวจจากร้านในไทย พ.ย. 2569) รายการอื่นเป็นราคาประมาณการ ราคาจริงขยับได้ตามร้าน</p></div>
+  <div class="card" style="padding:6px 8px;overflow-x:auto"><table>
+   <tr><th>#</th><th>อุปกรณ์</th><th>ใช้ทำอะไร</th><th>ราคา (บาท)</th></tr>
+   <tr><td>1</td><td><b>ESP32 DevKit V1 (30 ขา)</b></td><td class="mu">สมองของชุด ต่อ Wi-Fi ส่งข้อมูล</td><td class="pr">250–285</td></tr><tr><td>2</td><td><b>PZEM-004T V3.0 100A + CT</b></td><td class="mu">วัด V · A · W · kWh · PF</td><td class="pr">320–430</td></tr><tr><td>3</td><td><b>RCBO 30 mA (มอก. 909)</b></td><td class="mu">ตัวป้องกันชีวิตจริง ตัดเมื่อไฟรั่ว / ลัดวงจร</td><td class="pr">370–680</td></tr><tr><td>4</td><td><b>ZMCT103C โมดูลมี op-amp (ปรับค่าได้)</b></td><td class="mu">วัดไฟรั่วระดับ mA (L+N ลอดผ่าน)</td><td class="pr">60–150<span class=est>ประมาณการ</span></td></tr><tr><td>5</td><td><b>โมดูลตรวจไฟ AC 220V (optocoupler) × 2</b></td><td class="mu">รู้ว่าไฟเข้ามีไหม / หลังเบรกเกอร์มีไฟไหม</td><td class="pr">120–240<span class=est>ประมาณการ</span></td></tr><tr><td>6</td><td><b>MCB C2 (1 ขั้ว)</b></td><td class="mu">ทดลองกระแสเกิน → เบรกเกอร์ตัด</td><td class="pr">120–250<span class=est>ประมาณการ</span></td></tr><tr><td>7</td><td><b>ปุ่มกดติดปล่อยดับ 250VAC × 3 + ตัวต้านทาน 2W × 9</b></td><td class="mu">ชุดจำลองไฟรั่ว 3 / 7 / 12 mA</td><td class="pr">150–250<span class=est>ประมาณการ</span></td></tr><tr><td>8</td><td><b>บัซเซอร์ Active + ตัวต้านทาน 10k/20k + สายจัมเปอร์</b></td><td class="mu">เสียงเตือนที่ตัวเครื่อง + ตัวแบ่งแรงดัน</td><td class="pr">60–120<span class=est>ประมาณการ</span></td></tr><tr><td>9</td><td><b>อะแดปเตอร์ USB 5V (มี มอก.) + สาย</b></td><td class="mu">เลี้ยง ESP32 จากไฟก่อนเบรกเกอร์</td><td class="pr">150–250<span class=est>ประมาณการ</span></td></tr><tr><td>10</td><td><b>กล่องพลาสติก / กล่องรางดิน + รางดิน + เทอร์มินัล</b></td><td class="mu">ปิดขั้วไฟ 220V ทั้งหมด</td><td class="pr">300–600<span class=est>ประมาณการ</span></td></tr><tr><td>11</td><td><b>ปลั๊กตัวผู้ 3 ขา + เต้ารับมีกราวด์ + สายไฟ 1.0–1.5 ตร.มม.</b></td><td class="mu">ทางเข้า-ออกของไฟ</td><td class="pr">200–350<span class=est>ประมาณการ</span></td></tr><tr><td>12</td><td><b>พาวเวอร์แบงก์แบบชาร์จไปใช้ไปได้ (ไม่บังคับ)</b></td><td class="mu">ให้แจ้ง “ไฟดับทั้งบ้าน” ได้</td><td class="pr">300–500<span class=est>ประมาณการ</span></td></tr>
+   <tfoot><tr><td></td><td colspan="2">รวมโดยประมาณ (ไม่รวมพาวเวอร์แบงก์)</td><td class="pr">2,100–3,600 ฿</td></tr></tfoot>
+  </table></div>
+  <div class="box warn">💡 <b>ZMCT103C ต้องเป็นแบบ “โมดูลมี op-amp และปุ่มหมุนปรับค่า”</b> เพราะไฟรั่วระดับ mA ให้สัญญาณเล็กมาก ต้องขยายก่อน และรูของ ZMCT103C เล็ก ใช้กับสายไม่เกิน 1.0–1.5 ตร.มม. เหมาะกับแลป ถ้าใช้หน้างานจริงกับสายใหญ่ ดูหัวข้อ “ต่อยอด”</div>
+ </div>
+</section>
+
+<section class="alt" id="wiring">
+ <div class="wrap">
+  <div class="head"><span class="eyebrow">การต่อสาย</span><h2>ฝั่งไฟต่ำ (ESP32) ต่อแบบนี้</h2><p>ฝั่ง 220V ต่อตามผังวงจรด้านบนโดยช่างไฟฟ้า ฝั่งไฟต่ำใช้สายจัมเปอร์</p></div>
+  <div class="g2">
+   <div class="card" style="padding:6px 8px"><table>
+    <tr><th>อุปกรณ์ · ขา</th><th>ต่อเข้า ESP32</th></tr>
+    <tr><td><b>PZEM-004T</b> 5V · GND</td><td>3V3 · GND</td></tr>
+    <tr><td><b>PZEM-004T</b> TX · RX</td><td>GPIO16 · GPIO17</td></tr>
+    <tr><td><b>ZMCT103C</b> VCC · GND</td><td>5V (VIN) · GND</td></tr>
+    <tr><td><b>ZMCT103C</b> OUT</td><td>ผ่านตัวแบ่งแรงดัน 10k/20k → <b>GPIO34</b></td></tr>
+    <tr><td><b>โมดูลตรวจไฟ #1</b> (ไฟเข้า) VCC · GND · OUT</td><td>3V3 · GND · <b>GPIO25</b></td></tr>
+    <tr><td><b>โมดูลตรวจไฟ #2</b> (หลังเบรกเกอร์) VCC · GND · OUT</td><td>3V3 · GND · <b>GPIO26</b></td></tr>
+    <tr><td><b>บัซเซอร์ Active</b> + · −</td><td><b>GPIO27</b> · GND</td></tr>
+    <tr><td><b>ไฟเลี้ยง ESP32</b></td><td>USB จากอะแดปเตอร์ที่เสียบ <b>ก่อน RCBO</b> (ผ่านพาวเวอร์แบงก์ถ้ามี)</td></tr>
+   </table></div>
+   <div>
+    <pre>ตัวแบ่งแรงดันของ ZMCT (สำคัญ)
+ZMCT OUT ──[ 10 kΩ ]──┬── GPIO34
+                      │
+                   [ 20 kΩ ]
+                      │
+                     GND
+
+โมดูลเลี้ยงด้วย 5V สัญญาณสูงได้เกือบ 5V
+แบ่งเหลือ 2/3 ให้ไม่เกิน 3.3V ที่ ESP32 รับได้
+ใช้ GPIO34 เพราะเป็น ADC1 (ADC2 ใช้ไม่ได้ตอนเปิด Wi-Fi)</pre>
+    <div class="box ok">✅ <b>ทำไม ESP32 ต้องรับไฟจาก “ก่อน RCBO”</b><br>ถ้าเสียบไฟหลังเบรกเกอร์ พอเบรกเกอร์ตัด ESP32 จะดับไปด้วย ส่งแจ้งเตือนไม่ได้ ต่อก่อนเบรกเกอร์ และมีพาวเวอร์แบงก์ จะแจ้งได้ทั้ง “เบรกเกอร์ตัด” และ “ไฟดับทั้งบ้าน”</div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section id="software">
+ <div class="wrap">
+  <div class="head"><span class="eyebrow">ซอฟต์แวร์</span><h2>ติดตั้งครั้งเดียว ใช้กับแอปเดิม</h2></div>
+  <ol class="steps">
+   <li><div><b>อัปเกรดฐานข้อมูล (ผู้ดูแลระบบทำครั้งเดียว)</b><p>Supabase → SQL Editor → วางไฟล์ <code>watch/supabase/leak-upgrade.sql</code> → Run · อุปกรณ์รุ่นเดิมใช้ต่อได้ตามปกติ</p></div></li>
+   <li><div><b>เพิ่มอุปกรณ์ในแอป</b><p>เปิด coredashtech.com/watch/app → เพิ่มอุปกรณ์ → กด “โปรแกรมวัดไฟรั่ว + เบรกเกอร์ตัด (ESP32)” จะได้ไฟล์ <code>coredash-leak.ino</code> ที่ฝังรหัสให้แล้ว</p></div></li>
+   <li><div><b>ลงโปรแกรม</b><p>Arduino IDE ติดตั้งไลบรารี WiFiManager และ PZEM004Tv30 เลือกบอร์ด ESP32 Dev Module แล้วกด Upload</p></div></li>
+   <li><div><b>ตั้ง Wi-Fi</b><p>ต่อมือถือเข้า Wi-Fi “CoreDash-Leak-xxxx” (รหัส coredash) เลือก Wi-Fi ของแลป</p></div></li>
+   <li><div><b>สอบเทียบไฟรั่ว</b><p>เปิด Serial Monitor 115200 · ไม่กดปุ่มใดๆ พิมพ์ <code>zero</code> · กดปุ่ม 🟠 7 mA ค้างไว้ แล้วพิมพ์ <code>cal 7.0</code> (หรือค่าที่คำนวณจากแรงดันจริง) · พิมพ์ <code>show</code> เพื่อตรวจค่า</p></div></li>
+   <li><div><b>ตั้งเกณฑ์ในแอป</b><p>หน้าอุปกรณ์ → “เกณฑ์ไฟรั่ว และพิกัดเบรกเกอร์” · เตือน 9 mA · อันตราย 15 mA · พิกัดเบรกเกอร์ <b>2 A</b> (เพราะในแลปใช้ MCB C2)</p></div></li>
+  </ol>
+ </div>
+</section>
+
+<section class="alt" id="tests">
+ <div class="wrap">
+  <div class="head"><span class="eyebrow">ทดลองจริง</span><h2>7 การทดลอง และข้อความที่จะเห็นในมือถือ</h2><p>ข้อความด้านล่างมาจากระบบจริง (ทดสอบตรรกะกับฐานข้อมูลแล้ว) ตัวเลขของคุณจะต่างไปเล็กน้อยตามแรงดันไฟและการสอบเทียบ</p></div>
+  <div class="tests">
+   <div class="card test"><span class="no">TEST 1 · ปกติ</span><h3>เปิดหลอดไฟ ไม่กดปุ่มใด</h3><ol><li>เสียบปลั๊กชุดทดลอง เปิดหลอดไฟ</li><li>ดูแอป: วงจรมีไฟ · ไฟรั่วต่ำกว่า 1 mA</li></ol><div class="bub">สถานะ “วงจรมีไฟ” · ไฟรั่ว 0.8 mA<small>ไม่มีแจ้งเตือน = ถูกต้อง</small></div></div>
+   <div class="card test"><span class="no">TEST 2 · รั่วเล็กน้อย</span><h3>กดปุ่ม 🟢 3 mA ค้าง 15 วินาที</h3><ol><li>ค่าไฟรั่วในแอปขึ้นราว 3 mA</li><li>ยังต่ำกว่าเกณฑ์ จึงไม่แจ้งเตือน</li></ol><div class="bub">ไฟรั่ว 2.9 mA<small>เห็นค่าในหน้าอุปกรณ์ / Serial Monitor</small></div></div>
+   <div class="card test"><span class="no">TEST 3 · เกินเกณฑ์เตือน</span><h3>กดปุ่ม 🔴 12 mA ค้าง 15 วินาที แล้วปล่อย</h3><ol><li>บัซเซอร์ดัง 2 ครั้ง</li><li>มือถือได้แจ้งเตือนภายในไม่กี่วินาที</li><li>ปล่อยปุ่ม รอรอบถัดไป ได้ข้อความกลับสู่ปกติ</li></ol><div class="bub">🟠 แลปไฟรั่ว: ไฟรั่ว 12.3 mA สูงกว่าปกติ ควรให้ช่างตรวจ</div><div class="bub">✅ แลปไฟรั่ว: ไฟรั่วกลับสู่ปกติ 0.9 mA</div></div>
+   <div class="card test"><span class="no">TEST 4 · รั่วอันตราย → RCBO ตัด</span><h3>กด 🟠 7 mA + 🔴 12 mA พร้อมกัน (≈ 19 mA)</h3><ol><li>บัซเซอร์ดังถี่ แจ้งระดับอันตราย</li><li>RCBO 30 mA อาจตัดเองได้ (มาตรฐานให้ตัดได้ตั้งแต่ราวครึ่งหนึ่ง คือ 15 mA) ถ้าไม่ตัดก็ถือว่าปกติ</li><li>ถ้าตัด ระบบบอกสาเหตุว่าเป็นไฟรั่ว</li></ol><div class="bub">🔴 แลปไฟรั่ว: ไฟรั่ว 19.5 mA ระดับอันตราย งดใช้วงจรนี้และเรียกช่างไฟฟ้า</div><div class="bub">⛔ แลปไฟรั่ว: เบรกเกอร์ตัด · น่าจะเป็นไฟรั่ว (ก่อนตัดรั่ว 19.5 mA) ให้ช่างหาจุดรั่วก่อนเปิดใหม่</div></div>
+   <div class="card test"><span class="no">TEST 5 · ปุ่ม T บน RCBO</span><h3>กดปุ่ม T ทดสอบบนเบรกเกอร์กันดูด</h3><ol><li>RCBO ตัดทันที (ต้องตัด ถ้าไม่ตัดให้เปลี่ยน RCBO)</li><li>ปุ่ม T สร้างไฟรั่วภายในตัวเบรกเกอร์เอง ZMCT จึงไม่เห็น ระบบจึงบอกว่า “อาจเป็นลัดวงจรฉับพลันหรือมีคนปิด”</li></ol><div class="bub">⛔ แลปไฟรั่ว: เบรกเกอร์ตัด · อาจเป็นลัดวงจรฉับพลัน หรือมีคนปิดเบรกเกอร์ ให้ตรวจสายและเครื่องใช้ก่อนเปิดใหม่</div><div class="bub">💡 แลปไฟรั่ว: เบรกเกอร์กลับมาจ่ายไฟแล้ว<small>หลังโยกเบรกเกอร์ขึ้น</small></div></div>
+   <div class="card test"><span class="no">TEST 6 · กระแสเกิน (แทนการลัดวงจร)</span><h3>เสียบกาต้มน้ำ / ไดร์เป่าผม 1,000–2,000 W</h3><ol><li>กระแส 4–9 A เกินพิกัด MCB C2 หลายเท่า</li><li>แอปเตือนใกล้พิกัด แล้ว MCB ตัดภายในไม่กี่วินาทีถึงราวหนึ่งนาที</li><li>ระบบบอกสาเหตุว่าเป็นกระแสเกิน</li></ol><div class="bub">⚠️ แลปไฟรั่ว: ใช้ไฟ 8.3 A เกินพิกัดเบรกเกอร์ 2 A<small>ขึ้นเมื่อส่งทันก่อนเบรกเกอร์ตัด</small></div><div class="bub">⛔ แลปไฟรั่ว: เบรกเกอร์ตัด · น่าจะเป็นกระแสเกิน / ใช้ไฟเกินพิกัด (สูงสุด 8.6 A) ลดเครื่องใช้ก่อนเปิดใหม่</div></div>
+   <div class="card test"><span class="no">TEST 7 · ไฟดับทั้งบ้าน</span><h3>ถอดปลั๊กชุดทดลอง (ESP32 ใช้พาวเวอร์แบงก์)</h3><ol><li>โมดูลตรวจไฟ #1 ไม่เห็นไฟเข้า ระบบรู้ว่าเป็นไฟดับ ไม่ใช่เบรกเกอร์ตัด</li><li>เสียบกลับ ได้ข้อความไฟกลับ</li></ol><div class="bub">⚡ แลปไฟรั่ว: ไฟฟ้าดับ (ไฟเข้าจากการไฟฟ้าไม่มี)</div><div class="bub">💡 แลปไฟรั่ว: ไฟฟ้ากลับมาแล้ว 230 V</div></div>
+   <div class="card test" style="border-color:rgba(245,199,106,.45)"><span class="no" style="color:var(--amber)">ทำไมไม่ลัดวงจรจริง</span><h3>ระบบจับการลัดวงจรอย่างไร</h3><p class="mu" style="font-size:14.5px">ลัดวงจรจริงเกิดเร็วระดับเสี้ยววินาที เบรกเกอร์ตัดก่อนที่ PZEM (อ่านทุก ~1 วินาที) จะเห็นกระแส ระบบจึงใช้วิธี <b>ตัดสาเหตุอื่นออก</b>: เบรกเกอร์ตัด + ไฟเข้ายังมี + ก่อนตัดไม่มีไฟรั่วและไม่มีกระแสเกิน → แจ้ง “อาจเป็นลัดวงจรฉับพลัน” ซึ่งเป็นข้อความเดียวกับ TEST 5 ปลอดภัยกว่าและได้ผลในแอปเหมือนกัน</p></div>
+  </div>
+ </div>
+</section>
+
+<section id="upgrade">
+ <div class="wrap">
+  <div class="head"><span class="eyebrow">ข้อจำกัด & ต่อยอด</span><h2>บอกตรงๆ ว่าแลปนี้ทำอะไรได้ และไปต่อยังไง</h2></div>
+  <div class="up">
+   <div class="card"><h3>📏 ความแม่นยำ</h3><p>ZMCT103C เป็นเซนเซอร์ราคาประหยัด หลังสอบเทียบแล้วเหมาะดูแนวโน้มและแจ้งเตือนระดับ mA แต่ไม่ใช่อุปกรณ์วัดที่รับรอง และวัดไฟรั่วแบบ DC (จากอินเวอร์เตอร์/โซลาร์บางชนิด) ไม่ได้</p></div>
+   <div class="card"><h3>🏭 ใช้หน้างานจริง</h3><p>เปลี่ยน ZMCT เป็นเซนเซอร์ไฟรั่วแบบอุตสาหกรรม (ZCT รูใหญ่ ให้สัญญาณ 4–20 mA หรือ RS485) ต่อเข้า CoreDash Link ได้เลย รองรับสายเมนขนาดใหญ่และติดในตู้ไฟ</p></div>
+   <div class="card"><h3>🔔 รู้ว่าตัดเพราะ “ทริป” จริง</h3><p>ใช้ RCBO / MCB ที่มีหน้าสัมผัสแจ้งเตือน (Alarm / Auxiliary contact) ต่อเข้าอินพุตดิจิทัล จะแยก “ทริปเพราะเหตุผิดปกติ” กับ “มีคนโยกปิด” ได้แน่นอน</p></div>
+   <div class="card"><h3>⚡ จับยอดกระแสลัดวงจร</h3><p>เพิ่ม CT วัดกระแสแบบเร็ว (เช่น SCT-013) อ่านด้วย ESP32 หลายพันครั้งต่อวินาที เก็บยอดกระแสช่วงก่อนตัด ช่วยยืนยันว่าเป็นลัดวงจรจริง</p></div>
+   <div class="card"><h3>📈 ดูแนวโน้มรายสัปดาห์</h3><p>ไฟรั่วที่ค่อยๆ ขึ้นหลังฝนตก บอกว่ามีน้ำเข้าจุดต่อสาย ให้ช่างไปแก้ก่อนที่จะมีคนโดนไฟดูด</p></div>
+   <div class="card"><h3>🎓 ใช้สอนได้</h3><p>ชุดนี้เหมาะกับห้องปฏิบัติการอาชีวะ สาขาไฟฟ้า เห็นหลักการเบรกเกอร์กันดูดด้วยตาตัวเอง และต่อยอดเป็นโครงงาน IoT</p></div>
+  </div>
+ </div>
+</section>
+</main>
+<footer><div class="wrap">CoreDash Technology · CoreDash Leak Lab · ระบบนี้เป็นการเฝ้าระวังเพิ่ม ไม่ใช่อุปกรณ์ป้องกันไฟฟ้า ต้องมีเบรกเกอร์กันดูดและสายดินเสมอ · โทร 081-923-2380</div></footer>
+<script>
+/* ============ 3D isometric engine ============ */
+const K=26,C30=.8660254,S30=.5;let UID=0;const PR={};
+const n=v=>Math.round(v*10)/10;
+function rgb(h){h=h.slice(1);if(h.length==3)h=[...h].map(c=>c+c).join('');const v=parseInt(h,16);return[v>>16&255,v>>8&255,v&255]}
+function sh(h,f){if(!h||h[0]!=='#')return h;const m=v=>f<=1?v*f:v+(255-v)*(f-1);return'rgb('+rgb(h).map(v=>Math.round(Math.max(0,Math.min(255,m(v))))).join(',')+')'}
+const tw=t=>t.replace(/[ัิ-ฺ็-๎]/g,'').length*6.4+20;
+// primitives
+const B=(x,y,z,w,d,h,c,o={})=>({t:'box',x,y,z,w,d,h,c,...o});
+const Cy=(x,y,z,r,h,c,o={})=>({t:'cyl',x,y,z,r,h,c,...o});
+const L=(pts,c,w=3,o={})=>({t:'line',pts,c,w,...o});
+const Ba=(x,y,z,r,c,o={})=>({t:'ball',x,y,z,r,c,...o});
+const Q=(pts,c,o={})=>({t:'quad',pts,c,...o});
+const Di=(x,y,z,r,c,o={})=>({t:'disc',x,y,z,r,c,...o});
+const T=(x,y,z,text,dx=30,dy=-34)=>({t:'label',x,y,z,text,dx,dy});
+const W=(x,y,z)=>({t:'wifi',x,y,z});
+// composites
+const ground=(w,d,c='#294a2e')=>B(0,0,-.25,w,d,.25,c,{layer:0});
+const room=(w,d,h=3.2)=>[B(0,0,-.2,w,d,.2,'#3f4a63',{layer:0}),B(0,0,0,w,.25,h,'#273452',{layer:.4}),B(0,0,0,.25,d,h,'#222d47',{layer:.4})];
+const core=(x,y,z=0,lbl='กล่อง CoreDash',dx=34,dy=-44)=>[B(x,y,z,.9,.55,1.05,'#e6ecf8',{screen:1,led:'#22d3ee'}),Cy(x+.72,y+.12,z+1.05,.045,.65,'#3a4257'),W(x+.72,y+.12,z+1.75),lbl?T(x+.45,y+.55,z+.95,lbl,dx,dy):null];
+const coreOnPost=(x,y,h=1.1,lbl,dx,dy)=>[Cy(x+.45,y+.27,0,.07,h,'#8b93a6'),core(x,y,h,lbl,dx,dy)];
+const plant=(x,y,z=0,s=1,c='#34b45e')=>[Cy(x,y,z,.06*s,.35*s,'#6b4a2b'),Ba(x,y,z+.55*s,.34*s,c),Ba(x+.12*s,y-.1*s,z+.8*s,.22*s,sh(c,1.18))];
+const tree=(x,y,s=1)=>[Cy(x,y,0,.12*s,.9*s,'#6b4a2b'),Ba(x,y,1.3*s,.62*s,'#2f9e54'),Ba(x+.25*s,y-.2*s,1.7*s,.4*s,'#46c06c'),Ba(x-.3*s,y+.18*s,1.5*s,.38*s,'#2a8a49')];
+const tank=(x,y,r,h,c,z=0)=>Cy(x,y,z,r,h,c,{cap:sh(c,1.25)});
+const pump=(x,y,z=0,c='#2563eb')=>[B(x,y,z,.9,.55,.5,c,{fins:1}),Cy(x+.3,y+.27,z+.5,.18,.18,'#94a3b8')];
+const valve=(x,y,z=0)=>[B(x,y,z,.32,.32,.32,'#e0463c'),Cy(x+.16,y+.16,z+.32,.06,.18,'#1f2937')];
+const probe=(x,y,z=0,c='#1f2937')=>[B(x,y,z,.3,.2,.45,c,{led:'#22c55e'}),Cy(x+.15,y+.1,z+.45,.05,.15,'#64748b')];
+const cable=(pts,c='#f59e0b')=>L(pts,c,2,{dash:1,layer:1.6});
+const pipe=(pts,c='#334155',w=5,layer)=>L(pts,c,w,{pipe:1,layer});
+const house=(x,y,w=2,d=1.6,h=1.4,c='#e8dcc8',roof='#b4472f')=>[B(x,y,0,w,d,h,c,{door:1}),B(x-.15,y-.15,h,w+.3,d+.3,.22,roof)];
+const lamp=(x,y,h=2.6,on=true)=>[Cy(x,y,0,.06,h,'#7b8496'),B(x-.05,y-.05,h,.55,.18,.1,'#cbd5e1'),Ba(x+.38,y+.04,h-.1,.12,on?'#fde68a':'#475569',{glow:on?1:0})];
+const glass=()=>[{f:'front',u0:.07,u1:.93,v0:.05,v1:.93,c:'rgba(125,211,252,.30)'},...[.3,.55,.8].map(v=>({f:'front',u0:.1,u1:.9,v0:v,v1:v+.025,c:'#94a3b8'})),...[[.15,.08,'#ef4444'],[.35,.08,'#f8fafc'],[.6,.33,'#22c55e'],[.2,.58,'#f59e0b'],[.7,.58,'#3b82f6'],[.45,.33,'#f8fafc']].map(([u,v,c])=>({f:'front',u0:u,u1:u+.14,v0:v,v1:v+.18,c}))];
+
+function decoOf(it){const d=[...(it.deco||[])];
+ if(it.screen)d.push({f:'front',u0:.13,u1:.66,v0:.42,v1:.84,c:'#0b1b3f',st:1});
+ if(it.led)d.push({f:'front',u0:.76,u1:.88,v0:.68,v1:.8,c:it.led});
+ if(it.breakers){const k=it.breakers;for(let i=0;i<k;i++){const u0=.07+i*(.86/k);d.push({f:'front',u0,u1:u0+.86/k*.62,v0:.42,v1:.7,c:'#374151'})}d.push({f:'front',u0:.06,u1:.94,v0:.08,v1:.22,c:'rgba(0,0,0,.16)'})}
+ if(it.door)d.push({f:'front',u0:.42,u1:.6,v0:0,v1:.66,c:'#7c5a3a'},{f:'front',u0:.1,u1:.3,v0:.36,v1:.7,c:'#9bd2f0'},{f:'front',u0:.72,u1:.9,v0:.36,v1:.7,c:'#9bd2f0'},{f:'right',u0:.3,u1:.7,v0:.36,v1:.7,c:'#9bd2f0'});
+ if(it.fins)for(const f of['front','right'])for(let i=0;i<6;i++){const v0=.12+i*.13;d.push({f,u0:.04,u1:.96,v0,v1:v0+.05,c:'rgba(0,0,0,.2)'})}
+ if(it.strata)for(const f of['front','right'])d.push({f,u0:0,u1:1,v0:0,v1:.4,c:'rgba(0,0,0,.24)'},{f,u0:0,u1:1,v0:.4,v1:.72,c:'rgba(0,0,0,.1)'});
+ if(it.win){const[cs,rs]=it.win;for(let r=0;r<rs;r++){const v0=.08+r*(.86/rs);for(let c=0;c<cs;c++){const u0=.06+c*(.88/cs);d.push({f:'front',u0,u1:u0+.88/cs*.6,v0,v1:v0+.86/rs*.55,c:(r*7+c*3)%5==0?'#fde68a':'#7dd3fc'})}for(let c=0;c<2;c++){const u0=.15+c*.42;d.push({f:'right',u0,u1:u0+.26,v0,v1:v0+.86/rs*.55,c:'#7dd3fc'})}}}
+ if(it.bars)for(let i=0;i<it.bars;i++){const u0=(i+.35)/it.bars;d.push({f:'front',u0,u1:u0+.3/it.bars,v0:.04,v1:.96,c:'rgba(0,0,0,.3)'})}
+ return d}
+function wp(it){const{x,y,z}=it;switch(it.t){
+ case'box':{const{w,d,h}=it;return[[x,y,z],[x+w,y,z],[x,y+d,z],[x+w,y+d,z],[x,y,z+h],[x+w,y,z+h],[x,y+d,z+h],[x+w,y+d,z+h]]}
+ case'cyl':return[[x,y,z],[x,y,z+it.h]];
+ case'line':case'quad':return it.pts;
+ default:return[[x,y,z]]}}
+function proj(sc,ang){const ca=Math.cos(ang),sa=Math.sin(ang);
+ const R=(x,y)=>{const dx=x-sc.cx,dy=y-sc.cy;return[dx*ca-dy*sa,dx*sa+dy*ca]};
+ return{ca,sa,P:(x,y,z)=>{const[a,b]=R(x,y);return[(a-b)*C30*K,(a+b)*S30*K-z*K]},D:(x,y,z)=>{const[a,b]=R(x,y);return a+b+z*.3}}}
+function prep(key){if(PR[key])return PR[key];return PR[key]=prepItems((SC[key]||DVS[key])())}
+function prepItems(raw,ctr){
+ const items=raw.flat(12).filter(Boolean).map(it=>it.t==='box'?{...it,_d:decoOf(it)}:it);
+ let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+ for(const it of items){if(it.t==='label'||it.t==='wifi')continue;for(const p of wp(it)){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])}}
+ const sc={items,cx:ctr?ctr.cx:(x0+x1)/2,cy:ctr?ctr.cy:(y0+y1)/2};
+ const bb=(angs,lab)=>{let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;const add=(a,b)=>{a0=Math.min(a0,a);a1=Math.max(a1,a);b0=Math.min(b0,b);b1=Math.max(b1,b)};
+  for(const ang of angs){const{P}=proj(sc,ang);for(const it of items){
+   if(it.t==='label'){if(!lab)continue;const q=P(it.x,it.y,it.z),w=tw(it.text),tx=q[0]+it.dx,ty=q[1]+it.dy,lx=it.dx>=0?tx:tx-w;add(lx,ty-12);add(lx+w,ty+12);add(q[0],q[1]);continue}
+   if(it.t==='wifi'){const q=P(it.x,it.y,it.z);add(q[0]-16,q[1]-18);add(q[0]+16,q[1]);continue}
+   for(const p of wp(it)){const q=P(...p);if(it.t==='cyl'||it.t==='disc'){const rx=it.r*K*1.2247,ry=it.r*K*.7071;add(q[0]-rx,q[1]-ry);add(q[0]+rx,q[1]+ry)}else if(it.t==='ball'){const r=it.r*K*(it.glow?2.2:1);add(q[0]-r,q[1]-r);add(q[0]+r,q[1]+r)}else add(q[0],q[1])}}}
+  const m=8;return[a0-m,b0-m,a1-a0+2*m,b1-b0+2*m].map(n).join(' ')};
+ sc.vb=bb([-1.05,-.7,-.35,0,.35,.7,1.05],true);sc.vbn=bb([0],false);
+ return sc}
+function render(sc,ang=0,opt={}){
+ const lab=opt.labels!==false,{ca,sa,P,D}=proj(sc,ang),uid='s'+(++UID),defs=new Map();
+ const G=(c,k)=>{const key=k+c;if(!defs.has(key))defs.set(key,[uid+'_'+defs.size,c,k]);return defs.get(key)[0]};
+ const pt=p=>n(p[0])+','+n(p[1]);
+ const poly=(ps,fill,ex='')=>`<polygon points="${ps.map(pt).join(' ')}" fill="${fill}" ${ex}/>`;
+ const arr=[];
+ for(const it of sc.items){if(!lab&&it.t==='label')continue;let ly=it.layer,d=0;
+  switch(it.t){case'box':d=D(it.x+it.w/2,it.y+it.d/2,it.z);break;case'cyl':case'ball':case'disc':d=D(it.x,it.y,it.z);break;
+   case'line':case'quad':{let s=0;for(const p of it.pts)s+=D(...p);d=s/it.pts.length;break}default:ly=ly??9}
+  arr.push([ly??2,d,it])}
+ arr.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ const dBox=it=>{const{x,y,z,w,d,h,c}=it;let s='';const st='stroke="rgba(0,0,0,.28)" stroke-width=".7" stroke-linejoin="round"';
+  const F=[[0,-1,[[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]]],[0,1,[[x,y+d,z],[x+w,y+d,z],[x+w,y+d,z+h],[x,y+d,z+h]],'front'],[-1,0,[[x,y+d,z],[x,y,z],[x,y,z+h],[x,y+d,z+h]]],[1,0,[[x+w,y+d,z],[x+w,y,z],[x+w,y,z+h],[x+w,y+d,z+h]],'right']];
+  for(const[nx,ny,ps,fn]of F){const rx=nx*ca-ny*sa,ry=nx*sa+ny*ca;if(rx+ry<=.01)continue;
+   s+=poly(ps.map(p=>P(...p)),sh(c,.75+.1*(ry-rx)),st);
+   if(fn&&it._d.length){const fp=fn==='front'?(u,v)=>[x+w*u,y+d,z+h*v]:(u,v)=>[x+w,y+d-d*u,z+h*v];
+    for(const q of it._d){if(q.f!==fn)continue;s+=poly([fp(q.u0,q.v0),fp(q.u1,q.v0),fp(q.u1,q.v1),fp(q.u0,q.v1)].map(p=>P(...p)),q.c,q.st?'stroke="var(--a2)" stroke-width="1"':'')}}}
+  s+=poly([[x,y,z+h],[x+w,y,z+h],[x+w,y+d,z+h],[x,y+d,z+h]].map(p=>P(...p)),sh(c,1.1),st);return s};
+ const draw=it=>{switch(it.t){
+  case'box':return dBox(it);
+  case'cyl':{const b=P(it.x,it.y,it.z),t=P(it.x,it.y,it.z+it.h),rx=it.r*K*1.2247,ry=it.r*K*.7071;
+   return`<path d="M${n(b[0]-rx)},${n(b[1])} A${n(rx)},${n(ry)} 0 0 0 ${n(b[0]+rx)},${n(b[1])} L${n(t[0]+rx)},${n(t[1])} L${n(t[0]-rx)},${n(t[1])} Z" fill="url(#${G(it.c,'l')})" stroke="rgba(0,0,0,.25)" stroke-width=".6"/><ellipse cx="${n(t[0])}" cy="${n(t[1])}" rx="${n(rx)}" ry="${n(ry)}" fill="${it.cap||sh(it.c,1.12)}" stroke="rgba(0,0,0,.2)" stroke-width=".6"/>`}
+  case'ball':{const q=P(it.x,it.y,it.z),r=it.r*K;return(it.glow?`<circle cx="${n(q[0])}" cy="${n(q[1])}" r="${n(r*2.2)}" fill="url(#${G(it.c,'g')})"/>`:'')+`<circle cx="${n(q[0])}" cy="${n(q[1])}" r="${n(r)}" fill="url(#${G(it.c,'r')})" ${it.op?`opacity="${it.op}"`:''}/>`}
+  case'disc':{const q=P(it.x,it.y,it.z);return`<ellipse cx="${n(q[0])}" cy="${n(q[1])}" rx="${n(it.r*K*1.2247)}" ry="${n(it.r*K*.7071)}" fill="${it.c}"/>`}
+  case'line':{const d='M'+it.pts.map(p=>pt(P(...p))).join(' L');const w=it.w;
+   if(it.pipe)return`<path d="${d}" stroke="${sh(it.c,.55)}" stroke-width="${w+2.4}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${it.c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${sh(it.c,1.6)}" stroke-width="${n(Math.max(1,w*.28))}" fill="none" opacity=".5" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,${-n(w*.22)})"/>`;
+   return`<path d="${d}" stroke="${it.c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" ${it.dash?(it.nofl?'stroke-dasharray="10 8"':'class="flow"'):''}/>`}
+  case'quad':{const ps=it.pts.map(p=>P(...p));let s=poly(ps,it.c,it.ns?'':'stroke="#cbd5e1" stroke-width="1"');
+   if(it.grid){const[nu,nv]=it.grid,lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],[A,Bq,C,Dq]=ps;
+    for(let i=1;i<nu;i++){const p1=lp(A,Bq,i/nu),p2=lp(Dq,C,i/nu);s+=`<line x1="${n(p1[0])}" y1="${n(p1[1])}" x2="${n(p2[0])}" y2="${n(p2[1])}" stroke="#93c5fd" stroke-width=".7" opacity=".55"/>`}
+    for(let j=1;j<nv;j++){const p1=lp(A,Dq,j/nv),p2=lp(Bq,C,j/nv);s+=`<line x1="${n(p1[0])}" y1="${n(p1[1])}" x2="${n(p2[0])}" y2="${n(p2[1])}" stroke="#93c5fd" stroke-width=".7" opacity=".55"/>`}}
+   return s}
+  case'wifi':{const q=P(it.x,it.y,it.z);return'<g>'+[6,11,16].map(r=>`<path class="wf" d="M${n(q[0]-r*.7)},${n(q[1]-r*.55)} A${r},${r} 0 0 1 ${n(q[0]+r*.7)},${n(q[1]-r*.55)}"/>`).join('')+'</g>'}
+  case'label':{const q=P(it.x,it.y,it.z),w=tw(it.text),tx=q[0]+it.dx,ty=q[1]+it.dy,lx=it.dx>=0?tx:tx-w;
+   return`<g class="lb"><path d="M${n(q[0])},${n(q[1])} L${n(tx)},${n(ty)}"/><circle cx="${n(q[0])}" cy="${n(q[1])}" r="2.8"/><rect x="${n(lx)}" y="${n(ty-11)}" width="${n(w)}" height="22" rx="11"/><text x="${n(lx+w/2)}" y="${n(ty+4)}" text-anchor="middle">${it.text}</text></g>`}}return''};
+ let body='';for(const[, ,it]of arr)body+=draw(it);
+ let df='';for(const[id,c,k]of defs.values()){
+  if(k==='l')df+=`<linearGradient id="${id}"><stop offset="0" stop-color="${sh(c,.62)}"/><stop offset=".38" stop-color="${sh(c,1.1)}"/><stop offset="1" stop-color="${sh(c,.7)}"/></linearGradient>`;
+  else if(k==='r')df+=`<radialGradient id="${id}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="${sh(c,1.35)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${sh(c,.62)}"/></radialGradient>`;
+  else df+=`<radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity=".75"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`}
+ return`<svg viewBox="${opt.vb==='n'?sc.vbn:sc.vb}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opt.aria||'ภาพ 3D การติดตั้ง'}"><defs>${df}</defs>${body}</svg>`}
+
+
+const SC={},DVS={};
+SC.bench=()=>[B(-.5,-.5,-.18,11,6.5,.18,'#b08a57',{layer:0}),B(0,0,0,10,.25,4.4,'#dfe6f1',{layer:.4}),
+ B(.5,.25,3.3,4.6,.08,.16,'#cbd5e1'),
+ B(.7,.33,2.95,.7,.6,.85,'#f8fafc',{deco:[{f:'front',u0:.3,u1:.7,v0:.4,v1:.58,c:'#1f2937'},{f:'front',u0:.62,u1:.82,v0:.16,v1:.26,c:'#facc15'}]}),
+ B(1.6,.33,2.95,.36,.6,.85,'#f8fafc',{deco:[{f:'front',u0:.25,u1:.75,v0:.4,v1:.58,c:'#1f2937'}]}),
+ [0,1,2,3,4,5].map(i=>B(2.3+i*.22,.33,3.0,.19,.5,.45,i<2?'#7c4a1e':i<4?'#1d4ed8':'#65a30d')),
+ B(4.0,.33,2.9,.55,.3,.55,'#1e40af',{deco:[{f:'front',u0:.3,u1:.7,v0:.3,v1:.7,c:'#0b1220'}]}),
+ B(.7,.33,1.2,1.2,.3,.85,'#1e3a8a',{deco:[{f:'front',u0:.1,u1:.5,v0:.5,v1:.85,c:'#cbd5e1'},{f:'front',u0:.6,u1:.9,v0:.2,v1:.5,c:'#111827'}]}),Cy(1.6,.75,.7,.2,.12,'#111827',{cap:'#334155'}),
+ B(2.2,.33,1.6,1,.15,.28,'#15803d',{deco:[{f:'front',u0:.05,u1:.25,v0:.2,v1:.8,c:'#1d4ed8'}]}),B(2.2,.33,1.1,1,.15,.28,'#15803d',{deco:[{f:'front',u0:.05,u1:.25,v0:.2,v1:.8,c:'#1d4ed8'}]}),
+ B(3.5,.33,1.1,1.2,.12,.6,'#111827',{deco:[{f:'front',u0:.35,u1:.85,v0:.3,v1:.85,c:'#cbd5e1'},{f:'front',u0:.08,u1:.2,v0:.45,v1:.55,c:'#22d3ee'}]}),Cy(4.95,.45,1.4,.12,.12,'#111827',{cap:'#334155'}),
+ B(5.8,.33,1.4,1.9,.45,1.3,'#f4f7fc',{deco:[{f:'front',u0:0,u1:1,v0:.86,v1:.95,c:'#2E6BFF'}]}),Ba(6.2,.82,1.95,.15,'#22c55e'),Ba(6.75,.82,1.95,.15,'#f59e0b'),Ba(7.3,.82,1.95,.15,'#ef4444'),
+ B(8.2,.33,1.8,1,.15,.9,'#f8fafc',{deco:[{f:'front',u0:.25,u1:.38,v0:.45,v1:.65,c:'#1f2937'},{f:'front',u0:.62,u1:.75,v0:.45,v1:.65,c:'#1f2937'},{f:'front',u0:.45,u1:.55,v0:.2,v1:.32,c:'#1f2937'}]}),
+ L([[1.05,.62,2.95],[1.05,.62,2.7],[4.15,.62,2.7],[4.15,.62,2.9]],'#7c4a1e',2.5,{layer:2.2}),L([[1.2,.62,2.95],[1.2,.62,2.6],[4.4,.62,2.6],[4.4,.62,2.9]],'#1d4ed8',2.5,{layer:2.2}),
+ L([[4.27,.62,2.9],[4.27,.62,2.2],[8.7,.62,2.2],[8.7,.62,2.1]],'#7c4a1e',2.5,{layer:2.2}),L([[4.37,.62,2.9],[4.37,.62,2.3],[8.9,.62,2.3],[8.9,.62,2.1]],'#1d4ed8',2.5,{layer:2.2}),
+ L([[3.5,.5,1.4],[3.2,.5,1.75],[2.9,.5,1.75]],'#f59e0b',1.6,{dash:1,layer:2.3}),L([[3.5,.5,1.2],[3.2,.5,1.25],[2.9,.5,1.25]],'#f59e0b',1.6,{dash:1,layer:2.3}),L([[3.6,.5,1.6],[3.6,.5,1.9],[1.9,.5,1.9],[1.9,.5,1.6]],'#f59e0b',1.6,{dash:1,layer:2.3}),
+ L([[8.7,1.5,0],[8.7,.5,0],[8.7,.48,2.0]],'#334155',3),
+ B(9,1.4,0,.9,.9,.08,'#cbd5e1'),Cy(9.45,1.85,.08,.08,.9,'#94a3b8'),Ba(9.45,1.85,1.15,.28,'#fde68a',{glow:1}),Cy(7.7,2.6,0,.4,.65,'#e5e7eb',{cap:'#94a3b8'}),
+ B(.6,2.4,0,.55,.4,.3,'#e5e7eb'),B(1.5,2.5,0,1,.55,.22,'#334155',{deco:[{f:'front',u0:.1,u1:.25,v0:.4,v1:.6,c:'#22c55e'}]}),L([[.87,2.4,.15],[.87,.4,.15],[.87,.4,.2]],'#111827',2),
+ B(4.5,2.8,0,.65,1.2,.08,'#111827'),W(4.8,3.4,.4),
+ T(1.05,.93,3.5,'RCBO 30 mA (ตัวป้องกันจริง)',-40,-80),T(1.78,.93,3.6,'MCB C2 ทดลองกระแสเกิน',40,-70),T(4.27,.63,3.2,'ZMCT103C: L + N ลอดผ่าน',60,-50),T(1.3,.63,1.9,'PZEM-004T + CT',-80,10),T(2.7,.48,1.75,'โมดูลตรวจไฟ #1 / #2',-40,-40),T(4.1,.45,1.6,'ESP32',30,-40),T(6.75,.82,1.95,'ปุ่มจำลองไฟรั่ว 3 / 7 / 12 mA',70,-120),T(8.7,.48,2.6,'เต้ารับโหลด',70,-20),T(9.45,1.85,1.15,'หลอดไฟ',30,-20),T(7.7,2.6,.65,'กาต้มน้ำ (ทดลองกระแสเกิน)',40,30),T(1.5,2.75,.22,'อะแดปเตอร์ + พาวเวอร์แบงก์',-40,40),T(4.8,3.4,.08,'มือถือรับแจ้งเตือน',30,40)];
+const st=document.getElementById('bench'),sc=prep('bench');let a=-.7,dr=null;const d=()=>st.innerHTML=render(sc,a,{aria:'ชุดทดลองวัดไฟรั่วบนโต๊ะ'});
+st.onpointerdown=e=>{dr={x:e.clientX,a};st.setPointerCapture(e.pointerId)};st.onpointermove=e=>{if(dr){a=Math.max(-1,Math.min(1,dr.a+(e.clientX-dr.x)*.007));d()}};st.onpointerup=st.onpointercancel=()=>dr=null;d();
+</script>
+</body>
+</html>

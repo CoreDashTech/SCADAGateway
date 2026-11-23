@@ -109,7 +109,7 @@ async function listView() {
     return `<a class="card dcard ${on ? 'on' : 'off'}" href="#/d/${d.id}">
       <div class="dtop"><span class="dot ${on ? 'on' : 'off'}"></span><b>${esc(d.name)}</b><span class="tag">${KIND[d.kind]}</span></div>
       <div class="dbig">${d.last?.w != null ? n(d.last.w) + ' W' : '—'}</div>
-      <div class="small">${!d.last_seen ? 'ยังไม่เคยส่งข้อมูล' : on ? 'ออนไลน์' : 'ขาดการติดต่อ'}${d.kind === 'pump' && on && d.pump_running != null ? ` · ปั๊ม${d.pump_running ? 'ทำงาน' : 'หยุด'}` : ''}${on && d.mains_ok === false ? ' · <b style="color:var(--red)">ไฟเมนดับ</b>' : ''}</div>
+      <div class="small">${!d.last_seen ? 'ยังไม่เคยส่งข้อมูล' : on ? 'ออนไลน์' : 'ขาดการติดต่อ'}${d.kind === 'pump' && on && d.pump_running != null ? ` · ปั๊ม${d.pump_running ? 'ทำงาน' : 'หยุด'}` : ''}${on && d.mains_ok === false ? ' · <b style="color:var(--red)">ไฟเมนดับ</b>' : ''}${on && d.mains_ok !== false && d.last?.brk === false ? ' · <b style="color:var(--red)">เบรกเกอร์ตัด</b>' : ''}${on && d.last?.leak >= 9 ? ` · <b style="color:var(--amber)">ไฟรั่ว ${n(d.last.leak, 1)} mA</b>` : ''}</div>
       <span class="acc ${a.kind}">${accText(a)}</span></a>`
   }).join('')
   $view.innerHTML = `
@@ -145,13 +145,31 @@ function keyCard(key, id) {
   el.innerHTML = `<b>รหัสอุปกรณ์ (แสดงครั้งเดียว)</b><code class="key">${esc(key)}</code>
     <button class="btn pri sm" data-a="dl">ดาวน์โหลดโปรแกรม ESP32 (ฝังรหัสให้แล้ว)</button>
     <button class="btn ghost sm" data-a="dll">โปรแกรม CoreDash Link (ESP32-C3)</button>
+    <button class="btn ghost sm" data-a="dlk">โปรแกรมวัดไฟรั่ว + เบรกเกอร์ตัด (ESP32)</button>
     <button class="btn ghost sm" data-a="cp">คัดลอกรหัส</button>
     <p class="small">ระบบเก็บรหัสนี้แบบเข้ารหัส แสดงอีกไม่ได้ ถ้าหาย ให้กด “ออกรหัสใหม่” ในหน้าอุปกรณ์</p>
     ${id ? `<a class="btn ghost sm" href="#/d/${id}">ไปหน้าอุปกรณ์ →</a>` : ''}`
   el.querySelector('[data-a=dl]').onclick = () => window.cdDownloadFirmware(key)
   el.querySelector('[data-a=dll]').onclick = () => window.cdDownloadFirmware(key, 'coredash-link.ino')
+  el.querySelector('[data-a=dlk]').onclick = () => window.cdDownloadFirmware(key, 'coredash-leak.ino')
   el.querySelector('[data-a=cp]').onclick = (e) => navigator.clipboard?.writeText(key).then(() => { e.target.textContent = 'คัดลอกแล้ว ✓' })
   return el
+}
+
+/* ───────── เกณฑ์ไฟรั่ว (แสดงเมื่อฐานข้อมูลรัน leak-upgrade.sql แล้วเท่านั้น) ───────── */
+async function leakSettings(id) {
+  const f = document.getElementById('leakf')
+  const { data: s, error } = await sb.from('watch_devices').select('leak_warn_ma,leak_trip_ma,max_amp').eq('id', id).maybeSingle()
+  if (error || !s || !f) return
+  document.getElementById('lw').value = s.leak_warn_ma; document.getElementById('lt').value = s.leak_trip_ma; document.getElementById('lm').value = s.max_amp
+  f.hidden = false
+  f.onsubmit = async (e) => {
+    e.preventDefault()
+    const lw = Number(document.getElementById('lw').value), lt = Number(document.getElementById('lt').value), lm = Number(document.getElementById('lm').value)
+    if (!(lw >= 1 && lt > lw && lt <= 300 && lm >= 0.5 && lm <= 200)) return msg(document.getElementById('lmsg'), 'ค่าไม่ถูกต้อง: ระดับอันตรายต้องมากกว่าระดับเตือน', 'err')
+    const { error: er } = await sb.from('watch_devices').update({ leak_warn_ma: lw, leak_trip_ma: lt, max_amp: lm }).eq('id', id)
+    msg(document.getElementById('lmsg'), er ? 'บันทึกไม่สำเร็จ' : 'บันทึกแล้ว อุปกรณ์จะใช้เกณฑ์ใหม่ในการส่งรอบถัดไป', er ? 'err' : 'ok')
+  }
 }
 
 /* ───────── หน้าอุปกรณ์ ───────── */
@@ -197,9 +215,18 @@ async function deviceView(id) {
       <p class="small">เคล็ดลับ: เปิดปั๊มแล้วดูค่า “แอมป์” ด้านบน ตั้งค่านี้ไว้ราวครึ่งหนึ่งของกระแสตอนปั๊มทำงาน</p>
       <div id="sm"></div><button class="btn pri sm">บันทึก</button>
     </form>
+    <form class="card mt" id="leakf" hidden><h3>เกณฑ์ไฟรั่ว และพิกัดเบรกเกอร์</h3>
+      <div class="grid2">
+        <div class="row"><label for="lw">เตือนเมื่อไฟรั่วเกิน (mA)</label><input id="lw" type="number" step="0.5" min="1" max="300"></div>
+        <div class="row"><label for="lt">ระดับอันตรายเมื่อเกิน (mA)</label><input id="lt" type="number" step="0.5" min="1" max="300"></div>
+        <div class="row"><label for="lm">พิกัดเบรกเกอร์ของวงจร (แอมป์)</label><input id="lm" type="number" step="0.5" min="0.5" max="200"></div>
+      </div>
+      <p class="small">แนะนำ: เตือน 9 mA · อันตราย 15 mA (เบรกเกอร์กันดูด 30 mA อาจตัดได้ตั้งแต่ราว 15 mA) · พิกัดเบรกเกอร์ดูที่ตัวเบรกเกอร์ เช่น C16 = 16 A</p>
+      <div id="lmsg"></div><button class="btn pri sm">บันทึก</button>
+    </form>
     <details class="card mt danger"><summary>ดาวน์โหลดโปรแกรม · ออกรหัสใหม่ · ลบอุปกรณ์</summary>
       <p class="small">โปรแกรมที่ฝังรหัสอุปกรณ์ต้องออกรหัสใหม่ก่อน (ระบบแสดงรหัสเดิมซ้ำไม่ได้) หรือดาวน์โหลดแบบไม่ฝังรหัส แล้วใส่รหัสในหน้าตั้งค่า Wi-Fi</p>
-      <p><button class="btn ghost sm" id="dlplain">ดาวน์โหลดโปรแกรม (ไม่ฝังรหัส)</button> <button class="btn ghost sm" id="dlplainl">โปรแกรม Link (ไม่ฝังรหัส)</button> <button class="btn ghost sm" id="rot">ออกรหัสใหม่</button></p>
+      <p><button class="btn ghost sm" id="dlplain">ดาวน์โหลดโปรแกรม (ไม่ฝังรหัส)</button> <button class="btn ghost sm" id="dlplainl">โปรแกรม Link (ไม่ฝังรหัส)</button> <button class="btn ghost sm" id="dlplaink">โปรแกรมวัดไฟรั่ว (ไม่ฝังรหัส)</button> <button class="btn ghost sm" id="rot">ออกรหัสใหม่</button></p>
       <div id="rotout"></div>
       <form id="delf" style="margin-top:18px"><label for="dc">พิมพ์ชื่อ “${esc(d.name)}” เพื่อยืนยันการลบอุปกรณ์และข้อมูลทั้งหมด</label>
         <input id="dc" autocomplete="off"><div id="dm"></div><button class="btn danger sm" style="margin-top:8px">ลบอุปกรณ์</button></form>
@@ -223,6 +250,8 @@ async function deviceView(id) {
   }
   document.getElementById('dlplain').onclick = () => window.cdDownloadFirmware('')
   document.getElementById('dlplainl').onclick = () => window.cdDownloadFirmware('', 'coredash-link.ino')
+  document.getElementById('dlplaink').onclick = () => window.cdDownloadFirmware('', 'coredash-leak.ino')
+  leakSettings(id)
   document.getElementById('rot').onclick = async () => {
     if (!confirm('ออกรหัสใหม่? รหัสเดิมในอุปกรณ์จะใช้ไม่ได้ทันที')) return
     const { data: k, error: er } = await sb.rpc('watch_rotate_key', { p_id: id })
@@ -260,12 +289,14 @@ async function liveRefresh(id) {
     <div class="stat"><span class="dot ${on ? 'on' : 'off'}"></span><b>${!d.last_seen ? 'ยังไม่เคยส่งข้อมูล' : on ? 'ออนไลน์' : 'ขาดการติดต่อ'}</b>
       ${d.last_seen ? `<span class="small">อัปเดตล่าสุด ${dt(d.last_seen)}</span>` : ''}
       ${d.mains_ok === false ? '<span class="tag red">ไฟเมนดับ</span>' : ''}
+      ${L.brk === false && d.mains_ok !== false ? '<span class="tag red">เบรกเกอร์ตัด</span>' : L.brk === true ? '<span class="tag green">วงจรมีไฟ</span>' : ''}
       ${d.kind === 'pump' && d.pump_running != null ? `<span class="tag ${d.pump_running ? 'green' : 'red'}">ปั๊ม${d.pump_running ? 'ทำงาน' : 'หยุด'}</span>` : ''}</div>
     <div class="vals"><div><span class="n">${n(L.w)}</span><small>วัตต์</small></div><div><span class="n">${n(L.v)}</span><small>โวลต์</small></div>
       <div><span class="n">${n(L.a, 2)}</span><small>แอมป์</small></div><div><span class="n">${n(L.kwh, 1)}</span><small>หน่วยสะสม</small></div>
       ${L.temp != null ? `<div><span class="n">${n(L.temp, 1)}</span><small>°C</small></div>` : ''}
       ${L.level != null ? `<div><span class="n">${n(L.level)}</span><small>% ระดับน้ำ</small></div>` : ''}
-      ${L.batt != null ? `<div><span class="n">${n(L.batt, 2)}</span><small>V แบตสำรอง</small></div>` : ''}</div>
+      ${L.batt != null ? `<div><span class="n">${n(L.batt, 2)}</span><small>V แบตสำรอง</small></div>` : ''}
+      ${L.leak != null ? `<div><span class="n" style="color:${L.leak >= 15 ? 'var(--red)' : L.leak >= 9 ? 'var(--amber)' : 'inherit'}">${n(L.leak, 1)}</span><small>mA ไฟรั่ว</small></div>` : ''}</div>
     ${!d.last_seen ? '<p class="small" style="margin-top:12px">ลงโปรแกรมใน ESP32 แล้วเสียบไฟ ข้อมูลแรกจะขึ้นภายใน 1 นาที</p>' : ''}`
   chart((rows || []).slice().reverse())
   document.getElementById('evs').innerHTML = (ev || []).length ? `<ul>${ev.map((e) => `<li><span class="small">${dt(e.ts)}</span> ${esc(e.message)}</li>`).join('')}</ul>` : '<p class="small">ยังไม่มีเหตุการณ์</p>'
