@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="th" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoreDash คลังความรู้ · ตัวอย่างใช้งานจริง คู่มือ และภาพ 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../app/icons/favicon.png">
+<link rel="apple-touch-icon" href="../app/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#050C26">
+<meta name="description" content="คลังความรู้ CoreDash: ตัวอย่างการใช้งานจริง ภาพ 3D การต่ออุปกรณ์ วิธีติดตั้ง และคู่มือ สำหรับเกษตร ปศุสัตว์ สัตว์น้ำ โรงงาน ไอที และหมู่บ้าน">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050C26;--a1:#2E6BFF;--a2:#22D3EE;--r:16px;--ff:'Sarabun','Space Grotesk',system-ui,sans-serif;--fh:'Space Grotesk','Sarabun',sans-serif}
+html[data-mode=dark]{--tx:#EEF3FF;--mu:#A9B8DA;--card:color-mix(in srgb,var(--bg) 86%,#3b6bff);--card2:color-mix(in srgb,var(--bg) 80%,#3b6bff);--line:color-mix(in srgb,var(--bg) 78%,#8caaff);--lbg:rgba(7,12,30,.9);--ltx:#eaf0ff;--lln:rgba(255,255,255,.55);--shadow:0 20px 50px -20px rgba(0,0,0,.6);--stagebg:color-mix(in srgb,var(--bg) 90%,#3b6bff)}
+html[data-mode=light]{--tx:#0c1631;--mu:#55617e;--card:#fff;--card2:color-mix(in srgb,var(--bg),#000 3.5%);--line:color-mix(in srgb,var(--bg),#000 10%);--lbg:rgba(255,255,255,.96);--ltx:#0c1631;--lln:rgba(12,22,49,.45);--shadow:0 18px 40px -22px rgba(20,40,90,.35);--stagebg:color-mix(in srgb,var(--bg),#000 4%)}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{font-family:var(--ff);font-size:16.5px;background:var(--bg);color:var(--tx);line-height:1.65;-webkit-font-smoothing:antialiased;transition:background .35s,color .35s}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(700px 420px at 85% -5%,color-mix(in srgb,var(--a1) 18%,transparent),transparent 70%),radial-gradient(600px 380px at -5% 35%,color-mix(in srgb,var(--a2) 10%,transparent),transparent 70%)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+.wrap{width:min(1200px,92vw);margin:0 auto}
+h1,h2,h3,h4{font-family:var(--fh);font-weight:700;line-height:1.25}
+.grad{background:linear-gradient(95deg,var(--a2),var(--a1) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--ff);font-size:13px;letter-spacing:.14em;color:var(--a2);font-weight:700;text-transform:uppercase}
+html[data-mode=light] .eyebrow,html[data-mode=light] .uc-go,html[data-mode=light] .gl b{color:var(--a1)}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--a2);border-radius:2px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;font-family:var(--ff);font-weight:700;font-size:15px;border:1px solid var(--line);background:var(--card);transition:.2s;white-space:nowrap}
+.btn:hover{border-color:color-mix(in srgb,var(--a2) 60%,transparent);transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(135deg,var(--a1),color-mix(in srgb,var(--a1),var(--a2) 70%));border-color:transparent;color:#fff;box-shadow:0 10px 26px -10px color-mix(in srgb,var(--a1) 80%,transparent)}
+.btn.sm{padding:8px 13px;font-size:14px;border-radius:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;font-family:var(--fh);transition:.2s}
+.chip:hover{border-color:color-mix(in srgb,var(--a2) 55%,transparent)}
+.chip.on{background:color-mix(in srgb,var(--a1) 22%,var(--card));border-color:color-mix(in srgb,var(--a1) 70%,transparent)}
+.chip .n{font-size:12px;opacity:.7}
+section{padding:72px 0}
+.sec-head{text-align:center;max-width:760px;margin:0 auto 38px}
+.sec-head h2{font-size:clamp(26px,3.4vw,38px);margin:10px 0 10px}
+.sec-head p{color:var(--mu)}
+/* header */
+.top{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:18px;height:66px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--fh);font-weight:700;font-size:19px}
+.logo i{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--a1),var(--a2));font-style:normal}
+.logo b{font-weight:600;color:var(--a2)}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{padding:8px 10px;border-radius:9px;color:var(--mu);font-weight:600;font-size:15px}
+.nav a:hover{color:var(--tx);background:var(--card)}
+.acts{display:flex;gap:8px;align-items:center}
+/* theme pop */
+.pop{position:absolute;right:4vw;top:72px;width:300px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);z-index:80}
+.pop[hidden]{display:none}
+.pop h5{font-family:var(--fh);font-weight:500;font-size:14px;margin:4px 0 10px;color:var(--mu)}
+.sw{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.sw button{aspect-ratio:1;border-radius:10px;border:2px solid var(--line);position:relative}
+.sw button.on{border-color:var(--a2);box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 30%,transparent)}
+.sw-l{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin:-6px 0 12px}
+.cus{display:flex;align-items:center;gap:10px;font-size:14px}
+.cus input{width:44px;height:32px;border:1px solid var(--line);border-radius:8px;background:none;padding:2px;cursor:pointer}
+/* hero */
+.hero{padding:56px 0 40px}
+.hero-g{display:grid;grid-template-columns:1.02fr 1fr;gap:44px;align-items:center}
+.hero h1 span,.hero h1 .nw{white-space:nowrap}.hero h1{font-family:var(--ff);font-size:clamp(32px,4.5vw,56px);font-weight:800;margin:16px 0 14px;letter-spacing:-.01em}
+.hero p.lead{color:var(--mu);font-size:18px;max-width:560px}
+.search{margin:26px 0 18px;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 16px;max-width:560px}
+.search input{flex:1;background:none;border:0;outline:0;color:var(--tx);font:inherit;font-size:16px;padding:8px 0}
+.search:focus-within{border-color:color-mix(in srgb,var(--a2) 60%,transparent)}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.stat{padding:14px 18px;border:1px solid var(--line);background:var(--card);border-radius:14px;min-width:120px}
+.stat b{font-family:var(--fh);font-size:26px;font-weight:600;display:block;line-height:1.1}
+.stat span{font-size:13px;color:var(--mu)}
+.show{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:16px;box-shadow:var(--shadow)}
+.show-h{display:flex;align-items:center;gap:12px;padding:4px 6px 12px;border-bottom:1px solid var(--line)}
+.dot{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--a2),var(--a1))}
+.show-h b{font-family:var(--fh);font-weight:500;display:block;line-height:1.2}
+.show-h small{color:var(--mu);font-size:13px}
+.show-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.show-tabs .chip{font-size:13px;padding:5px 11px}
+.stage{position:relative;border-radius:18px;background:radial-gradient(120% 90% at 50% 15%,color-mix(in srgb,var(--a1) 15%,transparent),transparent 62%),var(--stagebg);border:1px solid var(--line);overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none}
+.stage:active{cursor:grabbing}
+.stage::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:28px 28px;opacity:.35;mask-image:radial-gradient(circle at 50% 60%,#000,transparent 75%);pointer-events:none}
+.stage svg{display:block;width:100%;height:100%;position:relative}
+.show .stage{height:380px}
+.show-f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 6px 2px;font-size:14px;color:var(--mu)}
+/* svg bits */
+.lb rect{fill:var(--lbg);stroke:color-mix(in srgb,var(--a2) 50%,transparent);stroke-width:1}
+.lb text{fill:var(--ltx);font-size:11.5px;font-family:var(--ff);font-weight:500}
+.lb path{stroke:var(--lln);stroke-width:1;fill:none}
+.lb circle{fill:var(--a2)}
+.wf{fill:none;stroke:var(--a2);stroke-width:2;stroke-linecap:round;animation:wf 1.8s ease-in-out infinite}
+.wf:nth-child(2){animation-delay:.25s}.wf:nth-child(3){animation-delay:.5s}
+@keyframes wf{0%,100%{opacity:.15}50%{opacity:1}}
+.flow{stroke-dasharray:5 5;animation:fl 1s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-20}}
+/* categories */
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.cat{position:relative;text-align:left;padding:20px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);overflow:hidden;transition:.25s}
+.cat::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:var(--cc);opacity:.14;filter:blur(10px);transition:.3s}
+.cat:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--cc) 60%,transparent)}
+.cat:hover::after{opacity:.28}
+.cat .ic{font-size:28px;width:52px;height:52px;display:grid;place-items:center;border-radius:14px;background:color-mix(in srgb,var(--cc) 18%,transparent);margin-bottom:14px}
+.cat h3{font-size:19px;margin-bottom:4px}
+.cat p{color:var(--mu);font-size:14px}
+.cat .cnt{position:absolute;right:18px;bottom:16px;font-family:var(--fh);font-size:13px;color:var(--cc)}
+/* use cases */
+.filters{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.subf{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:26px;color:var(--mu);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.uc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:.25s;outline:0}
+.uc:hover,.uc:focus-visible{transform:translateY(-4px);border-color:color-mix(in srgb,var(--cc) 65%,transparent);box-shadow:var(--shadow)}
+.uc[hidden]{display:none}
+.uc-thumb{position:relative;height:200px;background:radial-gradient(90% 80% at 50% 30%,color-mix(in srgb,var(--cc) 16%,transparent),transparent 70%),var(--stagebg);border-bottom:1px solid var(--line)}
+.uc-thumb svg{width:100%;height:100%;padding:14px 14px 6px;transition:transform .45s}
+.uc:hover .uc-thumb svg{transform:scale(1.05) translateY(-3px)}
+.uc-cat{position:absolute;left:12px;top:12px;font-size:12px;font-family:var(--fh);padding:3px 10px;border-radius:999px;background:color-mix(in srgb,var(--bg) 70%,transparent);border:1px solid var(--line);backdrop-filter:blur(6px)}
+.uc-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
+.uc h3{font-size:18px;margin-bottom:6px}
+.uc p{color:var(--mu);font-size:14.5px;flex:1}
+.uc-meta{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 12px}
+.uc-meta span{font-size:12.5px;padding:3px 9px;border-radius:8px;background:var(--card2);color:var(--mu)}
+.uc-go{font-family:var(--fh);font-weight:500;color:var(--a2);font-size:14.5px}
+.empty{text-align:center;color:var(--mu);padding:40px;border:1px dashed var(--line);border-radius:var(--r)}
+.lv i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--line);margin-right:2px;vertical-align:middle}
+.lv i.f{background:var(--a2)}
+/* how */
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative}
+.how-c{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;position:relative}
+.how-c .num{font-family:var(--fh);font-size:13px;color:var(--a2);letter-spacing:.1em}
+.how-c .big{font-size:34px;margin:8px 0}
+.how-c h3{font-size:18px;margin-bottom:6px}
+.how-c p{font-size:14px;color:var(--mu)}
+.how-c:not(:last-child)::after{content:"→";position:absolute;right:-14px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:14px;z-index:2}
+/* devices */
+.devs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.dev{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.dev-t{height:140px;background:var(--stagebg);border-bottom:1px solid var(--line);display:grid;place-items:center}
+.dev-t svg{width:80%;height:85%}
+.dev-b{padding:14px 16px 16px;font-size:14px}
+.dev-b h3{font-size:16.5px;margin-bottom:2px}
+.dev-b .tg{font-size:12px;color:var(--a2);font-family:var(--fh)}
+.dev-b dl{margin-top:8px;display:grid;gap:6px}
+.dev-b dt{font-size:12px;color:var(--mu);font-family:var(--fh)}
+.dev-b dd{font-size:13.5px}
+.uses{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.uses a{font-size:12px;padding:2px 8px;border-radius:7px;border:1px solid var(--line);color:var(--mu)}
+.uses a:hover{color:var(--tx);border-color:var(--a2)}
+/* manual */
+.man{display:grid;grid-template-columns:290px 1fr;gap:22px;align-items:start}
+.toc{position:sticky;top:86px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.toc button{display:flex;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:11px;font-size:14.5px;color:var(--mu);align-items:flex-start}
+.toc button b{font-family:var(--fh);font-weight:500;color:var(--a2);min-width:22px}
+.toc button:hover{background:var(--card2);color:var(--tx)}
+.toc button.on{background:color-mix(in srgb,var(--a1) 18%,var(--card));color:var(--tx)}
+.mbody{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:30px 34px;min-height:440px}
+.mbody h3{font-size:26px;margin:6px 0 14px}
+.mbody h4{font-size:18px;margin:22px 0 8px}
+.mbody p,.mbody li{color:color-mix(in srgb,var(--tx) 88%,var(--mu))}
+.mbody ul,.mbody ol{padding-left:22px;display:grid;gap:6px}
+.mbody table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14.5px}
+.mbody th,.mbody td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.mbody th{font-family:var(--fh);font-weight:500;color:var(--mu);font-size:13.5px}
+.box{border-radius:14px;padding:14px 16px;margin:14px 0;border:1px solid;font-size:14.5px}
+.box.info{background:color-mix(in srgb,var(--a1) 10%,transparent);border-color:color-mix(in srgb,var(--a1) 40%,transparent)}
+.box.warn{background:color-mix(in srgb,#f59e0b 10%,transparent);border-color:color-mix(in srgb,#f59e0b 45%,transparent)}
+.box.ok{background:color-mix(in srgb,#22c55e 9%,transparent);border-color:color-mix(in srgb,#22c55e 40%,transparent)}
+.mnav{display:flex;justify-content:space-between;gap:10px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+/* glossary + faq */
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.gl div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.gl b{font-family:var(--fh);font-weight:600;color:var(--a2);font-size:16px}
+.gl p{font-size:14px;color:var(--mu);margin-top:3px}
+.faq{max-width:860px;margin:0 auto;display:grid;gap:10px}
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 18px}
+.faq summary{cursor:pointer;padding:12px 0;font-family:var(--fh);font-weight:500;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.faq summary::after{content:"+";color:var(--a2);font-size:20px;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding:0 0 14px;color:var(--mu)}
+.cta{text-align:center;background:linear-gradient(135deg,color-mix(in srgb,var(--a1) 22%,var(--card)),color-mix(in srgb,var(--a2) 12%,var(--card)));border:1px solid var(--line);border-radius:28px;padding:48px 24px}
+.cta h2{font-size:clamp(24px,3vw,34px);margin-bottom:10px}
+.cta p{color:var(--mu);margin-bottom:22px}
+.cta .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+footer{border-top:1px solid var(--line);padding:26px 0 90px;color:var(--mu);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* floating */
+.fab{position:fixed;left:18px;bottom:18px;z-index:90;box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+.totop{position:fixed;right:18px;bottom:18px;z-index:39;width:44px;height:44px;border-radius:12px;background:var(--card);border:1px solid var(--line);opacity:0;pointer-events:none;transition:.3s}
+.totop.show{opacity:1;pointer-events:auto}
+/* guide */
+.guide{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto}
+.guide[hidden]{display:none}
+.guide::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(700px 400px at 80% 0,color-mix(in srgb,var(--cc,var(--a1)) 16%,transparent),transparent 70%)}
+.g-top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.g-top-in{display:flex;align-items:center;gap:12px;height:64px}
+.crumb{flex:1;font-size:14px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb b{color:var(--tx);font-weight:500}
+.g-body{position:relative;padding:30px 0 100px}
+.g-hero{display:grid;grid-template-columns:1.15fr 1fr;gap:30px;align-items:start}
+.viewer .stage{height:440px}
+.vw-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.vw-bar input[type=range]{flex:1;min-width:120px;accent-color:var(--a2)}
+.vw-bar .btn.on{border-color:var(--a2);color:var(--a2)}
+.vw-hint{font-size:13px;color:var(--mu);margin-top:6px}
+.g-info .tag{display:inline-flex;gap:6px;font-family:var(--fh);font-size:13px;padding:4px 12px;border-radius:999px;background:color-mix(in srgb,var(--cc) 18%,transparent);color:color-mix(in srgb,var(--cc),var(--tx) 30%)}
+.g-info h1{font-size:clamp(28px,3.4vw,42px);margin:12px 0 10px}
+.g-info .sh{color:var(--mu);font-size:17px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.pills span{font-size:13.5px;padding:6px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.prob{background:var(--card);border:1px solid var(--line);border-left:3px solid #f97316;border-radius:12px;padding:14px 16px;font-size:15px}
+.prob b{font-family:var(--fh);font-weight:500;display:block;margin-bottom:2px;color:#fb923c}
+.g-grid{display:grid;grid-template-columns:1fr 360px;gap:26px;margin-top:34px;align-items:start}
+.g-sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 26px;margin-bottom:18px}
+.g-sec h3{font-size:21px;margin-bottom:14px;display:flex;gap:10px;align-items:center}
+.g-sec h3 i{font-style:normal;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--cc) 18%,transparent);font-size:16px}
+.checks{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.checks li{padding:10px 12px;border-radius:11px;background:var(--card2);font-size:14.5px;display:flex;gap:8px}
+.checks li::before{content:"✓";color:var(--a2);font-weight:700}
+.flowd{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.flowd .fn{flex:1;min-width:130px;padding:12px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-size:13.5px}
+.flowd .fn b{display:block;font-family:var(--fh);font-weight:500;font-size:14px;margin-bottom:4px}
+.flowd .ar{display:grid;place-items:center;color:var(--a2);font-size:18px}
+.steps{list-style:none;counter-reset:s;display:grid;gap:12px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:12px;padding:14px;border-radius:14px;background:var(--card2)}
+.steps li::before{content:counter(s);width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:var(--fh);font-weight:600;font-size:18px;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2))}
+.steps b{font-family:var(--fh);font-weight:500;font-size:16px;display:block;margin-bottom:2px}
+.steps p{font-size:14.5px;color:var(--mu)}
+.rule{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:10px;align-items:center;padding:11px 14px;border-radius:12px;background:var(--card2);margin-bottom:8px;font-size:14.5px}
+.rule em{font-style:normal;font-family:var(--fh);font-size:12px;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--a1) 25%,transparent);color:var(--a2)}
+.rule em.t{background:color-mix(in srgb,#22c55e 22%,transparent);color:#4ade80}
+html[data-mode=light] .rule em.t{color:#15803d}
+.tips{list-style:none;display:grid;gap:8px}
+.tips li{padding:10px 12px 10px 38px;position:relative;border-radius:11px;background:var(--card2);font-size:14.5px}
+.tips li::before{content:"💡";position:absolute;left:11px;top:9px}
+.side{position:sticky;top:84px;display:grid;gap:16px}
+.dtab{width:100%;border-collapse:collapse;font-size:14px}
+.dtab td{padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.dtab td:last-child{text-align:right;color:var(--mu);white-space:nowrap;padding-left:10px}
+.phone{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:14px}
+.phone .show-h{padding:2px 4px 10px}
+.bub{background:color-mix(in srgb,var(--a1) 22%,var(--card2));border-radius:14px;padding:11px 13px 8px;margin-top:10px;font-size:14px;animation:pop .5s both}
+.bub small{display:block;text-align:right;color:var(--mu);font-size:11.5px;margin-top:4px}
+.bub:nth-child(3){animation-delay:.25s}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+.g-nav{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.g-nav a{padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.g-nav a:hover{border-color:var(--a2)}
+.g-nav small{color:var(--mu);font-size:13px;display:block}
+.g-nav b{font-family:var(--fh);font-weight:500}
+.g-nav a:last-child{text-align:right}
+.rel{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:14px}
+.rel .uc-thumb{height:150px}
+.rel h3{font-size:16px}
+@media (max-width:980px){
+ .hero-g,.g-hero,.g-grid,.man{grid-template-columns:1fr}
+ .nav{display:none}
+ .acts{margin-left:auto}
+ .how{grid-template-columns:1fr 1fr}
+ .how-c:nth-child(2)::after{display:none}
+ .side,.toc{position:static}
+ .show .stage,.viewer .stage{height:320px}
+}
+@media (max-width:600px){
+ .checks{grid-template-columns:1fr}
+ .how{grid-template-columns:1fr}.how-c::after{display:none}
+ .acts .lbl{display:none}
+ .mbody{padding:22px 18px}
+ .rule{grid-template-columns:auto 1fr}
+ .crumb{display:none}
+ .g-top-in{justify-content:space-between}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+ <div class="wrap top-in">
+  <a class="logo" href="../" aria-label="CoreDash หน้าหลัก"><i>⚡</i>CoreDash <b>Learn</b></a>
+  <nav class="nav">
+   <a href="#categories">หมวดหมู่</a><a href="#usecases">ตัวอย่างใช้งาน</a><a href="#devices">อุปกรณ์</a><a href="#manual">คู่มือ</a><a href="#glossary">คำศัพท์</a><a href="#faq">คำถามพบบ่อย</a><a href="../watch/">Watch</a>
+  </nav>
+  <div class="acts">
+   <button class="btn sm" id="themeBtn" aria-haspopup="true" title="ปรับสีพื้นหลัง">🎨 <span class="lbl">สีพื้นหลัง</span></button>
+   <a class="btn sm pri home" href="../">← <span class="lbl">กลับหน้าหลัก</span></a>
+  </div>
+ </div>
+</header>
+
+<div class="pop" id="themePop" hidden>
+ <h5>สีพื้นหลัง</h5>
+ <div class="sw" id="bgSw"></div>
+ <div class="cus"><input type="color" id="bgCustom" value="#050c26"> <span>เลือกสีเอง</span></div>
+ <h5 style="margin-top:16px">สีหลัก (ปุ่ม / ไฮไลต์)</h5>
+ <div class="sw" id="acSw"></div>
+ <button class="btn sm" id="themeReset" style="width:100%;justify-content:center">คืนค่าเริ่มต้นแบบ CoreDash</button>
+</div>
+
+<main id="top">
+ <section class="hero">
+  <div class="wrap hero-g">
+   <div>
+    <span class="eyebrow">CoreDash Knowledge · คลังความรู้</span>
+    <h1><span class="nw">เอาไปใช้จริงได้ทุกงาน</span><br><span class="grad">จากสวน ถึงโรงงาน</span></h1>
+    <p class="lead">รวมตัวอย่างการใช้งานจริง ภาพ 3D การต่ออุปกรณ์ วิธีติดตั้งทีละขั้น และคู่มือ ตั้งแต่รดน้ำ ใส่ปุ๋ย นาข้าว สวนกล้วย ฟาร์มไก่ ฟาร์มหมู บ่อกุ้ง ไปจนถึง Power meter เครื่องจักร ห้องเซิร์ฟเวอร์ และหมู่บ้าน</p>
+    <label class="search"><span>🔎</span><input id="q" type="search" placeholder="ค้นหา เช่น กุ้ง, ไก่, นาข้าว, ไฟรั่ว, ตู้แช่"><button class="btn sm pri" id="qGo">ค้นหา</button></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+     <a class="btn pri" href="#usecases">▶ ดูตัวอย่างใช้งานจริง</a>
+     <a class="btn" href="#manual">📘 เปิดคู่มือ</a>
+    </div>
+    <div class="stats" id="stats"></div>
+   </div>
+   <div class="show">
+    <div class="show-h"><span class="dot"></span><div><b>ตัวอย่างหน้างาน 3D</b><small>ลากที่ภาพเพื่อหมุนดูรอบด้าน</small></div></div>
+    <div class="show-tabs" id="heroTabs"></div>
+    <div class="stage" id="heroStage"></div>
+    <div class="show-f"><span id="heroCap"></span><a class="btn sm" id="heroGo" href="#">ดูวิธีทำ →</a></div>
+   </div>
+  </div>
+ </section>
+
+ <section id="categories" style="padding-top:30px">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">เลือกตามงานของคุณ</span><h2>หมวดหมู่การใช้งาน</h2><p>กดเลือกหมวด เพื่อดูตัวอย่างที่ตรงกับหน้างาน</p></div>
+   <div class="cats" id="cats"></div>
+  </div>
+ </section>
+
+ <section id="usecases">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">ตัวอย่างใช้งานจริง</span><h2>ปัญหาจริง วิธีแก้จริง พร้อมภาพ 3D</h2><p>ทุกตัวอย่างมีภาพการต่ออุปกรณ์ รายการอุปกรณ์ ขั้นตอนติดตั้ง เงื่อนไขแจ้งเตือน และตัวอย่างข้อความที่ส่งเข้ามือถือ</p></div>
+   <div class="filters" id="filters"></div>
+   <div class="subf">ระดับความยาก:
+    <button class="chip sm on" data-lv="all">ทั้งหมด</button><button class="chip" data-lv="1">ง่าย</button><button class="chip" data-lv="2">ปานกลาง</button><button class="chip" data-lv="3">ซับซ้อน</button>
+    <span id="count" style="margin-left:8px"></span>
+   </div>
+   <div class="grid" id="grid"></div>
+   <div class="empty" id="empty" hidden>ไม่พบตัวอย่างที่ตรงกับคำค้น ลองคำอื่น หรือกด “ทั้งหมด”</div>
+  </div>
+ </section>
+
+ <section id="how" style="padding-top:20px">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">หลักการทำงาน</span><h2>ทุกงานใช้หลักเดียวกัน 4 ขั้น</h2><p>เปลี่ยนแค่เซนเซอร์ให้ตรงกับสิ่งที่อยากรู้ ส่วนที่เหลือเหมือนกันหมด</p></div>
+   <div class="how">
+    <div class="how-c"><span class="num">STEP 01</span><div class="big">📡</div><h3>เซนเซอร์วัดค่า</h3><p>กระแสไฟ อุณหภูมิ ความชื้นดิน ระดับน้ำ แรงดัน การสั่น ประตูเปิด-ปิด</p></div>
+    <div class="how-c"><span class="num">STEP 02</span><div class="big">🧠</div><h3>กล่อง CoreDash ตัดสินใจ</h3><p>อ่านค่าทุกช่วงเวลา เทียบกับกติกาที่ตั้งไว้ และสั่งรีเลย์เปิด-ปิดอุปกรณ์ได้</p></div>
+    <div class="how-c"><span class="num">STEP 03</span><div class="big">☁️</div><h3>ส่งขึ้นระบบ</h3><p>ผ่าน Wi-Fi หรือ 4G เก็บกราฟย้อนหลัง ดูได้หลายสถานที่ในหน้าจอเดียว</p></div>
+    <div class="how-c"><span class="num">STEP 04</span><div class="big">📱</div><h3>แจ้งเตือนมือถือ</h3><p>ส่งเข้า Telegram และ LINE ทันที พร้อมบอกว่าเกิดอะไร ที่ไหน ควรทำอะไร</p></div>
+   </div>
+  </div>
+ </section>
+
+ <section id="devices">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">รู้จักอุปกรณ์</span><h2>เซนเซอร์และอุปกรณ์ที่ใช้บ่อย</h2><p>วัดอะไร ใช้กับงานไหน ต่อสายแบบไหน และข้อควรรู้ก่อนซื้อ</p></div>
+   <div class="devs" id="devs"></div>
+  </div>
+ </section>
+
+ <section id="manual">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">คู่มือ</span><h2>คู่มือติดตั้งและใช้งาน</h2><p>อ่านตามลำดับสำหรับมือใหม่ หรือกดเลือกบทที่ต้องการ</p></div>
+   <div class="man"><div class="toc" id="toc"></div><article class="mbody" id="mbody"></article></div>
+  </div>
+ </section>
+
+ <section id="glossary">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">คำศัพท์</span><h2>คำที่เจอบ่อย อธิบายแบบเข้าใจง่าย</h2></div>
+   <div class="gl" id="gl"></div>
+  </div>
+ </section>
+
+ <section id="faq">
+  <div class="wrap">
+   <div class="sec-head"><span class="eyebrow">คำถามพบบ่อย</span><h2>สงสัยตรงไหน ดูตรงนี้ก่อน</h2></div>
+   <div class="faq" id="faqList"></div>
+  </div>
+ </section>
+
+ <section style="padding-top:10px">
+  <div class="wrap cta">
+   <h2>มีหน้างานที่อยากเฝ้าระวัง แต่ยังไม่แน่ใจว่าต้องใช้อะไร?</h2>
+   <p>เล่าปัญหาให้ทีม CoreDash ฟัง เราช่วยเลือกเซนเซอร์และวางระบบให้เหมาะกับงานของคุณ · โทร / LINE 081-923-2380</p>
+   <div class="row"><a class="btn pri" href="../watch/app/">เริ่มทดลองฟรี</a><a class="btn" href="../watch/#demo">▶ ลองกดดู CoreDash Watch</a><a class="btn home" href="../">← กลับหน้าหลัก</a></div>
+  </div>
+ </section>
+</main>
+
+<footer><div class="wrap"><span><b style="color:var(--tx)">CoreDash Technology</b> · <a href="../" style="color:var(--a2)">coredashtech.com</a> · <a href="../watch/" style="color:var(--a2)">CoreDash Watch</a> · โทร 081-923-2380</span><span>งานที่ต่อไฟ 220V/380V ควรให้ช่างไฟฟ้าดำเนินการ · © 2026 CoreDash Technology</span></div></footer>
+
+<div class="guide" id="guide" hidden></div>
+
+<a class="btn pri fab home" href="../" aria-label="กลับหน้าหลัก">⌂ หน้าหลัก</a>
+<button class="totop" id="toTop" aria-label="กลับขึ้นด้านบน">↑</button>
+
+<script>
+/* ============ ตั้งค่า ============ */
+const HOME_URL='../'; // ลิงก์ปุ่ม "กลับหน้าหลัก" เปลี่ยนเป็นที่อยู่เว็บหลักของคุณได้
+document.querySelectorAll('a.home').forEach(a=>a.href=HOME_URL);
+
+/* ============ 3D isometric engine ============ */
+const K=26,C30=.8660254,S30=.5;let UID=0;const PR={};
+const n=v=>Math.round(v*10)/10;
+function rgb(h){h=h.slice(1);if(h.length==3)h=[...h].map(c=>c+c).join('');const v=parseInt(h,16);return[v>>16&255,v>>8&255,v&255]}
+function sh(h,f){if(!h||h[0]!=='#')return h;const m=v=>f<=1?v*f:v+(255-v)*(f-1);return'rgb('+rgb(h).map(v=>Math.round(Math.max(0,Math.min(255,m(v))))).join(',')+')'}
+const tw=t=>t.replace(/[ัิ-ฺ็-๎]/g,'').length*6.4+20;
+// primitives
+const B=(x,y,z,w,d,h,c,o={})=>({t:'box',x,y,z,w,d,h,c,...o});
+const Cy=(x,y,z,r,h,c,o={})=>({t:'cyl',x,y,z,r,h,c,...o});
+const L=(pts,c,w=3,o={})=>({t:'line',pts,c,w,...o});
+const Ba=(x,y,z,r,c,o={})=>({t:'ball',x,y,z,r,c,...o});
+const Q=(pts,c,o={})=>({t:'quad',pts,c,...o});
+const Di=(x,y,z,r,c,o={})=>({t:'disc',x,y,z,r,c,...o});
+const T=(x,y,z,text,dx=30,dy=-34)=>({t:'label',x,y,z,text,dx,dy});
+const W=(x,y,z)=>({t:'wifi',x,y,z});
+// composites
+const ground=(w,d,c='#294a2e')=>B(0,0,-.25,w,d,.25,c,{layer:0});
+const room=(w,d,h=3.2)=>[B(0,0,-.2,w,d,.2,'#3f4a63',{layer:0}),B(0,0,0,w,.25,h,'#273452',{layer:.4}),B(0,0,0,.25,d,h,'#222d47',{layer:.4})];
+const core=(x,y,z=0,lbl='กล่อง CoreDash',dx=34,dy=-44)=>[B(x,y,z,.9,.55,1.05,'#e6ecf8',{screen:1,led:'#22d3ee'}),Cy(x+.72,y+.12,z+1.05,.045,.65,'#3a4257'),W(x+.72,y+.12,z+1.75),lbl?T(x+.45,y+.55,z+.95,lbl,dx,dy):null];
+const coreOnPost=(x,y,h=1.1,lbl,dx,dy)=>[Cy(x+.45,y+.27,0,.07,h,'#8b93a6'),core(x,y,h,lbl,dx,dy)];
+const plant=(x,y,z=0,s=1,c='#34b45e')=>[Cy(x,y,z,.06*s,.35*s,'#6b4a2b'),Ba(x,y,z+.55*s,.34*s,c),Ba(x+.12*s,y-.1*s,z+.8*s,.22*s,sh(c,1.18))];
+const tree=(x,y,s=1)=>[Cy(x,y,0,.12*s,.9*s,'#6b4a2b'),Ba(x,y,1.3*s,.62*s,'#2f9e54'),Ba(x+.25*s,y-.2*s,1.7*s,.4*s,'#46c06c'),Ba(x-.3*s,y+.18*s,1.5*s,.38*s,'#2a8a49')];
+const tank=(x,y,r,h,c,z=0)=>Cy(x,y,z,r,h,c,{cap:sh(c,1.25)});
+const pump=(x,y,z=0,c='#2563eb')=>[B(x,y,z,.9,.55,.5,c,{fins:1}),Cy(x+.3,y+.27,z+.5,.18,.18,'#94a3b8')];
+const valve=(x,y,z=0)=>[B(x,y,z,.32,.32,.32,'#e0463c'),Cy(x+.16,y+.16,z+.32,.06,.18,'#1f2937')];
+const probe=(x,y,z=0,c='#1f2937')=>[B(x,y,z,.3,.2,.45,c,{led:'#22c55e'}),Cy(x+.15,y+.1,z+.45,.05,.15,'#64748b')];
+const cable=(pts,c='#f59e0b')=>L(pts,c,2,{dash:1,layer:1.6});
+const pipe=(pts,c='#334155',w=5,layer)=>L(pts,c,w,{pipe:1,layer});
+const house=(x,y,w=2,d=1.6,h=1.4,c='#e8dcc8',roof='#b4472f')=>[B(x,y,0,w,d,h,c,{door:1}),B(x-.15,y-.15,h,w+.3,d+.3,.22,roof)];
+const lamp=(x,y,h=2.6,on=true)=>[Cy(x,y,0,.06,h,'#7b8496'),B(x-.05,y-.05,h,.55,.18,.1,'#cbd5e1'),Ba(x+.38,y+.04,h-.1,.12,on?'#fde68a':'#475569',{glow:on?1:0})];
+const glass=()=>[{f:'front',u0:.07,u1:.93,v0:.05,v1:.93,c:'rgba(125,211,252,.30)'},...[.3,.55,.8].map(v=>({f:'front',u0:.1,u1:.9,v0:v,v1:v+.025,c:'#94a3b8'})),...[[.15,.08,'#ef4444'],[.35,.08,'#f8fafc'],[.6,.33,'#22c55e'],[.2,.58,'#f59e0b'],[.7,.58,'#3b82f6'],[.45,.33,'#f8fafc']].map(([u,v,c])=>({f:'front',u0:u,u1:u+.14,v0:v,v1:v+.18,c}))];
+
+function decoOf(it){const d=[...(it.deco||[])];
+ if(it.screen)d.push({f:'front',u0:.13,u1:.66,v0:.42,v1:.84,c:'#0b1b3f',st:1});
+ if(it.led)d.push({f:'front',u0:.76,u1:.88,v0:.68,v1:.8,c:it.led});
+ if(it.breakers){const k=it.breakers;for(let i=0;i<k;i++){const u0=.07+i*(.86/k);d.push({f:'front',u0,u1:u0+.86/k*.62,v0:.42,v1:.7,c:'#374151'})}d.push({f:'front',u0:.06,u1:.94,v0:.08,v1:.22,c:'rgba(0,0,0,.16)'})}
+ if(it.door)d.push({f:'front',u0:.42,u1:.6,v0:0,v1:.66,c:'#7c5a3a'},{f:'front',u0:.1,u1:.3,v0:.36,v1:.7,c:'#9bd2f0'},{f:'front',u0:.72,u1:.9,v0:.36,v1:.7,c:'#9bd2f0'},{f:'right',u0:.3,u1:.7,v0:.36,v1:.7,c:'#9bd2f0'});
+ if(it.fins)for(const f of['front','right'])for(let i=0;i<6;i++){const v0=.12+i*.13;d.push({f,u0:.04,u1:.96,v0,v1:v0+.05,c:'rgba(0,0,0,.2)'})}
+ if(it.strata)for(const f of['front','right'])d.push({f,u0:0,u1:1,v0:0,v1:.4,c:'rgba(0,0,0,.24)'},{f,u0:0,u1:1,v0:.4,v1:.72,c:'rgba(0,0,0,.1)'});
+ if(it.win){const[cs,rs]=it.win;for(let r=0;r<rs;r++){const v0=.08+r*(.86/rs);for(let c=0;c<cs;c++){const u0=.06+c*(.88/cs);d.push({f:'front',u0,u1:u0+.88/cs*.6,v0,v1:v0+.86/rs*.55,c:(r*7+c*3)%5==0?'#fde68a':'#7dd3fc'})}for(let c=0;c<2;c++){const u0=.15+c*.42;d.push({f:'right',u0,u1:u0+.26,v0,v1:v0+.86/rs*.55,c:'#7dd3fc'})}}}
+ if(it.bars)for(let i=0;i<it.bars;i++){const u0=(i+.35)/it.bars;d.push({f:'front',u0,u1:u0+.3/it.bars,v0:.04,v1:.96,c:'rgba(0,0,0,.3)'})}
+ return d}
+function wp(it){const{x,y,z}=it;switch(it.t){
+ case'box':{const{w,d,h}=it;return[[x,y,z],[x+w,y,z],[x,y+d,z],[x+w,y+d,z],[x,y,z+h],[x+w,y,z+h],[x,y+d,z+h],[x+w,y+d,z+h]]}
+ case'cyl':return[[x,y,z],[x,y,z+it.h]];
+ case'line':case'quad':return it.pts;
+ default:return[[x,y,z]]}}
+function proj(sc,ang){const ca=Math.cos(ang),sa=Math.sin(ang);
+ const R=(x,y)=>{const dx=x-sc.cx,dy=y-sc.cy;return[dx*ca-dy*sa,dx*sa+dy*ca]};
+ return{ca,sa,P:(x,y,z)=>{const[a,b]=R(x,y);return[(a-b)*C30*K,(a+b)*S30*K-z*K]},D:(x,y,z)=>{const[a,b]=R(x,y);return a+b+z*.3}}}
+function prep(key){if(PR[key])return PR[key];const fn=SC[key]||DVS[key];
+ const items=fn().flat(12).filter(Boolean).map(it=>it.t==='box'?{...it,_d:decoOf(it)}:it);
+ let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+ for(const it of items){if(it.t==='label'||it.t==='wifi')continue;for(const p of wp(it)){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])}}
+ const sc={items,cx:(x0+x1)/2,cy:(y0+y1)/2};
+ const bb=(angs,lab)=>{let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;const add=(a,b)=>{a0=Math.min(a0,a);a1=Math.max(a1,a);b0=Math.min(b0,b);b1=Math.max(b1,b)};
+  for(const ang of angs){const{P}=proj(sc,ang);for(const it of items){
+   if(it.t==='label'){if(!lab)continue;const q=P(it.x,it.y,it.z),w=tw(it.text),tx=q[0]+it.dx,ty=q[1]+it.dy,lx=it.dx>=0?tx:tx-w;add(lx,ty-12);add(lx+w,ty+12);add(q[0],q[1]);continue}
+   if(it.t==='wifi'){const q=P(it.x,it.y,it.z);add(q[0]-16,q[1]-18);add(q[0]+16,q[1]);continue}
+   for(const p of wp(it)){const q=P(...p);if(it.t==='cyl'||it.t==='disc'){const rx=it.r*K*1.2247,ry=it.r*K*.7071;add(q[0]-rx,q[1]-ry);add(q[0]+rx,q[1]+ry)}else if(it.t==='ball'){const r=it.r*K*(it.glow?2.2:1);add(q[0]-r,q[1]-r);add(q[0]+r,q[1]+r)}else add(q[0],q[1])}}}
+  const m=8;return[a0-m,b0-m,a1-a0+2*m,b1-b0+2*m].map(n).join(' ')};
+ sc.vb=bb([-1.05,-.7,-.35,0,.35,.7,1.05],true);sc.vbn=bb([0],false);
+ return PR[key]=sc}
+function render(sc,ang=0,opt={}){
+ const lab=opt.labels!==false,{ca,sa,P,D}=proj(sc,ang),uid='s'+(++UID),defs=new Map();
+ const G=(c,k)=>{const key=k+c;if(!defs.has(key))defs.set(key,[uid+'_'+defs.size,c,k]);return defs.get(key)[0]};
+ const pt=p=>n(p[0])+','+n(p[1]);
+ const poly=(ps,fill,ex='')=>`<polygon points="${ps.map(pt).join(' ')}" fill="${fill}" ${ex}/>`;
+ const arr=[];
+ for(const it of sc.items){if(!lab&&it.t==='label')continue;let ly=it.layer,d=0;
+  switch(it.t){case'box':d=D(it.x+it.w/2,it.y+it.d/2,it.z);break;case'cyl':case'ball':case'disc':d=D(it.x,it.y,it.z);break;
+   case'line':case'quad':{let s=0;for(const p of it.pts)s+=D(...p);d=s/it.pts.length;break}default:ly=ly??9}
+  arr.push([ly??2,d,it])}
+ arr.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ const dBox=it=>{const{x,y,z,w,d,h,c}=it;let s='';const st='stroke="rgba(0,0,0,.28)" stroke-width=".7" stroke-linejoin="round"';
+  const F=[[0,-1,[[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]]],[0,1,[[x,y+d,z],[x+w,y+d,z],[x+w,y+d,z+h],[x,y+d,z+h]],'front'],[-1,0,[[x,y+d,z],[x,y,z],[x,y,z+h],[x,y+d,z+h]]],[1,0,[[x+w,y+d,z],[x+w,y,z],[x+w,y,z+h],[x+w,y+d,z+h]],'right']];
+  for(const[nx,ny,ps,fn]of F){const rx=nx*ca-ny*sa,ry=nx*sa+ny*ca;if(rx+ry<=.01)continue;
+   s+=poly(ps.map(p=>P(...p)),sh(c,.75+.1*(ry-rx)),st);
+   if(fn&&it._d.length){const fp=fn==='front'?(u,v)=>[x+w*u,y+d,z+h*v]:(u,v)=>[x+w,y+d-d*u,z+h*v];
+    for(const q of it._d){if(q.f!==fn)continue;s+=poly([fp(q.u0,q.v0),fp(q.u1,q.v0),fp(q.u1,q.v1),fp(q.u0,q.v1)].map(p=>P(...p)),q.c,q.st?'stroke="var(--a2)" stroke-width="1"':'')}}}
+  s+=poly([[x,y,z+h],[x+w,y,z+h],[x+w,y+d,z+h],[x,y+d,z+h]].map(p=>P(...p)),sh(c,1.1),st);return s};
+ const draw=it=>{switch(it.t){
+  case'box':return dBox(it);
+  case'cyl':{const b=P(it.x,it.y,it.z),t=P(it.x,it.y,it.z+it.h),rx=it.r*K*1.2247,ry=it.r*K*.7071;
+   return`<path d="M${n(b[0]-rx)},${n(b[1])} A${n(rx)},${n(ry)} 0 0 0 ${n(b[0]+rx)},${n(b[1])} L${n(t[0]+rx)},${n(t[1])} L${n(t[0]-rx)},${n(t[1])} Z" fill="url(#${G(it.c,'l')})" stroke="rgba(0,0,0,.25)" stroke-width=".6"/><ellipse cx="${n(t[0])}" cy="${n(t[1])}" rx="${n(rx)}" ry="${n(ry)}" fill="${it.cap||sh(it.c,1.12)}" stroke="rgba(0,0,0,.2)" stroke-width=".6"/>`}
+  case'ball':{const q=P(it.x,it.y,it.z),r=it.r*K;return(it.glow?`<circle cx="${n(q[0])}" cy="${n(q[1])}" r="${n(r*2.2)}" fill="url(#${G(it.c,'g')})"/>`:'')+`<circle cx="${n(q[0])}" cy="${n(q[1])}" r="${n(r)}" fill="url(#${G(it.c,'r')})" ${it.op?`opacity="${it.op}"`:''}/>`}
+  case'disc':{const q=P(it.x,it.y,it.z);return`<ellipse cx="${n(q[0])}" cy="${n(q[1])}" rx="${n(it.r*K*1.2247)}" ry="${n(it.r*K*.7071)}" fill="${it.c}"/>`}
+  case'line':{const d='M'+it.pts.map(p=>pt(P(...p))).join(' L');const w=it.w;
+   if(it.pipe)return`<path d="${d}" stroke="${sh(it.c,.55)}" stroke-width="${w+2.4}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${it.c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${sh(it.c,1.6)}" stroke-width="${n(Math.max(1,w*.28))}" fill="none" opacity=".5" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,${-n(w*.22)})"/>`;
+   return`<path d="${d}" stroke="${it.c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" ${it.dash?(it.nofl?'stroke-dasharray="10 8"':'class="flow"'):''}/>`}
+  case'quad':{const ps=it.pts.map(p=>P(...p));let s=poly(ps,it.c,it.ns?'':'stroke="#cbd5e1" stroke-width="1"');
+   if(it.grid){const[nu,nv]=it.grid,lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],[A,Bq,C,Dq]=ps;
+    for(let i=1;i<nu;i++){const p1=lp(A,Bq,i/nu),p2=lp(Dq,C,i/nu);s+=`<line x1="${n(p1[0])}" y1="${n(p1[1])}" x2="${n(p2[0])}" y2="${n(p2[1])}" stroke="#93c5fd" stroke-width=".7" opacity=".55"/>`}
+    for(let j=1;j<nv;j++){const p1=lp(A,Dq,j/nv),p2=lp(Bq,C,j/nv);s+=`<line x1="${n(p1[0])}" y1="${n(p1[1])}" x2="${n(p2[0])}" y2="${n(p2[1])}" stroke="#93c5fd" stroke-width=".7" opacity=".55"/>`}}
+   return s}
+  case'wifi':{const q=P(it.x,it.y,it.z);return'<g>'+[6,11,16].map(r=>`<path class="wf" d="M${n(q[0]-r*.7)},${n(q[1]-r*.55)} A${r},${r} 0 0 1 ${n(q[0]+r*.7)},${n(q[1]-r*.55)}"/>`).join('')+'</g>'}
+  case'label':{const q=P(it.x,it.y,it.z),w=tw(it.text),tx=q[0]+it.dx,ty=q[1]+it.dy,lx=it.dx>=0?tx:tx-w;
+   return`<g class="lb"><path d="M${n(q[0])},${n(q[1])} L${n(tx)},${n(ty)}"/><circle cx="${n(q[0])}" cy="${n(q[1])}" r="2.8"/><rect x="${n(lx)}" y="${n(ty-11)}" width="${n(w)}" height="22" rx="11"/><text x="${n(lx+w/2)}" y="${n(ty+4)}" text-anchor="middle">${it.text}</text></g>`}}return''};
+ let body='';for(const[, ,it]of arr)body+=draw(it);
+ let df='';for(const[id,c,k]of defs.values()){
+  if(k==='l')df+=`<linearGradient id="${id}"><stop offset="0" stop-color="${sh(c,.62)}"/><stop offset=".38" stop-color="${sh(c,1.1)}"/><stop offset="1" stop-color="${sh(c,.7)}"/></linearGradient>`;
+  else if(k==='r')df+=`<radialGradient id="${id}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="${sh(c,1.35)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${sh(c,.62)}"/></radialGradient>`;
+  else df+=`<radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity=".75"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`}
+ return`<svg viewBox="${opt.vb==='n'?sc.vbn:sc.vb}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opt.aria||'ภาพ 3D การติดตั้ง'}"><defs>${df}</defs>${body}</svg>`}
+
+/* ============ ฉาก 3D ของแต่ละงาน ============ */
+const bars=(k)=>({bars:k});
+const SC={
+drip:()=>[ground(10.2,9),
+ [2,4.4,6.8].map(y=>[B(1.2,y,0,6.9,1,.22,'#6b4a2e',{layer:1}),pipe([[8.7,y+.5,.26],[1.3,y+.5,.26]],'#111827',2.4,1.5),[1.8,3.3,4.8,6.3,7.6].map(x=>plant(x,y+.5,.22,.85))]),
+ pipe([[3.2,1,.25],[8.7,1,.25],[8.7,7.3,.25]],'#1d4ed8',5,1.5),
+ tank(1.3,1,.78,2.3,'#3b82f6'),pump(2.3,.72),valve(8.54,1.25,.1),
+ probe(4.3,5.05,.22),probe(6.9,2.65,.22),
+ cable([[4.45,5.15,.24],[9.55,5.15,.02],[9.55,3.6,.02]]),cable([[7.05,2.75,.24],[9.55,2.75,.02],[9.55,3.4,.02]]),
+ coreOnPost(9.1,3.3,1.2,'กล่อง CoreDash',36,26),
+ T(1.3,1,2.3,'ถังเก็บน้ำ',-24,-26),T(2.75,1,.6,'ปั๊มน้ำ',-34,-46),T(8.7,1.4,.45,'โซลินอยด์วาล์ว',28,-34),T(4.45,5.15,.67,'เซนเซอร์ความชื้นดิน',-30,-52)],
+fert:()=>[ground(9.5,8),
+ tank(1.2,1.2,.8,2.2,'#3b82f6'),tank(3.2,1.1,.5,1.5,'#16a34a'),tank(4.7,1.1,.5,1.5,'#ea580c'),
+ B(2.95,1.75,0,.5,.35,.42,'#e2e8f0',{led:'#22c55e'}),B(4.45,1.75,0,.5,.35,.42,'#e2e8f0',{led:'#22c55e'}),
+ pipe([[1.2,2,.25],[1.2,2.7,.25],[7.8,2.7,.25],[7.8,6.6,.25]],'#1d4ed8',5,1.5),
+ pipe([[3.2,2.1,.25],[3.2,2.7,.25]],'#16a34a',2.5,1.55),pipe([[4.7,2.1,.25],[4.7,2.7,.25]],'#ea580c',2.5,1.55),
+ B(5.9,2.5,.15,.35,.4,.5,'#0f172a',{led:'#22d3ee'}),
+ [3.8,5.3].map(y=>[B(1,y,0,6.4,.9,.2,'#6b4a2e',{layer:1}),pipe([[7.8,y+.45,.24],[1.1,y+.45,.24]],'#111827',2.2,1.5),[1.6,2.9,4.2,5.5,6.8].map(x=>plant(x,y+.45,.2,.8,'#4ade80'))]),
+ cable([[6.1,2.9,.15],[8.65,2.9,.02],[8.65,3.3,.02]]),coreOnPost(8.2,3.1,1.2,'กล่อง CoreDash',36,26),
+ T(1.2,1.2,2.2,'ถังน้ำหลัก',-24,-24),T(3.2,1.1,1.5,'ถังปุ๋ย A',-10,-40),T(4.7,1.1,1.5,'ถังปุ๋ย B',22,-40),T(4.7,1.95,.42,'ปั๊มฉีดปุ๋ย',-50,46),T(6.07,2.7,.65,'หัววัด EC / pH',16,-70)],
+soil:()=>[B(1,1,-1.6,7,5,1.6,'#7a5230',{strata:1,layer:0}),B(1,1,0,7,5,.12,'#3f8f45',{layer:.5}),
+ [[2,2],[3.5,2.2],[5,1.9],[6.5,2.1],[2.3,3.6],[3.4,3.8],[2.1,5.1],[3.4,5.2],[7.2,5.3],[7.3,3.9]].map(([x,y])=>plant(x,y,.12,.75,'#3fbf62')),
+ Cy(4.6,5.66,.12,.34,.42,'#1e293b',{cap:'#334155'}),Cy(4.6,5.66,.54,.08,.2,'#f59e0b'),
+ [4.35,4.6,4.85].map(x=>L([[x,6.04,.02],[x,6.04,-.95]],'#cbd5e1',3,{layer:3})),
+ cable([[4.75,5.66,.16],[5.95,5.66,.14],[5.95,4.6,.14]]),
+ Cy(5.95,4.57,.12,.07,1.3,'#8b93a6'),core(5.5,4.3,1.42,'กล่อง CoreDash',-40,-50),
+ Cy(7.1,2.4,.12,.05,1.45,'#8b93a6'),Q([[6.6,2,1.95],[7.6,2,1.95],[7.6,2.8,1.55],[6.6,2.8,1.55]],'#1e3a8a',{grid:[3,2]}),
+ T(4.6,5.66,.6,'เซนเซอร์ดิน 7-in-1',-40,-56),T(4.6,6.04,-.7,'ขาวัดฝังลึก 15–20 ซม.',46,18),T(7.1,2.4,1.9,'แผงโซลาร์ + แบต',30,-44)],
+green:()=>{const g=[ground(9.5,7.5),B(1,1,0,6,4.6,.06,'#57534e',{layer:.5})],fr='#cbd5e1',Y0=1,Y1=5.6,H=2.4,R=3.4,YM=3.3;
+ for(const x of[1,3,5,7])for(const y of[Y0,Y1])g.push(L([[x,y,0],[x,y,H]],fr,1.6));
+ for(const x of[1,3,5,7])g.push(L([[x,Y0,H],[x,YM,R],[x,Y1,H]],fr,1.6,{layer:7}));
+ g.push(L([[1,YM,R],[7,YM,R]],fr,1.6,{layer:7}),L([[1,Y0,H],[7,Y0,H]],fr,1.4,{layer:7}),L([[1,Y1,H],[7,Y1,H]],fr,1.4,{layer:7}));
+ g.push(Q([[1,Y0,H],[7,Y0,H],[7,YM,R],[1,YM,R]],'rgba(186,230,253,.10)',{layer:8,ns:1}),Q([[1,YM,R],[7,YM,R],[7,Y1,H],[1,Y1,H]],'rgba(186,230,253,.16)',{layer:8,ns:1}),Q([[1,Y1,0],[7,Y1,0],[7,Y1,H],[1,Y1,H]],'rgba(186,230,253,.07)',{layer:8,ns:1}),Q([[7,Y0,0],[7,Y1,0],[7,Y1,H],[7,Y0,H]],'rgba(186,230,253,.07)',{layer:8,ns:1}));
+ for(const y of[2,3.3,4.6])for(const x of[1.7,2.9,4.1,5.3,6.4])g.push(plant(x,y,.06,.8,'#4ade80'));
+ g.push(B(3.2,1.05,1.1,1,.18,1,'#94a3b8',{deco:[{f:'front',u0:.12,u1:.88,v0:.12,v1:.88,c:'#1e293b'}]}));
+ g.push(L([[1.2,2.65,2.2],[6.8,2.65,2.2]],'#e2e8f0',1.4,{layer:6}),L([[1.2,3.95,2.2],[6.8,3.95,2.2]],'#e2e8f0',1.4,{layer:6}));
+ [2,3.5,5,6.5].forEach(x=>g.push(Ba(x,2.65,2.02,.15,'#e0f2fe',{op:.45,layer:6}),Ba(x,3.95,2.02,.15,'#e0f2fe',{op:.45,layer:6})));
+ g.push(L([[4.1,3.3,3.3],[4.1,3.3,1.88]],'#94a3b8',1,{layer:6}),B(3.95,3.2,1.5,.3,.2,.38,'#f8fafc',{led:'#22c55e',layer:6.5}));
+ g.push(coreOnPost(8,1.4,1.2),T(4.1,3.3,1.7,'เซนเซอร์อุณหภูมิ-ความชื้น',-30,-80),T(3.7,1.1,1.6,'พัดลมระบาย',-80,16),T(6.8,3.95,2.2,'หัวพ่นหมอก',34,-20));return g},
+pond:()=>[ground(10,8.5,'#3f5f35'),B(1.2,1.2,0,6.8,5.2,.05,'#9ca3af',{layer:.5}),B(1.5,1.5,0,6.2,4.6,.07,'#0e7490',{layer:.6}),
+ Di(3.6,3.6,.08,1.1,'rgba(255,255,255,.10)',{layer:.7}),Di(3.6,3.6,.08,.7,'rgba(255,255,255,.14)',{layer:.7}),
+ B(3,3.4,.07,1.2,.4,.22,'#f8fafc'),Cy(3.1,3.6,.07,.16,.18,'#f97316'),Cy(4.1,3.6,.07,.16,.18,'#f97316'),
+ Cy(6.4,5,.07,.2,.22,'#f97316',{cap:'#fdba74'}),
+ cable([[3.6,3.4,.1],[3.6,1.3,.06],[8.65,1.3,.02],[8.65,2.7,.02]]),cable([[6.4,5,.12],[8.1,5,.06],[8.65,3.1,.02]]),
+ coreOnPost(8.2,2.6,1.2),tree(9.2,6.8,.7),tree(9.3,.8,.6),tree(.6,7.7,.7),
+ T(3.6,3.6,.3,'เครื่องตีน้ำ + CT วัดกระแส',-30,-56),T(6.4,5,.3,'หัววัดออกซิเจน (DO)',30,-40)],
+orchard:()=>[ground(10.8,9,'#2f5130'),
+ [2,4.5,7].map((y,i)=>[pipe([[8.8,y,.05],[1.2,y,.05]],'#111827',2.4,1.5),[1.8,4.2,6.6].map(x=>tree(x,y,.75)),valve(8.65,y-.16,0),probe(3,y+.25,0),T(1.2,y,.1,'โซน '+(i+1),-30,-16)]),
+ pipe([[9.4,.9,.05],[9.4,7,.05]],'#1d4ed8',5,1.4),[2,4.5,7].map(y=>pipe([[9.4,y,.05],[8.97,y,.05]],'#1d4ed8',4,1.45)),
+ pump(9,.3),coreOnPost(9.7,3.1,1.3,'กล่อง CoreDash',40,0),
+ Cy(10.05,5.9,0,.06,1.6,'#8b93a6'),Q([[9.5,5.5,1.95],[10.6,5.5,1.95],[10.6,6.3,1.55],[9.5,6.3,1.55]],'#1e3a8a',{grid:[3,2]}),
+ T(10.05,5.9,1.9,'แผงโซลาร์ + แบตเตอรี่',40,34),T(9.45,.57,.55,'ปั๊ม + เซนเซอร์แรงดัน',20,-64)],
+mush:()=>{const g=[...room(8,5.5)];
+ for(const x0 of[1,4]){for(const z of[.25,1.05,1.85]){g.push(B(x0,1,z,2.4,1.1,.08,'#a16207'));for(const xx of[x0+.35,x0+.95,x0+1.55,x0+2.1])for(const yy of[1.3,1.8])g.push(Cy(xx,yy,z+.08,.16,.42,'#e7e5e4'),Ba(xx+.05,yy+.05,z+.56,.13,'#d6c4a0'))}
+  for(const[px,py]of[[x0,1],[x0+2.4,1],[x0,2.1],[x0+2.4,2.1]])g.push(L([[px,py,0],[px,py,2.1]],'#78350f',2))}
+ g.push(B(6.7,1.2,0,.8,.7,1,'#e2e8f0',{led:'#22c55e'}),Ba(7.1,1.55,1.35,.3,'#e0f2fe',{op:.55}),Ba(7.3,1.4,1.75,.25,'#e0f2fe',{op:.4}));
+ g.push(B(3.3,.25,2.4,.3,.12,.4,'#f8fafc',{led:'#22c55e'}),core(6.6,.25,1.8,'กล่อง CoreDash',30,-30));
+ g.push(T(3.45,.37,2.8,'เซนเซอร์ความชื้น',-24,-30),T(7.1,1.55,1,'เครื่องพ่นละออง',34,30));return g},
+power:()=>[...room(7.5,5,3.4),B(.8,.25,.35,2.4,.5,2.4,'#d1d5db',{breakers:8}),
+ ['#7c4a1e','#111827','#6b7280'].map((c,i)=>[L([[1.4+i*.45,.55,3.4],[1.4+i*.45,.55,2.75]],c,4,{pipe:1}),Cy(1.4+i*.45,.55,2.92,.14,.16,'#0f172a',{cap:'#f59e0b'})]),
+ B(3.6,.25,1.5,.8,.3,1,'#f1f5f9',{screen:1}),cable([[3.6,.45,2.3],[3.05,.45,2.6]]),cable([[4.4,.45,2],[5.2,.45,2]]),
+ core(5.2,.25,1.4,'กล่อง CoreDash',30,-30),B(2.6,2.6,0,2.4,1.4,1.2,'#2563eb',{fins:1}),B(5,3.2,0,1.2,1,1.6,'#64748b',{fins:1}),
+ T(1.4,.55,2.92,'CT วัดกระแส 3 เฟส',-40,-30),T(2,.75,1.1,'ตู้ MDB',-50,30),T(4,.55,2.5,'มิเตอร์วัดพลังงาน',10,-60)],
+solar:()=>[ground(9,8,'#2f5130'),B(1.5,1.5,0,4.5,3.2,2,'#e8dcc8',{door:1}),B(1.3,1.3,2,4.9,3.6,.18,'#64748b'),
+ [0,1,2].map(i=>Q([[1.6+i*1.5,1.55,2.75],[2.95+i*1.5,1.55,2.75],[2.95+i*1.5,3.6,2.2],[1.6+i*1.5,3.6,2.2]],'#1e3a8a',{grid:[3,4],layer:3})),
+ B(6,2.2,.8,.25,.8,1,'#f1f5f9',{deco:[{f:'right',u0:.2,u1:.8,v0:.5,v1:.85,c:'#0b1b3f'}]}),
+ B(6,3.4,0,.6,.9,1.15,'#334155',{deco:[{f:'right',u0:.15,u1:.3,v0:.7,v1:.8,c:'#22c55e'}]}),
+ cable([[6.25,2.6,.8],[6.3,2.6,.02],[7.75,2.6,.02],[7.75,4.95,.02]]),coreOnPost(7.3,4.9,1.1),
+ T(3.7,2.6,2.6,'แผงโซลาร์',-20,-56),T(6.25,2.6,1.6,'อินเวอร์เตอร์ + CT',34,-34),T(6.6,3.85,1,'แบตเตอรี่',40,4)],
+leak:()=>[...room(7.5,5),B(1,.25,1.5,1.5,.3,1.1,'#f1f5f9',{breakers:6}),
+ L([[1.6,.42,1.5],[1.6,.42,0]],'#7c4a1e',3,{pipe:1}),L([[1.82,.42,1.5],[1.82,.42,0]],'#1d4ed8',3,{pipe:1}),Cy(1.71,.42,.85,.24,.16,'#f59e0b',{cap:'#fbbf24'}),
+ B(4,.25,1.6,.8,.45,1.1,'#f8fafc',{led:'#ef4444'}),pump(3.6,3),pipe([[4.5,3.27,.3],[7,3.27,.3]],'#1d4ed8',4,1.5),
+ cable([[2.4,.4,1.9],[5.4,.4,1.9]]),core(5.6,.25,1.5,'กล่อง CoreDash',30,-30),
+ T(1.75,.4,2.6,'ตู้ไฟ (คอนซูเมอร์)',-20,-40),T(1.71,.42,1,'เซนเซอร์ไฟรั่ว ZCT',-46,34),T(4.4,.5,2.7,'เครื่องทำน้ำอุ่น',14,-30),T(4.05,3.27,.68,'ปั๊มน้ำ',34,-30)],
+outage:()=>[ground(10,8,'#3a4257'),B(4,1.5,0,3.5,2.8,2.2,'#e8dcc8',{door:1}),B(3.8,1.3,2.2,3.9,3.2,.2,'#b4472f'),
+ Cy(1.2,1.2,0,.12,4,'#9ca3af'),B(.6,1.1,3.6,1.2,.2,.12,'#6b7280'),
+ L([[.75,1.2,3.75],[4,2,2.1]],'#111827',1.3),L([[1.65,1.2,3.75],[4,2.5,2.1]],'#111827',1.3),
+ B(4.4,4.9,0,1.6,1,1.1,'#facc15',{fins:1}),B(7.5,2,.5,.25,.7,1.1,'#d1d5db',{deco:[{f:'right',u0:.15,u1:.85,v0:.55,v1:.85,c:'#374151'},{f:'right',u0:.2,u1:.35,v0:.3,v1:.42,c:'#22c55e'}]}),
+ cable([[5.2,4.9,.5],[5.2,4.4,.02],[7.9,4.4,.02],[7.9,4.75,.02]]),coreOnPost(7.5,4.6,1.1),
+ T(1.2,1.2,4,'ไฟจากการไฟฟ้า',30,-20),T(5.2,5.4,1.1,'เครื่องปั่นไฟ',-40,40),T(7.75,2.35,1.6,'ตู้สลับไฟ ATS + เซนเซอร์แรงดัน',24,-50)],
+motor:()=>[B(0,0,-.2,10,7,.2,'#4b5563',{layer:0}),L([[1.6,1.6,.01],[6.4,1.6,.01],[6.4,4.4,.01],[1.6,4.4,.01],[1.6,1.6,.01]],'#facc15',2,{dash:1,nofl:1,layer:.5}),
+ B(2,2,0,4,2,.3,'#334155'),B(2.3,2.4,.3,1.7,1.1,1.1,'#2563eb',{fins:1}),B(2.1,2.55,.3,.2,.8,.9,'#1e40af'),
+ L([[4,2.95,.85],[4.5,2.95,.85]],'#cbd5e1',5,{pipe:1}),B(4.5,2.5,.3,1.2,.9,.9,'#64748b'),
+ pipe([[5.7,2.95,.75],[7,2.95,.75],[7,5.6,.75]],'#0e7490',6),
+ Cy(3.1,2.95,1.4,.13,.16,'#f59e0b',{cap:'#fbbf24'}),B(3.3,3.5,.6,.25,.08,.25,'#f97316'),
+ cable([[3.2,2.95,1.56],[3.2,1.3,1.56],[3.2,1.3,.02],[7.8,1.3,.02]]),
+ B(7.6,.5,0,1.2,.6,2.2,'#e2e8f0',{screen:1}),core(7.75,.5,2.2,'กล่อง CoreDash',30,-26),
+ T(3.1,2.95,1.56,'เซนเซอร์สั่น + อุณหภูมิ',-40,-46),T(3.2,3.5,.4,'มอเตอร์',-50,40),T(5.1,2.95,1.2,'ปั๊ม / เกียร์',20,-60),T(8.2,1.1,1.1,'ตู้ควบคุม + CT',40,30)],
+runtime:()=>{const g=[B(0,0,-.2,10,7,.2,'#4b5563',{layer:0})];
+ for(const x of[1.2,3,5,7,8.6])for(const y of[3.1,3.9])g.push(Cy(x,y,0,.06,.8,'#64748b'));
+ g.push(B(1,3,.8,7.8,1,.18,'#111827'));[1.6,3.3,6.2,7.6].forEach(x=>g.push(B(x,3.2,.98,.6,.6,.45,'#d97706')));
+ g.push(B(4.3,2.2,0,1.8,.55,2.6,'#f59e0b'),B(4.3,2.2,2.6,1.8,2.4,.45,'#f59e0b',{deco:[{f:'front',u0:.1,u1:.5,v0:.25,v1:.75,c:'#0b1b3f'}]}));
+ g.push(Cy(5.7,2.5,3.05,.12,.3,'#16a34a'),Ba(5.7,2.5,3.45,.14,'#4ade80',{glow:1}));
+ g.push(Cy(9,3.29,0,.05,.95,'#64748b'),B(8.9,3.2,.95,.18,.18,.35,'#111827',{deco:[{f:'front',u0:.2,u1:.8,v0:.55,v1:.85,c:'#ef4444'}]}));
+ g.push(B(1,.6,0,1.1,.6,2.1,'#e2e8f0',{breakers:4}),core(2.4,.6,1.2,'กล่อง CoreDash',30,-30),cable([[9,3.3,.02],[9,1.4,.02],[2.85,1.4,.02],[2.85,1.15,.02]]));
+ g.push(T(5.7,2.5,3.45,'ไฟสถานะเครื่อง',30,-24),T(9,3.29,1.25,'เซนเซอร์นับชิ้นงาน',20,-40),T(1.55,.9,2.1,'ตู้ไฟ + CT',-30,-30));return g},
+comp:()=>[...room(8,5.5),Cy(1.8,2.2,0,.8,2.6,'#dc2626'),Cy(1.8,2.2,2.6,.12,.25,'#9ca3af'),
+ B(3.3,1.6,0,2,1.3,1.3,'#1d4ed8',{fins:1}),B(3.3,1.6,1.3,2,1.3,.15,'#1e3a8a'),pipe([[3.3,2.2,1],[2.55,2.2,1]],'#9ca3af',4),
+ pipe([[1.8,2.2,2.85],[1.8,2.2,3.05],[1.8,.3,3.05]],'#9ca3af',4),B(2.5,2.3,1.6,.2,.2,.2,'#94a3b8'),Cy(2.6,2.4,1.8,.1,.25,'#111827',{cap:'#22d3ee'}),
+ cable([[2.6,2.4,2.05],[2.6,.4,2.3],[6.1,.4,2.1]]),core(6.1,.25,1.4,'กล่อง CoreDash',26,-30),
+ T(1.8,2.2,1.6,'ถังลม',-50,10),T(4.3,2.2,1.45,'ปั๊มลม + CT',30,-50),T(2.6,2.4,2.05,'เซนเซอร์แรงดัน',-30,-56)],
+tank:()=>[ground(8,7,'#3a4257'),[[2,2],[4,2],[2,4],[4,4]].map(([x,y])=>B(x,y,0,.18,.18,1.5,'#64748b')),B(1.9,1.9,1.5,2.4,2.4,.15,'#475569'),
+ Cy(3.1,3.1,1.65,1,2.3,'#d4d4d8',{cap:'#e4e4e7'}),Cy(3.4,2.9,3.95,.17,.22,'#111827',{cap:'#22d3ee'}),
+ pipe([[3.1,4.15,1.75],[3.1,4.6,1.75],[3.1,4.6,.3],[5.3,4.6,.3]],'#1d4ed8',4),pump(5.3,4.32),pipe([[6.2,4.6,.3],[7.8,4.6,.3]],'#1d4ed8',4,1.5),
+ cable([[3.55,2.9,4.05],[4.4,2.9,4.05],[4.4,2.9,.02],[6.25,2.9,.02]]),coreOnPost(5.8,2.4,1.1),
+ T(3.4,2.9,4.17,'เซนเซอร์ระดับน้ำอัลตราโซนิก',26,-26),T(2.1,3.1,2.8,'ถังน้ำบนขาตั้ง',-40,10),T(5.75,4.6,.65,'ปั๊มเติมน้ำ',36,30)],
+well:()=>[ground(9,7.5,'#3f5f35'),Di(2,3,.01,.7,'#57534e',{layer:.5}),Cy(2,3,0,.22,.5,'#94a3b8',{cap:'#475569'}),
+ pipe([[2,3,.4],[2,3,.55],[4,3,.55]],'#1d4ed8',4),Cy(4.4,3,0,.45,1.1,'#2563eb'),pipe([[4.4,3,1.1],[4.4,3,1.35],[6.6,3,1.35],[6.6,3,.6]],'#1d4ed8',4),
+ house(6.1,3.2,2.2,1.8,1.6),Cy(5,3,1.35,.09,.22,'#111827',{cap:'#22d3ee'}),
+ Cy(3.1,1.4,0,.07,1.3,'#8b93a6'),B(2.6,1.2,1.3,1,.45,1,'#e2e8f0',{breakers:2}),cable([[2,3,.5],[3.1,1.6,.02]]),coreOnPost(4,1,1.3,'กล่อง CoreDash',30,-26),
+ T(2,3,.5,'บ่อบาดาล (ปั๊มจุ่ม)',-46,30),T(4.4,3,1.1,'ถังแรงดัน',-60,-20),T(5,3,1.57,'เซนเซอร์แรงดัน',40,34),T(3.1,1.42,2.3,'ตู้ควบคุมปั๊ม + CT',-30,-30)],
+wmeter:()=>[ground(9,7.5,'#3f5f35'),B(0,6,0,9,1.5,.04,'#52525b',{layer:.5}),house(3,1.5,3.2,2.6,2),
+ pipe([[1.5,7.2,.1],[1.5,5,.1],[4.6,5,.1],[4.6,4.15,.1]],'#2563eb',4,1.5),
+ B(1.2,4.8,0,.65,.45,.4,'#1e40af',{deco:[{f:'front',u0:.2,u1:.8,v0:.35,v1:.85,c:'#e0f2fe'}]}),B(1.25,4.82,.4,.25,.2,.18,'#111827',{led:'#22d3ee'}),
+ cable([[1.35,4.9,.55],[1.35,4.4,.02],[7.25,4.4,.02],[7.25,4.85,.02]]),coreOnPost(6.8,4.6,1.1),
+ T(1.5,5,.6,'มิเตอร์น้ำ + เซนเซอร์พัลส์',-30,-60),T(1.5,6.8,.1,'ท่อประปาจากถนน',40,26)],
+guard:()=>[ground(10,8,'#3a4257'),B(3,4.6,0,7,2.2,.03,'#52525b',{layer:.5}),L([[3,5.7,.04],[10,5.7,.04]],'#f8fafc',1.6,{dash:1,nofl:1,layer:.6}),
+ B(1,3,0,1.8,1.5,2.1,'#f1f5f9',{deco:[{f:'front',u0:.1,u1:.9,v0:.45,v1:.85,c:'#7dd3fc'},{f:'right',u0:.15,u1:.85,v0:.45,v1:.85,c:'#7dd3fc'},{f:'front',u0:.12,u1:.22,v0:.2,v1:.32,c:'#ef4444'}]}),B(.8,2.8,2.1,2.2,1.9,.2,'#1e3a8a'),
+ B(3.1,4.2,0,.4,.4,1.05,'#facc15'),L([[3.3,4.4,.95],[9,4.4,.95]],'#ef4444',5,{pipe:1}),
+ [[6,1.2],[8.5,2.5]].map(([x,y])=>B(x,y,0,.3,.3,1.1,'#334155',{deco:[{f:'front',u0:.15,u1:.85,v0:.6,v1:.85,c:'#22d3ee'}]})),
+ lamp(2.6,1.6,2.8),core(2.85,3.5,.9,'กล่อง CoreDash',40,-20),
+ T(1.2,4.5,.5,'ปุ่มฉุกเฉิน',-40,30),T(6.15,1.35,1.1,'จุดตรวจ NFC',30,-30),T(8.65,2.65,1.1,'จุดตรวจ NFC',30,-30),T(6.5,4.4,.95,'ไม้กั้น',20,40)],
+gate:()=>[ground(10,7,'#3a4257'),B(0,4,0,10,3,.03,'#52525b',{layer:.5}),
+ B(.3,3,0,3,.2,1.8,'#cbd5e1',bars(12)),B(6.7,3,0,3,.2,1.8,'#cbd5e1',bars(12)),B(3.3,2.9,0,.45,.45,2.1,'#94a3b8'),B(6.25,2.9,0,.45,.45,2.1,'#94a3b8'),
+ B(4.9,3.3,.05,2.4,.12,1.6,'#475569',bars(10)),B(6.1,3.38,.9,.14,.1,.25,'#f8fafc'),
+ B(3.4,3.35,2.1,.3,.2,.18,'#f8fafc'),Ba(3.55,3.6,2.12,.1,'#e5e7eb'),Cy(6.47,3.12,2.1,.15,.2,'#ef4444'),Ba(6.47,3.12,2.4,.1,'#f87171',{glow:1}),
+ coreOnPost(7.6,1.6,1.2),
+ T(6.15,3.45,1,'เซนเซอร์แม่เหล็กประตู',50,40),T(3.55,3.6,2.2,'PIR ตรวจจับคน',-40,-30),T(6.47,3.12,2.4,'ไซเรน',30,-30)],
+mroom:()=>[...room(8,5.5),B(5.5,.25,0,1.1,.06,2.2,'#7c5a3a'),B(.8,.25,.2,2,.6,2.2,'#d1d5db',{breakers:6}),
+ B(3,.25,0,.8,.6,2.4,'#1f2937',{deco:[0,1,2,3,4].map(i=>({f:'front',u0:.15,u1:.85,v0:.15+i*.15,v1:.2+i*.15,c:i%2?'#22d3ee':'#22c55e'}))}),
+ B(3.2,.25,2.5,1.4,.35,.45,'#f8fafc'),B(5.85,.31,2.26,.3,.08,.1,'#f8fafc'),B(4.3,.25,1.5,.25,.08,.3,'#f8fafc',{led:'#22c55e'}),
+ Di(3.9,1.6,.01,.55,'rgba(56,189,248,.4)',{layer:.6}),B(3.75,1.45,0,.25,.2,.06,'#f8fafc'),
+ core(6.95,.25,1.4,'กล่อง CoreDash',20,-40),
+ T(6,.35,2.35,'เซนเซอร์ประตู',20,-50),T(4.42,.33,1.65,'อุณหภูมิห้อง',-90,-40),T(3.87,1.55,.06,'เซนเซอร์น้ำท่วมพื้น',40,34)],
+street:()=>[ground(11,8,'#33503a'),B(0,3.2,0,11,1.8,.03,'#3f3f46',{layer:.5}),L([[0,4.1,.04],[11,4.1,.04]],'#e5e7eb',1.4,{dash:1,nofl:1,layer:.6}),
+ [1,4.2,7.4].map(x=>house(x,.6,2.2,1.8,1.5)),[1.5,5.5].map(x=>house(x,5.6,2.2,1.6,1.4,'#e0d4c0','#475569')),
+ [1.2,3.8,6.4,9].map((x,i)=>lamp(x,3,2.6,i!==2)),B(9.6,1.2,0,.9,.5,1.3,'#d1d5db',{breakers:3}),core(9.6,1.2,1.3,'',0,0),
+ T(6.78,3.04,2.5,'ดวงนี้ดับ → แจ้งเตือน',-40,-46),T(10.05,1.45,2.2,'ตู้ไฟถนน + CT + กล่อง CoreDash',-30,-46)],
+vwater:()=>[ground(11,8.5,'#33503a'),[[5,.8],[7.6,.8],[5.2,5.8],[7.8,5.6]].map(([x,y])=>house(x,y,2,1.6,1.4)),
+ [[1,1],[2.4,1],[1,2.4],[2.4,2.4]].map(([x,y])=>B(x,y,0,.18,.18,3,'#64748b')),B(.9,.9,3,1.8,1.8,.12,'#475569'),Cy(1.8,1.8,3.12,.85,1.6,'#60a5fa',{cap:'#93c5fd'}),Cy(1.8,1.8,4.72,.12,.15,'#111827',{cap:'#22d3ee'}),
+ B(1,4.3,0,1.6,1.3,1.2,'#e2e8f0',{door:1}),B(.9,4.2,1.2,1.8,1.5,.12,'#1e3a8a'),
+ pipe([[2.6,1.8,3.3],[2.9,1.8,3.3],[2.9,1.8,.1],[2.9,4,.1],[10.5,4,.1]],'#1d4ed8',4,1.5),pipe([[2.6,4.9,.3],[2.9,4.9,.3],[2.9,4,.3]],'#1d4ed8',4),
+ coreOnPost(3.4,5.2,1.1),Cy(10.3,4,.1,.1,.35,'#111827',{cap:'#22d3ee'}),
+ T(1.8,1.8,4.85,'หอถังสูง + เซนเซอร์ระดับ',30,-24),T(1.8,4.95,1.3,'โรงสูบ + CT',-50,-30),T(10.3,4,.45,'แรงดันปลายสาย',-20,-46)],
+dorm:()=>[ground(9,7,'#3a4257'),B(1.5,1.2,0,5.5,3,4.2,'#e8e2d6',{win:[5,4]}),B(1.4,1.1,4.2,5.7,3.2,.18,'#64748b'),
+ B(7,1.6,.5,.15,2.2,1.2,'#d1d5db',{deco:[0,1,2,3,4,5].map(i=>({f:'right',u0:.05+(i%3)*.32,u1:.05+(i%3)*.32+.24,v0:i<3?.55:.12,v1:i<3?.9:.47,c:'#f8fafc'}))}),
+ cable([[7.15,2.7,.5],[7.15,2.7,.02],[8.05,2.7,.02],[8.05,4.5,.02]]),coreOnPost(7.6,4.3,1),
+ T(7.15,2.7,1.7,'มิเตอร์ไฟ-น้ำรายห้อง (RS485)',30,-40)],
+pool:()=>[ground(10,8,'#d6d3d1'),B(1.3,1.3,0,6.4,4.4,.04,'#e7e5e4',{layer:.5}),B(1.5,1.5,0,6,4,.05,'#06b6d4',{layer:.6}),
+ Di(3,3,.06,.6,'rgba(255,255,255,.2)',{layer:.7}),Di(5.5,4.2,.06,.4,'rgba(255,255,255,.2)',{layer:.7}),
+ B(8.2,1.3,0,1.6,1.6,1.4,'#e2e8f0',{door:1}),B(8.1,1.2,1.4,1.8,1.8,.12,'#0e7490'),pipe([[7.5,2.2,.12],[8.2,2.2,.12]],'#334155',4,1.5),
+ coreOnPost(8.6,4.2,1.1,'กล่อง CoreDash',40,14),B(2,6.2,0,1.4,.6,.25,'#f8fafc'),B(4,6.2,0,1.4,.6,.25,'#f8fafc'),Cy(6.3,6.5,0,.04,1.6,'#a8a29e'),Ba(6.3,6.5,1.7,.55,'#f97316'),
+ T(9,2.1,1.5,'ห้องเครื่อง: ปั๊มกรอง + หัววัด pH/ORP',-40,-50)],
+freezer:()=>[...room(8,5.5,3),B(.8,.25,0,1.3,.9,2.2,'#e2e8f0',{deco:glass()}),B(2.4,.25,0,1.3,.9,2.2,'#e2e8f0',{deco:glass()}),
+ B(4.2,2.2,0,3,1,1.1,'#7c5a3a'),B(4.1,2.1,1.1,3.2,1.2,.08,'#d6d3d1'),B(5,2.3,1.18,.9,.6,.8,'#111827',{led:'#22d3ee'}),
+ cable([[1.45,.6,2.2],[1.45,.4,2.5],[4.4,.4,2.3]]),core(4.4,.25,1.6,'กล่อง CoreDash',30,-26),
+ T(1.45,.7,2.2,'หัววัดอุณหภูมิในตู้',-30,-40),T(3.05,1.15,1,'เซนเซอร์ประตูตู้',40,60)],
+chicken:()=>[ground(11,8.5,'#3a4a34'),
+ B(1.5,1,0,3,6,1.8,'#e5e7eb',{deco:[[.06,.47,.08,.48],[.53,.94,.08,.48],[.06,.47,.52,.92],[.53,.94,.52,.92]].map(([a,b,c,d])=>({f:'front',u0:a,u1:b,v0:c,v1:d,c:'#1f2937'})).concat([{f:'right',u0:.72,u1:.97,v0:.1,v1:.85,c:'#6b8f71'}],[0,1,2,3,4,5].map(i=>({f:'right',u0:.72,u1:.97,v0:.15+i*.12,v1:.17+i*.12,c:'rgba(0,0,0,.25)'})),[{f:'right',u0:.1,u1:.6,v0:.75,v1:.82,c:'#9ca3af'}])}),
+ B(1.35,.85,1.8,3.3,6.3,.2,'#64748b'),
+ B(4.5,3.6,.7,.1,.35,.35,'#f8fafc',{deco:[{f:'right',u0:.3,u1:.7,v0:.6,v1:.8,c:'#22c55e'}]}),
+ [[6.2,1],[7.2,1],[6.2,2],[7.2,2]].map(([x,y])=>B(x,y,0,.14,.14,1.3,'#64748b')),B(6.1,.9,1.3,1.3,1.3,.1,'#475569'),Cy(6.75,1.55,1.4,.55,1.1,'#2563eb',{cap:'#60a5fa'}),
+ pipe([[6.75,2.1,1.5],[6.75,2.6,1.5],[4.6,2.6,1.5]],'#1d4ed8',3),B(5.3,2.45,1.3,.35,.3,.3,'#1e40af',{led:'#22d3ee'}),
+ B(7,4.2,0,1.5,.9,.95,'#facc15',{fins:1}),B(5.4,6.4,0,.9,.5,1.3,'#d1d5db',{breakers:3}),
+ cable([[5.85,6.65,.3],[5.85,5.7,.02],[8.45,5.7,.02],[8.45,5.4,.02]]),coreOnPost(8,5.1,1.1,'กล่อง CoreDash',40,34),
+ T(3,7,1.2,'พัดลมระบายอากาศ (CT ทุกชุด)',-60,40),T(4.5,1.6,1.1,'Cooling pad',-20,-60),T(4.55,3.75,.9,'อุณหภูมิ + แอมโมเนีย',-150,-20),T(6.75,1.55,2.5,'ถังน้ำดื่ม + มิเตอร์น้ำ',30,-26),T(7.75,4.65,.95,'เครื่องปั่นไฟ',70,-46),T(5.85,6.65,1.3,'ตู้ควบคุม',-60,36)],
+pig:()=>{const g=[...room(9.4,6,2.6)];const pig=(x,y)=>[B(x,y,0,.72,.38,.38,'#f4a7b9'),B(x+.68,y+.05,.1,.22,.28,.24,'#f9b8c8')];
+ for(const x of[1,3,5,7,9])g.push(B(x,1,0,.08,1.8,.55,'#9ca3af'),B(x,3.7,0,.08,1.7,.55,'#9ca3af'));
+ g.push(B(1,2.72,0,8.08,.08,.5,'#9ca3af'),B(1,5.32,0,8.08,.08,.42,'#9ca3af'));
+ for(const x of[1.4,3.4,5.4,7.4]){g.push(pig(x,1.4),pig(x+.3,2.1),pig(x,4.1),pig(x+.3,4.7))}
+ g.push(B(7.2,.25,1.1,1.1,.1,1.1,'#94a3b8',{deco:[{f:'front',u0:.1,u1:.9,v0:.1,v1:.9,c:'#1f2937'}]}));
+ g.push(B(.25,1.2,.5,.1,3.8,1.4,'#6b8f71',{deco:[0,1,2,3,4,5].map(i=>({f:'right',u0:.04,u1:.96,v0:.12+i*.14,v1:.14+i*.14,c:'rgba(0,0,0,.25)'}))}));
+ g.push(pipe([[1,.45,.6],[9,.45,.6]],'#2563eb',2.5),B(3.9,.25,1.5,.3,.1,.35,'#f8fafc',{led:'#f59e0b'}),core(5.2,.25,1.4,'กล่อง CoreDash',20,-40));
+ g.push(T(.3,3,1.9,'Cooling pad',30,-70),T(7.75,.3,2.2,'พัดลมระบาย',30,-30),T(4.05,.35,1.85,'แอมโมเนีย + อุณหภูมิ',-120,-30),T(2,.45,.6,'ท่อน้ำหัวจุ๊บ + มิเตอร์น้ำ',-60,60));return g},
+server:()=>{const g=[...room(8.4,6,3)];
+ for(let i=0;i<3;i++)g.push(B(1+i*1.1,1.2,0,.95,1.1,2.3,'#111827',{deco:[0,1,2,3,4,5,6,7].map(k=>({f:'front',u0:.12,u1:.88,v0:.1+k*.1,v1:.16+k*.1,c:k%3?'#1f2937':'#374151'})).concat([0,1,2,3].map(k=>({f:'front',u0:.75,u1:.82,v0:.12+k*.2,v1:.15+k*.2,c:k%2?'#22d3ee':'#22c55e'})))}));
+ g.push(B(1.3,2.3,1.7,.3,.06,.22,'#f8fafc'),B(4.6,1.3,0,.6,.9,1.1,'#374151',{led:'#22c55e'}));
+ g.push(B(5.8,.4,0,1.2,.8,2.2,'#f1f5f9',{deco:[0,1,2,3,4].map(k=>({f:'front',u0:.12,u1:.88,v0:.1+k*.07,v1:.13+k*.07,c:'#cbd5e1'})).concat([{f:'front',u0:.3,u1:.7,v0:.75,v1:.85,c:'#0b1b3f'}])}));
+ g.push(L([[5.5,1.5,.02],[7.3,1.5,.02]],'#facc15',2.5,{dash:1,nofl:1,layer:.6}),L([[.8,2.65,.02],[4.4,2.65,.02]],'#facc15',2.5,{dash:1,nofl:1,layer:.6}));
+ g.push(Cy(3.5,.45,2.7,.2,.08,'#f8fafc'),core(7.2,.25,1.5,'กล่อง CoreDash',20,-40));
+ g.push(T(1.45,2.33,1.81,'เซนเซอร์ลมเข้าหน้าตู้ Rack',-60,-60),T(6.4,.8,2.2,'แอร์ + CT วัดคอมเพรสเซอร์',10,-24),T(6.4,1.5,.02,'สายตรวจน้ำรั่ว',40,30),T(4.9,1.75,1.1,'UPS',30,-20),T(3.5,.45,2.78,'เซนเซอร์ควัน',-50,-56));return g},
+rack:()=>[...room(6,4.5,2.8),
+ B(1.4,.6,0,1.4,1.2,2,'#1f2937',{deco:[{f:'front',u0:.06,u1:.94,v0:.05,v1:.95,c:'rgba(125,211,252,.22)'}].concat([0,1,2,3].map(k=>({f:'front',u0:.15,u1:.85,v0:.2+k*.17,v1:.28+k*.17,c:k==2?'#334155':'#0f172a'})),[0,1,2].map(k=>({f:'front',u0:.7+k*.05,u1:.73+k*.05,v0:.25,v1:.28,c:'#22c55e'})))}),
+ Cy(2.1,1.2,2,.25,.08,'#94a3b8',{cap:'#334155'}),B(2.5,1.78,1.8,.15,.06,.12,'#f8fafc'),B(1.6,1.7,1.7,.2,.08,.15,'#f8fafc',{led:'#22c55e'}),
+ B(3.3,1.3,0,.5,.8,.6,'#374151',{led:'#22c55e'}),core(3.6,.25,1.2,'กล่อง CoreDash',30,-30),
+ T(2.1,1.2,2.08,'พัดลมระบายตู้ + CT',-40,-40),T(1.7,1.78,1.8,'เซนเซอร์อุณหภูมิในตู้',-110,10),T(2.58,1.84,1.86,'เซนเซอร์ประตูตู้',40,50),T(3.55,1.7,.6,'UPS',40,30)],
+banana:()=>{const g=[ground(10.5,8,'#3f5f35')];
+ const ban=(x,y,s=1)=>{const r=[Cy(x,y,0,.14*s,1.3*s,'#7c9a3c',{cap:'#a3b86c'}),Ba(x+.18*s,y+.12*s,1*s,.15*s,'#a3e635')];
+  for(let k=0;k<5;k++){const a=k*1.2566+.4,ca=Math.cos(a),sa=Math.sin(a),px=-sa,py=ca,L0=1.05*s,w=.24*s,z0=1.25*s;
+   r.push(Q([[x,y,z0],[x+ca*L0*.5+px*w,y+sa*L0*.5+py*w,z0+.5*s],[x+ca*L0,y+sa*L0,z0+.15*s],[x+ca*L0*.5-px*w,y+sa*L0*.5-py*w,z0+.5*s]],k%2?'#4caf50':'#3f9b45',{ns:1}))}return r};
+ for(const y of[1.8,4,6.2]){g.push(pipe([[8.6,y+.45,.04],[1,y+.45,.04]],'#111827',2.2,1.5));for(const x of[1.8,4.2,6.6])g.push(ban(x,y,.9))}
+ g.push(pipe([[9.1,1.2,.05],[9.1,6.8,.05]],'#1d4ed8',5,1.4),[1.8,4,6.2].map(y=>valve(8.6,y+.3,0)));
+ g.push(Cy(9.6,1.2,0,.05,3.2,'#94a3b8'),L([[9.1,1.2,3],[10.1,1.2,3]],'#94a3b8',2.5),Cy(9.1,1.2,3,.06,.15,'#64748b'),Ba(8.95,1.2,3.2,.08,'#e5e7eb'),Ba(9.2,1.35,3.2,.08,'#e5e7eb'),Ba(9.2,1.05,3.2,.08,'#e5e7eb'),Cy(10.1,1.2,2.75,.15,.3,'#f8fafc'));
+ g.push(probe(3.2,4.5,0),cable([[3.35,4.6,.02],[3.35,7.5,.02],[9.65,7.5,.02],[9.65,4.6,.02]]),coreOnPost(9.2,4.3,1.1,'กล่อง CoreDash',40,10));
+ g.push(T(9.6,1.2,3.2,'สถานีวัดลม + ฝน',30,-20),T(3.35,4.6,.5,'เซนเซอร์ความชื้นดิน',-40,40),T(8.76,2.25,.4,'วาล์วโซน',30,-30));return g},
+rice:()=>{const g=[ground(11,9.8,'#5b4a32'),B(0,8.6,-.05,11,1.2,.08,'#1e6091',{layer:.5})];
+ const F=[[.6,.6],[5.8,.6],[.6,4.4],[5.8,4.4]];
+ for(const[x,y]of F){g.push(B(x,y,0,4.6,3.4,.06,'#3b6e8f',{layer:.6}));for(let i=.35;i<4.4;i+=.6)for(let j=.35;j<3.2;j+=.6)g.push(L([[x+i,y+j,.06],[x+i+.06,y+j-.04,.48]],'#7cb518',2.2))}
+ g.push(B(0,4,0,11,.4,.18,'#7a5a3a',{layer:.7}),B(5.4,0,0,.4,8.6,.18,'#7a5a3a',{layer:.7}),B(0,8.1,0,11,.4,.18,'#7a5a3a',{layer:.7}));
+ g.push(Cy(8,6.1,0,.11,.9,'#f1f5f9'),Cy(8,6.1,.9,.15,.18,'#111827',{cap:'#22d3ee'}),Cy(2.9,2.3,0,.11,.9,'#f1f5f9'),Cy(2.9,2.3,.9,.15,.18,'#111827',{cap:'#22d3ee'}));
+ g.push(pump(9.5,8.15,.18),pipe([[9.95,9.3,.05],[9.95,8.7,.4]],'#334155',4),pipe([[9.5,8.4,.4],[8.9,7.4,.2]],'#334155',4));
+ g.push(Cy(5.6,1.6,.18,.12,.8,'#e5e7eb'),Cy(5.6,4.2,.18,.07,1.2,'#8b93a6'),core(5.15,3.95,1.38,'กล่อง CoreDash',50,-50),Cy(5.6,6.6,.18,.05,1.4,'#8b93a6'),Q([[5.1,6.2,1.8],[6.1,6.2,1.8],[6.1,7,1.4],[5.1,7,1.4]],'#1e3a8a',{grid:[3,2]}));
+ g.push(T(8,6.1,1.08,'ท่อวัดระดับน้ำ (AWD)',30,-30),T(5.6,1.6,.98,'เกจวัดฝน',-70,-30),T(9.95,8.4,.7,'ปั๊มสูบน้ำจากคลอง',30,30),T(5.6,6.6,1.8,'แผงโซลาร์ + แบต',-130,10));return g},
+shrimp:()=>{const g=[ground(11,8.5,'#7a6a52'),B(1,1,0,7.6,5.8,.05,'#1f2937',{layer:.5}),B(1.3,1.3,0,7,5.2,.07,'#0f766e',{layer:.6})];
+ const aer=(x,y)=>[Di(x+.7,y+.2,.08,.9,'rgba(255,255,255,.12)',{layer:.7}),B(x,y,.07,1.4,.35,.2,'#f8fafc'),Cy(x+.1,y+.17,.07,.15,.16,'#f97316'),Cy(x+1.3,y+.17,.07,.15,.16,'#f97316')];
+ g.push(aer(2,2),aer(5.8,2.2),aer(2.2,5.2),aer(5.8,5.3));
+ g.push(Cy(4.6,3.8,.07,.2,.22,'#f97316',{cap:'#fdba74'}),Cy(5.4,4.4,.07,.16,.2,'#facc15',{cap:'#fde68a'}));
+ g.push(B(9.3,1.6,0,.8,.5,1.3,'#d1d5db',{breakers:4}),cable([[4.7,3.8,.1],[4.7,.7,.06],[9.7,.7,.02],[9.7,1.6,.02]]),coreOnPost(9.3,3.4,1.1,'กล่อง CoreDash',40,36));
+ g.push(T(2.7,2.2,.27,'เครื่องตีน้ำ (CT ทุกตัว)',-40,-50),T(4.6,3.8,.29,'หัววัด DO',-30,-50),T(5.4,4.4,.27,'หัววัด pH + ความเค็ม',30,-40),T(9.7,1.85,1.3,'ตู้ควบคุมเครื่องตีน้ำ',30,-30));return g},
+ras:()=>{const g=[ground(10,7.4,'#6b7280')];
+ for(const[x,y]of[[1.8,2],[4.4,2],[7,2],[1.8,4.9],[4.4,4.9]])g.push(Cy(x,y,0,1,1,'#9ca3af',{cap:'#0e7490'}),L([[x,3.45,1.7],[x,y+(y<3?.4:-.4),1]],'#e5e7eb',1.2));
+ g.push(pipe([[.8,3.45,1.7],[8.6,3.45,1.7]],'#e5e7eb',3));
+ g.push(Cy(2.3,2.3,.9,.07,.4,'#f97316'),Cy(4.9,5.2,.9,.07,.4,'#f97316'),B(6.6,4.3,0,1.2,1.2,1,'#475569',{deco:[{f:'front',u0:.15,u1:.85,v0:.6,v1:.85,c:'#0e7490'}]}));
+ g.push(B(8.6,3.9,0,1,.7,.7,'#2563eb',{fins:1}),B(8.6,4.9,0,1,.7,.7,'#0ea5e9',{fins:1}),pipe([[8.6,4.2,.5],[8.6,3.45,1.7]],'#e5e7eb',3));
+ g.push(coreOnPost(8.6,1,1.1,'กล่อง CoreDash',30,-30));
+ g.push(T(1.8,2,1,'บ่อปูน / ถังกลม',-60,-40),T(2.3,2.3,1.3,'หัววัด DO',30,-60),T(9.1,4.6,.7,'ปั๊มลมหลัก + สำรอง (CT)',30,40),T(7.2,4.9,1,'ถังกรองชีวภาพ',-40,50));return g},
+cold:()=>[ground(10,7.5,'#3a4257'),B(1,1,0,5.5,3.8,2.6,'#e5e7eb',{deco:[{f:'front',u0:.55,u1:.8,v0:0,v1:.82,c:'#cbd5e1'},{f:'front',u0:.76,u1:.78,v0:.35,v1:.5,c:'#475569'}]}),
+ B(6.8,1.4,0,1.4,.9,1,'#94a3b8',{fins:1}),Cy(7.5,1.85,1,.35,.08,'#1f2937'),pipe([[6.8,1.8,.6],[6.5,1.8,.6]],'#cbd5e1',3),
+ B(4.15,4.8,2.16,.3,.08,.1,'#f8fafc'),cable([[4.3,4.85,2.2],[7.85,4.85,.02],[7.85,4.5,.02]]),coreOnPost(7.4,4.2,1.1,'กล่อง CoreDash',40,16),
+ T(7.5,1.85,1.1,'คอนเดนซิ่ง + CT',30,-40),T(4.3,4.84,2.2,'เซนเซอร์ประตู',24,-60),T(2.3,4.8,1.7,'หัววัดอุณหภูมิ 3 จุด',-60,-20)]
+};
+
+/* ============ ข้อมูล ============ */
+const CATS=[
+ {id:'farm',name:'เกษตร & สวน',icon:'🌱',color:'#22c55e',desc:'รดน้ำ ใส่ปุ๋ย ค่าดิน โรงเรือน สวนกล้วย นาข้าว'},
+ {id:'livestock',name:'ปศุสัตว์',icon:'🐔',color:'#eab308',desc:'ฟาร์มไก่ ฟาร์มหมู อากาศ แอมโมเนีย น้ำ อาหาร'},
+ {id:'aqua',name:'สัตว์น้ำ',icon:'🦐',color:'#14b8a6',desc:'บ่อปลา บ่อกุ้ง บ่อปูน ออกซิเจน คุณภาพน้ำ'},
+ {id:'energy',name:'พลังงาน & ค่าไฟ',icon:'⚡',color:'#f59e0b',desc:'Power meter โซลาร์ ไฟรั่ว ไฟดับ'},
+ {id:'factory',name:'โรงงาน & เครื่องจักร',icon:'🏭',color:'#3b82f6',desc:'มอเตอร์ ชั่วโมงเครื่อง นับชิ้นงาน ปั๊มลม'},
+ {id:'water',name:'น้ำ & ปั๊ม',icon:'💧',color:'#06b6d4',desc:'ระดับถัง บ่อบาดาล มิเตอร์น้ำ'},
+ {id:'security',name:'ป้อมยาม & ความปลอดภัย',icon:'🛡️',color:'#ef4444',desc:'จุดตรวจ ไม้กั้น ประตู ห้องเครื่อง'},
+ {id:'it',name:'ไอที & ห้องเซิร์ฟเวอร์',icon:'🖥️',color:'#6366f1',desc:'ห้องเซิร์ฟเวอร์ ตู้ Rack สาขา UPS'},
+ {id:'community',name:'หมู่บ้าน & หอพัก',icon:'🏘️',color:'#a855f7',desc:'ไฟถนน ประปา มิเตอร์รายห้อง สระว่ายน้ำ'},
+ {id:'cold',name:'ร้านค้า & ความเย็น',icon:'🧊',color:'#38bdf8',desc:'ตู้แช่ ห้องเย็น'}];
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const U=[
+{id:'drip',cat:'farm',title:'รดน้ำอัตโนมัติตามความชื้นดิน',short:'ดินแห้งเมื่อไหร่เปิดน้ำให้เอง ดินชื้นพอก็ปิด ไม่ต้องเดินไปเปิดวาล์วเอง',level:1,time:'1 วัน',
+ problem:'ตั้งเวลารดน้ำอย่างเดียวไม่ดูสภาพดิน วันที่ฝนตกก็ยังรด วันที่แดดจัดก็รดไม่พอ เปลืองทั้งน้ำและค่าไฟปั๊ม',
+ measure:['ความชื้นดิน (%) ที่ระดับราก','สถานะปั๊มและวาล์ว เปิด/ปิด','เวลารดน้ำสะสมต่อวัน','ปริมาณน้ำที่ใช้ (ถ้าติดมิเตอร์น้ำ)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ความชื้นดินแบบ Capacitive','1–3 จุด'],['โซลินอยด์วาล์ว 24VAC / 12VDC','1 ต่อโซน'],['คอนแทคเตอร์สั่งปั๊ม','1'],['เทปน้ำหยด / หัวน้ำหยด','ตามแปลง']],
+ steps:[['วางจุดวัด','ปักเซนเซอร์ที่ความลึกราก (ผักราว 10–15 ซม. ไม้ผล 20–30 ซม.) ห่างหัวน้ำหยด 10–20 ซม. อย่างน้อยแปลงละ 1 จุด'],['ต่อวาล์วและปั๊ม','ต่อโซลินอยด์วาล์วหลังปั๊ม ให้รีเลย์ในกล่อง CoreDash สั่งคอยล์ของคอนแทคเตอร์ ไม่สั่งมอเตอร์ปั๊มตรงจากรีเลย์เล็ก'],['เดินสายเซนเซอร์','ใช้สายกันแดดร้อยท่อ PE ฝังดินตื้นๆ กันหนูกัดและแดดเผา'],['สอบเทียบค่า','จดค่าตอนดินแห้งและหลังรดน้ำจนชุ่ม แล้วตั้งเป็น 0% และ 100% ในแอป'],['ตั้งกติกา','เปิดน้ำเมื่อความชื้นต่ำกว่า 35% ปิดเมื่อถึง 60% และกันไม่ให้รดช่วงเที่ยงวัน']],
+ rules:['ความชื้นดิน < 35% → เปิดวาล์ว + ปั๊ม','ความชื้นดิน ≥ 60% หรือเปิดนานเกิน 40 นาที → ปิดวาล์ว','สั่งปั๊มแล้วแต่ไม่มีกระแส → แจ้ง “ปั๊มไม่ทำงาน”'],
+ alerts:['🌱 แปลงผัก A: ดินแห้ง 32% เริ่มรดน้ำอัตโนมัติ','✅ แปลงผัก A: รดน้ำเสร็จ ความชื้น 61% ใช้เวลา 18 นาที'],
+ tips:['เซนเซอร์แบบ Capacitive ทนกว่าแบบขาเหล็กที่ผุภายในไม่กี่สัปดาห์','ตั้งเวลาห้ามรดช่วง 11:00–14:00 ลดน้ำระเหย']},
+{id:'fert',cat:'farm',title:'ใส่ปุ๋ยผ่านระบบน้ำ คุมค่า EC อัตโนมัติ',short:'ผสมปุ๋ย A/B เข้ากับน้ำตามสัดส่วน วัดค่า EC/pH ในท่อ ถ้าเข้มข้นเกินหรือจางไป แจ้งเตือนทันที',level:3,time:'2–3 วัน',
+ problem:'ผสมปุ๋ยด้วยมือได้ค่าไม่คงที่ บางรอบเข้มจนรากไหม้ บางรอบจางจนพืชขาดธาตุอาหาร และไม่มีบันทึกย้อนหลังว่าให้ไปเท่าไหร่',
+ measure:['ค่า EC (mS/cm) ของน้ำผสมปุ๋ย','ค่า pH ของน้ำผสมปุ๋ย','ระดับน้ำในถังปุ๋ย A/B','เวลาเดินปั๊มฉีดปุ๋ยแต่ละถัง'],
+ devices:[['กล่อง CoreDash','1'],['หัววัด EC + pH แบบติดท่อ (RS485)','1'],['ปั๊มฉีดปุ๋ย (Dosing pump)','2'],['ลูกลอยวัดระดับถังปุ๋ย','2'],['ถังปุ๋ย A/B + ถังน้ำหลัก','3 ใบ']],
+ steps:[['ติดตั้งถังและปั๊มฉีด','ต่อปั๊มฉีดเข้าท่อหลักก่อนถึงตัวกรอง เพื่อให้ปุ๋ยผสมกันก่อนเข้าแปลง'],['ติดหัววัด EC/pH','ติดห่างจุดฉีดอย่างน้อย 1 เมตร ให้น้ำผสมกันก่อน และติดในช่วงท่อที่มีน้ำเต็มเสมอ'],['สอบเทียบหัววัด','pH ใช้น้ำยามาตรฐาน 7.0 และ 4.0 ส่วน EC ใช้น้ำยา 1.413 mS/cm แล้วกดบันทึกค่าในแอป'],['ตั้งสูตรปุ๋ย','กำหนดค่า EC เป้าหมายตามพืช เช่น ผักสลัดราว 1.2–1.8 ให้ระบบฉีดเป็นจังหวะสั้นๆ จนได้ค่า'],['ตั้งการแจ้งเตือน','แจ้งเมื่อ EC หลุดช่วงนานเกิน 5 นาที หรือถังปุ๋ยใกล้หมด']],
+ rules:['EC < เป้าหมาย − 0.2 → เปิดปั๊มฉีด 5 วินาที แล้ววัดซ้ำ','EC > เป้าหมาย + 0.4 → หยุดฉีด + แจ้งเตือน','ลูกลอยถังปุ๋ยต่ำ → แจ้ง “เติมปุ๋ย”'],
+ alerts:['🧪 โรงเรือน 1: EC 2.6 สูงกว่าเป้าหมาย 1.6 หยุดฉีดปุ๋ยแล้ว','⚠️ ถังปุ๋ย B ใกล้หมด เหลือราว 15%'],
+ tips:['ล้างหัววัดด้วยน้ำสะอาดทุกสัปดาห์ คราบปุ๋ยทำให้ค่าเพี้ยน','เก็บหัว pH ให้เปียกเสมอ ถ้าแห้งจะเสื่อมเร็ว']},
+{id:'soil',cat:'farm',title:'เช็คค่าดิน pH · EC · NPK แบบเรียลไทม์',short:'ฝังเซนเซอร์ดิน 7-in-1 ไว้ในแปลง ดูค่ากรด-ด่าง ธาตุอาหาร ความชื้น และอุณหภูมิดินจากมือถือ',level:2,time:'ครึ่งวัน',
+ problem:'ส่งดินตรวจแล็บได้ผลปีละครั้งสองครั้ง ไม่รู้ว่าหลังใส่ปุ๋ยหรือหลังฝนตกหนัก ค่าในดินเปลี่ยนไปแค่ไหน',
+ measure:['pH ดิน','EC ดิน (ความเค็ม / ปุ๋ยสะสม)','N · P · K (ค่าประมาณ mg/kg)','ความชื้นและอุณหภูมิดิน'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ดิน 7-in-1 แบบ RS485','1 ต่อแปลง'],['แผงโซลาร์ 20W + แบต 12V (ถ้าไม่มีไฟ)','1 ชุด'],['สายสัญญาณ 4 แกนชีลด์','ตามระยะ']],
+ steps:[['เลือกจุดตัวแทน','ไม่ใช่ขอบแปลง ไม่ใช่แอ่งน้ำขัง และห่างจุดหว่านปุ๋ยเม็ดอย่างน้อย 30 ซม.'],['ฝังเซนเซอร์','ขุดหลุม เสียบขาเซนเซอร์เข้าผนังดินเดิมให้แน่น ห้ามตอกด้วยค้อน กลบอัดให้ไม่มีโพรงอากาศ'],['ต่อ RS485','ต่อสาย A/B และไฟเลี้ยง 12V เข้ากล่อง CoreDash เลือกรุ่นเซนเซอร์ในแอป ตั้งอ่านค่าทุก 10–30 นาที'],['ดูแนวโน้ม','อย่ายึดค่าเดียว ดูกราฟรายสัปดาห์ และเทียบกับผลแล็บปีละครั้งเพื่อปรับค่า']],
+ rules:['pH < 5.5 ต่อเนื่อง 3 วัน → แจ้ง “ดินเป็นกรด”','EC ดิน > 2.0 → แจ้ง “ดินเค็ม / ปุ๋ยสะสม”','ความชื้นดิน < 25% → แจ้งให้รดน้ำ'],
+ alerts:['🧭 แปลงทุเรียน B: pH ดิน 5.2 ต่ำต่อเนื่อง 3 วัน','📈 สรุปสัปดาห์: N 42 · P 18 · K 96 mg/kg ความชื้นเฉลี่ย 38%'],
+ tips:['ค่า NPK จากเซนเซอร์แบบนี้เป็นค่าประมาณ ใช้ดูแนวโน้ม ไม่แทนผลแล็บ','ยกเซนเซอร์ออกก่อนไถพรวนทุกครั้ง']},
+{id:'green',cat:'farm',title:'โรงเรือน คุมอุณหภูมิ-ความชื้น พ่นหมอกอัตโนมัติ',short:'ร้อนเกินเปิดพัดลมและพ่นหมอก ชื้นเกินเปิดระบายอากาศ พร้อมกราฟย้อนหลังทุกชั่วโมง',level:2,time:'1 วัน',
+ problem:'กลางวันในโรงเรือนร้อนเกิน 40°C ได้ในไม่กี่นาที ถ้าพัดลมหรือระบบพ่นหมอกเสียตอนไม่มีคนอยู่ ผักเสียหายทั้งโรง',
+ measure:['อุณหภูมิและความชื้นอากาศ','ค่า VPD (คำนวณจากอุณหภูมิ + ความชื้น)','สถานะพัดลมและปั๊มพ่นหมอก','ความเข้มแสง (เสริม)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์อุณหภูมิ-ความชื้น + กล่องกันแดด','1–2'],['คอนแทคเตอร์สั่งพัดลมและปั๊ม','2'],['ปั๊มแรงดันสูง + หัวพ่นหมอก','1 ชุด']],
+ steps:[['ติดเซนเซอร์ให้ถูกที่','แขวนกลางโรงเรือน สูงระดับยอดพืช อยู่ในกล่องกันแดด ไม่โดนแดดตรงหรือละอองหมอก'],['ต่อพัดลม-ปั๊ม','ให้รีเลย์ของกล่อง CoreDash สั่งคอยล์คอนแทคเตอร์ แล้วคอนแทคเตอร์จ่ายไฟให้พัดลม/ปั๊ม'],['ตั้งช่วงทำงาน','เช่น เปิดพัดลมที่ 32°C ปิดที่ 29°C พ่นหมอกครั้งละ 20 วินาที เว้น 5 นาที เมื่อความชื้น < 60%'],['ตั้งแจ้งเตือนฉุกเฉิน','เกิน 38°C นาน 10 นาที แสดงว่าอุปกรณ์อาจเสีย ส่งแจ้งเตือนถึงทุกคนในกลุ่ม']],
+ rules:['อุณหภูมิ > 32°C → เปิดพัดลม','อุณหภูมิ > 34°C และความชื้น < 60% → พ่นหมอก 20 วินาที','อุณหภูมิ > 38°C นาน 10 นาที → แจ้งเตือนด่วน'],
+ alerts:['🌡️ โรงเรือน 2: 38.4°C เกินกำหนด 10 นาที ตรวจพัดลมด่วน','💨 โรงเรือน 2: พ่นหมอกอัตโนมัติ 6 รอบวันนี้'],
+ tips:['ตั้งค่าเปิด-ปิดห่างกัน 2–3°C กันพัดลมเปิดปิดถี่','ล้างหัวพ่นหมอกทุกเดือน คราบหินปูนทำให้ตัน']},
+{id:'pond',cat:'aqua',title:'บ่อปลา บ่อกุ้ง เฝ้าออกซิเจนและเครื่องตีน้ำ',short:'ออกซิเจนต่ำตอนก่อนรุ่งสางคือช่วงที่ปลาน็อกน้ำ ระบบเปิดเครื่องตีน้ำสำรองและปลุกเจ้าของทันที',level:2,time:'1 วัน',
+ problem:'ออกซิเจนละลายน้ำตกต่ำสุดช่วงก่อนรุ่งสาง ถ้าเครื่องตีน้ำดับหรือไฟตกตอนนั้น ปลาและกุ้งน็อกน้ำได้ภายในชั่วโมง',
+ measure:['ออกซิเจนละลายน้ำ DO (mg/L)','อุณหภูมิน้ำ','กระแสไฟเครื่องตีน้ำ (รู้ว่าหมุนจริง)','ไฟดับ / ไฟกลับ'],
+ devices:[['กล่อง CoreDash พร้อมแบตสำรอง','1'],['หัววัด DO แบบออปติคอล','1'],['CT วัดกระแสเครื่องตีน้ำ','1 ต่อเครื่อง'],['ทุ่นลอยยึดหัววัด','1']],
+ steps:[['ติดหัววัด DO','ผูกกับทุ่นให้อยู่ลึก 30–50 ซม. ห่างเครื่องตีน้ำอย่างน้อย 5 เมตร จะได้ค่าจริงของบ่อ ไม่ใช่ค่าตรงจุดที่ฟองเยอะ'],['คล้อง CT','คล้อง CT ที่สายไฟเส้นเดียวของเครื่องตีน้ำในตู้ควบคุม ไม่ต้องตัดต่อสาย'],['ตั้งระดับเตือน','ตั้งตามชนิดสัตว์น้ำ เช่น เปิดเครื่องสำรองที่ 4 mg/L และแจ้งเตือนด่วนที่ 3 mg/L'],['ทดสอบ','ลองปิดเครื่องตีน้ำจากตู้ ดูว่าข้อความแจ้งเตือนเข้ามือถือภายใน 1 นาที']],
+ rules:['DO < 4 mg/L → เปิดเครื่องตีน้ำสำรอง','DO < 3 mg/L → แจ้งเตือนด่วน ซ้ำทุก 5 นาที','สั่งเปิดแต่กระแส = 0 → “เครื่องตีน้ำไม่หมุน”'],
+ alerts:['🐟 บ่อ 2: DO 2.8 mg/L ต่ำวิกฤต เปิดเครื่องสำรองแล้ว','⚡ บ่อ 2: ไฟดับ กล่องทำงานด้วยแบตสำรอง'],
+ tips:['หัววัดแบบออปติคอลดูแลง่ายกว่าแบบเมมเบรน แค่เช็ดตะไคร่','ตั้งให้แจ้งเตือนหลายคน เผื่อคนแรกไม่ตื่น']},
+{id:'orchard',cat:'farm',title:'สวนผลไม้ แบ่งโซนรดน้ำ ใช้พลังงานโซลาร์',short:'สวนใหญ่ไม่มีไฟบ้าน ใช้แผงโซลาร์เลี้ยงกล่อง สั่งวาล์วรดน้ำทีละโซน ดูประวัติการรดย้อนหลังได้',level:3,time:'2–4 วัน',
+ problem:'ปั๊มแรงไม่พอรดทั้งสวนพร้อมกัน คนงานต้องเดินเปิด-ปิดวาล์วทีละโซน ลืมปิดทีน้ำหมดถัง ลืมเปิดทีต้นโทรม',
+ measure:['ความชื้นดินรายโซน','สถานะวาล์วแต่ละโซน','แรงดันน้ำในท่อเมน (รู้ว่าท่อแตก)','แรงดันแบตเตอรี่โซลาร์'],
+ devices:[['กล่อง CoreDash','1'],['โซลินอยด์วาล์วแบบล็อกตัว (Latching)','1 ต่อโซน'],['เซนเซอร์ความชื้นดิน','1 ต่อโซน'],['เซนเซอร์แรงดันน้ำ 0–10 bar','1'],['แผงโซลาร์ 50W + แบต 12V','1 ชุด']],
+ steps:[['แบ่งโซนตามแรงปั๊ม','รวมอัตราไหลหัวน้ำต่อโซนไม่ให้เกินกำลังปั๊ม แล้ววางวาล์วโซนรวมกันที่หัวแปลง'],['ใช้วาล์วแบบล็อกตัว','วาล์ว Latching กินไฟเฉพาะตอนสั่งเปิด-ปิด เหมาะกับระบบโซลาร์'],['ต่อเซนเซอร์แรงดัน','ติดหลังปั๊มในท่อเมน ถ้าแรงดันตกฮวบขณะรด แปลว่าท่อแตกหรือข้อต่อหลุด'],['ตั้งตารางรด','ให้รดทีละโซนต่อกัน โซนไหนดินยังชื้นพอให้ข้ามไป']],
+ rules:['ถึงคิวโซน และความชื้นดิน < 40% → เปิดวาล์วโซนนั้น 30 นาที','แรงดันท่อ < 0.5 bar ขณะรด → ปิดปั๊ม + แจ้ง “ท่ออาจแตก”','แบต < 11.8V → แจ้งเตือน'],
+ alerts:['🌳 สวนทุเรียน: รดครบ 3 โซน โซน 2 ข้ามเพราะดินชื้น 52%','🚨 ท่อเมน: แรงดันตกเหลือ 0.3 bar หยุดปั๊มแล้ว'],
+ tips:['ติดตะแกรงกรองก่อนวาล์วทุกตัว ตะกอนทำให้วาล์วปิดไม่สนิท','ร้อยสายในท่อ PVC กันไฟไหม้หญ้าและสัตว์กัด']},
+{id:'mush',cat:'farm',title:'โรงเพาะเห็ด คุมความชื้นให้คงที่',short:'เห็ดต้องการความชื้นสูงสม่ำเสมอ ระบบเปิดเครื่องพ่นละอองเมื่อแห้ง และแจ้งเตือนเมื่อร้อนเกิน',level:1,time:'ครึ่งวัน',
+ problem:'ต้องเข้าไปรดน้ำวันละหลายรอบ ถ้าออกไปธุระครึ่งวัน ความชื้นตก ดอกเห็ดแห้งกระด้าง ขายไม่ได้ราคา',
+ measure:['ความชื้นอากาศ (%RH)','อุณหภูมิในโรงเรือน','CO₂ (เสริม สำหรับเห็ดบางชนิด)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์อุณหภูมิ-ความชื้นแบบมีฟิลเตอร์','1'],['เครื่องพ่นละออง','1'],['รีเลย์สั่งเครื่องพ่น','1']],
+ steps:[['ติดเซนเซอร์','ติดกลางห้อง ระดับกลางชั้นวางก้อนเห็ด ไม่ให้ละอองโดนตรง'],['ต่อเครื่องพ่น','ใช้รีเลย์ในกล่องสั่งเปิด-ปิดเครื่องพ่นละออง'],['ตั้งช่วงความชื้น','ตั้งตามชนิดเห็ด เช่น เปิดที่ 80%RH ปิดที่ 90%RH'],['ตั้งแจ้งเตือน','ร้อนเกิน 32°C หรือความชื้นต่ำกว่า 70% นานเกิน 30 นาที']],
+ rules:['ความชื้น < 80% → เปิดเครื่องพ่น','ความชื้น ≥ 90% → ปิดเครื่องพ่น','อุณหภูมิ > 32°C → แจ้ง “เปิดระบายอากาศ”'],
+ alerts:['🍄 โรงเห็ด: ความชื้นต่ำ 68% นาน 30 นาที ตรวจน้ำในเครื่องพ่น','✅ วันนี้ความชื้นเฉลี่ย 86% อุณหภูมิเฉลี่ย 28°C'],
+ tips:['ความชื้นสูงตลอดเวลาทำให้เซนเซอร์ราคาถูกเพี้ยนเร็ว เลือกรุ่นที่มีฟิลเตอร์กันน้ำ','ใช้น้ำกรองกับเครื่องพ่นอัลตราโซนิก ลดคราบขาว']},
+{id:'power',cat:'energy',title:'Power meter 3 เฟส ดูค่าไฟรายวันจากมือถือ',short:'วัดแรงดัน กระแส กำลังไฟ และหน่วย kWh ทั้งอาคาร รู้ทันทีว่าวันไหนใช้ไฟผิดปกติ',level:2,time:'1 วัน (ช่างไฟ)',
+ problem:'รู้ค่าไฟตอนบิลมาแล้วเท่านั้น ไม่รู้ว่าช่วงไหนใช้ไฟหนัก เครื่องไหนกินไฟ และไม่รู้ตัวเมื่อเฟสไม่สมดุลจนมอเตอร์ร้อน',
+ measure:['แรงดัน (V) และกระแส (A) ทุกเฟส','กำลังไฟฟ้า kW และพลังงานสะสม kWh','ค่า Power Factor','ความต้องการพลังไฟฟ้าสูงสุด (Peak demand)'],
+ devices:[['กล่อง CoreDash','1'],['มิเตอร์วัดพลังงาน 3 เฟส (Modbus RS485)','1'],['CT แบบแยกแกน ตามขนาดเมน','3'],['ฟิวส์ป้องกันสายวัดแรงดัน','1 ชุด']],
+ steps:[['สำรวจตู้ MDB','ดูขนาดเมนเบรกเกอร์เพื่อเลือก CT ให้รองรับกระแส เช่น เมน 200A ใช้ CT 250A'],['คล้อง CT ทีละเฟส','ตัดไฟก่อนทุกครั้ง หันลูกศรบน CT ไปทางโหลด และจับคู่ CT กับเฟสแรงดันให้ตรงกัน (L1–CT1, L2–CT2, L3–CT3)'],['ต่อ RS485','ต่อสาย A/B จากมิเตอร์มาที่กล่อง CoreDash ระยะได้หลายร้อยเมตร'],['ตั้งค่าไฟ','ใส่อัตราค่าไฟต่อหน่วย หรืออัตรา TOU ในแอป เพื่อให้คำนวณค่าไฟรายวัน']],
+ rules:['ใช้ไฟวันนี้ > ค่าเฉลี่ย 7 วัน 20% → แจ้งเตือน','แรงดันเฟสใดต่ำกว่า 200V หรือเฟสหาย → แจ้งด่วน','กระแสแต่ละเฟสต่างกันเกิน 20% → แจ้ง “ตรวจโหลดแต่ละเฟส”'],
+ alerts:['📊 โรงงาน A: ค่าไฟวันนี้ 4,820 บาท สูงกว่าค่าเฉลี่ย 23%','⚠️ ตู้ MDB: เฟส L2 แรงดันตก 186V'],
+ tips:['ถ้าใส่ CT กลับทิศ ค่า kW จะติดลบ สลับทิศหรือกลับค่าในแอปได้','ห้ามเปิดวงจร CT ชนิดเอาต์พุต 5A ขณะมีโหลด ต้องลัดวงจรขั้วก่อนถอด']},
+{id:'solar',cat:'energy',title:'โซลาร์รูฟ ดูไฟผลิตเทียบไฟใช้',short:'รู้ว่าแผงผลิตได้วันละกี่หน่วย บ้านใช้จริงเท่าไหร่ ซื้อจากการไฟฟ้ากี่หน่วย และแผงสกปรกหรือยัง',level:2,time:'1 วัน',
+ problem:'แอปอินเวอร์เตอร์บอกแค่ไฟที่ผลิต ไม่บอกว่าบ้านใช้เท่าไหร่ จึงไม่รู้ว่าคุ้มจริงไหม และไม่รู้ตัวเมื่อแผงสกปรกจนผลิตลดลง',
+ measure:['ไฟที่แผงผลิต (kWh)','ไฟที่ซื้อจากการไฟฟ้า / ส่งคืน','ไฟที่บ้านใช้จริง','ผลผลิตเทียบวันแดดดีย้อนหลัง'],
+ devices:[['กล่อง CoreDash','1'],['มิเตอร์วัดพลังงาน 2 ทิศทาง','1'],['CT วัดสายเมน + สายออกอินเวอร์เตอร์','2–4'],['เซนเซอร์ความเข้มแสง (เสริม)','1']],
+ steps:[['วัดสองจุด','CT ชุดแรกวัดสายเมนจากการไฟฟ้า ชุดที่สองวัดสายออกจากอินเวอร์เตอร์ แล้วคำนวณไฟที่บ้านใช้'],['ตั้งทิศ CT ให้ถูก','ไฟที่ไหลออกจากบ้านต้องเป็นค่าติดลบ ทดสอบช่วงเที่ยงที่แดดจัด'],['เทียบกับแสงแดด','ถ้ามีเซนเซอร์แสง ระบบเทียบผลผลิตต่อแสงได้ บอกได้ว่าแผงเริ่มสกปรก'],['ตั้งรายงาน','สรุปรายวันส่งเข้า LINE ทุก 20:00']],
+ rules:['ผลผลิตวันแดดดี < 80% ของปกติ 3 วัน → แจ้ง “ล้างแผง”','อินเวอร์เตอร์ไม่ผลิตไฟช่วง 10:00–14:00 → แจ้งด่วน'],
+ alerts:['☀️ วันนี้ผลิต 28.4 หน่วย ใช้เอง 22.1 หน่วย ส่งคืน 6.3 หน่วย','🧽 ผลผลิตลดลง 22% ต่อเนื่อง 3 วัน ควรล้างแผง'],
+ tips:['ล้างแผงช่วงเช้าหรือเย็น ไม่ฉีดน้ำเย็นใส่แผงที่ร้อนจัด','งานต่อสายฝั่ง DC แรงดันสูง ให้ช่างโซลาร์ทำ']},
+{id:'leak',cat:'energy',title:'ไฟรั่ว ตรวจจับก่อนมีคนโดนไฟดูด',short:'วัดกระแสรั่วระดับมิลลิแอมป์ เห็นไฟรั่วค่อยๆ สูงขึ้น แจ้งเตือนก่อนเบรกเกอร์ตัดหรือเกิดอันตราย',level:2,time:'ครึ่งวัน (ช่างไฟ)',
+ problem:'ปั๊มน้ำ เครื่องทำน้ำอุ่น สายไฟเก่าในที่ชื้น เริ่มรั่วทีละนิดโดยไม่มีใครรู้ จนเบรกเกอร์กันดูดตัดบ่อย หรือแย่กว่านั้นคือไม่มีเบรกเกอร์กันดูดเลย',
+ measure:['กระแสไฟรั่ว (mA) ของวงจร','แนวโน้มไฟรั่วรายสัปดาห์','จำนวนครั้งที่เบรกเกอร์กันดูดตัด'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ไฟรั่ว ZCT','1 ต่อวงจร'],['เบรกเกอร์กันดูด RCBO 30mA (ถ้ายังไม่มี)','ตามวงจร']],
+ steps:[['ตัดไฟ เลือกวงจร','เริ่มจากวงจรเสี่ยง: ปั๊มน้ำ เครื่องทำน้ำอุ่น ไฟนอกบ้าน ห้องน้ำ'],['คล้อง ZCT ถูกวิธี','คล้องสาย L และ N ของวงจรเดียวกันผ่านรูพร้อมกัน ห้ามคล้องสายดิน'],['ต่อเข้ากล่อง','ต่อสายสัญญาณจาก ZCT เข้าช่องอนาล็อกของกล่อง CoreDash'],['ตั้งระดับ','ปกติไม่ควรเกิน 3–5 mA เตือนที่ 9 mA เตือนด่วนที่ 15 mA ก่อนถึงจุดที่เบรกเกอร์กันดูด 30mA ตัด']],
+ rules:['ไฟรั่ว > 9 mA → แจ้ง “ควรให้ช่างตรวจ”','ไฟรั่ว > 15 mA → แจ้งเตือนด่วน','ไฟรั่วเฉลี่ยสัปดาห์นี้สูงกว่าสัปดาห์ก่อน 50% → แจ้งแนวโน้ม'],
+ alerts:['🟠 ห้องปั๊ม: ไฟรั่ว 9 mA สูงกว่าปกติ ควรให้ช่างตรวจ','🔴 เครื่องทำน้ำอุ่นห้องน้ำ 2: ไฟรั่ว 17 mA งดใช้จนกว่าจะตรวจ'],
+ tips:['ระบบนี้เป็นการเฝ้าระวังเพิ่ม ไม่ใช่ตัวแทนเบรกเกอร์กันดูดและสายดิน','ฝนตกแล้วค่าขึ้น บ่งบอกว่ามีน้ำเข้าจุดต่อสายนอกบ้าน']},
+{id:'outage',cat:'energy',title:'ไฟดับ ไฟกลับ และเครื่องปั่นไฟ',short:'รู้ทันทีเมื่อไฟดับ เครื่องปั่นไฟติดหรือไม่ และไฟกลับมาเมื่อไหร่ แม้ไม่มีใครอยู่หน้างาน',level:1,time:'2 ชั่วโมง',
+ problem:'ไฟดับตอนกลางคืน ตู้แช่ ปั๊มน้ำ เครื่องตีน้ำหยุดทั้งหมด กว่าจะรู้ก็เช้า ของเสียหายไปแล้ว',
+ measure:['มีไฟ / ไม่มีไฟ ของไฟเข้า','แรงดันแต่ละเฟส','สถานะเครื่องปั่นไฟ','ระยะเวลาไฟดับสะสม'],
+ devices:[['กล่อง CoreDash พร้อมแบตสำรอง','1'],['เซนเซอร์ตรวจแรงดันไฟ AC','1 ต่อแหล่งไฟ'],['เราเตอร์ 4G + UPS เล็ก','1']],
+ steps:[['ให้กล่องมีไฟสำรอง','กล่องต้องทำงานต่อเมื่อไฟดับ และอินเทอร์เน็ตต้องไม่ดับตาม ใช้ 4G หรือ UPS ให้เราเตอร์'],['วัดไฟเข้า','ต่อเซนเซอร์แรงดันที่ไฟจากการไฟฟ้า และอีกตัวที่ไฟจากเครื่องปั่นไฟ'],['ตั้งเงื่อนไข','ไฟดับเกิน 30 วินาทีจึงแจ้ง กันแจ้งรัวตอนไฟกะพริบ'],['ทดสอบ','ปิดเมนจริงหนึ่งครั้ง ดูว่าข้อความเข้าและเครื่องปั่นไฟติดตามกำหนด']],
+ rules:['ไฟเข้า = 0 นานกว่า 30 วินาที → แจ้ง “ไฟดับ”','ไฟดับเกิน 2 นาที แต่เครื่องปั่นไฟยังไม่ติด → แจ้งด่วน','ไฟกลับ → แจ้งพร้อมระยะเวลาที่ดับ'],
+ alerts:['⚡ ร้านกาแฟ: ไฟฟ้าดับ · กล่องทำงานด้วยแบตสำรอง','✅ ไฟกลับแล้ว · ดับนาน 48 นาที'],
+ tips:['ทดสอบแบตสำรองของกล่องทุก 6 เดือนด้วยการตัดไฟจริง','ถ้ามีตู้แช่ ให้ทำคู่กับงานเฝ้าอุณหภูมิตู้แช่']},
+{id:'motor',cat:'factory',title:'มอเตอร์และเครื่องจักร เตือนก่อนพัง',short:'วัดการสั่นสะเทือน อุณหภูมิตัวถัง และกระแส จับอาการลูกปืนเริ่มเสียได้ล่วงหน้า',level:3,time:'1–2 วัน',
+ problem:'เครื่องจักรพังกลางกะ ไลน์ผลิตหยุดทั้งไลน์ ทั้งที่ก่อนพังมีอาการสั่นและร้อนขึ้นเรื่อยๆ แต่ไม่มีใครวัด',
+ measure:['ความสั่นสะเทือน (mm/s RMS)','อุณหภูมิตัวถังมอเตอร์ / ลูกปืน','กระแสมอเตอร์แต่ละเฟส','ชั่วโมงเดินเครื่องสะสม'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์สั่น + อุณหภูมิ (RS485)','1 ต่อมอเตอร์'],['CT วัดกระแสมอเตอร์','3 ต่อมอเตอร์'],['สตั๊ดเกลียว หรือแม่เหล็กยึดเซนเซอร์','1 ต่อจุด']],
+ steps:[['เลือกจุดติด','ติดใกล้ลูกปืนฝั่งขับ (Drive end) บนเนื้อโลหะเรียบ ไม่ติดบนฝาครอบพัดลม'],['ยึดให้แน่น','ใช้สตั๊ดเกลียวดีที่สุด แม่เหล็กใช้ได้ถ้าผิวเรียบ ไม่ใช้เทปกาวเพราะค่าจะเพี้ยน'],['เก็บค่าตั้งต้น','ให้เครื่องเดินปกติ 1–2 สัปดาห์ เพื่อรู้ค่าปกติของเครื่องนั้น'],['ตั้งระดับเตือน','อ้างอิงมาตรฐาน ISO 10816 หรือใช้ค่าปกติ ×2 เป็นเตือน ×3 เป็นวิกฤต']],
+ rules:['ความสั่น > 2 เท่าของค่าปกติ → แจ้งฝ่ายซ่อมบำรุง','อุณหภูมิลูกปืน > 80°C → แจ้งด่วน','กระแสเกินพิกัด 10% นาน 5 นาที → แจ้ง “มอเตอร์ทำงานหนักเกิน”'],
+ alerts:['🛠️ ไลน์ 3 ปั๊มน้ำเย็น: สั่น 7.1 mm/s สูงกว่าปกติ 2.4 เท่า ควรนัดเปลี่ยนลูกปืน','🔥 มอเตอร์พัดลม CT-2: ลูกปืน 84°C'],
+ tips:['แนวโน้มที่ค่อยๆ สูงขึ้นสำคัญกว่าค่าครั้งเดียว','จดวันอัดจาระบีลงในแอป จะเห็นว่าค่าสั่นลดลงหลังบำรุงรักษาไหม']},
+{id:'runtime',cat:'factory',title:'นับชั่วโมงเครื่องจักร และนับชิ้นงาน',short:'รู้ว่าเครื่องเดินจริงกี่ชั่วโมง หยุดกี่ครั้ง ผลิตได้กี่ชิ้น และถึงรอบบำรุงรักษาเมื่อไหร่',level:2,time:'1 วัน',
+ problem:'จดยอดผลิตด้วยมือปลายกะ ตัวเลขไม่ตรงความจริง และไม่รู้ว่าเครื่องหยุดรอวัตถุดิบไปกี่ชั่วโมงต่อวัน',
+ measure:['สถานะเครื่อง เดิน / รอ / หยุด (จากกระแสไฟ)','จำนวนชิ้นงาน','ชั่วโมงเดินสะสมและรอบบำรุงรักษา','อัตราการใช้เครื่องต่อกะ'],
+ devices:[['กล่อง CoreDash','1'],['CT วัดกระแส','1 ต่อเครื่อง'],['เซนเซอร์แสงนับชิ้นงาน (Photo sensor)','1 ต่อไลน์'],['ไฟสถานะบนเครื่อง (เสริม)','1']],
+ steps:[['วัดสถานะด้วยกระแส','คล้อง CT สายเดียวของมอเตอร์หลัก ตั้งเกณฑ์ เช่น > 5A = เดิน, 0.5–5A = เปิดรอ, < 0.5A = ปิด'],['ติดเซนเซอร์นับ','ติดปลายสายพาน ให้ชิ้นงานบังแสงทีละชิ้น ปรับระยะไม่ให้นับซ้ำ'],['กำหนดกะ','ใส่เวลากะทำงานในแอป เพื่อสรุปยอดผลิตและเวลาหยุดรายกะ'],['ตั้งรอบซ่อมบำรุง','เช่น เปลี่ยนน้ำมันทุก 500 ชั่วโมงเดิน ให้ระบบนับและเตือนล่วงหน้า']],
+ rules:['เครื่องหยุดเกิน 15 นาทีในเวลากะ → แจ้งหัวหน้าไลน์','ชั่วโมงสะสมถึง 480 ชม. → แจ้งเตรียมบำรุงรักษา','ยอดผลิตต่อชั่วโมง < 70% ของเป้า → แจ้งเตือน'],
+ alerts:['🏭 เครื่องฉีด 2: หยุด 22 นาที (กะเช้า) ตรวจสอบสาเหตุ','📦 สรุปกะเช้า: 3,412 ชิ้น · เดิน 7.1 ชม. · หยุด 4 ครั้ง'],
+ tips:['ใช้ไฟสถานะบนเครื่องเป็นสัญญาณเพิ่มได้ ไม่ต้องแก้ PLC เดิม','เริ่มจากเครื่องที่เป็นคอขวดก่อน จะเห็นผลเร็วที่สุด']},
+{id:'comp',cat:'factory',title:'ปั๊มลมโรงงาน แรงดันตก และลมรั่ว',short:'เฝ้าแรงดันลมและกระแสปั๊ม รู้เมื่อแรงดันตกจนเครื่องจักรสะดุด และจับลมรั่วตอนโรงงานหยุด',level:2,time:'1 วัน',
+ problem:'ลมรั่วตามข้อต่อทำให้ปั๊มเดินทั้งที่ไม่มีใครใช้ลม เปลืองไฟ และถ้าปั๊มตัดเพราะร้อน เครื่องจักรที่ใช้ลมหยุดหมด',
+ measure:['แรงดันลมในถัง (bar)','กระแสและชั่วโมงเดินปั๊มลม','อุณหภูมิหัวปั๊ม','เวลาเดินตอนโรงงานหยุด (บอกลมรั่ว)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์แรงดัน 0–16 bar (4–20mA)','1'],['CT วัดกระแสปั๊มลม','1'],['เซนเซอร์อุณหภูมิแบบแปะผิว','1']],
+ steps:[['ติดเซนเซอร์แรงดัน','ติดที่ท่อออกจากถังลมผ่านบอลวาล์ว เพื่อถอดเปลี่ยนได้โดยไม่ต้องปล่อยลมทิ้ง'],['ต่อแบบ 4–20mA','สัญญาณกระแสทนสัญญาณรบกวนในโรงงานได้ดี และเดินสายได้ไกล'],['ทดสอบลมรั่ว','วันหยุดปิดเครื่องที่ใช้ลมทั้งหมด ดูว่าแรงดันลดเร็วแค่ไหน และปั๊มเดินกี่นาที'],['ตั้งแจ้งเตือน','แรงดันต่ำกว่าที่เครื่องจักรต้องการ และปั๊มเดินผิดเวลา']],
+ rules:['แรงดัน < 6 bar นาน 1 นาที → แจ้ง “แรงดันลมตก”','ปั๊มเดิน > 20% ของเวลาในวันหยุด → แจ้ง “สงสัยลมรั่ว”','อุณหภูมิหัวปั๊ม > 95°C → แจ้งด่วน'],
+ alerts:['💨 ปั๊มลม 1: แรงดันตก 5.4 bar ไลน์บรรจุอาจสะดุด','🔎 วันอาทิตย์ปั๊มเดิน 31% ของเวลา ทั้งที่โรงงานหยุด สงสัยลมรั่ว'],
+ tips:['ลมรั่วในโรงงานเก่าเป็นค่าไฟก้อนใหญ่ที่มองไม่เห็น','ระบายน้ำทิ้งจากถังลมสม่ำเสมอ เซนเซอร์จะอายุยืนขึ้น']},
+{id:'tank',cat:'water',title:'ระดับน้ำในถัง ไม่ให้หมดหรือล้น',short:'รู้ระดับน้ำเป็นเปอร์เซ็นต์ตลอดเวลา สั่งปั๊มเติมอัตโนมัติ และเตือนเมื่อน้ำลดเร็วผิดปกติ',level:1,time:'ครึ่งวัน',
+ problem:'ลูกลอยไฟฟ้าค้าง น้ำล้นถังทั้งคืน หรือปั๊มไม่ทำงานจนน้ำหมดถังตอนเช้าที่ทุกคนต้องใช้',
+ measure:['ระดับน้ำ (% และลิตร)','อัตราใช้น้ำต่อชั่วโมง','สถานะปั๊มเติมน้ำ'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ระดับน้ำอัลตราโซนิกแบบกันน้ำ','1'],['ลูกลอยสำรองกันล้น','1'],['คอนแทคเตอร์สั่งปั๊ม','1']],
+ steps:[['ติดเซนเซอร์บนฝาถัง','ตั้งฉากกับผิวน้ำ ห่างผนังถังและท่อน้ำเข้า ไม่ให้คลื่นและฟองรบกวน'],['ใส่ขนาดถัง','กรอกความสูงและความจุถังในแอป เพื่อแปลงระยะเป็นเปอร์เซ็นต์และลิตร'],['ต่อปั๊ม','ให้กล่องสั่งปั๊มผ่านคอนแทคเตอร์ และคงลูกลอยสำรองไว้กันล้นเผื่อระบบขัดข้อง'],['ตั้งระดับ','เติมเมื่อต่ำกว่า 30% หยุดที่ 90%']],
+ rules:['ระดับ < 30% → เปิดปั๊มเติม','ระดับ ≥ 90% → ปิดปั๊ม','ระดับลด > 10% ในชั่วโมงเดียวช่วงกลางคืน → แจ้ง “สงสัยท่อรั่ว”'],
+ alerts:['💧 ถังน้ำหอพัก: เหลือ 18% ปั๊มเติมไม่ทำงาน','🚰 ถังบนดาดฟ้า: น้ำลดเร็ว 14% ใน 1 ชม. ตอนตีสอง'],
+ tips:['ถังกลางแดดมีไอน้ำเกาะหัวอัลตราโซนิก เลือกรุ่นหัวปิดผนึก','ถ้าน้ำมีฟองหรือถังแคบมาก ใช้เซนเซอร์แรงดันแบบจุ่มแทน']},
+{id:'well',cat:'water',title:'ปั๊มบ่อบาดาล ทำงาน หยุด หรือเดินตัวเปล่า',short:'รู้ว่าปั๊มจุ่มเดินจริงไหมจากกระแสไฟ จับอาการน้ำแห้งบ่อ (Dry run) ก่อนมอเตอร์ไหม้',level:2,time:'ครึ่งวัน (ช่างไฟ)',
+ problem:'ปั๊มจุ่มอยู่ใต้ดินหลายสิบเมตร มองไม่เห็นว่าทำงานหรือไม่ น้ำในบ่อลดจนปั๊มเดินตัวเปล่า มอเตอร์ไหม้ ค่าซ่อมหลักหมื่น',
+ measure:['กระแสปั๊ม (บอกเดินจริง / เดินตัวเปล่า)','แรงดันน้ำในท่อจ่าย','จำนวนครั้งที่ปั๊มตัด-ต่อต่อชั่วโมง','ชั่วโมงเดินสะสม'],
+ devices:[['กล่อง CoreDash','1'],['CT วัดกระแสปั๊ม','1'],['เซนเซอร์แรงดันน้ำ 0–10 bar','1'],['รีเลย์ตัดปั๊มฉุกเฉิน','1']],
+ steps:[['หาค่ากระแสปกติ','ให้ปั๊มเดินตอนน้ำเต็ม จดกระแสไว้ เช่น 6.2A เมื่อเดินตัวเปล่ากระแสจะลดลงชัดเจน'],['คล้อง CT ในตู้ควบคุม','คล้องสายเส้นเดียว ไม่ต้องตัดสาย'],['ติดเซนเซอร์แรงดัน','ติดที่ท่อหลังเช็ควาล์ว ใกล้ถังแรงดัน'],['ตั้งระบบป้องกัน','ถ้ากระแสต่ำกว่า 70% ของปกติต่อเนื่อง 30 วินาที ให้ตัดปั๊มและแจ้งเตือน']],
+ rules:['กระแส < 70% ของปกติ 30 วินาที → ตัดปั๊ม + แจ้ง “น้ำแห้งบ่อ”','ปั๊มตัด-ต่อ > 10 ครั้ง/ชม. → แจ้ง “ถังแรงดันมีปัญหา”','ปั๊มเดินต่อเนื่อง > 3 ชม. → แจ้ง “สงสัยท่อรั่ว”'],
+ alerts:['🔴 บ่อบาดาลหลังบ้าน: ปั๊มเดินตัวเปล่า (กระแส 3.1A) ตัดปั๊มแล้ว','🔁 ปั๊มบ่อ: ตัด-ต่อ 14 ครั้งในชั่วโมงนี้ ตรวจลมในถังแรงดัน'],
+ tips:['หลังตัดเพราะน้ำแห้ง ให้รอบ่อฟื้น 30–60 นาทีค่อยเปิดใหม่','ปั๊มตัด-ต่อถี่ ส่วนใหญ่เกิดจากลมในถังแรงดันหมด']},
+{id:'wmeter',cat:'water',title:'มิเตอร์น้ำ จับน้ำรั่วกลางดึก',short:'อ่านมิเตอร์น้ำอัตโนมัติ ถ้ามีน้ำไหลตอนตีสองที่ไม่มีใครใช้ แปลว่ามีรั่ว แจ้งเตือนทันที',level:1,time:'2 ชั่วโมง',
+ problem:'ท่อรั่วใต้พื้นหรือชักโครกรั่วซึมไม่มีใครเห็น รู้ตัวอีกทีบิลค่าน้ำสูงกว่าปกติหลายเท่า',
+ measure:['ปริมาณน้ำใช้ต่อชั่วโมง / วัน','น้ำไหลต่อเนื่องช่วงกลางคืน','เทียบการใช้น้ำรายเดือน'],
+ devices:[['กล่อง CoreDash','1'],['มิเตอร์น้ำแบบมีเอาต์พุตพัลส์','1'],['กล่องกันน้ำครอบจุดต่อ','1']],
+ steps:[['เลือกมิเตอร์','มิเตอร์รุ่นมีพัลส์ (เช่น 1 พัลส์ต่อ 1–10 ลิตร) ติดหลังมิเตอร์การประปา ในฝั่งท่อของเรา'],['ต่อสายพัลส์','ต่อเข้าช่องดิจิทัลของกล่อง ใส่ค่าลิตรต่อพัลส์ในแอป'],['เทียบค่า','จดเลขมิเตอร์การประปาเทียบกับในแอป 1 สัปดาห์ ให้ตรงกัน'],['ตั้งช่วงเงียบ','กำหนด 01:00–05:00 เป็นช่วงที่ไม่ควรมีน้ำไหลต่อเนื่อง']],
+ rules:['น้ำไหลต่อเนื่อง > 30 นาที ช่วง 01:00–05:00 → แจ้ง “สงสัยน้ำรั่ว”','ใช้น้ำวันนี้ > ค่าเฉลี่ย 2 เท่า → แจ้งเตือน'],
+ alerts:['🚿 บ้านสวน: มีน้ำไหลต่อเนื่อง 45 นาทีกลางดึก สงสัยน้ำรั่ว','📉 เดือนนี้ใช้น้ำ 18 คิว ลดลงจากเดือนก่อน 12%'],
+ tips:['หยดสีผสมอาหารในถังพักชักโครก ถ้าสีลงโถโดยไม่กดน้ำ แปลว่ารั่ว','ถ้าสวนรดน้ำตอนกลางคืน ให้ยกเว้นช่วงเวลารดในกติกา']},
+{id:'guard',cat:'security',title:'ป้อมยาม เช็คอินจุดตรวจ และปุ่มฉุกเฉิน',short:'ยามแตะบัตรที่จุดตรวจตามรอบ ถ้าขาดรอบระบบแจ้งหัวหน้า และมีปุ่มฉุกเฉินส่งเหตุเข้ากลุ่มทันที',level:2,time:'1 วัน',
+ problem:'ไม่รู้ว่ายามเดินตรวจจริงไหม สมุดลงชื่อเขียนย้อนหลังได้ และเมื่อเกิดเหตุต้องโทรหาหลายคนทีละสาย',
+ measure:['เวลาเช็คอินแต่ละจุดตรวจ','รอบตรวจที่ขาด / ล่าช้า','การกดปุ่มฉุกเฉิน','ไฟในป้อมและไฟส่องสว่างรอบพื้นที่'],
+ devices:[['กล่อง CoreDash ที่ป้อม','1'],['เครื่องอ่านบัตร NFC ที่จุดตรวจ','3–6 จุด'],['ปุ่มฉุกเฉินแบบกดค้าง','1'],['เซนเซอร์แสง / CT วัดไฟส่องสว่าง','1']],
+ steps:[['วางจุดตรวจ','เลือกจุดเสี่ยง: ประตูหลัง ลานจอดรถ ห้องเครื่อง แนวรั้ว ตั้งรอบ เช่น ทุก 2 ชั่วโมงหลัง 22:00'],['ลงทะเบียนบัตร','ผูกบัตรกับชื่อยามแต่ละคนในแอป จะรู้ว่าใครเดินตรวจ'],['ติดปุ่มฉุกเฉิน','ติดในป้อมจุดที่เอื้อมถึงง่ายแต่ไม่โดนกดพลาด ตั้งให้กดค้าง 2 วินาที'],['ตั้งกลุ่มแจ้งเตือน','ส่งเข้ากลุ่ม LINE ของนิติบุคคล หรือหัวหน้า รปภ.']],
+ rules:['จุดตรวจไม่มีเช็คอินเกินรอบ 15 นาที → แจ้งหัวหน้า','กดปุ่มฉุกเฉิน → แจ้งด่วนทุกช่องทาง พร้อมชื่อป้อม','ไฟส่องสว่างดับหลัง 18:30 → แจ้งเตือน'],
+ alerts:['🛡️ หมู่บ้าน A: จุดตรวจ 3 (ประตูหลัง) ขาดรอบ 01:00','🚨 ป้อมหน้า: มีการกดปุ่มฉุกเฉิน'],
+ tips:['ทดสอบปุ่มฉุกเฉินเดือนละครั้งในเวลาที่นัดไว้','ส่งสรุปรอบตรวจรายสัปดาห์ให้คณะกรรมการ']},
+{id:'gate',cat:'security',title:'ไม้กั้น ประตูรั้ว เปิดค้างหรือถูกเปิดนอกเวลา',short:'รู้ทันทีเมื่อประตูรั้วหรือไม้กั้นเปิดค้างนานผิดปกติ หรือถูกเปิดนอกเวลาที่กำหนด',level:1,time:'2 ชั่วโมง',
+ problem:'ประตูหลังหมู่บ้านหรือรั้วโกดังถูกเปิดทิ้งไว้ทั้งคืน ไม่มีใครรู้จนของหาย',
+ measure:['สถานะประตู เปิด / ปิด','ระยะเวลาเปิดค้าง','การเปิดนอกเวลาที่กำหนด','การเคลื่อนไหวรอบประตู (PIR)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์แม่เหล็กประตูแบบงานหนัก','1 ต่อประตู'],['เซนเซอร์ตรวจจับคน PIR กลางแจ้ง','1'],['ไซเรน / ไฟกะพริบ (เสริม)','1']],
+ steps:[['ติดเซนเซอร์แม่เหล็ก','ติดฝั่งเสารั้วกับฝั่งบานประตู ให้ห่างกันไม่เกิน 2 ซม. เมื่อปิดสนิท'],['ติด PIR','หันออกจากถนนใหญ่ ลดการแจ้งเตือนผิดจากรถวิ่งผ่าน'],['ตั้งช่วงเวลา','กำหนดเวลาปกติที่ประตูเปิดได้ เช่น 06:00–22:00'],['เชื่อมไซเรน','ให้กล่องสั่งไซเรนเมื่อประตูถูกเปิดนอกเวลา']],
+ rules:['ประตูเปิดค้าง > 10 นาที → แจ้งเตือน','ประตูถูกเปิดช่วง 22:00–06:00 → แจ้งด่วน + เปิดไซเรน','มีคนเคลื่อนไหวหน้าประตูหลังเที่ยงคืน → แจ้งเตือน'],
+ alerts:['🚪 ประตูหลังโกดัง: เปิดค้าง 25 นาที','🚨 ประตูข้างหมู่บ้าน: ถูกเปิดนอกเวลา'],
+ tips:['ประตูเหล็กใช้เซนเซอร์แบบตัวโลหะ แบบพลาสติกแตกง่าย','ตั้งหน่วงเวลา PIR ไม่ให้แจ้งซ้ำทุกนาที']},
+{id:'mroom',cat:'security',title:'ห้องเครื่อง คลังสินค้า ห้องควบคุมไฟฟ้า',short:'ใครเข้าห้องสำคัญเมื่อไหร่ ร้อนเกินไหม มีน้ำท่วมพื้นไหม รู้ได้จากมือถือ',level:1,time:'ครึ่งวัน',
+ problem:'ห้องควบคุมไฟฟ้าหรือห้องเซิร์ฟเวอร์ร้อนจัดเพราะแอร์เสีย หรือมีน้ำรั่วเข้าห้อง ไม่มีใครรู้จนอุปกรณ์เสียหาย',
+ measure:['การเปิดประตูห้อง','อุณหภูมิห้อง','น้ำบนพื้น','ควันไฟ (เสริม)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ประตูแม่เหล็ก','1'],['เซนเซอร์อุณหภูมิ-ความชื้น','1'],['เซนเซอร์น้ำท่วมพื้น','1–2']],
+ steps:[['ติดเซนเซอร์ประตู','ติดที่วงกบด้านบนของประตู ลดโอกาสโดนกระแทก'],['ติดเซนเซอร์อุณหภูมิ','ติดสูงราว 1.5 เมตร ห่างช่องลมแอร์ ให้วัดอากาศจริงของห้อง'],['วางเซนเซอร์น้ำ','วางจุดต่ำสุดของห้อง ใต้แอร์ หรือใกล้ท่อน้ำ'],['ตั้งเวลาทำการ','เปิดประตูนอกเวลาทำการให้แจ้งเตือน']],
+ rules:['อุณหภูมิห้อง > 35°C นาน 10 นาที → แจ้ง “แอร์อาจเสีย”','ตรวจพบน้ำที่พื้น → แจ้งด่วน','ประตูถูกเปิดนอกเวลาทำการ → แจ้งเตือน'],
+ alerts:['🌡️ ห้อง MDB: 37°C นาน 12 นาที ตรวจแอร์','💧 ห้องเครื่อง: พบน้ำที่พื้นใต้แอร์'],
+ tips:['ห้องที่มีตู้ไฟสำคัญ ติดเซนเซอร์ควันเพิ่มคุ้มค่ามาก','ส่งแจ้งเตือนเข้ากลุ่มช่าง ไม่ใช่แค่ผู้จัดการคนเดียว']},
+{id:'street',cat:'community',title:'ไฟถนนหมู่บ้าน ดับดวงไหนรู้ทันที',short:'วัดกระแสวงจรไฟถนนและความสว่าง ถ้าหลอดดับหรือเบรกเกอร์ตัด นิติบุคคลรู้ก่อนลูกบ้านร้องเรียน',level:2,time:'1 วัน',
+ problem:'ไฟถนนดับหลายวันโดยไม่มีใครแจ้ง ซอยมืดเสี่ยงอุบัติเหตุและโจรกรรม ต้องให้ยามขับรถสำรวจทุกคืน',
+ measure:['กระแสรวมของวงจรไฟถนนแต่ละสาย','ความสว่างรอบพื้นที่','เวลาเปิด-ปิดไฟจริง','หน่วยไฟที่ใช้ต่อเดือน'],
+ devices:[['กล่อง CoreDash ในตู้ควบคุมไฟถนน','1'],['CT วัดกระแส','1 ต่อวงจร'],['เซนเซอร์แสง (Lux) กลางแจ้ง','1'],['คอนแทคเตอร์เปิด-ปิดไฟ','1 ชุด']],
+ steps:[['รู้ค่าต่อดวง','วัดกระแสรวมตอนไฟติดครบ หารด้วยจำนวนดวง เช่น 20 ดวง 4.4A ≈ 0.22A ต่อดวง'],['คล้อง CT ทีละวงจร','แยกตามซอย จะรู้ว่าซอยไหนมีปัญหา'],['เปิด-ปิดตามแสงจริง','ให้กล่องสั่งคอนแทคเตอร์ตามค่าแสงร่วมกับเวลา ประหยัดกว่าตั้งเวลาอย่างเดียว'],['ตั้งการแจ้ง','กระแสลดลงเท่ากับไฟดับ 2 ดวงขึ้นไป ให้แจ้งพร้อมชื่อซอย']],
+ rules:['กระแสวงจรลดลง > 10% → แจ้ง “ไฟดับประมาณ N ดวง”','มืดแล้ว (Lux < 20) แต่กระแส = 0 → แจ้ง “วงจรไฟถนนไม่ทำงาน”','สว่างแล้วไฟยังเปิด → ปิดอัตโนมัติ'],
+ alerts:['💡 ซอย 5: ไฟถนนดับประมาณ 3 ดวง','🌙 ซอย 2: มืดแล้วแต่ไฟถนนไม่ติด ตรวจเบรกเกอร์'],
+ tips:['ไฟ LED กินกระแสต่อดวงน้อย ต้องเลือก CT ขนาดเล็กให้ละเอียดพอ','เก็บประวัติเปลี่ยนหลอดในแอป ใช้วางงบประมาณปีถัดไป']},
+{id:'vwater',cat:'community',title:'ประปาหมู่บ้าน ปั๊มส่วนกลาง และหอถังสูง',short:'เฝ้าระดับหอถัง ปั๊มส่งน้ำ และแรงดันในเส้นท่อ ลูกบ้านไม่ต้องเจอน้ำไม่ไหลตอนเช้า',level:3,time:'2–3 วัน',
+ problem:'ปั๊มส่วนกลางตัดตอนกลางคืน น้ำในหอถังหมดตอนเช้าที่ทุกบ้านใช้น้ำพร้อมกัน เจ้าหน้าที่ต้องปีนดูระดับน้ำเอง',
+ measure:['ระดับน้ำหอถังสูง','สถานะและกระแสปั๊มส่งน้ำ','แรงดันน้ำปลายสาย','ปริมาณน้ำจ่ายต่อวัน'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ระดับแบบแรงดัน (จุ่มก้นถัง)','1'],['CT วัดกระแสปั๊ม','1 ต่อปั๊ม'],['เซนเซอร์แรงดันปลายสาย','1'],['มิเตอร์น้ำพัลส์','1']],
+ steps:[['วัดระดับหอถัง','ใช้เซนเซอร์แรงดันแบบจุ่มหย่อนลงก้นถัง แม่นและไม่ต้องติดตั้งบนที่สูง'],['เฝ้าปั๊ม','คล้อง CT ทุกปั๊ม ตั้งสลับปั๊มหลัก-สำรองอัตโนมัติ'],['วัดปลายสาย','ติดเซนเซอร์แรงดันที่บ้านหลังสุดท้าย บอกได้ว่าน้ำไปถึงทุกบ้าน'],['ทำแดชบอร์ดกลาง','แชร์หน้าจอให้คณะกรรมการดูพร้อมกัน']],
+ rules:['หอถัง < 40% → เปิดปั๊มส่งน้ำ','ปั๊มหลักไม่มีกระแส → สลับไปปั๊มสำรอง + แจ้ง','แรงดันปลายสาย < 0.8 bar → แจ้ง “น้ำไหลอ่อน”'],
+ alerts:['🏘️ ประปาหมู่บ้าน: หอถังเหลือ 22% ปั๊มหลักไม่ทำงาน สลับไปปั๊มสำรองแล้ว','📊 เมื่อวานจ่ายน้ำ 142 คิว สูงกว่าปกติ 18%'],
+ tips:['ถ้าผลิตน้ำประปาเอง ตรวจคลอรีนคงเหลือควบคู่ด้วย','เซนเซอร์ใต้น้ำ ใช้สายแบบมีท่อระบายอากาศตามที่ผู้ผลิตกำหนด']},
+{id:'dorm',cat:'community',title:'หอพัก อพาร์ตเมนต์ จดมิเตอร์ไฟ-น้ำรายห้อง',short:'จดมิเตอร์อัตโนมัติทุกห้อง สรุปหน่วยค่าไฟค่าน้ำได้ในไม่กี่นาที และเตือนห้องที่ใช้ผิดปกติ',level:3,time:'2–5 วัน',
+ problem:'ต้องเดินจดมิเตอร์ทุกห้องทุกเดือน จดผิด คิดเงินผิด ผู้เช่าไม่เชื่อตัวเลข และไม่รู้ว่าห้องไหนน้ำรั่วไฟรั่ว',
+ measure:['หน่วยไฟ kWh รายห้อง','ปริมาณน้ำรายห้อง','ห้องที่ใช้น้ำ / ไฟผิดปกติ','ห้องว่างที่ยังมีการใช้ไฟ'],
+ devices:[['กล่อง CoreDash','1 ต่ออาคาร / ชั้น'],['มิเตอร์ไฟดิจิทัล RS485 (Modbus)','1 ต่อห้อง'],['มิเตอร์น้ำพัลส์ หรือ RS485','1 ต่อห้อง'],['สายสัญญาณ RS485','ตามอาคาร']],
+ steps:[['เปลี่ยนมิเตอร์','ใช้มิเตอร์ที่มีพอร์ต RS485 ตั้งเลขที่อยู่ (ID) ให้ไม่ซ้ำกัน และจดคู่กับเลขห้อง'],['เดินสายสัญญาณ','เดินสาย RS485 พ่วงต่อกันเป็นเส้นเดียวทั้งชั้น ใส่ตัวต้านทาน 120Ω ที่ปลายสาย'],['จับคู่ห้อง','ผูก ID มิเตอร์กับเลขห้องและผู้เช่าในแอป'],['ตั้งรอบสรุปยอด','กำหนดวันจด เพื่อสรุปหน่วยรายห้องแล้วนำไปคิดบิล']],
+ rules:['ห้องว่างแต่ใช้ไฟ > 0.5 หน่วย/วัน → แจ้งเตือน','ห้องใดใช้น้ำกลางดึกต่อเนื่อง → แจ้ง “สงสัยชักโครกรั่ว”','ถึงวันจดมิเตอร์ → ส่งสรุปให้เจ้าของหอ'],
+ alerts:['🏠 ห้อง 305: ใช้น้ำต่อเนื่อง 2 ชม. กลางดึก สงสัยชักโครกรั่ว','🧾 สรุปรอบบิล: 48 ห้อง · ไฟรวม 6,240 หน่วย · น้ำรวม 412 คิว'],
+ tips:['ถ้าใช้คิดเงินผู้เช่า เลือกมิเตอร์ที่ผ่านการรับรองมาตรฐาน','ให้ผู้เช่าดูการใช้ของห้องตัวเองได้ ลดข้อโต้แย้งเรื่องบิล']},
+{id:'pool',cat:'community',title:'สระว่ายน้ำส่วนกลาง คุมคลอรีนและ pH',short:'วัด pH และ ORP (บ่งบอกการฆ่าเชื้อของคลอรีน) ตลอดเวลา เตือนเมื่อค่าหลุดก่อนน้ำเขียวหรือแสบตา',level:2,time:'1 วัน',
+ problem:'วัดน้ำสระด้วยชุดหยดวันละครั้ง ช่วงคนเล่นเยอะคลอรีนหมดเร็ว น้ำขุ่นหรือแสบตาก่อนเจ้าหน้าที่จะรู้',
+ measure:['pH ของน้ำ','ORP (mV) บ่งบอกความสามารถฆ่าเชื้อ','อุณหภูมิน้ำ','สถานะปั๊มกรองและเวลาทำงาน'],
+ devices:[['กล่อง CoreDash','1'],['หัววัด pH + ORP พร้อมชุดติดท่อ','1'],['CT วัดกระแสปั๊มกรอง','1'],['ปั๊มเติมคลอรีน (เสริม)','1']],
+ steps:[['ติดหัววัดบนท่อ','ติดหลังเครื่องกรอง ก่อนจุดเติมคลอรีน ผ่านท่อบายพาสที่ปิด-เปิดได้ เพื่อถอดล้าง'],['สอบเทียบ','pH ใช้น้ำยา 7.0 และ 4.0 ส่วน ORP ตรวจกับน้ำยามาตรฐานเดือนละครั้ง'],['ตั้งค่าเป้าหมาย','สระทั่วไปมักคุม pH ราว 7.2–7.6 และ ORP ราว 650–750 mV'],['เชื่อมปั๊มคลอรีน (ถ้ามี)','ให้เติมเป็นจังหวะเมื่อ ORP ต่ำ และหยุดทันทีเมื่อปั๊มกรองไม่ทำงาน']],
+ rules:['ORP < 650 mV → แจ้ง / เปิดปั๊มเติมคลอรีน','pH นอกช่วง 7.0–7.8 → แจ้งเจ้าหน้าที่','ปั๊มกรองหยุด → ห้ามเติมคลอรีน + แจ้ง'],
+ alerts:['🏊 สระส่วนกลาง: ORP 590 mV คลอรีนต่ำ เติมคลอรีนแล้ว','⚠️ สระส่วนกลาง: pH 8.1 สูงเกินช่วง'],
+ tips:['ห้ามเติมสารเคมีขณะปั๊มกรองหยุด สารจะสะสมเข้มข้นในท่อ','ยังควรตรวจด้วยชุดหยดสัปดาห์ละครั้งเพื่อเทียบค่า']},
+{id:'freezer',cat:'cold',title:'ตู้แช่ร้านกาแฟ ร้านอาหาร มินิมาร์ท',short:'ตู้แช่อุ่นขึ้นเมื่อไหร่รู้ทันที ก่อนนม เนื้อ ไอศกรีมเสียทั้งตู้ พร้อมประวัติอุณหภูมิไว้แสดงตอนตรวจ',level:1,time:'1 ชั่วโมง',
+ problem:'คอมเพรสเซอร์ตู้แช่ดับตอนร้านปิด เปิดร้านเช้ามาของเสียทั้งตู้ หรือพนักงานปิดประตูไม่สนิททั้งคืน',
+ measure:['อุณหภูมิในตู้','ประตูเปิดค้าง','กระแสคอมเพรสเซอร์ (เสริม)','ไฟดับ'],
+ devices:[['กล่อง CoreDash','1'],['หัววัดอุณหภูมิกันน้ำ สายแบน','1 ต่อตู้'],['เซนเซอร์ประตูแม่เหล็ก (เสริม)','1 ต่อตู้']],
+ steps:[['เดินสายหัววัด','ใช้สายแบนลอดขอบยางประตู ไม่ต้องเจาะตู้ ติดหัววัดกลางตู้ ไม่ชิดช่องลมเย็น'],['ตั้งค่าแต่ละตู้','ตู้แช่เย็นทั่วไปราว 2–6°C ตู้แช่แข็งราว −18°C ตั้งชื่อตู้ให้ชัด'],['หน่วงเวลา','ตั้งเตือนเมื่อเกินเกณฑ์นาน 15–20 นาที เพราะเปิดประตูหยิบของค่าจะขึ้นชั่วคราว'],['ดูรอบละลายน้ำแข็ง','ตู้บางรุ่นละลายน้ำแข็งอัตโนมัติ อุณหภูมิขึ้นชั่วคราว ให้กำหนดช่วงยกเว้น']],
+ rules:['ตู้แช่เย็น > 8°C นาน 20 นาที → แจ้งเตือน','ตู้แช่แข็ง > −10°C นาน 20 นาที → แจ้งด่วน','ประตูเปิดค้าง > 3 นาที → แจ้งเตือน'],
+ alerts:['🧊 ร้านกาแฟ: ตู้นม 9.5°C สูงกว่าที่ตั้ง 6°C นาน 20 นาที','🚪 ตู้ไอศกรีม: ประตูเปิดค้าง 5 นาที'],
+ tips:['ใส่หัววัดในขวดน้ำเล็กๆ จะได้ค่าใกล้อุณหภูมิอาหาร และไม่แกว่งตอนเปิดประตู','เก็บกราฟย้อนหลังไว้แสดงตอนตรวจมาตรฐานร้านอาหาร']},
+{id:'cold',cat:'cold',title:'ห้องเย็น เก็บผักผลไม้ อาหารทะเล ยา',short:'เฝ้าอุณหภูมิหลายจุดในห้องเย็น ประตูเปิดค้าง และเครื่องทำความเย็น พร้อมรายงานย้อนหลังทั้งเดือน',level:2,time:'1 วัน',
+ problem:'ห้องเย็นมีสินค้ามูลค่าสูง ถ้าเครื่องทำความเย็นเสียตอนกลางคืนหรือประตูปิดไม่สนิท ความเสียหายหลักแสน',
+ measure:['อุณหภูมิหลายจุด (หน้าประตู กลางห้อง ใกล้คอยล์)','ความชื้นในห้อง','ประตูเปิดค้าง','กระแสคอมเพรสเซอร์'],
+ devices:[['กล่อง CoreDash','1'],['หัววัดอุณหภูมิแบบสาย','3 จุด'],['เซนเซอร์ประตูแม่เหล็ก','1'],['CT วัดกระแสคอนเดนซิ่ง','1'],['ปุ่มขอความช่วยเหลือในห้อง','1']],
+ steps:[['กระจายจุดวัด','หน้าประตู (อุ่นสุด) กลางห้อง และใกล้คอยล์เย็น จะรู้ว่าความเย็นทั่วห้องไหม'],['ต่อ CT คอนเดนซิ่ง','ถ้าอุณหภูมิขึ้นแต่คอมเพรสเซอร์ยังเดิน แสดงว่าน้ำยารั่วหรือคอยล์ตัน'],['ติดปุ่มขอความช่วยเหลือ','ติดในห้องข้างประตู เผื่อมีคนติดอยู่ข้างใน'],['ตั้งรายงาน','ส่งสรุปอุณหภูมิต่ำสุด-สูงสุดรายวันทุกเช้า']],
+ rules:['อุณหภูมิกลางห้องเกินเกณฑ์ 15 นาที → แจ้งเตือน','อุณหภูมิขึ้นขณะคอมเพรสเซอร์เดิน → แจ้ง “เครื่องทำความเย็นผิดปกติ”','กดปุ่มในห้อง → แจ้งด่วนทุกช่องทาง'],
+ alerts:['❄️ ห้องเย็น 1: 7.8°C เกินเกณฑ์ 4°C คอมเพรสเซอร์ยังเดิน ตรวจน้ำยา','🆘 ห้องเย็น 2: มีการกดปุ่มขอความช่วยเหลือภายในห้อง'],
+ tips:['ติดม่านริ้วพลาสติกที่ประตู ลดความเย็นรั่วตอนเข้า-ออก','สินค้ากลุ่มยาและวัคซีนมีข้อกำหนดการบันทึกอุณหภูมิเฉพาะ ควรตรวจสอบมาตรฐานที่เกี่ยวข้อง']}
+,
+{id:'banana',cat:'farm',title:'สวนกล้วย รดน้ำ ให้ปุ๋ย และเฝ้าลมแรง',short:'กล้วยต้องการน้ำมากและสม่ำเสมอ ระบบรดตามความชื้นดิน ให้ปุ๋ยผ่านน้ำ และเตือนลมแรงก่อนต้นหักล้ม',level:2,time:'1–2 วัน',
+ problem:'กล้วยใบใหญ่ คายน้ำมาก ขาดน้ำช่วงออกเครือลูกจะเล็ก เครือไม่สวย ส่วนลมพายุทำให้ต้นที่ตกเครือหักล้มจำนวนมาก',
+ measure:['ความชื้นดินระดับราก (20–30 ซม.)','ปริมาณฝนรายวัน','ความเร็วลม (กระโชกสูงสุด)','สถานะปั๊มและวาล์วโซน','ค่า EC น้ำปุ๋ย (ถ้าให้ปุ๋ยทางน้ำ)'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์ความชื้นดิน','1 ต่อโซน'],['สถานีตรวจอากาศ (ลม + ฝน)','1'],['โซลินอยด์วาล์ว','1 ต่อโซน'],['ปั๊มฉีดปุ๋ย + หัววัด EC (เสริม)','1 ชุด']],
+ steps:[['ฝังเซนเซอร์ระหว่างกอ','ห่างกอกล้วยราว 50 ซม. ลึก 20–30 ซม. ในแนวที่น้ำหยดหรือสปริงเกลอร์รดถึง'],['ติดสถานีตรวจอากาศ','ติดบนเสาที่สูงกว่ายอดกล้วย ในที่โล่ง ไม่มีต้นไม้บังลม'],['ใช้ข้อมูลฝน','ถ้าฝนตกเกินที่ตั้งไว้ ให้ข้ามรอบรดน้ำวันนั้นอัตโนมัติ'],['ให้ปุ๋ยทางน้ำ','กล้วยต้องการโพแทสเซียมสูง แบ่งให้ผ่านระบบน้ำเป็นรอบสั้นๆ แทนหว่านครั้งใหญ่']],
+ rules:['ความชื้นดิน < 45% และไม่มีฝน 24 ชม. → รดน้ำโซนนั้น','ฝนวันนี้ > 15 มม. → ข้ามรอบรดน้ำ','ลมกระโชก > 40 กม./ชม. → แจ้งเตือนให้เตรียมค้ำต้น'],
+ alerts:['🍌 สวนกล้วยหอม โซน 2: ดินแห้ง 41% เริ่มรดน้ำ 25 นาที','🌬️ ลมกระโชก 48 กม./ชม. เตรียมไม้ค้ำต้นที่ตกเครือ'],
+ tips:['ค้ำต้นที่ตกเครือก่อนเข้าหน้ามรสุม ช่วยลดต้นหักได้มาก','สปริงเกลอร์ใต้ทรงพุ่มเหมาะกับกล้วย เพราะใบใหญ่บังน้ำที่รดจากด้านบน']},
+{id:'rice',cat:'farm',title:'นาข้าว วัดระดับน้ำในแปลง แบบเปียกสลับแห้ง (AWD)',short:'รู้ระดับน้ำในนาจากมือถือ สูบน้ำเข้าเมื่อน้ำลดถึงเกณฑ์ ประหยัดน้ำและค่าน้ำมันสูบ ไม่ต้องขี่รถไปดูทุกแปลง',level:2,time:'1 วัน',
+ problem:'ต้องไปดูน้ำในนาทุกวัน บางแปลงแห้งจนดินแตก บางแปลงขังน้ำนานเกินจำเป็น เปลืองค่าน้ำมันสูบน้ำ',
+ measure:['ระดับน้ำในแปลง (ซม. เหนือ / ใต้ผิวดิน)','ปริมาณฝน','ระดับน้ำในคลองหรือบ่อพัก','สถานะปั๊มสูบน้ำ'],
+ devices:[['กล่อง CoreDash + แผงโซลาร์','1'],['เซนเซอร์ระดับน้ำในนา (ในท่อ PVC เจาะรู)','1 ต่อแปลง'],['เกจวัดฝน','1'],['รีเลย์สั่งปั๊ม / CT วัดปั๊ม','1']],
+ steps:[['ทำท่อวัดน้ำ','ใช้ท่อ PVC เจาะรูรอบ ฝังลึกใต้ผิวดินราว 15–20 ซม. เพื่อเห็นระดับน้ำใต้ผิวดินตามหลัก AWD แล้วติดเซนเซอร์ระดับในท่อ'],['เลือกจุดตัวแทน','ติดกลางแปลง ไม่ใช่ใกล้ปากทางน้ำเข้า'],['ตั้งเกณฑ์ตามระยะข้าว','หลักทั่วไปของ AWD คือปล่อยน้ำลดถึงราว 15 ซม. ใต้ผิวดิน แล้วสูบเข้าให้ท่วมราว 5 ซม. และรักษาน้ำขังช่วงข้าวออกดอก'],['ใช้พลังงานโซลาร์','กลางทุ่งไม่มีไฟ ใช้แผงโซลาร์ + แบตเตอรี่ และสัญญาณ 4G']],
+ rules:['ระดับน้ำ < −15 ซม. (ใต้ผิวดิน) → แจ้ง / เปิดปั๊มสูบเข้า','ระดับน้ำ ≥ +5 ซม. → ปิดปั๊ม','ช่วงข้าวออกดอก ระดับน้ำ < 0 ซม. → แจ้งด่วน'],
+ alerts:['🌾 นาแปลง 3: น้ำลดถึง −15 ซม. เริ่มสูบน้ำเข้า','✅ นาแปลง 3: น้ำได้ระดับ +5 ซม. ปิดปั๊มแล้ว ใช้เวลา 2 ชม. 10 นาที'],
+ tips:['การทำนาเปียกสลับแห้งช่วยประหยัดน้ำ และลดก๊าซมีเทนจากนาข้าว','ทำคันนาให้แน่น ไม่อย่างนั้นน้ำรั่วออกเร็วจนปั๊มต้องสูบถี่']},
+{id:'chicken',cat:'livestock',title:'ฟาร์มไก่ โรงเรือนระบบปิด (EVAP)',short:'เฝ้าอุณหภูมิ ความชื้น แอมโมเนีย พัดลม และไฟฟ้าในโรงเรือน ไฟดับหรือพัดลมหยุดไม่กี่นาที ไก่อาจตายยกโรง',level:2,time:'1–2 วัน',
+ problem:'โรงเรือนระบบปิดพึ่งพัดลมและ Cooling pad ตลอดเวลา ถ้าไฟดับ เบรกเกอร์ตัด หรือพัดลมหยุดตอนกลางคืน อุณหภูมิพุ่งเร็ว ไก่เครียดและตายจำนวนมากก่อนคนงานจะรู้',
+ measure:['อุณหภูมิ-ความชื้น 3 จุด (หัว กลาง ท้ายโรงเรือน)','แอมโมเนีย NH₃ (ppm)','กระแสพัดลมแต่ละชุด และปั๊ม Cooling pad','ไฟดับ / เครื่องปั่นไฟ','น้ำดื่มต่อวัน (บอกสุขภาพไก่)','ระดับอาหารในไซโล (เสริม)'],
+ devices:[['กล่อง CoreDash พร้อมแบตสำรอง','1 ต่อโรงเรือน'],['เซนเซอร์อุณหภูมิ-ความชื้น','3 จุด'],['เซนเซอร์แอมโมเนีย NH₃','1–2'],['CT วัดกระแสพัดลม / ปั๊ม Cooling pad','ตามจำนวนชุด'],['มิเตอร์น้ำพัลส์ ท่อน้ำดื่ม','1'],['เซนเซอร์ตรวจไฟดับ','1']],
+ steps:[['วางจุดวัด 3 จุด','ติดที่หัว กลาง และท้ายโรงเรือน สูงระดับตัวไก่ เพราะท้ายโรงฝั่งพัดลมร้อนกว่าหน้าแผ่น Cooling pad เสมอ'],['ติดเซนเซอร์แอมโมเนีย','ติดกลางโรงระดับต่ำใกล้ตัวไก่ ห่างแผ่น Cooling pad และพัดลม เช็ดฝุ่นที่หัววัดสม่ำเสมอ'],['คล้อง CT พัดลม','คล้องแยกเป็นชุดในตู้ควบคุม รู้ทันทีว่าพัดลมชุดไหนหยุด ไม่ต้องรอให้ร้อน'],['ตั้งค่าตามอายุไก่','อุณหภูมิเป้าหมายลดลงตามอายุไก่ ปรับเกณฑ์ทุกสัปดาห์ตามคู่มือสายพันธุ์'],['ทดสอบไฟดับ','ตัดไฟเมนจริง ดูว่าแจ้งเตือนเข้าทันที และเครื่องปั่นไฟติดตามเวลา']],
+ rules:['ไฟดับ หรือพัดลมหลักไม่มีกระแส → แจ้งด่วนทุกช่องทาง ซ้ำทุก 2 นาที','อุณหภูมิท้ายโรง > เป้าหมาย + 3°C นาน 10 นาที → แจ้งเตือน','NH₃ > 20 ppm นาน 30 นาที → แจ้ง “เพิ่มการระบายอากาศ”','น้ำดื่มวันนี้ลดลง > 15% จากเมื่อวาน → แจ้ง “ตรวจสุขภาพไก่ / ท่อน้ำ”'],
+ alerts:['🐔 โรงเรือน 3: พัดลมชุด 4–6 หยุด ท้ายโรง 33.8°C','⚡ ฟาร์มไก่: ไฟดับ เครื่องปั่นไฟติดแล้วใน 40 วินาที'],
+ tips:['ไฟดับคือความเสี่ยงอันดับหนึ่งของโรงเรือนปิด ให้กล่องและเราเตอร์มีแบตสำรองเสมอ','น้ำดื่มลดลงกะทันหันมักเป็นสัญญาณแรกว่าไก่ป่วยหรือท่อน้ำตัน']},
+{id:'pig',cat:'livestock',title:'ฟาร์มหมู อากาศในคอก แอมโมเนีย น้ำ และอาหาร',short:'คุมอากาศในคอก เตือนแอมโมเนียสูง น้ำหัวจุ๊บไม่ไหล และไซโลอาหารใกล้หมด',level:2,time:'1–2 วัน',
+ problem:'หมูระบายความร้อนทางผิวหนังได้ไม่ดี ถ้าพัดลมหรือ Cooling pad หยุด หรือน้ำดื่มไม่ไหล หมูกินอาหารลด โตช้า และแม่หมูเครียดจนเสียหาย',
+ measure:['อุณหภูมิ-ความชื้นในคอก','แอมโมเนีย NH₃ และ CO₂ (เสริม)','น้ำดื่มต่อวัน / แรงดันน้ำในท่อหัวจุ๊บ','ระดับอาหารในไซโล','กระแสพัดลมและปั๊ม Cooling pad'],
+ devices:[['กล่อง CoreDash','1 ต่อโรงเรือน'],['เซนเซอร์อุณหภูมิ-ความชื้น','2–3'],['เซนเซอร์แอมโมเนีย NH₃','1'],['มิเตอร์น้ำพัลส์ + เซนเซอร์แรงดันน้ำ','1 ชุด'],['โหลดเซลล์ไซโลอาหาร','1 ต่อไซโล'],['CT วัดกระแสพัดลม / ปั๊ม','ตามจำนวน']],
+ steps:[['ติดเซนเซอร์ระดับตัวหมู','สูงราว 50–80 ซม. จากพื้น พ้นระยะที่หมูกัดถึง และอยู่ในกล่องกันน้ำ เพราะมีการล้างคอกบ่อย'],['วัดน้ำดื่ม','ติดมิเตอร์น้ำที่ท่อเมนเข้าโรงเรือน และเซนเซอร์แรงดันที่ปลายท่อหัวจุ๊บ รู้ทันทีถ้าน้ำไม่ถึงคอกท้าย'],['ไซโลอาหาร','โหลดเซลล์ที่ขาไซโลแม่นที่สุด หรือใช้เซนเซอร์ระดับที่ฝาไซโลแบบประหยัด'],['แยกกลุ่มแจ้งเตือน','กลุ่มด่วน (ไฟดับ พัดลมหยุด น้ำไม่ไหล) แยกจากกลุ่มสรุปรายวัน']],
+ rules:['อุณหภูมิคอก > เกณฑ์ตามช่วงอายุ นาน 15 นาที → แจ้งเตือน','แรงดันน้ำปลายท่อต่ำ หรือไม่มีน้ำไหล 1 ชม. ช่วงกลางวัน → แจ้งด่วน','ไซโลเหลือ < 20% → แจ้งสั่งอาหาร','NH₃ > 20 ppm → แจ้ง “เพิ่มการระบาย / ล้างคอก”'],
+ alerts:['🐷 โรงขุน 2: น้ำไม่ไหลถึงคอกท้าย แรงดัน 0.2 bar','🌾 ไซโลอาหาร B: เหลือ 18% (ราว 1.6 ตัน) ควรสั่งอาหาร'],
+ tips:['ใช้กล่องและเซนเซอร์กันน้ำ IP65 ขึ้นไป เพราะมีการล้างคอกด้วยน้ำแรงดันสูง','ก๊าซในโรงเรือนกัดกร่อนโลหะ เลือกขั้วต่อและกล่องที่ทนสนิม']},
+{id:'shrimp',cat:'aqua',title:'บ่อกุ้ง คุมออกซิเจน pH ความเค็ม และเครื่องตีน้ำ',short:'วัดคุณภาพน้ำต่อเนื่อง เปิดเครื่องตีน้ำชุดเสริมตามค่า DO และปลุกคนเฝ้าบ่อตอนตีสาม',level:3,time:'2–3 วัน',
+ problem:'กุ้งตายจากออกซิเจนต่ำมักเกิดช่วงกลางคืนถึงเช้ามืด หรือหลังแพลงก์ตอนตายตอนฟ้าครึ้มฝนตก ส่วนการเปิดเครื่องตีน้ำทุกตัวตลอดคืนก็เปลืองค่าไฟมาก',
+ measure:['ออกซิเจนละลายน้ำ DO (mg/L)','pH เช้า-บ่าย (ดูการแกว่ง)','ความเค็ม (ppt)','อุณหภูมิน้ำ','กระแสเครื่องตีน้ำแต่ละตัว'],
+ devices:[['กล่อง CoreDash พร้อมแบตสำรอง','1 ต่อ 1–2 บ่อ'],['หัววัด DO แบบออปติคอล','1 ต่อบ่อ'],['หัววัด pH + ความเค็ม (EC)','1 ต่อบ่อ'],['CT วัดกระแสเครื่องตีน้ำ','1 ต่อเครื่อง'],['คอนแทคเตอร์สั่งเครื่องตีน้ำ','ตามจำนวน']],
+ steps:[['วางหัววัดถูกจุด','ติดบนทุ่นหรือแพ ลึกราว 30–50 ซม. ในจุดที่น้ำไหลหมุนเวียน ไม่ติดหน้าเครื่องตีน้ำโดยตรง'],['แบ่งเครื่องตีน้ำเป็นชุด','ชุดหลักเปิดตลอดคืน ชุดเสริมเปิดเมื่อ DO ต่ำกว่าเกณฑ์ ประหยัดไฟกว่าเปิดทุกตัว'],['ตั้งเกณฑ์ DO','แนวทางทั่วไปคือรักษา DO ไม่ต่ำกว่า 4 mg/L เช่น เปิดชุดเสริมที่ 5 และแจ้งด่วนที่ 3.5'],['ดูการแกว่งของ pH','ถ้า pH เช้ากับบ่ายต่างกันเกิน 0.5 แสดงว่าแพลงก์ตอนหนาเกินไป ควรปรับน้ำ']],
+ rules:['DO < 5 mg/L → เปิดเครื่องตีน้ำชุดเสริม','DO < 3.5 mg/L → แจ้งด่วน ซ้ำทุก 5 นาที','pH แกว่งในวัน > 0.5 → แจ้ง “แพลงก์ตอนหนา ปรับน้ำ”','สั่งเปิดเครื่องตีน้ำแต่ไม่มีกระแส → แจ้ง “เครื่องตีน้ำหยุด”'],
+ alerts:['🦐 บ่อ B3: DO 3.4 mg/L ตอนตีสี่ เปิดเครื่องตีน้ำชุดเสริมแล้ว','📉 บ่อ B1: pH แกว่ง 7.6 → 8.5 ในวันเดียว ควรเปลี่ยนถ่ายน้ำ'],
+ tips:['ค่าความเค็มที่เหมาะขึ้นกับสายพันธุ์และระยะการเลี้ยง ปรึกษานักวิชาการประมงประกอบ','ดูยอกินอาหารทุกมื้อคู่กับค่าน้ำ จะเห็นต้นเหตุชัดขึ้น']},
+{id:'ras',cat:'aqua',title:'บ่อปูน ถังกลม ระบบน้ำหมุนเวียน (RAS)',short:'เลี้ยงปลาดุก ปลานิล แบบหนาแน่น ปั๊มลมหรือปั๊มน้ำหยุดไม่กี่นาทีปลาก็น็อก ระบบเฝ้าทุกบ่อ เปิดปั๊มลมสำรองเอง',level:2,time:'1 วัน',
+ problem:'การเลี้ยงหนาแน่นพึ่งปั๊มลมและปั๊มน้ำตลอดเวลา ถ้าไฟดับหรือปั๊มลมพังกลางดึก ออกซิเจนหมดเร็วมาก ส่วนน้ำล้นหรือรั่วจากบ่อทำให้ปลาหลุดหรือน้ำแห้ง',
+ measure:['DO แต่ละบ่อ (หรือบ่อตัวแทน)','อุณหภูมิน้ำ','ระดับน้ำในบ่อ (ล้น / รั่ว)','กระแสปั๊มลมและปั๊มน้ำหมุนเวียน','ไฟดับ'],
+ devices:[['กล่อง CoreDash พร้อมแบตสำรอง','1'],['หัววัด DO','1 ต่อบ่อ หรือบ่อตัวแทน'],['ลูกลอย / เซนเซอร์ระดับน้ำ','1 ต่อบ่อ'],['CT วัดกระแสปั๊มลม + ปั๊มน้ำ','2 ขึ้นไป'],['ปั๊มลมสำรอง (เปิดอัตโนมัติ)','1']],
+ steps:[['เฝ้าปั๊มลมก่อน','ปั๊มลมคือหัวใจของบ่อปูน คล้อง CT ไว้ ถ้าหยุดให้เปิดปั๊มลมสำรองทันที'],['ติดหัววัด DO','ถ้ามีหลายบ่อ ติดในบ่อที่เลี้ยงหนาแน่นที่สุดเป็นตัวแทน'],['ระดับน้ำ','ติดลูกลอยระดับสูงกันล้น และระดับต่ำกันน้ำรั่วจากท่อทิ้ง'],['ไฟสำรอง','ปั๊มลมสำรองควรต่อกับแบตเตอรี่หรือเครื่องปั่นไฟ ไม่ใช่วงจรเดียวกับปั๊มหลัก']],
+ rules:['ปั๊มลมหลักไม่มีกระแส → เปิดปั๊มลมสำรอง + แจ้งด่วน','DO < 3 mg/L → แจ้งด่วน','ระดับน้ำต่ำกว่าเกณฑ์ → แจ้ง “น้ำรั่ว / ท่อทิ้งเปิดค้าง”'],
+ alerts:['🐟 บ่อปูน 4: ปั๊มลมหลักหยุด เปิดปั๊มลมสำรองแล้ว','💧 บ่อปูน 2: ระดับน้ำต่ำผิดปกติ ตรวจท่อทิ้งน้ำ'],
+ tips:['ปลาดุกทนออกซิเจนต่ำได้ดีกว่าปลานิล ตั้งเกณฑ์ตามชนิดปลา','ล้างหัวทรายและสายลมเป็นประจำ ฟองละเอียดช่วยละลายออกซิเจนได้ดีกว่า']},
+{id:'server',cat:'it',title:'ห้องเซิร์ฟเวอร์ อุณหภูมิ น้ำรั่ว UPS และแอร์',short:'แอร์ดับ น้ำหยดใส่ตู้ หรือ UPS เหลือแบตน้อย รู้ทันทีก่อนเครื่องร้อนจนดับเองหรือข้อมูลเสียหาย',level:1,time:'ครึ่งวัน',
+ problem:'ห้องเซิร์ฟเวอร์ร้อนขึ้นเร็วมากเมื่อแอร์ตัด โดยเฉพาะวันหยุดหรือกลางคืน กว่าจะรู้เซิร์ฟเวอร์ก็ปิดตัวเองหรือฮาร์ดดิสก์เสียหายแล้ว',
+ measure:['อุณหภูมิลมเข้าหน้าตู้ Rack','ความชื้นห้อง','น้ำรั่วบนพื้นใต้แอร์ / ใต้พื้นยก','สถานะไฟเข้า UPS และแบตคงเหลือ','กระแสแอร์แต่ละตัว','ควัน และประตูห้อง'],
+ devices:[['กล่อง CoreDash','1'],['เซนเซอร์อุณหภูมิ-ความชื้น','2–3'],['สายตรวจน้ำรั่ว','ตามความยาว'],['เซนเซอร์ควัน (หน้าสัมผัส)','1'],['CT วัดกระแสแอร์','1 ต่อเครื่อง'],['เซนเซอร์ประตู','1']],
+ steps:[['วัดลมเข้าหน้าตู้','ติดเซนเซอร์ที่ประตูหน้าตู้ Rack ฝั่งลมเย็นเข้า ไม่ใช่ด้านหลังที่ลมร้อนออก'],['วางสายตรวจน้ำรั่ว','วางล้อมใต้แอร์และตามแนวท่อน้ำทิ้งแอร์ หรือใต้พื้นยก'],['เฝ้าแอร์ด้วย CT','ถ้าแอร์เปิดอยู่แต่กระแสคอมเพรสเซอร์ต่ำ แปลว่าไม่ทำความเย็น แม้พัดลมยังหมุน'],['เชื่อม UPS','อ่านสถานะผ่านหน้าสัมผัสแจ้งเตือนหรือพอร์ตสื่อสารของ UPS (ถ้ารุ่นนั้นรองรับ) เพื่อรู้ว่าไฟเมนดับและแบตเหลือเท่าไหร่']],
+ rules:['อุณหภูมิลมเข้า > 27°C นาน 10 นาที → แจ้งเตือน','อุณหภูมิ > 32°C → แจ้งด่วนทีมไอทีทุกคน','ตรวจพบน้ำที่พื้น หรือควัน → แจ้งด่วนทันที','UPS ทำงานด้วยแบต → แจ้งพร้อมเวลาสำรองที่เหลือ'],
+ alerts:['🖥️ ห้องเซิร์ฟเวอร์: ลมเข้าตู้ A 29.4°C แอร์ 1 ไม่มีกระแสคอมเพรสเซอร์','🔋 UPS ห้อง Server: ไฟเมนดับ ใช้แบต เหลือราว 18 นาที'],
+ tips:['ช่วงอุณหภูมิที่นิยมแนะนำสำหรับลมเข้าอุปกรณ์ไอทีคือราว 18–27°C ตามแนวทาง ASHRAE','กล่อง CoreDash ไม่ควรพึ่งเน็ตวงเดียวกับเซิร์ฟเวอร์ ใช้ 4G สำรองจะแจ้งได้แม้เน็ตออฟฟิศล่ม']},
+{id:'rack',cat:'it',title:'ตู้ Rack สาขา และตู้ Network ตามอาคาร',short:'ตู้เน็ตเวิร์กเล็กตามสาขาหรือตามชั้นมักไม่มีแอร์ เฝ้าความร้อน ไฟดับ และการเปิดตู้ จากที่เดียว',level:1,time:'2 ชั่วโมง',
+ problem:'ตู้ Network ตามสาขาอยู่ในห้องเก็บของหรือใต้บันได อากาศไม่ถ่ายเท พัดลมตู้เสียไม่มีใครรู้ สวิตช์และเราเตอร์ร้อนจนรีสตาร์ทเอง ทั้งสาขาเน็ตหลุด',
+ measure:['อุณหภูมิในตู้','พัดลมระบายตู้ทำงานไหม','ไฟเข้า / UPS เล็ก','ประตูตู้ถูกเปิด'],
+ devices:[['กล่อง CoreDash','1 ต่อตู้'],['เซนเซอร์อุณหภูมิ','1'],['CT เล็ก วัดพัดลมตู้','1'],['เซนเซอร์ประตูตู้','1'],['เซนเซอร์ตรวจไฟดับ','1']],
+ steps:[['ติดเซนเซอร์ส่วนบนของตู้','ลมร้อนลอยขึ้นด้านบน ค่าจะเตือนได้เร็วกว่า'],['เช็คพัดลม','วัดกระแสพัดลมตู้ ถ้าพัดลมหยุด ให้แจ้งก่อนอุณหภูมิขึ้น'],['ประตูตู้','ติดเซนเซอร์ประตู ตรวจว่ามีคนเปิดตู้นอกเวลาซ่อมบำรุง'],['รวมทุกสาขาในจอเดียว','ตั้งชื่อตามสาขา เช่น “สาขาบางนา-ตู้ชั้น2” ดูภาพรวมได้ทันที']],
+ rules:['อุณหภูมิในตู้ > 40°C นาน 10 นาที → แจ้งเตือน','พัดลมตู้ไม่มีกระแส → แจ้ง “ตรวจพัดลมตู้”','ไฟดับ > 1 นาที → แจ้งเตือน','ประตูตู้เปิดนอกเวลา → แจ้งเตือน'],
+ alerts:['🗄️ สาขาบางนา: ตู้ Network 43°C พัดลมตู้หยุดทำงาน','🚪 สาขาเชียงใหม่: ประตูตู้ Rack ถูกเปิดนอกเวลา'],
+ tips:['ตู้ในห้องปิด ควรมีช่องระบายอากาศเข้า-ออกของห้อง ไม่ใช่แค่พัดลมในตู้','ส่งสรุปอุณหภูมิสูงสุดรายสัปดาห์ จะรู้ว่าตู้ไหนควรย้ายที่']}
+];
+const CO=CATS.map(c=>c.id);U.sort((a,b)=>CO.indexOf(a.cat)-CO.indexOf(b.cat));
+const UID_IDX=Object.fromEntries(U.map((u,i)=>[u.id,i]));
+
+/* อุปกรณ์ */
+const dcab=(x,y,z)=>L([[x,y,z],[x,y,z+.4],[x+1,y+.5,z+.4]],'#111827',2.5);
+const DV=[
+ {id:'d-ct',name:'CT วัดกระแส (แยกแกน)',tag:'ไฟฟ้า',what:'คล้องสายไฟเส้นเดียวเพื่อวัดกระแส AC ไม่ต้องตัดต่อสาย',wire:'ต่อเข้าช่องอนาล็อก หรือเข้ามิเตอร์วัดพลังงาน',tip:'คล้องเส้นเดียว (L หรือ N) ถ้าคล้องทั้งคู่ค่าจะเป็นศูนย์',uses:['chicken','pig','server','rack','shrimp','ras','rice','power','solar','pond','motor','runtime','comp','well','street','vwater','cold'],
+  sc:()=>[L([[-.5,.4,.45],[2.5,.4,.45]],'#7c4a1e',7,{pipe:1}),B(.7,0,0,.6,.8,.95,'#1f2937',{deco:[{f:'front',u0:.2,u1:.8,v0:.3,v1:.7,c:'#0f172a'}]}),L([[1,.8,.2],[1,1.6,.05],[2,1.8,.05]],'#e2e8f0',2)]},
+ {id:'d-meter',name:'มิเตอร์วัดพลังงาน (Modbus)',tag:'ไฟฟ้า',what:'วัด V, A, kW, kWh, PF ได้แม่นยำ ส่งค่าทาง RS485',wire:'RS485 (A/B) ต่อพ่วงได้หลายตัวบนสายเส้นเดียว',tip:'ใช้คิดค่าไฟ/บิลผู้เช่า เลือกรุ่นที่ผ่านการรับรอง',uses:['power','solar','dorm'],
+  sc:()=>[B(-.3,-.05,.6,1.8,.1,.15,'#94a3b8'),B(0,0,0,1.2,.6,1.6,'#f1f5f9',{screen:1,led:'#22c55e'})]},
+ {id:'d-zct',name:'เซนเซอร์ไฟรั่ว ZCT',tag:'ไฟฟ้า',what:'วัดกระแสรั่วลงดินระดับมิลลิแอมป์ จากผลต่างของสาย L และ N',wire:'คล้องสาย L+N ของวงจรเดียวกันพร้อมกัน ต่อเข้าช่องอนาล็อก',tip:'ห้ามคล้องสายดิน และห้ามใช้แทนเบรกเกอร์กันดูด',uses:['leak'],
+  sc:()=>[Cy(1,1,.4,.6,.45,'#f59e0b',{cap:'#fbbf24'}),Di(1,1,.86,.3,'#1f2937',{layer:2.5}),L([[.92,1,-.3],[.92,1,1.6]],'#7c4a1e',4,{pipe:1,layer:3}),L([[1.1,1,-.3],[1.1,1,1.6]],'#1d4ed8',4,{pipe:1,layer:3})]},
+ {id:'d-volt',name:'เซนเซอร์ตรวจไฟดับ (แรงดัน AC)',tag:'ไฟฟ้า',what:'บอกว่ามีไฟหรือไม่ และวัดแรงดันไฟเข้า',wire:'ต่อขนานกับไฟที่ต้องการวัด ผ่านฟิวส์ป้องกัน',tip:'กล่องต้องมีแบตสำรอง ไม่อย่างนั้นไฟดับพร้อมกล่องจะแจ้งไม่ได้',uses:['chicken','ras','rack','outage'],
+  sc:()=>[B(0,0,0,1,.6,.7,'#f8fafc',{led:'#22c55e'}),L([[1,.3,.3],[2,.3,.3],[2.3,.8,.2]],'#111827',3)]},
+ {id:'d-tprobe',name:'หัววัดอุณหภูมิกันน้ำ',tag:'อุณหภูมิ',what:'วัดอุณหภูมิในตู้แช่ ห้องเย็น น้ำ หรือผิววัสดุ',wire:'สายดิจิทัล 3 เส้น ระยะสั้น-กลาง',tip:'ใส่ในขวดน้ำเล็กๆ ในตู้แช่ จะได้ค่าใกล้อุณหภูมิอาหาร',uses:['freezer','cold','motor'],
+  sc:()=>[Cy(0,0,0,.12,1.3,'#cbd5e1',{cap:'#e5e7eb'}),L([[0,0,1.3],[0,0,1.7],[1.2,.6,1.7]],'#111827',2.5)]},
+ {id:'d-th',name:'เซนเซอร์อุณหภูมิ-ความชื้น',tag:'อากาศ',what:'วัดอุณหภูมิและความชื้นสัมพัทธ์ (%RH) ของอากาศ',wire:'ดิจิทัล หรือ RS485 สำหรับระยะไกล',tip:'กลางแจ้งต้องอยู่ในกล่องกันแดด ไม่อย่างนั้นค่าสูงเกินจริง',uses:['chicken','pig','server','rack','green','mush','mroom'],
+  sc:()=>[B(0,0,0,.8,.4,1.2,'#f8fafc',{deco:[0,1,2,3].map(i=>({f:'front',u0:.1,u1:.9,v0:.15+i*.2,v1:.22+i*.2,c:'rgba(0,0,0,.18)'}))}),dcab(.4,.2,1.2)]},
+ {id:'d-soil',name:'เซนเซอร์ความชื้นดิน Capacitive',tag:'ดิน',what:'วัดความชื้นในดินเป็นเปอร์เซ็นต์ สำหรับสั่งรดน้ำ',wire:'อนาล็อก 3 เส้น หรือรุ่น RS485 สำหรับระยะไกล',tip:'ต้องสอบเทียบค่าแห้ง-เปียกกับดินจริงของแปลง',uses:['banana','drip','orchard'],
+  sc:()=>[B(0,0,.9,.6,.15,.4,'#111827'),B(.12,0,0,.36,.08,.9,'#1e293b',{deco:[{f:'front',u0:.1,u1:.9,v0:.1,v1:.3,c:'#facc15'}]}),dcab(.3,.07,1.3)]},
+ {id:'d-soil7',name:'เซนเซอร์ดิน 7-in-1',tag:'ดิน',what:'pH · EC · N · P · K · ความชื้น · อุณหภูมิดิน ในหัวเดียว',wire:'RS485 + ไฟเลี้ยง 12V',tip:'ค่า NPK เป็นค่าประมาณ ใช้ดูแนวโน้มคู่กับผลแล็บ',uses:['soil'],
+  sc:()=>[[.3,.5,.7].map(x=>L([[x,.5,.9],[x,.5,-.2]],'#e2e8f0',3,{layer:1})),Cy(.5,.5,.9,.4,.6,'#1e293b',{cap:'#334155'}),dcab(.5,.5,1.5)]},
+ {id:'d-ph',name:'หัววัด pH / EC / ORP / ความเค็ม',tag:'น้ำ',what:'วัดกรด-ด่าง ความเข้มข้นปุ๋ย การฆ่าเชื้อ หรือความเค็มของน้ำ (แปลงจาก EC เป็น ppt)',wire:'ผ่านบอร์ดแปลงสัญญาณ เป็น RS485 หรือ 4–20mA',tip:'ต้องสอบเทียบด้วยน้ำยามาตรฐาน และเปลี่ยนหัว pH ทุก 1–2 ปี',uses:['shrimp','fert','pool'],
+  sc:()=>[Cy(0,0,0,.14,1.6,'#e5e7eb'),Cy(0,0,1.6,.16,.35,'#1d4ed8'),dcab(0,0,1.95)]},
+ {id:'d-do',name:'หัววัดออกซิเจนละลายน้ำ (DO)',tag:'น้ำ',what:'วัดออกซิเจนในน้ำ mg/L สำคัญมากกับบ่อปลา บ่อกุ้ง',wire:'RS485 + ไฟเลี้ยง 12V',tip:'แบบออปติคอลดูแลง่าย แค่เช็ดตะไคร่สม่ำเสมอ',uses:['shrimp','ras','pond'],
+  sc:()=>[Cy(0,0,0,.22,.15,'#f97316'),Cy(0,0,.15,.22,1.3,'#334155'),dcab(0,0,1.45)]},
+ {id:'d-ultra',name:'เซนเซอร์ระดับน้ำอัลตราโซนิก',tag:'น้ำ',what:'วัดระยะถึงผิวน้ำ แปลงเป็นระดับน้ำ % และลิตร',wire:'ดิจิทัล / RS485',tip:'ติดให้ห่างผนังถังและท่อน้ำเข้า กันคลื่นรบกวน',uses:['ras','tank'],
+  sc:()=>[B(0,0,0,1,.6,.35,'#111827'),Cy(.28,.3,.35,.17,.18,'#cbd5e1',{cap:'#64748b'}),Cy(.72,.3,.35,.17,.18,'#cbd5e1',{cap:'#64748b'})]},
+ {id:'d-press',name:'เซนเซอร์แรงดัน (น้ำ / ลม)',tag:'แรงดัน',what:'วัดแรงดันในท่อหรือถัง หน่วย bar ใช้จับท่อแตก ลมตก',wire:'4–20mA หรือ 0–5V',tip:'ติดผ่านบอลวาล์ว จะถอดเปลี่ยนได้โดยไม่ต้องหยุดระบบ',uses:['pig','orchard','comp','well','vwater'],
+  sc:()=>[Cy(0,0,0,.14,.35,'#d4a017'),Cy(0,0,.35,.2,.15,'#b45309'),Cy(0,0,.5,.22,.9,'#cbd5e1'),dcab(0,0,1.4)]},
+ {id:'d-flow',name:'มิเตอร์น้ำแบบพัลส์',tag:'น้ำ',what:'นับปริมาณน้ำที่ไหลผ่าน ใช้จับน้ำรั่วและจดมิเตอร์อัตโนมัติ',wire:'สัญญาณพัลส์ 2 เส้น เข้าช่องดิจิทัล',tip:'ใส่ค่าลิตรต่อพัลส์ให้ตรงกับรุ่นมิเตอร์',uses:['chicken','pig','wmeter','vwater','dorm'],
+  sc:()=>[L([[-1,.3,.4],[2,.3,.4]],'#1d4ed8',8,{pipe:1}),B(.2,0,0,.7,.6,.8,'#1e40af',{deco:[{f:'front',u0:.2,u1:.8,v0:.5,v1:.85,c:'#e0f2fe'}]})]},
+ {id:'d-vib',name:'เซนเซอร์สั่นสะเทือน',tag:'เครื่องจักร',what:'วัดความสั่น mm/s และอุณหภูมิผิวเครื่อง เตือนก่อนลูกปืนพัง',wire:'RS485 + ไฟเลี้ยง 12–24V',tip:'ยึดด้วยสตั๊ดเกลียวหรือแม่เหล็ก ห้ามใช้เทปกาว',uses:['motor'],
+  sc:()=>[B(0,0,0,.8,.8,.15,'#64748b'),Cy(.4,.4,.15,.3,.6,'#f59e0b',{cap:'#fbbf24'}),dcab(.4,.4,.75)]},
+ {id:'d-reed',name:'เซนเซอร์ประตูแม่เหล็ก',tag:'ความปลอดภัย',what:'บอกสถานะประตู / หน้าต่าง / ตู้ เปิดหรือปิด',wire:'หน้าสัมผัส 2 เส้น เข้าช่องดิจิทัล',tip:'ระยะห่างตอนปิดไม่ควรเกิน 1–2 ซม.',uses:['server','rack','gate','mroom','freezer','cold'],
+  sc:()=>[B(0,0,0,.9,.3,.3,'#f8fafc'),B(1.15,0,0,.5,.3,.3,'#f8fafc'),dcab(0,.15,.3)]},
+ {id:'d-pir',name:'เซนเซอร์ตรวจจับคน (PIR)',tag:'ความปลอดภัย',what:'ตรวจจับการเคลื่อนไหวของคน/สัตว์ จากความร้อน',wire:'หน้าสัมผัส หรือดิจิทัล + ไฟเลี้ยง 12V',tip:'หันหนีถนนและแสงแดดตรง ลดการแจ้งผิด',uses:['gate'],
+  sc:()=>[B(0,0,0,.9,.5,1,'#f8fafc'),Ba(.45,.55,.6,.28,'#e5e7eb')]},
+ {id:'d-relay',name:'รีเลย์ + คอนแทคเตอร์',tag:'สั่งงาน',what:'ให้กล่อง CoreDash สั่งเปิด-ปิดปั๊ม พัดลม วาล์ว ไฟ',wire:'รีเลย์สั่งคอยล์คอนแทคเตอร์ แล้วคอนแทคเตอร์จ่ายไฟโหลด',tip:'มอเตอร์ทุกตัวต้องผ่านคอนแทคเตอร์และอุปกรณ์ป้องกันมอเตอร์',uses:['rice','ras','shrimp','drip','green','mush','tank','well'],
+  sc:()=>[B(0,0,0,1,.7,1.2,'#9ca3af',{deco:[{f:'front',u0:.1,u1:.9,v0:.75,v1:.92,c:'#374151'},{f:'front',u0:.3,u1:.7,v0:.35,v1:.6,c:'#e5e7eb'}]}),B(1.25,0,0,1.1,.7,.4,'#1d4ed8',{led:'#ef4444'})]},
+ {id:'d-valve',name:'โซลินอยด์วาล์ว',tag:'สั่งงาน',what:'เปิด-ปิดน้ำด้วยไฟฟ้า แยกโซนรดน้ำได้',wire:'สั่งผ่านรีเลย์ 12/24V หรือแบบล็อกตัว (Latching)',tip:'ติดตะแกรงกรองหน้าวาล์ว กันตะกอนทำให้ปิดไม่สนิท',uses:['banana','drip','orchard'],
+  sc:()=>[L([[-.8,.3,.3],[1.8,.3,.3]],'#334155',8,{pipe:1}),B(.2,0,0,.6,.6,.6,'#111827'),Cy(.5,.3,.6,.25,.6,'#e0463c',{cap:'#f87171'})]}
+  ,{id:'d-nh3',name:'เซนเซอร์แอมโมเนีย NH₃',tag:'ปศุสัตว์',what:'วัดก๊าซแอมโมเนีย (ppm) จากมูลสัตว์ในโรงเรือนไก่และหมู',wire:'RS485 หรือ 4–20mA + ไฟเลี้ยง 12–24V',tip:'หัววัดก๊าซมีอายุใช้งาน ต้องสอบเทียบหรือเปลี่ยนตามที่ผู้ผลิตกำหนด',uses:['chicken','pig'],
+  sc:()=>[Cy(.4,.2,-.3,.15,.3,'#94a3b8'),B(0,0,0,.8,.4,1,'#f8fafc',{deco:[{f:'front',u0:.2,u1:.8,v0:.1,v1:.32,c:'#94a3b8'},{f:'front',u0:.25,u1:.75,v0:.55,v1:.85,c:'#0b1b3f',st:1}]}),dcab(.4,.2,1)]},
+ {id:'d-load',name:'โหลดเซลล์ ชั่งไซโลอาหาร',tag:'ปศุสัตว์',what:'ชั่งน้ำหนักอาหารในไซโล รู้ว่าเหลือกี่ตัน และกินไปวันละเท่าไหร่',wire:'โหลดเซลล์ทุกขา → บอร์ดรวมสัญญาณ → RS485',tip:'ต้องติดตั้งบนฐานแข็งแรงและได้ระดับ ลมแรงทำให้ค่าแกว่งเล็กน้อย',uses:['pig','chicken'],
+  sc:()=>[[[-.45,-.45],[.45,-.45],[-.45,.45],[.45,.45]].map(([x,y])=>[Cy(x,y,0,.05,.8,'#64748b'),B(x-.1,y-.1,.22,.2,.2,.14,'#f59e0b')]),Cy(0,0,.8,.7,1.4,'#d1d5db'),Cy(0,0,2.2,.3,.2,'#9ca3af')]},
+ {id:'d-weather',name:'สถานีตรวจอากาศ (ลม + ฝน)',tag:'อากาศ',what:'วัดความเร็วลม ทิศลม และปริมาณฝน',wire:'RS485 หรือพัลส์ (ถ้วยวัดลม / ถังฝนกระดก)',tip:'ติดในที่โล่ง สูงกว่าสิ่งกีดขวาง เกจฝนต้องได้ระดับ',uses:['banana','rice'],
+  sc:()=>[Cy(0,0,0,.05,2.4,'#94a3b8'),L([[-.7,0,2.2],[.7,0,2.2]],'#94a3b8',2.5),Cy(-.7,0,2.2,.05,.15,'#64748b'),Ba(-.9,0,2.4,.09,'#e5e7eb'),Ba(-.6,.18,2.4,.09,'#e5e7eb'),Ba(-.6,-.18,2.4,.09,'#e5e7eb'),Cy(.7,0,1.95,.16,.32,'#f8fafc')]},
+ {id:'d-paddy',name:'เซนเซอร์ระดับน้ำในนา',tag:'น้ำ',what:'วัดระดับน้ำเหนือและใต้ผิวดินในแปลงนา สำหรับทำนาเปียกสลับแห้ง',wire:'อัลตราโซนิกหรือแรงดันในท่อ PVC + แผงโซลาร์',tip:'ฝังท่อให้ลึกกว่าระดับที่ต้องการวัด และปิดฝากันแมลงเข้า',uses:['rice'],
+  sc:()=>[B(-.3,-.3,-.05,1.2,1.2,.05,'#3b6e8f'),Cy(.3,.3,-.05,.12,1,'#f1f5f9',{cap:'#e5e7eb'}),Cy(.3,.3,.95,.16,.2,'#111827',{cap:'#22d3ee'}),dcab(.3,.3,1.15)]},
+ {id:'d-leakrope',name:'สายตรวจน้ำรั่ว',tag:'อาคาร',what:'สายรับรู้น้ำวางบนพื้น ตรงไหนเปียกก็แจ้งทันที',wire:'สายเซนเซอร์ → โมดูลตรวจจับ → หน้าสัมผัส / RS485',tip:'วางรอบแหล่งน้ำ เช่น ใต้แอร์ ท่อน้ำทิ้ง และหลีกทางเดิน',uses:['server','mroom'],
+  sc:()=>[B(0,0,0,.6,.4,.3,'#f8fafc',{led:'#ef4444'}),L([[.6,.2,.03],[2,.2,.03],[2,1.2,.03],[.4,1.2,.03]],'#facc15',3)]},
+ {id:'d-smoke',name:'เซนเซอร์ควัน',tag:'ความปลอดภัย',what:'ตรวจจับควันในห้องเซิร์ฟเวอร์ ห้องไฟฟ้า คลังสินค้า',wire:'หน้าสัมผัสแจ้งเหตุ เข้าช่องดิจิทัล',tip:'ทดสอบด้วยสเปรย์ทดสอบควันตามรอบ และอย่าติดหน้าช่องลมแอร์',uses:['server','mroom'],
+  sc:()=>[Cy(0,0,0,.45,.18,'#f8fafc',{cap:'#f1f5f9'}),Cy(0,0,.18,.18,.04,'#e5e7eb'),Ba(.25,.1,.2,.04,'#ef4444',{glow:1})]}
+];
+const DVS=Object.fromEntries(DV.map(d=>[d.id,d.sc]));
+
+const MAN=[
+ {t:'รู้จักระบบ CoreDash ใน 5 นาที',h:`<p>ระบบเฝ้าระวังทุกแบบมี 4 ส่วนเหมือนกัน เปลี่ยนแค่เซนเซอร์ให้ตรงกับสิ่งที่อยากรู้</p>
+<ol><li><b>เซนเซอร์</b> วัดค่าที่หน้างาน เช่น กระแสไฟ อุณหภูมิ ความชื้นดิน ระดับน้ำ</li><li><b>กล่อง CoreDash</b> อ่านค่า เทียบกับกติกาที่ตั้งไว้ และสั่งรีเลย์เปิด-ปิดอุปกรณ์ได้</li><li><b>อินเทอร์เน็ต</b> ผ่าน Wi-Fi หรือ 4G ส่งข้อมูลขึ้นระบบ เก็บกราฟย้อนหลัง</li><li><b>มือถือ</b> รับแจ้งเตือนผ่าน Telegram และ LINE ดูค่าล่าสุดได้ทุกที่</li></ol>
+<div class="box info">💡 <b>เริ่มจากปัญหาเดียวที่เจ็บที่สุด</b> เช่น “ปั๊มน้ำหยุดแล้วไม่มีใครรู้” ทำให้ใช้ได้จริงก่อน แล้วค่อยขยายไปจุดอื่น</div>
+<h4>ตัวอย่างเส้นทางของข้อมูล</h4><p>ปั๊มหยุด → CT วัดกระแสได้ 0A → กล่องเห็นว่าสั่งเปิดอยู่แต่ไม่มีกระแส → ส่งข้อความ “ปั๊มบ่อหลังบ้าน หยุดทำงาน” เข้ากลุ่ม LINE ภายในไม่กี่วินาที</p>`},
+ {t:'เลือกเซนเซอร์ให้ตรงงาน',h:`<p>ใช้ตารางนี้จับคู่ “สิ่งที่อยากรู้” กับ “อุปกรณ์ที่ใช้”</p>
+<table><tr><th>อยากรู้ว่า…</th><th>ใช้อุปกรณ์</th></tr>
+<tr><td>ปั๊ม / มอเตอร์ / เครื่องจักร เดินจริงไหม</td><td>CT วัดกระแส</td></tr><tr><td>ใช้ไฟกี่หน่วย ค่าไฟเท่าไหร่</td><td>มิเตอร์วัดพลังงาน + CT</td></tr>
+<tr><td>มีไฟรั่วไหม</td><td>ZCT ไฟรั่ว</td></tr><tr><td>ไฟดับ / ไฟกลับ</td><td>เซนเซอร์แรงดัน AC + กล่องมีแบต</td></tr>
+<tr><td>ตู้แช่ ห้องเย็น เย็นพอไหม</td><td>หัววัดอุณหภูมิกันน้ำ</td></tr><tr><td>อากาศในโรงเรือน / ห้องเครื่อง</td><td>เซนเซอร์อุณหภูมิ-ความชื้น</td></tr>
+<tr><td>ดินแห้งหรือยัง</td><td>เซนเซอร์ความชื้นดิน Capacitive</td></tr><tr><td>ธาตุอาหาร กรด-ด่างในดิน</td><td>เซนเซอร์ดิน 7-in-1</td></tr>
+<tr><td>น้ำในถังเหลือเท่าไหร่</td><td>อัลตราโซนิก หรือเซนเซอร์แรงดันแบบจุ่ม</td></tr><tr><td>ท่อแตก / ลมตก</td><td>เซนเซอร์แรงดัน</td></tr>
+<tr><td>น้ำรั่ว ใช้น้ำเท่าไหร่</td><td>มิเตอร์น้ำแบบพัลส์</td></tr><tr><td>เครื่องจักรใกล้พัง</td><td>เซนเซอร์สั่นสะเทือน</td></tr>
+<tr><td>ประตูถูกเปิด / มีคนเข้า</td><td>เซนเซอร์ประตูแม่เหล็ก / PIR</td></tr></table>`},
+ {t:'ไฟเลี้ยงและการเดินสาย',h:`<ul><li>แยกสายเซนเซอร์ (ไฟต่ำ 5/12/24V DC) ออกจากสายไฟกำลัง 220V/380V อย่าร้อยท่อเดียวกัน</li>
+<li>ระยะสายโดยประมาณ: สัญญาณอนาล็อกแบบแรงดัน ไม่เกิน 10–20 เมตร · 4–20mA ได้หลายร้อยเมตร · RS485 ไกลได้ราว 1,200 เมตร</li>
+<li>RS485 ต่อแบบพ่วงเป็นเส้นเดียว (Daisy chain) ไม่แตกกิ่ง ใส่ตัวต้านทาน 120Ω ที่ปลายสายทั้งสองด้าน</li>
+<li>ใช้สายชีลด์ในโรงงาน และต่อชีลด์ลงดินที่ฝั่งกล่องเพียงด้านเดียว</li>
+<li>งานกลางแจ้งใช้กล่องกันน้ำ IP65 ขึ้นไป ใช้เคเบิลแกลนด์ หันรูสายลงด้านล่าง และทำสายห้อยตก (Drip loop) กันน้ำไหลเข้า</li></ul>
+<div class="box warn">⚠️ ถ้าไม่แน่ใจว่าสายไหนเป็นไฟ 220V อย่าแตะต้อง ให้ช่างไฟฟ้าตรวจก่อนทุกครั้ง</div>`},
+ {t:'ติดตั้งกล่องและสัญญาณอินเทอร์เน็ต',h:`<ol><li>เลือกจุดในร่ม หรือในกล่องกันน้ำ ไม่โดนแดดตรงและฝนสาด</li><li>เช็คสัญญาณ Wi-Fi ด้วยมือถือตรงจุดที่จะติด ควรได้อย่างน้อย 2 ขีด</li>
+<li>ไกลบ้านหรือกลางสวน ใช้เราเตอร์ 4G หรือ Wi-Fi ระยะไกล (จุดต่อจุด)</li><li>เปิดเครื่อง เชื่อมต่อตามขั้นตอนในแอป และตั้งชื่ออุปกรณ์ตามสถานที่จริง เช่น “บ่อ2-ตีน้ำ”, “ตู้นม-ร้านA”</li><li>งานสำคัญ ให้มีแบตสำรองทั้งกล่องและเราเตอร์</li></ol>
+<div class="box ok">✅ ตั้งชื่อดีตั้งแต่แรก ข้อความแจ้งเตือนจะอ่านแล้วเข้าใจทันทีว่าเกิดที่ไหน</div>`},
+ {t:'เชื่อม Telegram และ LINE',h:`<p>แนะนำให้แยกกลุ่มตามความเร่งด่วน คนที่ต้องลงมือจะได้ไม่พลาดข้อความสำคัญ</p>
+<table><tr><th>กลุ่ม</th><th>ส่งอะไร</th><th>ใครอยู่ในกลุ่ม</th></tr><tr><td>🔴 ด่วน</td><td>ไฟดับ ปั๊มหยุด ออกซิเจนต่ำ ปุ่มฉุกเฉิน</td><td>ช่าง เจ้าของ คนเฝ้ากะ</td></tr>
+<tr><td>🟠 เตือน</td><td>ค่าเริ่มผิดปกติ ต้องนัดตรวจ</td><td>ช่าง หัวหน้างาน</td></tr><tr><td>📊 สรุป</td><td>รายงานรายวัน / รายสัปดาห์</td><td>เจ้าของ ผู้บริหาร</td></tr></table>
+<h4>ข้อความที่ดีควรมี 4 ส่วน</h4><p><b>[สถานที่]</b> + <b>[อุปกรณ์]</b> + <b>[ค่าที่วัดได้]</b> + <b>[ควรทำอะไร]</b> เช่น “ร้านกาแฟ: ตู้นม 9.5°C สูงกว่าที่ตั้ง 6°C นาน 20 นาที — ตรวจประตูตู้”</p>
+<div class="box info">💡 หลังเชื่อมเสร็จ กดส่งข้อความทดสอบทุกครั้ง และให้ทุกคนในกลุ่มยืนยันว่าได้รับ</div>`},
+ {t:'ตั้งเงื่อนไขแจ้งเตือนให้พอดี ไม่รก',h:`<p>แจ้งเตือนเยอะเกินไป คนจะเลิกอ่าน แจ้งน้อยเกินไปก็พลาดเหตุจริง ใช้ 5 เครื่องมือนี้</p>
+<ul><li><b>เกณฑ์ (Threshold)</b> ค่าที่ถือว่าผิดปกติ เช่น ตู้แช่ &gt; 8°C</li><li><b>หน่วงเวลา (Delay)</b> ต้องเกินต่อเนื่องนานเท่าไหร่ถึงแจ้ง เช่น 15 นาที กันแจ้งตอนเปิดประตูหยิบของ</li>
+<li><b>ช่วงคืนค่า (Hysteresis)</b> เปิดที่ค่าหนึ่ง ปิดอีกค่าหนึ่ง เช่น เปิดพัดลม 32°C ปิด 29°C กันอุปกรณ์เปิดปิดถี่</li><li><b>ระดับความรุนแรง</b> แยก “เตือน” กับ “ด่วน” ส่งคนละกลุ่ม</li><li><b>แจ้งซ้ำ / เวลาเงียบ</b> เหตุด่วนแจ้งซ้ำจนมีคนรับทราบ เหตุไม่ด่วนเก็บไว้ส่งตอนเช้า</li></ul>
+<div class="box ok">✅ ตัวอย่างกติกาที่ดี: “ถ้าอุณหภูมิตู้นม &gt; 8°C ต่อเนื่อง 20 นาที → แจ้งกลุ่มเตือน · ถ้า &gt; 12°C ต่อเนื่อง 20 นาที → แจ้งกลุ่มด่วน ซ้ำทุก 10 นาที”</div>`},
+ {t:'ความปลอดภัยงานไฟฟ้า',h:`<div class="box warn">⚠️ งานที่เกี่ยวกับไฟ 220V/380V ตู้ MDB มอเตอร์ และปั๊ม ต้องให้ช่างไฟฟ้าที่มีความรู้ดำเนินการ</div>
+<ul><li>ตัดไฟ ล็อกเบรกเกอร์ และแขวนป้าย “ห้ามสับ” ก่อนเริ่มงาน แล้ววัดด้วยเครื่องมือว่าไม่มีไฟจริง</li><li>CT แบบแยกแกนช่วยให้ไม่ต้องตัดสาย แต่การเปิดตู้ไฟยังมีความเสี่ยง ต้องระวังทุกครั้ง</li>
+<li>CT ชนิดเอาต์พุต 5A ห้ามปล่อยขั้วเปิดวงจรขณะมีกระแส ต้องลัดวงจรขั้วก่อนถอด</li><li>ห้ามสั่งมอเตอร์หรือปั๊มตรงจากรีเลย์บนบอร์ด ให้สั่งผ่านคอนแทคเตอร์และอุปกรณ์ป้องกันมอเตอร์</li>
+<li>บ้านและอาคารควรมีสายดินและเบรกเกอร์กันดูด ระบบตรวจไฟรั่วเป็นแค่การเฝ้าระวังเพิ่ม</li><li>กล่องโลหะทุกใบต้องต่อลงดิน</li></ul>`},
+ {t:'ดูแลรักษาและแก้ปัญหาเบื้องต้น',h:`<table><tr><th>อาการ</th><th>สาเหตุที่พบบ่อย</th><th>วิธีแก้</th></tr>
+<tr><td>ค่าไม่อัปเดต / ออฟไลน์</td><td>เน็ตหลุด ไฟเลี้ยงกล่องหลุด</td><td>ดูไฟสถานะบนกล่อง รีสตาร์ทเราเตอร์ เช็คปลั๊ก</td></tr>
+<tr><td>ค่ากระโดดไปมา</td><td>ขั้วสายหลวม สัญญาณรบกวน</td><td>ขันขั้วให้แน่น ใช้สายชีลด์ แยกจากสายไฟกำลัง</td></tr>
+<tr><td>pH / EC เพี้ยน</td><td>หัววัดสกปรก หรือเสื่อม</td><td>ล้าง สอบเทียบใหม่ เปลี่ยนหัว pH ตามอายุ</td></tr>
+<tr><td>ความชื้นดินค้างที่ 0% หรือ 100%</td><td>สายขาด น้ำเข้าหัว</td><td>ตรวจสาย เปลี่ยนเซนเซอร์</td></tr>
+<tr><td>ค่าไฟติดลบ</td><td>ใส่ CT กลับทิศ</td><td>กลับทิศ CT หรือกลับค่าในแอป</td></tr>
+<tr><td>แจ้งเตือนรัวเกินไป</td><td>ไม่มีหน่วงเวลา / ช่วงคืนค่า</td><td>ตั้ง Delay และ Hysteresis ตามบทที่ 6</td></tr></table>
+<h4>ตารางดูแลประจำ</h4><ul><li><b>ทุกสัปดาห์</b> ล้างหัววัดในน้ำ ดูกราฟว่ามีค่าแปลกๆ ไหม</li><li><b>ทุกเดือน</b> สอบเทียบ pH / ORP ทดสอบปุ่มฉุกเฉินและข้อความแจ้งเตือน</li><li><b>ทุก 6 เดือน</b> ทดสอบตัดไฟดูแบตสำรอง ตรวจซีลกล่องกันน้ำและขั้วสาย</li></ul>`},
+ {t:'ค่าแนวทางที่ควรเฝ้าดู (สัตว์น้ำ ปศุสัตว์ นาข้าว ไอที)',h:`<div class="box warn">⚠️ ตัวเลขในบทนี้เป็นค่าแนวทางทั่วไปสำหรับตั้งเกณฑ์แจ้งเตือนเริ่มต้น ควรปรับตามสายพันธุ์ ช่วงอายุ และคำแนะนำของสัตวแพทย์ นักวิชาการประมง หรือผู้ผลิตอุปกรณ์</div>
+<table><tr><th>งาน</th><th>ค่าที่เฝ้า</th><th>แนวทางเริ่มต้น</th></tr>
+<tr><td>🦐 บ่อกุ้งขาว</td><td>DO · pH · อุณหภูมิ</td><td>DO ไม่ต่ำกว่า 4 mg/L · pH ราว 7.5–8.5 และแกว่งในวันไม่เกิน 0.5 · น้ำราว 28–32°C</td></tr>
+<tr><td>🐟 บ่อปลานิล</td><td>DO · pH</td><td>DO ไม่ต่ำกว่า 3–4 mg/L · pH ราว 6.5–8.5</td></tr>
+<tr><td>🐔 ไก่เนื้อ โรงเรือนปิด</td><td>อุณหภูมิ · NH₃</td><td>สัปดาห์แรกราว 32–33°C แล้วลดลงตามอายุ · NH₃ ไม่ควรเกินราว 20–25 ppm</td></tr>
+<tr><td>🐷 ฟาร์มหมู</td><td>อุณหภูมิ · NH₃</td><td>ลูกหมูต้องการอุ่นกว่าหมูขุนมาก ตั้งตามช่วงอายุ · NH₃ ไม่ควรเกินราว 20 ppm ยิ่งต่ำยิ่งดี</td></tr>
+<tr><td>🌾 นาข้าว AWD</td><td>ระดับน้ำ</td><td>สูบเข้าเมื่อน้ำลดถึงราว 15 ซม. ใต้ผิวดิน เติมให้ท่วมราว 5 ซม. · รักษาน้ำขังช่วงข้าวออกดอก</td></tr>
+<tr><td>🖥️ ห้องเซิร์ฟเวอร์</td><td>อุณหภูมิลมเข้า</td><td>ราว 18–27°C (แนวทาง ASHRAE)</td></tr></table>
+<h4>วัดค่าน้ำให้แม่น</h4><ul><li>DO ต่ำสุดมักเกิดช่วงก่อนรุ่งสาง ดูกราฟช่วง 03:00–06:00 เป็นหลัก</li><li>pH สูงสุดมักเป็นช่วงบ่าย ต่ำสุดช่วงเช้ามืด ความต่างบอกความหนาแน่นของแพลงก์ตอน</li><li>หัววัดในบ่อต้องล้างคราบตะไคร่สม่ำเสมอ และสอบเทียบตามรอบ</li></ul>`}
+];
+const GL=[['kWh (หน่วย)','พลังงานไฟฟ้าที่ใช้ไป 1 หน่วยบนบิลค่าไฟ เท่ากับใช้ไฟ 1,000 วัตต์นาน 1 ชั่วโมง'],['A / mA','แอมแปร์ หน่วยของกระแสไฟ mA คือหนึ่งในพันของแอมแปร์ ใช้วัดไฟรั่ว'],['CT','อุปกรณ์คล้องสายไฟเพื่อวัดกระแส ไม่ต้องตัดสาย'],['ZCT','CT สำหรับวัดไฟรั่ว คล้องสาย L และ N พร้อมกัน'],['1 เฟส / 3 เฟส','ไฟบ้านทั่วไปเป็น 1 เฟส 220V โรงงานมักเป็น 3 เฟส 380V'],['Power Factor (PF)','ตัวบอกประสิทธิภาพการใช้ไฟ ใกล้ 1 ยิ่งดี โรงงานบางแห่งโดนค่าปรับถ้าต่ำ'],['pH','ค่ากรด-ด่าง 7 คือกลาง ต่ำกว่าเป็นกรด สูงกว่าเป็นด่าง'],['EC','ค่าการนำไฟฟ้า บอกความเข้มข้นของปุ๋ยหรือเกลือในน้ำและดิน'],['NPK','ไนโตรเจน ฟอสฟอรัส โพแทสเซียม ธาตุอาหารหลักของพืช'],['DO','ออกซิเจนละลายในน้ำ (mg/L) สำคัญต่อสัตว์น้ำ'],['ORP','ค่าบ่งบอกความสามารถฆ่าเชื้อของน้ำ ใช้คุมคลอรีนในสระ'],['RS485 / Modbus','มาตรฐานสื่อสารของเซนเซอร์และมิเตอร์ ต่อพ่วงได้หลายตัว ระยะไกล'],['4–20mA','สัญญาณแบบกระแส ทนสัญญาณรบกวน นิยมในโรงงาน'],['IP65','ระดับกันฝุ่นกันน้ำ IP65 กันฝุ่นได้และกันน้ำฉีดได้'],['รีเลย์ / คอนแทคเตอร์','สวิตช์ไฟฟ้าที่สั่งเปิด-ปิดด้วยสัญญาณ คอนแทคเตอร์ใช้กับโหลดใหญ่'],['Hysteresis','ตั้งค่าเปิดกับค่าปิดให้ห่างกัน กันอุปกรณ์เปิดปิดถี่'],['Dry run','ปั๊มเดินตัวเปล่าไม่มีน้ำ ทำให้มอเตอร์และซีลเสียหาย'],['VPD','ค่าความต่างไอน้ำในอากาศ ใช้คุมสภาพโรงเรือนให้พืชคายน้ำพอดี'],['NH₃ / ppm','ก๊าซแอมโมเนียจากมูลสัตว์ ppm คือส่วนในล้านส่วน ยิ่งสูงยิ่งระคายตาและทางเดินหายใจของสัตว์'],['ppt (ความเค็ม)','ส่วนในพันส่วน ใช้บอกความเค็มของน้ำ น้ำทะเลราว 30–35 ppt'],['AWD','การทำนาแบบเปียกสลับแห้ง ปล่อยน้ำลดก่อนสูบเข้าใหม่ ประหยัดน้ำ'],['Cooling pad / EVAP','แผ่นทำความเย็นด้วยน้ำระเหย ใช้คู่พัดลมดูดในโรงเรือนระบบปิด'],['RAS','ระบบเลี้ยงสัตว์น้ำแบบน้ำหมุนเวียน กรองแล้วนำกลับมาใช้ซ้ำ'],['Load cell','เซนเซอร์ชั่งน้ำหนัก ใช้ชั่งไซโลอาหารสัตว์']];
+const FAQ=[['ต้องเขียนโปรแกรมเองไหม?','ไม่จำเป็น ตัวอย่างในคลังนี้เป็นการเลือกเซนเซอร์และตั้งเงื่อนไขแบบ “ถ้า…แล้ว…” ซึ่งตั้งค่าได้ในระบบ'],
+ ['ติดตั้งเองได้ไหม?','งานเซนเซอร์ไฟต่ำ (5–24V) เช่น หัววัดอุณหภูมิ เซนเซอร์ประตู ความชื้นดิน ทำเองได้ตามคู่มือ ส่วนงานที่ต่อไฟ 220V/380V ตู้ไฟ มอเตอร์ ปั๊ม ควรให้ช่างไฟฟ้าทำ'],
+ ['ในสวนไม่มีไฟบ้าน ใช้ได้ไหม?','ได้ ใช้แผงโซลาร์ขนาดเล็กกับแบตเตอรี่ 12V เลี้ยงกล่องและเซนเซอร์ และใช้ 4G แทน Wi-Fi ดูตัวอย่าง “สวนผลไม้ แบ่งโซนรดน้ำ”'],
+ ['ถ้าอินเทอร์เน็ตหรือไฟดับ จะยังแจ้งเตือนได้ไหม?','ต้องมีแบตสำรองให้กล่องและเราเตอร์ หรือใช้ 4G จึงจะส่งแจ้งเตือนตอนไฟดับได้ งานสำคัญควรวางแผนไฟสำรองตั้งแต่แรก'],
+ ['สายเซนเซอร์เดินได้ไกลแค่ไหน?','ขึ้นกับชนิดสัญญาณ อนาล็อกแบบแรงดันสั้นสุด (10–20 ม.) 4–20mA ได้หลายร้อยเมตร RS485 ไกลได้ราว 1,200 ม.'],
+ ['กล่องเดียวต่อได้กี่เซนเซอร์?','ขึ้นกับจำนวนช่องของกล่องและชนิดเซนเซอร์ เซนเซอร์ RS485 ต่อพ่วงหลายตัวบนสายเส้นเดียวได้'],
+ ['แจ้งเตือนเข้าได้หลายคนไหม?','ได้ ส่งเข้ากลุ่ม Telegram หรือ LINE แนะนำแยกกลุ่ม “ด่วน” กับ “สรุปรายวัน” ดูบทที่ 5 ในคู่มือ']];
+
+/* ============ UI ============ */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lvl=l=>`<span class="lv">${[1,2,3].map(i=>`<i class="${i<=l?'f':''}"></i>`).join('')} ${['','ง่าย','ปานกลาง','ซับซ้อน'][l]}</span>`;
+
+// stats
+$('#stats').innerHTML=[[U.length,'ตัวอย่างใช้งานจริง'],[CATS.length,'หมวดหมู่'],[DV.length,'อุปกรณ์ที่ควรรู้'],[MAN.length,'บทในคู่มือ']].map(([a,b])=>`<div class="stat"><b>${a}</b><span>${b}</span></div>`).join('');
+
+// categories
+$('#cats').innerHTML=CATS.map(c=>`<button class="cat" style="--cc:${c.color}" data-cat="${c.id}"><div class="ic">${c.icon}</div><h3>${c.name}</h3><p>${c.desc}</p><span class="cnt">${U.filter(u=>u.cat===c.id).length} ตัวอย่าง →</span></button>`).join('');
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)return;setCat(b.dataset.cat);document.getElementById('usecases').scrollIntoView({behavior:'smooth'})});
+
+// filters
+$('#filters').innerHTML=`<button class="chip on" data-cat="all">ทั้งหมด <span class="n">${U.length}</span></button>`+CATS.map(c=>`<button class="chip" data-cat="${c.id}">${c.icon} ${c.name} <span class="n">${U.filter(u=>u.cat===c.id).length}</span></button>`).join('');
+const ST={cat:'all',lv:'all',q:''};
+const cardHTML=(u,cls='')=>{const c=CAT[u.cat];return`<article class="uc ${cls}" data-id="${u.id}" style="--cc:${c.color}" tabindex="0" role="link" aria-label="${esc(u.title)}">
+<div class="uc-thumb">${render(prep(u.id),0,{labels:false,vb:'n',aria:esc(u.title)})}<span class="uc-cat">${c.icon} ${c.name}</span></div>
+<div class="uc-body"><h3>${esc(u.title)}</h3><p>${esc(u.short)}</p><div class="uc-meta"><span>${lvl(u.level)}</span><span>⏱ ${u.time}</span><span>🔌 ${u.devices.length} อุปกรณ์</span></div><span class="uc-go">ดูวิธีทำ + ภาพ 3D →</span></div></article>`};
+$('#grid').innerHTML=U.map(u=>cardHTML(u)).join('');
+const hay=Object.fromEntries(U.map(u=>[u.id,[u.title,u.short,u.problem,CAT[u.cat].name,...u.measure,...u.devices.map(d=>d[0])].join(' ').toLowerCase()]));
+function applyF(){let k=0;$$('#grid .uc').forEach(el=>{const u=U[UID_IDX[el.dataset.id]];const ok=(ST.cat==='all'||u.cat===ST.cat)&&(ST.lv==='all'||u.level==ST.lv)&&(!ST.q||ST.q.split(/\s+/).every(w=>hay[u.id].includes(w)));el.hidden=!ok;if(ok)k++});
+ $('#count').textContent=`แสดง ${k} จาก ${U.length} ตัวอย่าง`;$('#empty').hidden=k>0;
+ $$('#filters .chip').forEach(b=>b.classList.toggle('on',b.dataset.cat===ST.cat));$$('.subf .chip').forEach(b=>b.classList.toggle('on',b.dataset.lv===ST.lv))}
+function setCat(c){ST.cat=c;applyF()}
+$('#filters').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)setCat(b.dataset.cat)});
+$('.subf').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b){ST.lv=b.dataset.lv;applyF()}});
+const doSearch=()=>{ST.q=$('#q').value.trim().toLowerCase();if(ST.q)ST.cat='all';applyF()};
+$('#q').addEventListener('input',doSearch);
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){doSearch();document.getElementById('usecases').scrollIntoView({behavior:'smooth'})}});
+$('#qGo').addEventListener('click',e=>{e.preventDefault();doSearch();document.getElementById('usecases').scrollIntoView({behavior:'smooth'})});
+applyF();
+document.addEventListener('click',e=>{const c=e.target.closest('.uc');if(c){openFromHub=true;location.hash='uc-'+c.dataset.id}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('uc')){openFromHub=true;location.hash='uc-'+e.target.dataset.id}});
+
+// devices
+$('#devs').innerHTML=DV.map(d=>`<div class="dev"><div class="dev-t">${render(prep(d.id),0,{labels:false,vb:'n',aria:esc(d.name)})}</div><div class="dev-b"><span class="tg">${d.tag}</span><h3>${d.name}</h3>
+<dl><dt>ทำอะไร</dt><dd>${esc(d.what)}</dd><dt>การต่อสาย</dt><dd>${esc(d.wire)}</dd><dt>ข้อควรรู้</dt><dd>${esc(d.tip)}</dd></dl>
+<div class="uses">${d.uses.map(id=>`<a href="#uc-${id}">${CAT[U[UID_IDX[id]].cat].icon} ${esc(U[UID_IDX[id]].title.split(' ')[0])}</a>`).join('')}</div></div></div>`).join('');
+
+// manual
+let mi=0;
+function showMan(i){mi=i;$$('#toc button').forEach((b,j)=>b.classList.toggle('on',j===i));
+ $('#mbody').innerHTML=`<span class="eyebrow">บทที่ ${i+1} / ${MAN.length}</span><h3>${MAN[i].t}</h3>${MAN[i].h}<div class="mnav">${i>0?`<button class="btn sm" data-m="${i-1}">← ${MAN[i-1].t}</button>`:'<span></span>'}${i<MAN.length-1?`<button class="btn sm pri" data-m="${i+1}">${MAN[i+1].t} →</button>`:'<a class="btn sm pri" href="#usecases">ไปดูตัวอย่างใช้งาน →</a>'}</div>`}
+$('#toc').innerHTML=MAN.map((m,i)=>`<button data-m="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${m.t}</span></button>`).join('');
+document.getElementById('manual').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;showMan(+b.dataset.m);if(b.closest('.mnav')&&window.innerWidth<980)document.getElementById('mbody').scrollIntoView({behavior:'smooth'})});
+showMan(0);
+
+$('#gl').innerHTML=GL.map(([a,b])=>`<div><b>${a}</b><p>${b}</p></div>`).join('');
+$('#faqList').innerHTML=FAQ.map(([q,a])=>`<details><summary>${q}</summary><p>${a}</p></details>`).join('');
+
+/* viewer */
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function viewer(stage,key,o={}){let ang=o.ang||0,lab=o.labels!==false,auto=!!o.auto&&!RM,t0=performance.now(),raf=0,drag=null,dead=false,fr=0;const sc=prep(key);
+ const draw=()=>{stage.innerHTML=render(sc,ang,{labels:lab,aria:o.aria});o.onAng&&o.onAng(ang)};
+ const loop=t=>{if(dead)return;if(auto&&!drag&&!document.hidden&&(fr++%2===0)){ang=Math.sin((t-t0)/2600)*.55;draw()}raf=requestAnimationFrame(loop)};
+ stage.onpointerdown=e=>{drag={x:e.clientX,a:ang};auto=false;o.onAuto&&o.onAuto(false);stage.setPointerCapture(e.pointerId)};
+ stage.onpointermove=e=>{if(!drag)return;ang=Math.max(-1.05,Math.min(1.05,drag.a+(e.clientX-drag.x)*.008));draw()};
+ stage.onpointerup=stage.onpointercancel=()=>{drag=null};
+ draw();raf=requestAnimationFrame(loop);
+ return{set(a){ang=a;draw()},get ang(){return ang},labels(v){lab=v;draw()},auto(v){auto=v&&!RM;t0=performance.now()-Math.asin(Math.max(-1,Math.min(1,ang/.55)))*2600},stop(){dead=true;cancelAnimationFrame(raf)}}}
+
+// hero
+const HERO=[['drip','🌱 สวนเกษตร'],['rice','🌾 นาข้าว'],['chicken','🐔 ฟาร์มไก่'],['shrimp','🦐 บ่อกุ้ง'],['motor','🏭 โรงงาน'],['power','⚡ Power meter'],['server','🖥️ ห้อง Server'],['street','🏘️ หมู่บ้าน']];
+let hv=null;
+function hero(k){hv&&hv.stop();const u=U[UID_IDX[k]];$$('#heroTabs .chip').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+ hv=viewer($('#heroStage'),k,{auto:true,aria:u.title});$('#heroCap').textContent=u.title;$('#heroGo').href='#uc-'+k}
+$('#heroTabs').innerHTML=HERO.map(([k,t])=>`<button class="chip" data-k="${k}">${t}</button>`).join('');
+$('#heroTabs').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)hero(b.dataset.k)});
+$('#heroGo').addEventListener('click',()=>{openFromHub=true});
+hero('drip');
+
+/* guide page */
+let gv=null,openFromHub=false;
+function guideHTML(u){const c=CAT[u.cat],i=UID_IDX[u.id],pv=U[(i-1+U.length)%U.length],nx=U[(i+1)%U.length];
+ const rel=U.filter(x=>x.cat===u.cat&&x.id!==u.id).slice(0,3);
+ const sensors=u.devices.filter(d=>!/กล่อง CoreDash/.test(d[0])).map(d=>d[0]);
+ return`<div class="g-top"><div class="wrap g-top-in"><button class="btn sm" data-act="back">← กลับคลังความรู้</button><div class="crumb">คลังความรู้ / ${c.name} / <b>${esc(u.title)}</b></div><a class="btn sm pri" href="${HOME_URL}">⌂ กลับหน้าหลัก</a></div></div>
+<div class="wrap g-body">
+ <div class="g-hero">
+  <div class="viewer"><div class="stage" id="gStage"></div>
+   <div class="vw-bar"><button class="btn sm" data-v="l">◀</button><input type="range" id="gRange" min="-60" max="60" value="0" aria-label="หมุนภาพ 3D"><button class="btn sm" data-v="r">▶</button><button class="btn sm on" data-v="lab">🏷️ ป้ายชื่อ</button><button class="btn sm" data-v="auto">⟳ หมุนอัตโนมัติ</button></div>
+   <div class="vw-hint">ลากที่ภาพ หรือเลื่อนแถบ เพื่อหมุนดูการติดตั้งรอบด้าน</div></div>
+  <div class="g-info"><span class="tag">${c.icon} ${c.name}</span><h1>${esc(u.title)}</h1><p class="sh">${esc(u.short)}</p>
+   <div class="pills"><span>${lvl(u.level)}</span><span>⏱ เวลาติดตั้ง ${u.time}</span><span>🔌 ${u.devices.length} รายการอุปกรณ์</span></div>
+   <div class="prob"><b>ปัญหาที่เจอบ่อย</b>${esc(u.problem)}</div></div>
+ </div>
+ <div class="g-grid">
+  <div>
+   <div class="g-sec"><h3><i>📏</i>วัดอะไรได้บ้าง</h3><ul class="checks">${u.measure.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>
+   <div class="g-sec"><h3><i>🔗</i>ผังการเชื่อมต่อ</h3><div class="flowd"><div class="fn"><b>📡 อุปกรณ์หน้างาน</b>${sensors.map(esc).join('<br>')}</div><div class="ar">→</div><div class="fn"><b>🧠 กล่อง CoreDash</b>อ่านค่า ตัดสินใจตามกติกา สั่งรีเลย์</div><div class="ar">→</div><div class="fn"><b>☁️ ระบบ + กราฟ</b>ผ่าน Wi-Fi / 4G เก็บข้อมูลย้อนหลัง</div><div class="ar">→</div><div class="fn"><b>📱 Telegram / LINE</b>แจ้งเตือนทันที + สรุปรายวัน</div></div></div>
+   <div class="g-sec"><h3><i>🛠️</i>วิธีติดตั้งทีละขั้น</h3><ol class="steps">${u.steps.map(([a,b])=>`<li><div><b>${esc(a)}</b><p>${esc(b)}</p></div></li>`).join('')}</ol></div>
+   <div class="g-sec"><h3><i>⚙️</i>ตัวอย่างเงื่อนไขแจ้งเตือน</h3>${u.rules.map(r=>{const[a,b]=r.split('→');return`<div class="rule"><em>ถ้า</em><span>${esc(a.trim())}</span><em class="t">แล้ว</em><span>${esc((b||'').trim())}</span></div>`}).join('')}</div>
+   <div class="g-sec"><h3><i>💡</i>เคล็ดลับจากหน้างาน</h3><ul class="tips">${u.tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>
+    <div class="box warn" style="margin-bottom:0">⚠️ งานที่ต้องต่อไฟ 220V/380V ตู้ไฟ มอเตอร์ หรือปั๊ม ให้ช่างไฟฟ้าดำเนินการ ตัดไฟก่อนทุกครั้ง</div></div>
+  </div>
+  <aside class="side">
+   <div class="g-sec" style="margin:0"><h3><i>📦</i>อุปกรณ์ที่ใช้</h3><table class="dtab">${u.devices.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</table></div>
+   <div class="phone"><div class="show-h"><span class="dot"></span><div><b>CoreDash Watch</b><small>ตัวอย่างข้อความแจ้งเตือน</small></div></div>${u.alerts.map((a,k)=>`<div class="bub">${esc(a)}<small>${['06:12','20:00'][k]||''}</small></div>`).join('')}</div>
+   <a class="btn pri" href="${HOME_URL}" style="justify-content:center">⌂ กลับหน้าหลัก CoreDash</a>
+  </aside>
+ </div>
+ <div class="g-nav"><a href="#uc-${pv.id}"><small>← ตัวอย่างก่อนหน้า</small><b>${esc(pv.title)}</b></a><a href="#uc-${nx.id}"><small>ตัวอย่างถัดไป →</small><b>${esc(nx.title)}</b></a></div>
+ ${rel.length?`<div class="g-sec" style="margin-top:22px"><h3><i>${c.icon}</i>ตัวอย่างอื่นในหมวด ${c.name}</h3><div class="rel">${rel.map(r=>cardHTML(r)).join('')}</div></div>`:''}
+</div>`}
+function openGuide(id){const u=U[UID_IDX[id]];if(!u)return closeGuide();const g=$('#guide');g.style.setProperty('--cc',CAT[u.cat].color);
+ g.innerHTML=guideHTML(u);g.hidden=false;g.scrollTop=0;document.body.style.overflow='hidden';hv&&hv.stop();gv&&gv.stop();
+ const rg=$('#gRange'),ab=g.querySelector('[data-v=auto]');
+ gv=viewer($('#gStage'),id,{aria:u.title,onAng:a=>{rg.value=Math.round(a*180/Math.PI)},onAuto:v=>ab.classList.toggle('on',v)});
+ rg.oninput=()=>{gv.auto(false);ab.classList.remove('on');gv.set(rg.value*Math.PI/180)};
+ g.querySelector('.vw-bar').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;const v=b.dataset.v;
+  if(v==='l'||v==='r'){gv.auto(false);ab.classList.remove('on');gv.set(Math.max(-1.05,Math.min(1.05,gv.ang+(v==='l'?-.35:.35))))}
+  if(v==='lab'){b.classList.toggle('on');gv.labels(b.classList.contains('on'))}
+  if(v==='auto'){const on=!b.classList.contains('on');b.classList.toggle('on',on);gv.auto(on)}};
+ document.title=u.title+' · CoreDash คลังความรู้'}
+function closeGuide(){const g=$('#guide');if(g.hidden)return;g.hidden=true;g.innerHTML='';gv&&gv.stop();gv=null;document.body.style.overflow='';document.title='CoreDash คลังความรู้ · ตัวอย่างใช้งานจริง คู่มือ และภาพ 3D';hero(($('#heroTabs .chip.on')||{}).dataset?.k||'drip')}
+$('#guide').addEventListener('click',e=>{if(e.target.closest('[data-act=back]')){if(openFromHub&&history.length>1){openFromHub=false;history.back()}else location.hash='usecases'}});
+function route(){const h=location.hash.slice(1);if(h.startsWith('uc-'))openGuide(h.slice(3));else closeGuide()}
+addEventListener('hashchange',route);route();
+
+/* theme */
+const BGS=[['#050C26','CoreDash'],['#030407','ดำสนิท'],['#04181b','เขียวไพน์'],['#120b26','ม่วงราตรี'],['#14181f','เทาเหล็ก'],['#f3f6fb','สว่าง']];
+const ACS=[['#2E6BFF','#22D3EE'],['#16a34a','#84cc16'],['#f97316','#facc15'],['#8b5cf6','#ec4899'],['#0ea5e9','#2dd4bf'],['#e11d48','#fb923c']];
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+function lum(h){const[r,g,b]=rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b}
+function setBg(c,save=true){const R=document.documentElement;R.style.setProperty('--bg',c);R.dataset.mode=lum(c)>.4?'light':'dark';$('#bgCustom').value=c;$$('#bgSw button').forEach(b=>b.classList.toggle('on',b.dataset.c===c));save&&store.set('cd-bg',c)}
+function setAc(i,save=true){const[a,b]=ACS[i];const R=document.documentElement;R.style.setProperty('--a1',a);R.style.setProperty('--a2',b);$$('#acSw button').forEach((x,j)=>x.classList.toggle('on',j===i));save&&store.set('cd-ac',i)}
+$('#bgSw').innerHTML=BGS.map(([c,t])=>`<button data-c="${c}" title="${t}" aria-label="${t}" style="background:${c}"></button>`).join('');
+$('#acSw').innerHTML=ACS.map(([a,b],i)=>`<button data-i="${i}" aria-label="สีหลัก ${i+1}" style="background:linear-gradient(135deg,${a},${b})"></button>`).join('');
+$('#bgSw').onclick=e=>{const b=e.target.closest('button');if(b)setBg(b.dataset.c)};
+$('#acSw').onclick=e=>{const b=e.target.closest('button');if(b)setAc(+b.dataset.i)};
+$('#bgCustom').oninput=e=>setBg(e.target.value);
+$('#themeReset').onclick=()=>{setBg(BGS[0][0]);setAc(0)};
+$('#themeBtn').onclick=e=>{e.stopPropagation();$('#themePop').hidden=!$('#themePop').hidden};
+document.addEventListener('click',e=>{if(!e.target.closest('#themePop')&&!e.target.closest('#themeBtn'))$('#themePop').hidden=true});
+setBg(store.get('cd-bg')||BGS[0][0],false);setAc(+(store.get('cd-ac')||0),false);
+
+/* to top */
+addEventListener('scroll',()=>$('#toTop').classList.toggle('show',scrollY>700),{passive:true});
+$('#toTop').onclick=()=>scrollTo({top:0,behavior:'smooth'});
+</script>
+</body>
+</html>
