@@ -9,8 +9,8 @@
  *   - "PZEM004Tv30" โดย Jakub Mandula
  * บอร์ด: ESP32 Dev Module (Board Manager: "esp32" โดย Espressif)
  *
- * การต่อสาย (PZEM-004T v3 ใช้ไฟเลี้ยง 5V จาก ESP32):
- *   PZEM 5V  → ESP32 5V (VIN)      PZEM GND → ESP32 GND
+ * การต่อสาย (เลี้ยง PZEM ด้วย 3V3 เพราะขา ESP32 รับได้แค่ 3.3V):
+ *   PZEM 5V  → ESP32 3V3           PZEM GND → ESP32 GND
  *   PZEM TX  → ESP32 GPIO16 (RX2)  PZEM RX  → ESP32 GPIO17 (TX2)
  *   ฝั่งไฟ 220V ของ PZEM และคล้อง CT ที่สายไฟเส้นเดียวของปั๊ม/เครื่องใช้ ให้ช่างไฟต่อ
  *

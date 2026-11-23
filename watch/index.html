@@ -148,6 +148,36 @@
 #carRadar.on{animation:blink .9s ease-in-out infinite;opacity:1}
 @media (max-width:900px){.sf,.sf-hw{grid-template-columns:1fr}}
 @media (max-width:640px){.sf-ctl{grid-template-columns:1fr 1fr 1fr}.sf-tabs button{font-size:14.5px;padding:8px 12px}}
+/* ───── รายการซื้อของ ───── */
+.bm{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;margin-top:28px}
+.bm-card{display:flex;flex-direction:column;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.bm-pic{background:radial-gradient(circle at 50% 40%,#16285E,#0A1230 75%);padding:12px 16px;border-bottom:1px solid var(--line)}
+.bm-pic svg{width:100%;height:auto;display:block;max-height:180px}
+.bm-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.bm-h{display:flex;align-items:center;gap:10px}
+.bm-h b{font-size:17px;flex:1;line-height:1.3}
+.bm-n{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font:800 14px 'Space Grotesk',sans-serif;background:linear-gradient(135deg,#2E6BFF,#22D3EE)}
+.bm-q{flex:none;font-size:13px;font-weight:700;color:var(--amber);background:rgba(245,199,106,.1);padding:3px 9px;border-radius:999px}
+.bm-q.bad{color:#FCA5A5;background:rgba(248,113,113,.14)}.bm-q.opt{color:var(--mute);background:rgba(255,255,255,.06)}
+.bm-body ul{margin:0;padding-left:18px;color:var(--mute);font-size:14.5px;line-height:1.6}
+.bm-body ul b{color:#fff}
+.bm-price{display:flex;align-items:baseline;gap:10px;margin-top:auto;padding-top:6px}
+.bm-price b{font:800 22px 'Space Grotesk','Sarabun',sans-serif;color:#fff}
+.bm-price .src{font-size:12.5px;color:var(--green)}.bm-price .src.est{color:var(--amber)}
+.bm-shop{display:flex;flex-wrap:wrap;gap:6px}
+.bm-shop a{font-size:13.5px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);color:var(--cyan);text-decoration:none;background:rgba(255,255,255,.03)}
+.bm-shop a:hover{border-color:var(--cyan)}
+.bm-sum{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;margin-top:18px}
+.bm-t{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}
+.bm-t td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--mute)}
+.bm-t td:last-child{text-align:right;color:#fff;white-space:nowrap}
+.bm-tips p{margin:6px 0;color:var(--mute);font-size:14.5px}
+.bm-copy{background:#071233;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.6;margin-bottom:8px}
+.wd{margin-top:18px;padding:12px}
+.wd svg{width:100%;height:auto;display:block}
+.wd svg text{font-family:'Sarabun',sans-serif}
+@media (max-width:900px){.bm-sum{grid-template-columns:1fr}}
+@media (max-width:700px){.wd{overflow-x:auto}.wd svg{min-width:820px}.wd::before{content:'← เลื่อนดูด้านข้าง →';display:block;font-size:13px;color:var(--mute);text-align:center;margin-bottom:6px}}
 .mtoast{position:fixed;left:12px;right:12px;bottom:-120px;z-index:50;background:#F4F7FF;color:#0B1536;border-radius:16px;padding:10px 14px;box-shadow:0 14px 34px -8px rgba(0,0,0,.8);font-size:15px;transition:bottom .35s cubic-bezier(.2,.9,.3,1.2);display:none}
 .mtoast b{display:block;font-size:12.5px;color:#4B5B86}.mtoast.show{bottom:14px}
 @media (max-width:1050px){.mtoast{display:block}.dm{grid-template-columns:1fr 1fr}.dm-phone{grid-column:1/-1;min-height:360px}}
@@ -160,7 +190,7 @@
 <header class="nav"><div class="wrap">
   <a class="brand" href="../"><span class="lm" aria-hidden="true">⚡</span>CoreDash <span style="color:var(--cyan)">Watch</span></a>
   <span class="sp"></span>
-  <a class="nl" href="#demo">ลองกดดู</a><a class="nl" href="#safety">ความปลอดภัย</a><a class="nl" href="#hw">ต่อสาย</a><a class="nl" href="#how">วิธีใช้</a><a class="nl" href="#price">ราคา</a>
+  <a class="nl" href="#demo">ลองกดดู</a><a class="nl" href="#safety">ความปลอดภัย</a><a class="nl" href="#hw">ต่อสาย</a><a class="nl" href="#parts">ซื้ออะไร</a><a class="nl" href="#how">วิธีใช้</a><a class="nl" href="#price">ราคา</a>
   <a class="btn pri sm" href="app/">เข้าสู่ระบบ / ทดลองฟรี</a>
 </div></header>
 
@@ -424,26 +454,316 @@
       <div class="hw-stage" id="hwStage"><svg id="hwSvg" viewBox="0 0 760 470" role="img" aria-label="ภาพสามมิติการต่อ ESP32 กับ PZEM-004T และ CT"></svg><span class="hint">🖱 ขยับเมาส์เพื่อเอียงภาพ</span></div>
       <div class="hws" id="hwSteps">
         <button type="button" data-s="0"><span class="n">0</span><b>ภาพรวมชุดอุปกรณ์</b><p>ESP32 DevKit + PZEM-004T v3.0 + CT คล้องสาย + อะแดปเตอร์ 5V</p></button>
-        <button type="button" data-s="1"><span class="n">1</span><b>ไฟเลี้ยง 2 เส้น <span class="badge ok">ทำเองได้</span></b><p><span class="sw" style="background:#EF4444"></span>5V → 5V &nbsp; <span class="sw" style="background:#94A3B8"></span>GND → GND</p></button>
+        <button type="button" data-s="1"><span class="n">1</span><b>ไฟเลี้ยง 2 เส้น <span class="badge ok">ทำเองได้</span></b><p><span class="sw" style="background:#EF4444"></span>PZEM 5V → ESP32 3V3 &nbsp; <span class="sw" style="background:#94A3B8"></span>GND → GND</p></button>
         <button type="button" data-s="2"><span class="n">2</span><b>สายข้อมูล 2 เส้น <span class="badge ok">ทำเองได้</span></b><p><span class="sw" style="background:#FACC15"></span>PZEM TX → GPIO16 &nbsp; <span class="sw" style="background:#22C55E"></span>PZEM RX → GPIO17</p></button>
         <button type="button" data-s="3"><span class="n">3</span><b>คล้อง CT ที่สาย L ของปั๊ม <span class="badge dg">ช่างไฟเท่านั้น</span></b><p>คล้องเฉพาะสายไฟเส้นเดียว (L) ถ้าคล้องทั้ง L และ N พร้อมกัน ค่าจะอ่านได้ 0</p></button>
         <button type="button" data-s="4"><span class="n">4</span><b>ต่อแรงดัน L/N เข้า PZEM <span class="badge dg">ช่างไฟเท่านั้น</span></b><p>ปิดเบรกเกอร์ก่อนทุกครั้ง ต่อขั้วตามป้ายบนบอร์ดจริง</p></button>
         <button type="button" data-s="5"><span class="n">5</span><b>เสียบไฟ พร้อมใช้งาน</b><p>ไฟ LED ติด ข้อมูลขึ้นหน้าแอปภายใน 1 นาที</p></button>
       </div>
     </div>
-    <div class="grid2" style="margin-top:26px;align-items:start">
+    <div class="center" style="margin-top:22px"><a class="btn ghost" href="#parts">ดูรายการซื้อของ หน้าตาอุปกรณ์ และราคา ↓</a></div>
+  </div>
+</section>
+
+
+<!-- ═══════════ รายการซื้อของ + ภาพการต่อ ═══════════ -->
+<section id="parts">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">ซื้ออะไรบ้าง</span>
+      <h2 style="margin-top:8px">รายการอุปกรณ์ครบทุกชิ้น หน้าตา สเปก ราคา ร้านที่ขาย</h2>
+      <p class="lead">ดูหน้าตาของจริงก่อนซื้อ จะได้ไม่ซื้อผิดรุ่น ราคาสำรวจจากร้านออนไลน์ในไทย พ.ย. 2569 ราคาจริงอาจขยับขึ้นลงเล็กน้อย</p>
+    </div>
+
+    <div class="bm">
+      <!-- 1 ESP32 -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดบอร์ด ESP32 DevKit 30 ขา">
+          <rect x="22" y="34" width="198" height="82" rx="6" fill="#17171C" stroke="#3A3A44"/>
+          <g fill="#D4A72C">
+            <rect x="34" y="38" width="6" height="6"/><rect x="46" y="38" width="6" height="6"/><rect x="58" y="38" width="6" height="6"/><rect x="70" y="38" width="6" height="6"/><rect x="82" y="38" width="6" height="6"/><rect x="94" y="38" width="6" height="6"/><rect x="106" y="38" width="6" height="6"/><rect x="118" y="38" width="6" height="6"/><rect x="130" y="38" width="6" height="6"/><rect x="142" y="38" width="6" height="6"/><rect x="154" y="38" width="6" height="6"/><rect x="166" y="38" width="6" height="6"/><rect x="178" y="38" width="6" height="6"/><rect x="190" y="38" width="6" height="6"/><rect x="202" y="38" width="6" height="6"/>
+            <rect x="34" y="106" width="6" height="6"/><rect x="46" y="106" width="6" height="6"/><rect x="58" y="106" width="6" height="6"/><rect x="70" y="106" width="6" height="6"/><rect x="82" y="106" width="6" height="6"/><rect x="94" y="106" width="6" height="6"/><rect x="106" y="106" width="6" height="6"/><rect x="118" y="106" width="6" height="6"/><rect x="130" y="106" width="6" height="6"/><rect x="142" y="106" width="6" height="6"/><rect x="154" y="106" width="6" height="6"/><rect x="166" y="106" width="6" height="6"/><rect x="178" y="106" width="6" height="6"/><rect x="190" y="106" width="6" height="6"/><rect x="202" y="106" width="6" height="6"/>
+          </g>
+          <rect x="126" y="50" width="66" height="50" rx="3" fill="#C3CBD6" stroke="#8D98A8"/>
+          <text x="159" y="72" font-size="11" font-weight="700" fill="#334155" text-anchor="middle" font-family="sans-serif">ESP32</text>
+          <text x="159" y="86" font-size="7.5" fill="#475569" text-anchor="middle" font-family="sans-serif">WROOM-32</text>
+          <rect x="192" y="50" width="24" height="50" fill="#1F2937"/>
+          <path d="M197 54 h14 v6 h-14 v6 h14 v6 h-14 v6 h14 v6 h-14" fill="none" stroke="#D4A72C" stroke-width="1.6"/>
+          <rect x="8" y="62" width="20" height="26" rx="2" fill="#C3CBD6" stroke="#8D98A8"/>
+          <rect x="62" y="64" width="16" height="16" fill="#0B0B0E" stroke="#3A3A44"/>
+          <circle cx="46" cy="58" r="5" fill="#64748B"/><circle cx="46" cy="92" r="5" fill="#64748B"/>
+          <text x="46" y="73" font-size="6.5" fill="#CBD5E1" text-anchor="middle" font-family="sans-serif">EN</text>
+          <text x="46" y="83" font-size="6.5" fill="#CBD5E1" text-anchor="middle" font-family="sans-serif">BOOT</text>
+          <circle cx="98" cy="58" r="2.5" fill="#EF4444"/>
+          <text x="37" y="128" font-size="7" fill="#94A3B8" font-family="sans-serif">3V3 GND … G16 G17 …</text>
+          <text x="10" y="58" font-size="7" fill="#94A3B8" font-family="sans-serif">USB</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">1</span><b>ESP32 DevKit V1 แบบ 30 ขา</b><span class="bm-q">1 ตัว</span></div>
+          <ul>
+            <li>ชิป ESP32-WROOM-32 มี Wi-Fi และ Bluetooth ในตัว</li>
+            <li>เลือกแบบ<b>บัดกรีขามาแล้ว</b> ไม่ต้องบัดกรีเอง</li>
+            <li>ชิป USB เป็น CP2102 หรือ CH340/CH9102 ก็ได้ (ถ้าคอมไม่เห็นบอร์ด ให้ลงไดรเวอร์ตามชื่อชิป)</li>
+            <li>มีขา GPIO16 (RX2) และ GPIO17 (TX2) ที่ใช้คุยกับ PZEM</li>
+          </ul>
+          <div class="bm-price"><b>250–285 ฿</b><span class="src">ราคาจากร้าน</span></div>
+          <div class="bm-shop"><a href="https://www.arduitronics.com/product/4133/doit-esp-32-development-board-esp-wroom-32-wifibluetooth-esp32-esp-32s-30-pin-%E0%B9%81%E0%B8%9A%E0%B8%9A%E0%B8%9A%E0%B8%B1%E0%B8%84%E0%B8%81%E0%B8%A3%E0%B8%B5%E0%B9%81%E0%B8%A5%E0%B9%89%E0%B8%A7" target="_blank" rel="noopener">Arduitronics</a><a href="https://www.cybertice.com/category/138/internet-of-things-iot-wifi/esp32-wifi-bluetooth-lora" target="_blank" rel="noopener">Cybertice</a><a href="https://shopee.co.th/search?keyword=esp32%20devkit%2030%20pin" target="_blank" rel="noopener">ค้นใน Shopee</a></div>
+        </div>
+      </article>
+
+      <!-- 2 PZEM -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดโมดูล PZEM-004T v3.0 พร้อมขดลวด CT แบบเปิดได้">
+          <rect x="14" y="26" width="150" height="96" rx="6" fill="#0E6E5C" stroke="#14B8A6"/>
+          <rect x="44" y="44" width="38" height="34" rx="3" fill="#F1F5F9" stroke="#94A3B8"/>
+          <text x="63" y="65" font-size="7" fill="#475569" text-anchor="middle" font-family="sans-serif">หม้อแปลง</text>
+          <rect x="94" y="48" width="12" height="9" fill="#111827"/><rect x="94" y="64" width="12" height="9" fill="#111827"/>
+          <rect x="140" y="34" width="20" height="80" rx="2" fill="#16A34A" stroke="#14532D"/>
+          <g fill="#CBD5E1" stroke="#64748B"><circle cx="150" cy="46" r="5"/><circle cx="150" cy="66" r="5"/><circle cx="150" cy="86" r="5"/><circle cx="150" cy="104" r="5"/></g>
+          <rect x="16" y="44" width="10" height="44" fill="#111827"/>
+          <g fill="#D4A72C"><rect x="18.5" y="47" width="5" height="5"/><rect x="18.5" y="57" width="5" height="5"/><rect x="18.5" y="67" width="5" height="5"/><rect x="18.5" y="77" width="5" height="5"/></g>
+          <text x="30" y="52" font-size="7" fill="#E2E8F0" font-family="sans-serif">5V</text><text x="30" y="62" font-size="7" fill="#E2E8F0" font-family="sans-serif">RX</text><text x="30" y="72" font-size="7" fill="#E2E8F0" font-family="sans-serif">TX</text><text x="30" y="82" font-size="7" fill="#E2E8F0" font-family="sans-serif">GND</text>
+          <text x="60" y="108" font-size="9" font-weight="700" fill="#E2E8F0" text-anchor="middle" font-family="sans-serif">PZEM-004T V3.0</text>
+          <circle cx="204" cy="92" r="24" fill="none" stroke="#111827" stroke-width="13"/>
+          <circle cx="204" cy="92" r="24" fill="none" stroke="#334155" stroke-width="1.5"/>
+          <rect x="198" y="62" width="12" height="8" rx="2" fill="#475569"/>
+          <path d="M184 76 C176 66 168 58 160 56" fill="none" stroke="#111827" stroke-width="3"/>
+          <text x="204" y="134" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">CT 100A แบบเปิดได้</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">2</span><b>PZEM-004T V3.0 รุ่น 100A พร้อม CT</b><span class="bm-q">1 ชุด</span></div>
+          <ul>
+            <li>วัด V, A, W, kWh, PF, Hz · ไฟ 80–260 VAC · กระแส 0–100A</li>
+            <li><b>ต้องเป็นรุ่น 100A ที่มีห่วง CT</b> รุ่น 10A ไม่มี CT ต้องตัดสายไฟเข้าบอร์ด ไม่เหมาะกับปั๊ม</li>
+            <li>CT แบบ<b>เปิดได้ (split-core)</b> คล้องสายได้โดยไม่ต้องถอดสาย</li>
+            <li>ต้องเขียนว่า <b>V3.0</b> เพราะรุ่นเก่าใช้โปรแกรมคนละแบบ</li>
+          </ul>
+          <div class="bm-price"><b>320–430 ฿</b><span class="src">ราคาจากร้าน</span></div>
+          <div class="bm-shop"><a href="https://www.allnewstep.com/product/4272/pzem-004t-ac-digital-power-energy-meter-module-v3-0-100a-%E0%B9%82%E0%B8%A1%E0%B8%94%E0%B8%B9%E0%B8%A5%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%9E%E0%B8%A5%E0%B8%B1%E0%B8%87%E0%B8%87%E0%B8%B2%E0%B8%99" target="_blank" rel="noopener">ArduinoAll</a><a href="https://www.artronshop.co.th/product/119/pzem004t-100a-v3-ac-digital-power-energy-meter-module" target="_blank" rel="noopener">ArtronShop</a><a href="https://shopee.co.th/search?keyword=pzem-004t%20v3%20100a" target="_blank" rel="noopener">ค้นใน Shopee</a></div>
+        </div>
+      </article>
+
+      <!-- 3 RCBO -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดเบรกเกอร์กันดูด RCBO 30mA แบบติดราง">
+          <rect x="70" y="8" width="100" height="134" rx="8" fill="#F1F5F9" stroke="#94A3B8"/>
+          <rect x="80" y="12" width="80" height="14" rx="3" fill="#CBD5E1"/>
+          <circle cx="100" cy="19" r="4" fill="#64748B"/><circle cx="140" cy="19" r="4" fill="#64748B"/>
+          <rect x="80" y="124" width="80" height="14" rx="3" fill="#CBD5E1"/>
+          <circle cx="100" cy="131" r="4" fill="#64748B"/><circle cx="140" cy="131" r="4" fill="#64748B"/>
+          <rect x="106" y="46" width="28" height="48" rx="5" fill="#1E293B"/>
+          <rect x="110" y="50" width="20" height="20" rx="3" fill="#0F172A"/>
+          <text x="120" y="64" font-size="8" fill="#F1F5F9" text-anchor="middle" font-family="sans-serif">ON</text>
+          <circle cx="152" cy="54" r="7" fill="#FACC15" stroke="#A16207"/><text x="152" y="57" font-size="8" font-weight="700" fill="#713F12" text-anchor="middle" font-family="sans-serif">T</text>
+          <text x="120" y="106" font-size="9" font-weight="700" fill="#0F172A" text-anchor="middle" font-family="sans-serif">RCBO C32</text>
+          <text x="120" y="117" font-size="8" fill="#334155" text-anchor="middle" font-family="sans-serif">IΔn 30mA · มอก.909</text>
+          <text x="88" y="40" font-size="8" fill="#334155" font-family="sans-serif">L</text><text x="146" y="40" font-size="8" fill="#334155" font-family="sans-serif">N</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">3</span><b>เบรกเกอร์กันดูด RCBO 30 mA</b><span class="bm-q bad">ต้องมี</span></div>
+          <ul>
+            <li>ตัวนี้คือ<b>ตัวช่วยชีวิตจริง</b> ตัดไฟเองเมื่อมีไฟรั่วถึง 30 mA</li>
+            <li>ดูให้มีเครื่องหมาย <b>มอก. 909-2548</b> บนตัวสินค้า</li>
+            <li>ขนาดแอมป์ (เช่น C16, C32) ให้ช่างเลือกตามขนาดปั๊มและสายไฟ</li>
+            <li>กดปุ่ม T ทดสอบเดือนละครั้ง ต้องตัดไฟทันที</li>
+          </ul>
+          <div class="bm-price"><b>≈ 370–680 ฿</b><span class="src">ราคาลูกย่อย RCBO ที่ HomePro</span></div>
+          <div class="bm-shop"><a href="https://www.homepro.co.th/p/1075751" target="_blank" rel="noopener">HomePro</a><a href="https://www.homepro.co.th/p/1094759" target="_blank" rel="noopener">รุ่นที่ระบุ มอก.909</a></div>
+        </div>
+      </article>
+
+      <!-- 4 สายจัมเปอร์ -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดสายจัมเปอร์ตัวเมีย 4 เส้น">
+          <path d="M40 30 C110 30 130 120 200 120" fill="none" stroke="#EF4444" stroke-width="4"/>
+          <path d="M40 54 C110 54 130 104 200 104" fill="none" stroke="#94A3B8" stroke-width="4"/>
+          <path d="M40 78 C110 78 130 88 200 88" fill="none" stroke="#FACC15" stroke-width="4"/>
+          <path d="M40 102 C110 102 130 72 200 72" fill="none" stroke="#22C55E" stroke-width="4"/>
+          <g fill="#111827"><rect x="22" y="24" width="20" height="12" rx="2"/><rect x="22" y="48" width="20" height="12" rx="2"/><rect x="22" y="72" width="20" height="12" rx="2"/><rect x="22" y="96" width="20" height="12" rx="2"/><rect x="198" y="114" width="20" height="12" rx="2"/><rect x="198" y="98" width="20" height="12" rx="2"/><rect x="198" y="82" width="20" height="12" rx="2"/><rect x="198" y="66" width="20" height="12" rx="2"/></g>
+          <text x="120" y="142" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">หัวเมีย–เมีย ยาว 20 ซม.</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">4</span><b>สายจัมเปอร์ ตัวเมีย–ตัวเมีย</b><span class="bm-q">4 เส้น</span></div>
+          <ul>
+            <li>ยาว 20 ซม. ใช้ 4 สีให้จำง่าย: แดง ดำ/เทา เหลือง เขียว</li>
+            <li>ซื้อเป็นแพ็กทีเดียว เหลือไว้ใช้งานอื่น</li>
+            <li>ติดตั้งถาวรควรหยดกาวร้อนที่หัวกันหลุด</li>
+          </ul>
+          <div class="bm-price"><b>≈ 20–40 ฿</b><span class="src est">ประมาณการ</span></div>
+          <div class="bm-shop"><a href="https://shopee.co.th/search?keyword=%E0%B8%AA%E0%B8%B2%E0%B8%A2%E0%B8%88%E0%B8%B1%E0%B8%A1%E0%B9%80%E0%B8%9B%E0%B8%AD%E0%B8%A3%E0%B9%8C%20%E0%B9%80%E0%B8%A1%E0%B8%B5%E0%B8%A2%20%E0%B9%80%E0%B8%A1%E0%B8%B5%E0%B8%A2" target="_blank" rel="noopener">ค้นใน Shopee</a></div>
+        </div>
+      </article>
+
+      <!-- 5 อะแดปเตอร์ -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดอะแดปเตอร์ 5V และสาย USB">
+          <rect x="30" y="40" width="64" height="64" rx="10" fill="#F8FAFC" stroke="#94A3B8"/>
+          <rect x="44" y="26" width="6" height="16" rx="1" fill="#94A3B8"/><rect x="74" y="26" width="6" height="16" rx="1" fill="#94A3B8"/>
+          <rect x="54" y="92" width="16" height="8" rx="2" fill="#334155"/>
+          <text x="62" y="70" font-size="9" font-weight="700" fill="#334155" text-anchor="middle" font-family="sans-serif">5V 2A</text>
+          <path d="M62 104 C62 136 150 136 170 96" fill="none" stroke="#1F2937" stroke-width="5"/>
+          <rect x="164" y="74" width="16" height="24" rx="3" fill="#C3CBD6" stroke="#8D98A8"/>
+          <text x="172" y="66" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">หัวเสียบบอร์ด</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">5</span><b>อะแดปเตอร์ 5V 2A + สาย USB</b><span class="bm-q">1 ชุด</span></div>
+          <ul>
+            <li>อะแดปเตอร์มือถือทั่วไป 5V อย่างน้อย 1A ใช้ได้</li>
+            <li>หัวสายให้ตรงกับบอร์ด (Micro-USB หรือ USB-C)</li>
+            <li><b>ต้องเป็นสายที่รับส่งข้อมูลได้</b> สายชาร์จอย่างเดียวจะลงโปรแกรมไม่ได้</li>
+          </ul>
+          <div class="bm-price"><b>≈ 100–200 ฿</b><span class="src est">ประมาณการ</span></div>
+          <div class="bm-shop"><a href="https://shopee.co.th/search?keyword=adapter%205v%202a%20micro%20usb" target="_blank" rel="noopener">ค้นใน Shopee</a></div>
+        </div>
+      </article>
+
+      <!-- 6 กล่อง -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดกล่องกันน้ำพร้อมเคเบิลแกลนด์">
+          <rect x="50" y="26" width="140" height="100" rx="8" fill="#9CA3AF" stroke="#4B5563"/>
+          <rect x="58" y="34" width="124" height="84" rx="6" fill="#B6BCC6" stroke="#6B7280"/>
+          <g fill="#4B5563"><circle cx="64" cy="40" r="3"/><circle cx="176" cy="40" r="3"/><circle cx="64" cy="112" r="3"/><circle cx="176" cy="112" r="3"/></g>
+          <rect x="84" y="126" width="18" height="12" rx="2" fill="#1F2937"/><rect x="138" y="126" width="18" height="12" rx="2" fill="#1F2937"/>
+          <text x="120" y="82" font-size="10" font-weight="700" fill="#374151" text-anchor="middle" font-family="sans-serif">IP65</text>
+          <text x="120" y="148" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">เคเบิลแกลนด์ร้อยสาย</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">6</span><b>กล่องกันน้ำ IP65 + เคเบิลแกลนด์</b><span class="bm-q">1 ใบ</span></div>
+          <ul>
+            <li>ขนาดราว 150×100×70 มม. ใส่ ESP32 กับ PZEM ได้</li>
+            <li>เคเบิลแกลนด์ 2 ตัว สำหรับร้อยสายไฟและสาย USB</li>
+            <li>ติดในที่ร่ม ไม่โดนแดดและฝนตรงๆ</li>
+          </ul>
+          <div class="bm-price"><b>≈ 80–200 ฿</b><span class="src est">ประมาณการ</span></div>
+          <div class="bm-shop"><a href="https://shopee.co.th/search?keyword=%E0%B8%81%E0%B8%A5%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%81%E0%B8%B1%E0%B8%99%E0%B8%99%E0%B9%89%E0%B8%B3%20ip65" target="_blank" rel="noopener">ค้นใน Shopee</a></div>
+        </div>
+      </article>
+
+      <!-- 7 แบต -->
+      <article class="bm-card">
+        <div class="bm-pic"><svg viewBox="0 0 240 150" role="img" aria-label="ภาพวาดพาวเวอร์แบงก์">
+          <rect x="56" y="30" width="128" height="86" rx="14" fill="#1F2937" stroke="#475569"/>
+          <g fill="#34D399"><circle cx="96" cy="100" r="3"/><circle cx="108" cy="100" r="3"/><circle cx="120" cy="100" r="3"/><circle cx="132" cy="100" r="3" opacity=".3"/></g>
+          <text x="120" y="70" font-size="11" font-weight="700" fill="#E2E8F0" text-anchor="middle" font-family="sans-serif">10000 mAh</text>
+          <rect x="180" y="62" width="10" height="16" rx="2" fill="#64748B"/>
+          <text x="120" y="138" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">ชาร์จไปใช้ไปได้ (pass-through)</text>
+        </svg></div>
+        <div class="bm-body">
+          <div class="bm-h"><span class="bm-n">7</span><b>พาวเวอร์แบงก์</b><span class="bm-q opt">ไม่บังคับ</span></div>
+          <ul>
+            <li>ต่อคั่นระหว่างอะแดปเตอร์กับบอร์ด ไฟดับแล้วบอร์ดยังทำงาน แจ้ง “ไฟดับ” ได้ทันที</li>
+            <li>ต้องรองรับ<b>ชาร์จไปใช้ไปได้ (pass-through)</b> บางรุ่นตัดไฟออกตอนสลับ ให้ลองก่อน</li>
+            <li>เราเตอร์ Wi-Fi ต้องมีไฟสำรองด้วย ไม่งั้นส่งข้อความออกไม่ได้</li>
+          </ul>
+          <div class="bm-price"><b>≈ 300–500 ฿</b><span class="src est">ประมาณการ</span></div>
+          <div class="bm-shop"><a href="https://shopee.co.th/search?keyword=powerbank%20pass%20through" target="_blank" rel="noopener">ค้นใน Shopee</a></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="card bm-sum">
       <div>
-        <h3>รายการอุปกรณ์ ราคาประหยัด หาซื้อได้ทั่วไป</h3>
-        <p class="muted" style="margin:6px 0 0">ซื้อเองตามรายการ หรือสั่ง<b style="color:#fff">ชุดประกอบเสร็จ</b>จาก CoreDash ที่ลงโปรแกรมและต่อสายฝั่งบอร์ดให้แล้ว เหลือแค่ให้ช่างไฟต่อฝั่ง 220V</p>
-        <div class="warnbox">⚠ PZEM-004T ต่อกับไฟบ้าน 220V โดยตรง อันตรายถึงชีวิต ปิดเบรกเกอร์ก่อนต่อทุกครั้ง และให้ช่างไฟที่มีความรู้เป็นผู้ต่อฝั่งไฟฟ้า</div>
+        <h3>รวมงบโดยประมาณ</h3>
+        <table class="bm-t">
+          <tr><td>ชุดหลัก (ข้อ 1, 2, 4, 5, 6)</td><td><b>≈ 770–1,155 ฿</b></td></tr>
+          <tr><td>+ RCBO 30 mA ถ้าบ้านยังไม่มี (ข้อ 3)</td><td>≈ 370–680 ฿</td></tr>
+          <tr><td>+ พาวเวอร์แบงก์ (ข้อ 7 ไม่บังคับ)</td><td>≈ 300–500 ฿</td></tr>
+          <tr><td>ค่าช่างไฟต่อฝั่ง 220V</td><td>สอบถามช่างในพื้นที่</td></tr>
+          <tr><td>ค่าโปรแกรม CoreDash Watch</td><td>ฟรี 90 วัน แล้ว <span data-cfg="month">99 ฿</span>/เดือน</td></tr>
+        </table>
       </div>
-      <div class="parts">
-        <div class="part"><b>ESP32 DevKit</b><span class="q">1 ตัว</span><span class="small">บอร์ดหลัก มี Wi-Fi ในตัว</span></div>
-        <div class="part"><b>PZEM-004T v3.0 พร้อม CT คล้องสาย</b><span class="q">1 ชุด</span><span class="small">วัดแรงดัน กระแส กำลังไฟ หน่วยสะสม</span></div>
-        <div class="part"><b>สายจัมเปอร์ เมีย–เมีย</b><span class="q">4 เส้น</span><span class="small">5V · GND · TX→GPIO16 · RX→GPIO17</span></div>
-        <div class="part"><b>อะแดปเตอร์ 5V + สาย USB</b><span class="q">1 ชุด</span><span class="small">ไฟเลี้ยง ESP32</span></div>
-        <div class="part"><b>กล่องกันน้ำ + พาวเวอร์แบงก์ (ไม่บังคับ)</b><span class="q">1 ชุด</span><span class="small">ติดข้างตู้ไฟ · แบตสำรองช่วยให้แจ้ง “ไฟดับ” ได้ทันที</span></div>
+      <div class="bm-tips">
+        <b>ซื้อให้ถูกรุ่นในข้อความเดียว</b>
+        <p>ส่งข้อความนี้ให้ร้านค้าได้เลย:</p>
+        <div class="bm-copy" id="bmCopy">ESP32 DevKit V1 30 ขา (บัดกรีขาแล้ว) 1 ตัว · PZEM-004T V3.0 รุ่น 100A พร้อม CT แบบเปิดได้ 1 ชุด · สายจัมเปอร์เมีย-เมีย 20 ซม. 4 เส้น · อะแดปเตอร์ 5V 2A + สาย USB รับส่งข้อมูลได้ 1 ชุด</div>
+        <button class="btn ghost sm" type="button" id="bmCopyB">คัดลอกรายการ</button>
+        <p class="small" style="color:var(--mute);margin:10px 0 0">ไม่อยากซื้อเองทีละชิ้น? สั่งชุดประกอบเสร็จจาก CoreDash โทร <span data-cfg="phone">081-923-2380</span></p>
       </div>
+    </div>
+
+    <!-- ภาพการต่อละเอียด -->
+    <div class="center" style="margin-top:44px">
+      <span class="eyebrow">ภาพการต่อทุกขา</span>
+      <h2 style="margin-top:8px">ต่อสายตามภาพนี้ ทีละเส้น</h2>
+    </div>
+    <div class="card wd">
+      <svg viewBox="0 0 960 470" role="img" aria-label="แผนผังการต่อสาย RCBO PZEM-004T ESP32 และปั๊มน้ำ">
+        <rect x="10" y="40" width="470" height="410" rx="16" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.45)" stroke-dasharray="6 6"/>
+        <text x="28" y="66" font-size="14" font-weight="700" fill="#FCA5A5">ฝั่งไฟ 220V · ช่างไฟเท่านั้น · ปิดเบรกเกอร์ก่อนต่อ</text>
+        <rect x="500" y="40" width="450" height="410" rx="16" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.45)" stroke-dasharray="6 6"/>
+        <text x="518" y="66" font-size="14" font-weight="700" fill="#6EE7B7">ฝั่งไฟต่ำ · ต่อเองได้</text>
+
+        <!-- RCBO -->
+        <rect x="40" y="110" width="80" height="150" rx="8" fill="#F1F5F9" stroke="#94A3B8"/>
+        <rect x="66" y="150" width="28" height="48" rx="5" fill="#1E293B"/>
+        <text x="80" y="226" font-size="11" font-weight="700" fill="#0F172A" text-anchor="middle">RCBO</text>
+        <text x="80" y="242" font-size="10" fill="#334155" text-anchor="middle">30 mA</text>
+        <text x="80" y="100" font-size="12" fill="#A9B8DA" text-anchor="middle">ไฟเข้าจากตู้</text>
+        <!-- สาย L/N ไปปั๊ม -->
+        <path d="M100 260 V330 H400" fill="none" stroke="#B45309" stroke-width="5"/>
+        <path d="M60 260 V370 H400" fill="none" stroke="#2563EB" stroke-width="5"/>
+        <text x="112" y="350" font-size="12" font-weight="700" fill="#F59E0B">L (สายเส้นไฟ)</text>
+        <text x="72" y="392" font-size="12" font-weight="700" fill="#60A5FA">N (สายนิวทรัล)</text>
+        <!-- ปั๊ม -->
+        <rect x="400" y="310" width="66" height="80" rx="12" fill="#1D4ED8" stroke="#60A5FA"/>
+        <circle cx="433" cy="350" r="16" fill="none" stroke="#BFDBFE" stroke-width="3"/>
+        <text x="433" y="410" font-size="12" fill="#E2E8F0" text-anchor="middle">ปั๊มน้ำ</text>
+        <!-- CT -->
+        <ellipse cx="300" cy="330" rx="14" ry="24" fill="none" stroke="#111827" stroke-width="9"/>
+        <ellipse cx="300" cy="330" rx="14" ry="24" fill="none" stroke="#F59E0B" stroke-width="2"/>
+        <text x="320" y="355" font-size="12" font-weight="700" fill="#FCD34D">CT คล้อง L</text>
+        <path d="M300 306 C300 250 340 210 362 196" fill="none" stroke="#E2E8F0" stroke-width="2.5"/>
+        <path d="M306 306 C312 256 346 222 362 214" fill="none" stroke="#64748B" stroke-width="2.5"/>
+        <!-- ต่อแรงดันเข้า PZEM -->
+        <path d="M190 330 V258 C190 240 230 240 362 238" fill="none" stroke="#B45309" stroke-width="3"/>
+        <path d="M220 370 V280 C220 262 250 258 362 256" fill="none" stroke="#2563EB" stroke-width="3"/>
+        <circle cx="190" cy="330" r="5" fill="#F59E0B"/><circle cx="220" cy="370" r="5" fill="#60A5FA"/>
+        <text x="200" y="232" font-size="11" fill="#FCA5A5">ต่อขนานเพื่อวัดแรงดัน</text>
+
+        <!-- PZEM -->
+        <rect x="360" y="120" width="250" height="160" rx="10" fill="#0E6E5C" stroke="#14B8A6" stroke-width="2"/>
+        <text x="485" y="150" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">PZEM-004T V3.0</text>
+        <rect x="370" y="180" width="28" height="90" rx="3" fill="#16A34A" stroke="#14532D"/>
+        <g fill="#CBD5E1" stroke="#475569"><circle cx="384" cy="196" r="6"/><circle cx="384" cy="214" r="6"/><circle cx="384" cy="238" r="6"/><circle cx="384" cy="256" r="6"/></g>
+        <text x="404" y="200" font-size="10.5" fill="#E2E8F0">CT</text><text x="404" y="218" font-size="10.5" fill="#E2E8F0">CT</text>
+        <text x="404" y="242" font-size="10.5" fill="#E2E8F0">L</text><text x="404" y="260" font-size="10.5" fill="#E2E8F0">N</text>
+        <rect x="574" y="176" width="26" height="88" rx="3" fill="#111827"/>
+        <g fill="#D4A72C"><rect x="582" y="184" width="10" height="10"/><rect x="582" y="204" width="10" height="10"/><rect x="582" y="224" width="10" height="10"/><rect x="582" y="244" width="10" height="10"/></g>
+        <text x="568" y="193" font-size="11" fill="#E2E8F0" text-anchor="end">5V</text><text x="568" y="213" font-size="11" fill="#E2E8F0" text-anchor="end">RX</text>
+        <text x="568" y="233" font-size="11" fill="#E2E8F0" text-anchor="end">TX</text><text x="568" y="253" font-size="11" fill="#E2E8F0" text-anchor="end">GND</text>
+
+        <!-- สายไฟต่ำ -->
+        <path d="M600 189 H690 V150 H790" fill="none" stroke="#EF4444" stroke-width="4"/>
+        <path d="M600 209 H710 V246 H790" fill="none" stroke="#22C55E" stroke-width="4"/>
+        <path d="M600 229 H700 V226 H790" fill="none" stroke="#FACC15" stroke-width="4"/>
+        <path d="M600 249 H680 V170 H790" fill="none" stroke="#94A3B8" stroke-width="4"/>
+
+        <!-- ESP32 -->
+        <rect x="790" y="110" width="140" height="190" rx="8" fill="#17171C" stroke="#3A3A44" stroke-width="2"/>
+        <rect x="846" y="262" width="76" height="30" rx="3" fill="#C3CBD6"/>
+        <text x="884" y="282" font-size="11" font-weight="700" fill="#334155" text-anchor="middle">ESP32</text>
+        <g fill="#D4A72C"><rect x="794" y="144" width="10" height="10"/><rect x="794" y="164" width="10" height="10"/><rect x="794" y="220" width="10" height="10"/><rect x="794" y="240" width="10" height="10"/></g>
+        <text x="810" y="153" font-size="11" fill="#E2E8F0">3V3</text><text x="810" y="173" font-size="11" fill="#E2E8F0">GND</text>
+        <text x="810" y="229" font-size="11" fill="#E2E8F0">G16 (RX2)</text><text x="810" y="249" font-size="11" fill="#E2E8F0">G17 (TX2)</text>
+        <rect x="844" y="98" width="32" height="16" rx="3" fill="#C3CBD6"/>
+        <path d="M860 98 V70 H900" fill="none" stroke="#1F2937" stroke-width="5"/>
+        <rect x="900" y="56" width="40" height="30" rx="6" fill="#F8FAFC" stroke="#94A3B8"/>
+        <text x="920" y="104" font-size="10.5" fill="#A9B8DA" text-anchor="middle">5V USB</text>
+
+        <!-- ป้ายสาย -->
+        <g font-size="12" font-weight="700">
+          <rect x="612" y="300" width="326" height="132" rx="10" fill="#071233" stroke="#2A3966"/>
+          <circle cx="630" cy="322" r="6" fill="#EF4444"/><text x="644" y="326" fill="#E2E8F0">แดง: PZEM 5V → ESP32 3V3</text>
+          <circle cx="630" cy="348" r="6" fill="#94A3B8"/><text x="644" y="352" fill="#E2E8F0">เทา: PZEM GND → ESP32 GND</text>
+          <circle cx="630" cy="374" r="6" fill="#FACC15"/><text x="644" y="378" fill="#E2E8F0">เหลือง: PZEM TX → ESP32 G16</text>
+          <circle cx="630" cy="400" r="6" fill="#22C55E"/><text x="644" y="404" fill="#E2E8F0">เขียว: PZEM RX → ESP32 G17</text>
+          <text x="630" y="424" font-size="10.5" font-weight="500" fill="#A9B8DA">TX ไขว้ไป RX เสมอ · ไฟเลี้ยงใช้ 3V3 ไม่ใช่ 5V</text>
+        </g>
+      </svg>
+    </div>
+    <div class="grid2" style="margin-top:16px;align-items:start">
+      <div class="honest"><b>ทำไมใช้ 3V3 แทน 5V:</b> ขารับข้อมูลของ ESP32 รับได้แค่ 3.3V ถ้าเลี้ยง PZEM ด้วย 5V สัญญาณ TX จะออกมา 5V เสี่ยงขา ESP32 เสีย การเลี้ยงด้วย 3V3 ใช้งานได้กับสายสั้นๆ ไม่ต้องใส่อุปกรณ์เพิ่ม ถ้าอ่านค่าไม่ได้ ให้ตรวจว่า TX/RX ไขว้ถูก และสายสั้นไม่เกิน 30 ซม.</div>
+      <div class="warnbox" style="margin-top:0">⚠ ห้ามคล้อง CT รอบสาย L และ N พร้อมกัน ค่าจะอ่านได้ 0 · ลำดับขั้ว CT/L/N บนบอร์ดอาจต่างกันตามล็อตผลิต ดูป้ายที่พิมพ์บนบอร์ดจริงเสมอ · ฝั่ง 220V ให้ช่างไฟต่อ และต้องมี RCBO 30 mA ตัดไฟเสมอ</div>
     </div>
   </div>
 </section>
@@ -712,7 +1032,7 @@
   // ── ESP32 ──
   var es = box(4, 12, 0, 54, 24, 3, PCB) + box(12, 16, 3, 20, 16, 2.5, SIL) + box(6, 34, 3, 50, 2.5, 2, DARK) + box(6, 11.5, 3, 50, 2.5, 2, DARK) + box(0, 20, 0.6, 5, 7, 2.2, SIL)
   es += '<circle id="hwLed" cx="' + P(52, 17, 3)[0].toFixed(1) + '" cy="' + P(52, 17, 3)[1].toFixed(1) + '" r="3.2" fill="#334155"/>'
-  es += lab(30, 22, 16, 'ESP32 DevKit') + lab(26, 40, 2, 'VIN GND … G16 G17', 's')
+  es += lab(30, 22, 16, 'ESP32 DevKit') + lab(26, 40, 2, '3V3 GND … G16 G17', 's')
   // ── ไฟเลี้ยง (กลุ่ม pw) ──
   var pw = box(-30, 16, 0, 13, 13, 15, ['#F8FAFC', '#CBD5E1', '#E2E8F0']) + lab(-24, 22, 22, 'อะแดปเตอร์ 5V', 's') + wire([[-17, 23, 4], [-6, 23, 2], [0, 23, 1.6]], '#475569', 3)
   pw += wire([[12, 36, 5], [12, 50, 16], [70, 50, 20], [89, 14, 20], [89, 13.5, 8]], '#EF4444') + wire([[16, 36, 5], [16, 54, 9], [74, 54, 11], [89, 27, 11], [89, 26.5, 8]], '#94A3B8')
@@ -965,6 +1285,15 @@
   }
   document.querySelectorAll('.sf-tabs button').forEach(function (b) { b.addEventListener('click', function () { tab(b.dataset.sf) }) })
   lkDraw(1); stShow(null); carDraw(); tab('leak')
+})()
+
+;(function () {
+  var b = document.getElementById('bmCopyB'); if (!b) return
+  b.addEventListener('click', function () {
+    var t = document.getElementById('bmCopy').textContent
+    var done = function () { b.textContent = 'คัดลอกแล้ว ✓'; setTimeout(function () { b.textContent = 'คัดลอกรายการ' }, 1800) }
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () {}); else { var r = document.createRange(); r.selectNodeContents(document.getElementById('bmCopy')); var sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); document.execCommand('copy'); done() }
+  })
 })()
 </script>
 </body>
