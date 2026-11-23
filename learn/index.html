@@ -282,7 +282,7 @@ html[data-mode=light] .rule em.t{color:#15803d}
  <div class="wrap top-in">
   <a class="logo" href="../" aria-label="CoreDash หน้าหลัก"><i>⚡</i>CoreDash <b>Learn</b></a>
   <nav class="nav">
-   <a href="#categories">หมวดหมู่</a><a href="#usecases">ตัวอย่างใช้งาน</a><a href="#devices">อุปกรณ์</a><a href="#manual">คู่มือ</a><a href="#glossary">คำศัพท์</a><a href="#faq">คำถามพบบ่อย</a><a href="lab-leak/">🔬 แลป</a><a href="../watch/">Watch</a>
+   <a href="#categories">หมวดหมู่</a><a href="#usecases">ตัวอย่างใช้งาน</a><a href="#devices">อุปกรณ์</a><a href="#manual">คู่มือ</a><a href="#glossary">คำศัพท์</a><a href="#faq">คำถามพบบ่อย</a><a href="lab/">🔬 แลป</a><a href="../watch/">Watch</a>
   </nav>
   <div class="acts">
    <button class="btn sm" id="themeBtn" aria-haspopup="true" title="ปรับสีพื้นหลัง">🎨 <span class="lbl">สีพื้นหลัง</span></button>
@@ -311,7 +311,7 @@ html[data-mode=light] .rule em.t{color:#15803d}
     <div style="display:flex;gap:10px;flex-wrap:wrap">
      <a class="btn pri" href="#usecases">▶ ดูตัวอย่างใช้งานจริง</a>
      <a class="btn" href="#manual">📘 เปิดคู่มือ</a>
-     <a class="btn" href="lab-leak/">🔬 แลปวัดไฟรั่ว</a>
+     <a class="btn" href="lab/">🔬 ห้องแลปลงมือทำ</a>
     </div>
     <div class="stats" id="stats"></div>
    </div>
@@ -334,7 +334,7 @@ html[data-mode=light] .rule em.t{color:#15803d}
  <section id="usecases">
   <div class="wrap">
    <div class="sec-head"><span class="eyebrow">ตัวอย่างใช้งานจริง</span><h2>ปัญหาจริง วิธีแก้จริง พร้อมภาพ 3D</h2><p>ทุกตัวอย่างมีภาพการต่ออุปกรณ์ รายการอุปกรณ์ ขั้นตอนติดตั้ง เงื่อนไขแจ้งเตือน และตัวอย่างข้อความที่ส่งเข้ามือถือ</p></div>
-   <a class="labcard" href="lab-leak/"><span class="li">🔬</span><span><b>แลปทำได้จริง: วัดไฟรั่วและเบรกเกอร์ตัด ส่งเข้ามือถือ</b><small>รายการอุปกรณ์ราคาประหยัด ผังการต่อสาย เฟิร์มแวร์ และ 7 การทดลองที่เห็นผลในแอปจริง</small></span><span class="go">เข้าแลป →</span></a>
+   <a class="labcard" href="lab/"><span class="li">🔬</span><span><b>ห้องแลปลงมือทำ: ไฟฟ้า แม่เหล็ก ชีลด์ และการวัด</b><small>13 แลป รวมแลปฉบับเต็ม “วัดไฟรั่วส่งเข้ามือถือ” มีอุปกรณ์ ผังต่อสาย ขั้นตอน และเกณฑ์ผ่าน</small></span><span class="go">เข้าห้องแลป →</span></a>
    <div class="filters" id="filters"></div>
    <div class="subf">ระดับความยาก:
     <button class="chip sm on" data-lv="all">ทั้งหมด</button><button class="chip" data-lv="1">ง่าย</button><button class="chip" data-lv="2">ปานกลาง</button><button class="chip" data-lv="3">ซับซ้อน</button>
@@ -1294,7 +1294,7 @@ hero('drip');
 
 /* guide page */
 let gv=null,openFromHub=false;
-const LABS={leak:'lab-leak/',outage:'lab-leak/',power:'lab-leak/'};
+const LABS={leak:'lab-leak/',outage:'lab-leak/',power:'lab-leak/',wmeter:'lab/',vwater:'lab/',motor:'lab/#lab-ct',server:'lab/#lab-fanrpm',rack:'lab/#lab-fanrpm',gate:'lab/#lab-magneto'};
 function guideHTML(u){const c=CAT[u.cat],i=UID_IDX[u.id],pv=U[(i-1+U.length)%U.length],nx=U[(i+1)%U.length];
  const rel=U.filter(x=>x.cat===u.cat&&x.id!==u.id).slice(0,3);
  const sensors=u.devices.filter(d=>!/กล่อง CoreDash/.test(d[0])).map(d=>d[0]);

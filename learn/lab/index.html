@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoreDash Lab · ห้องแลปลงมือทำ ไฟฟ้า แม่เหล็ก ชีลด์ และการวัด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../../app/icons/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050C26;--bg2:#081640;--card:#0C1A45;--card2:#102255;--line:rgba(140,170,255,.18);--tx:#EEF3FF;--mu:#A9B8DA;--a1:#2E6BFF;--a2:#22D3EE;--amber:#F5C76A;--red:#F87171;--green:#34D399}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:'Sarabun','Space Grotesk',system-ui,sans-serif;font-size:16.5px;line-height:1.65;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(700px 420px at 85% -5%,rgba(46,107,255,.2),transparent 70%)}
+a{color:var(--a2)}
+.wrap{width:min(1180px,92vw);margin:0 auto}
+h1,h2,h3{font-family:'Space Grotesk','Sarabun',sans-serif;line-height:1.25;color:#fff}
+h2{font-size:clamp(22px,2.6vw,30px);margin:6px 0 10px}
+h3{font-size:18px;margin-bottom:6px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a2)}
+.eyebrow::before{content:"";width:22px;height:2px;background:currentColor;border-radius:2px}
+.mu{color:var(--mu)}
+.nav{position:sticky;top:0;z-index:30;background:rgba(5,12,38,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:10px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:#fff;text-decoration:none;white-space:nowrap;margin-right:auto}
+.brand i{font-style:normal;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#2E6BFF,#22D3EE)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;font:inherit;font-weight:700;font-size:14.5px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#DCE6FF;text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.09)}
+.btn.on{border-color:var(--a2);color:var(--a2);background:rgba(34,211,238,.08)}
+.btn.pri{background:linear-gradient(135deg,#2E6BFF,#1BB5E8);border-color:transparent;color:#fff}
+.hero{padding:40px 0 18px;max-width:900px}
+.hero h1{font-family:'Sarabun',sans-serif;font-weight:800;font-size:clamp(28px,3.8vw,44px);margin:10px 0}
+.hero h1 span{background:linear-gradient(90deg,#22D3EE,#2E6BFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mu);font-size:17px}
+.stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:16px}
+.stats b{font-family:'Space Grotesk';font-size:26px;color:#fff;display:block;line-height:1.1}
+.stats span{font-size:13.5px;color:var(--mu)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-bottom:20px}
+.lab{display:flex;flex-direction:column;gap:8px;text-align:left;font:inherit;color:inherit;cursor:pointer;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;transition:transform .15s,border-color .15s}
+.lab:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.5)}
+.lab .top{display:flex;align-items:center;gap:10px}
+.lab .ic{font-size:26px;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:rgba(46,107,255,.15);border:1px solid var(--line)}
+.lab .tg{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.tag{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mu);white-space:nowrap}
+.tag.full{color:#a7f3d0;border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.1)}
+.lab p{font-size:14.5px;color:var(--mu)}
+.lab .meta{display:flex;gap:14px;font-size:13px;color:var(--mu);margin-top:auto;padding-top:6px;border-top:1px dashed var(--line)}
+.lab .meta b{color:#fff}
+/* detail */
+dialog{margin:auto;border:1px solid var(--line);border-radius:18px;background:var(--bg2);color:var(--tx);width:min(980px,94vw);max-height:90vh;padding:0}
+dialog::backdrop{background:rgba(2,6,20,.75);backdrop-filter:blur(3px)}
+.dh{position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;gap:12px;z-index:2}
+.dh h2{font-size:21px;margin:0}
+.dh .x{margin-left:auto}
+.db{padding:18px 20px 24px;display:grid;gap:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.blk{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.blk h3{font-size:15.5px;color:var(--a2)}
+.blk ul,.blk ol{padding-left:20px;font-size:14.5px;display:grid;gap:3px}
+pre{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#071233;border:1px solid var(--line);border-radius:12px;padding:12px;overflow-x:auto;color:#dfe7ff;line-height:1.55;white-space:pre}
+.see{background:rgba(46,107,255,.1);border:1px solid rgba(46,107,255,.45);border-radius:12px;padding:12px 14px;font-size:15px}
+.pass{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.4);border-radius:12px;padding:12px 14px;font-size:15px}
+.warn{background:rgba(245,199,106,.08);border:1px solid rgba(245,199,106,.4);border-radius:12px;padding:12px 14px;font-size:14.5px}
+.path{margin:26px 0 40px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.steps div{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14.5px;color:var(--mu)}
+.steps b{display:block;color:#fff;font-size:15.5px}
+.kit{margin-bottom:40px}
+.kit table{width:100%;border-collapse:collapse;font-size:14.5px}
+.kit th,.kit td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+.kit th{color:var(--mu);font-weight:600;font-size:13.5px}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--mu);font-size:14px}
+@media(max-width:980px){.grid,.two,.steps{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+ <a class="brand" href="./"><i>🔬</i>CoreDash <span style="color:var(--a2)">Lab</span></a>
+ <a class="btn" href="../">📘 คลังความรู้</a><a class="btn pri" href="../../">← หน้าหลัก</a>
+</div></header>
+<main class="wrap">
+ <div class="hero">
+  <span class="eyebrow">ห้องแลปลงมือทำ</span>
+  <h1>ทดลองให้เห็นจริง<br><span>ไฟฟ้า · แม่เหล็ก · ชีลด์ · การวัด</span></h1>
+  <p>ทุกแลปใช้อุปกรณ์หาซื้อง่าย ราคาเข้าถึงได้ มีรายการของ วิธีต่อสาย ขั้นตอน สิ่งที่จะเห็น และเกณฑ์ผ่าน ทำต่อยอดเป็นงานจริงกับ CoreDash ได้ทันที</p>
+  <div class="stats"><div><b id="nLab"></b><span>แลปทั้งหมด</span></div><div><b>1</b><span>แลปฉบับเต็ม (มีเฟิร์มแวร์ + 3D)</span></div><div><b>ESP32</b><span>บอร์ดหลักทุกแลป</span></div></div>
+ </div>
+ <div class="filters" id="filters"></div>
+ <div class="grid" id="grid"></div>
+
+ <section class="path">
+  <span class="eyebrow">เส้นทางแนะนำ</span><h2>เริ่มจากไหนดี (สายงานแม่เหล็กและเซนเซอร์นับรอบ)</h2>
+  <div class="steps">
+   <div><b>1 · เข้าใจสนาม</b>แลป “สนามลดตามระยะ” และ “Hall / Reed / TMR” รู้ว่าเซนเซอร์ทำงานที่กี่เกาส์</div>
+   <div><b>2 · เข้าใจชีลด์</b>แลป “ชีลด์ 5 วัสดุ” เห็นเองว่าอะลูมิเนียมกันแม่เหล็กไม่ได้ เหล็กกับมิวเมทัลต่างกันยังไง</div>
+   <div><b>3 · สัญญาณสะอาด</b>แลป “สัญญาณรบกวนนับพัลส์เพี้ยน” และ “สอบเทียบมิเตอร์น้ำ”</div>
+   <div><b>4 · ต่อยอด</b>แลป “แมกนีโตมิเตอร์ 3 แกน” ใช้ตรวจจับแม่เหล็กแปลกปลอม และ “สอบเทียบมิเตอร์น้ำ” วัดผลจริง</div>
+  </div>
+ </section>
+
+ <section class="kit">
+  <span class="eyebrow">ชุดอุปกรณ์กลาง</span><h2>ซื้อครั้งเดียว ใช้ได้เกือบทุกแลป</h2>
+  <table>
+   <tr><th>อุปกรณ์</th><th>ใช้ทำอะไร</th><th>ราคาประมาณ</th></tr>
+   <tr><td>ESP32 DevKit + สาย USB + บอร์ดทดลอง + สายจัมเปอร์</td><td>สมองของทุกแลป อ่านค่า นับพัลส์ ส่งเข้า CoreDash</td><td>250–400 ฿</td></tr>
+   <tr><td>DRV5055A1 / SS49E (Hall เชิงเส้น)</td><td>วัดสนามแม่เหล็กเป็นตัวเลข</td><td>30–120 ฿</td></tr>
+   <tr><td>มัลติมิเตอร์</td><td>วัดแรงดัน กระแส ความต้านทาน</td><td>300–800 ฿</td></tr>
+   <tr><td>แม่เหล็กนีโอไดเมียม ก้อนเล็ก + ก้อนใหญ่</td><td>ตัวทดลองสนามแม่เหล็ก</td><td>100–600 ฿</td></tr>
+   <tr><td>แผ่นตัวอย่าง: เหล็ก 1.2 มม. · อะลูมิเนียม 1 มม. · ทองแดง · มิวเมทัล</td><td>เทียบผลการชีลด์</td><td>200–900 ฿</td></tr>
+   <tr><td>ไม้บรรทัด/เวอร์เนียร์ + จิ๊กพิมพ์ 3 มิติหรือไม้</td><td>วางซ้ำตำแหน่งเดิมได้ ผลน่าเชื่อถือ</td><td>100–300 ฿</td></tr>
+  </table>
+  <p class="mu" style="font-size:13.5px;margin-top:8px">ราคาเป็นช่วงโดยประมาณจากร้านออนไลน์ทั่วไป อาจต่างกันตามร้านและช่วงเวลา</p>
+ </section>
+</main>
+
+<dialog id="dlg"><div class="dh"><span id="dIc" style="font-size:26px"></span><h2 id="dT"></h2><button class="btn x" onclick="dlg.close()">ปิด ✕</button></div><div class="db" id="dB"></div></dialog>
+
+<footer><div class="wrap">CoreDash Technology · Lab · ทุกแลปที่เกี่ยวกับไฟบ้าน 220V ให้ทำโดยผู้มีความรู้ด้านไฟฟ้า และตัดไฟก่อนต่อสายทุกครั้ง · <a href="../">กลับคลังความรู้</a></div></footer>
+
+<script>
+const CATS=[['all','ทั้งหมด'],['mag','🧲 แม่เหล็ก'],['shield','🛡️ ชีลด์ & สัญญาณรบกวน'],['elec','⚡ ไฟฟ้า'],['meas','📏 การวัด & สอบเทียบ']];
+const LABS=[
+{id:'rd',full:'../lab-magnet/',ic:'🔒',cat:'shield',lv:'เฉพาะทีม',time:'–',cost:'–',t:'แลป R&D เฉพาะทีม',d:'พื้นที่ทดสอบภายในของทีมพัฒนา ต้องใส่รหัสผ่านก่อนเข้าดู'},
+{id:'leak',full:'../lab-leak/',ic:'⚡',cat:'elec',lv:'กลาง',time:'1 วัน',cost:'2,100–3,600 ฿',t:'วัดไฟรั่วและเบรกเกอร์ตัด ส่งเข้ามือถือ',d:'ZMCT103C วัดกระแสรั่ว แยกไฟดับกับเบรกเกอร์ตัด แจ้งเตือน Telegram/LINE ผ่าน CoreDash Watch'},
+{id:'falloff',ic:'📉',cat:'mag',lv:'เริ่มต้น',time:'1 ชม.',cost:'≈ 400 ฿',t:'สนามแม่เหล็กลดลงเร็วแค่ไหนตามระยะ',d:'วัดสนามจากแม่เหล็กที่ระยะต่างๆ ด้วย Hall เชิงเส้น ทำกราฟ log เห็นว่าทำไม “ระยะกันชน” คุ้มที่สุด',
+ goal:'เห็นด้วยตาว่าสนามแม่เหล็กลดลงเร็วมากเมื่อห่างออก (ใกล้ๆ ลดประมาณกำลังสามของระยะ)',
+ parts:['ESP32','DRV5055A1 หรือ SS49E','แม่เหล็กนีโอไดเมียม 2 ขนาด','ไม้บรรทัด + แผ่นรองหนา 1, 2, 5 มม.','แผ่นพลาสติกรองเซนเซอร์'],
+ wire:'DRV5055A1  VCC → 3.3V\n           GND → GND\n           OUT → GPIO34\n(SS49E ใช้ 5V ต้องแบ่งแรงดัน 10k/20k ก่อนเข้า GPIO34)',
+ code:'float zero=0;\nvoid setup(){Serial.begin(115200);analogSetPinAttenuation(34,ADC_11db);\n for(int i=0;i<64;i++)zero+=analogReadMilliVolts(34);zero/=64;}\nvoid loop(){float mv=0;for(int i=0;i<64;i++)mv+=analogReadMilliVolts(34);mv/=64;\n Serial.printf("%.0f G\\n",(mv-zero)/60.0*10); // DRV5055A1@3.3V ≈ 60 mV/mT\n delay(300);}',
+ steps:['ตั้งศูนย์ตอนไม่มีแม่เหล็กอยู่ใกล้','วางแม่เหล็กชิดเซนเซอร์ (0 มม.) จดค่า','เพิ่มระยะ 2, 5, 10, 15, 20, 30 มม. จดค่าทุกจุด','ทำซ้ำกับแม่เหล็กก้อนใหญ่','นำค่าไปทำกราฟใน Google Sheet แกน Y แบบ log'],
+ see:'ค่าอิ่มตัว (เกินช่วงเซนเซอร์) ที่ระยะชิด แล้วลดลงอย่างรวดเร็ว ระยะเพิ่ม 2 เท่า สนามลดลงหลายเท่า ก้อนใหญ่ลดช้ากว่าก้อนเล็ก',
+ pass:'ได้ตารางระยะ-สนาม และรู้ว่าระยะเท่าไรที่สนามต่ำกว่า 20 G สำหรับแม่เหล็กแต่ละก้อน',
+ warn:'เซนเซอร์ DRV5055A1 วัดได้ราว ±210 G ระยะชิดจะอิ่มตัว ใช้รุ่น A4 (ช่วงกว้างกว่า) หรือเกาส์มิเตอร์ถ้าต้องการค่าที่ระยะชิด'},
+{id:'sensors',ic:'🔍',cat:'mag',lv:'เริ่มต้น',time:'1–2 ชม.',cost:'≈ 450 ฿',t:'Hall / Reed / TMR ต่างกันยังไง',d:'หาจุดที่สวิตช์แม่เหล็กแต่ละแบบเริ่มทำงานและปล่อย เข้าใจคำว่า B_OP, B_RP และ latch ด้วยการทดลอง',
+ goal:'วัดจุดทำงาน (B_OP) จุดปล่อย (B_RP) ของ Reed switch, Hall switch และ TMR แบบ latch',
+ parts:['ESP32','Reed switch','Hall switch แบบ unipolar (เช่น A3144)','TMR หรือ Hall แบบ bipolar latch','DRV5055A1 วางคู่ไว้วัดสนาม','แม่เหล็กก้อนเล็ก + รางเลื่อน'],
+ wire:'Reed   → GPIO32 (INPUT_PULLUP, ขาอีกข้าง GND)\nHall   OUT → GPIO33 (+ pull-up 10k)\nTMR    OUT → GPIO27\nDRV5055 OUT → GPIO34  (วางติดกับสวิตช์ที่กำลังทดสอบ)',
+ steps:['เลื่อนแม่เหล็กเข้าหาช้าๆ จดค่าสนามที่สวิตช์เปลี่ยนสถานะ = B_OP','เลื่อนออก จดค่าที่สวิตช์กลับ = B_RP','กลับขั้วแม่เหล็กแล้วทำซ้ำ','สำหรับ TMR latch: ดูว่าเอาแม่เหล็กออกแล้วสถานะ “ค้าง” จนกว่าจะเจอขั้วตรงข้าม','ทำตารางเปรียบเทียบ 3 แบบ'],
+ see:'Reed และ Hall unipolar ทำงานขั้วเดียว ปล่อยเมื่อสนามลด · TMR/Hall latch ต้องเจอขั้วสลับถึงจะเปลี่ยน นี่คือเหตุผลที่สนามคงที่จากภายนอกทำให้มันค้าง',
+ pass:'ได้ตาราง B_OP/B_RP ของ 3 เซนเซอร์ และอธิบายได้ว่าทำไมมิเตอร์ใช้แบบ latch กับแม่เหล็ก 4 ขั้ว'},
+{id:'shieldmat',ic:'🛡️',cat:'shield',lv:'เริ่มต้น',time:'2 ชม.',cost:'≈ 900 ฿',t:'ชีลด์ 5 วัสดุ: แม่เหล็ก vs สัญญาณ WiFi',d:'ทดลองว่าวัสดุไหนกันแม่เหล็ก วัสดุไหนกันคลื่นวิทยุ ได้คำตอบที่หลายคนเข้าใจผิด: อะลูมิเนียมกันแม่เหล็กไม่ได้',
+ goal:'แยกให้ออกระหว่าง “ชีลด์สนามแม่เหล็กคงที่” กับ “ชีลด์คลื่นวิทยุ” ซึ่งใช้วัสดุต่างกัน',
+ parts:['ESP32 2 ตัว (ตัวหนึ่งเป็นจุดกระจาย WiFi อีกตัววัด RSSI)','DRV5055A1','แม่เหล็กก้อนเล็ก','กล่อง/แผ่น: พลาสติก · อะลูมิเนียม · ทองแดง · เหล็ก · มิวเมทัล','ฟอยล์อะลูมิเนียม 1 ม้วน'],
+ wire:'ส่วนแม่เหล็ก: DRV5055 OUT → GPIO34 วางแผ่นวัสดุคั่นกลางระหว่างแม่เหล็กกับเซนเซอร์\nส่วน WiFi: ESP32 ตัวที่ 2 เปิด AP, ตัวแรกอ่าน WiFi.RSSI() ทุกวินาที\n           แล้วห่อตัวแรกด้วยวัสดุแต่ละแบบ',
+ steps:['วัดสนามแม่เหล็กโดยไม่มีอะไรคั่น ที่ระยะ 10 มม.','คั่นด้วยแต่ละวัสดุ จดค่า','ห่อ ESP32 ด้วยแต่ละวัสดุ (ปิดรอบด้าน) จดค่า RSSI','ลองเหล็กชั้นเดียวกับเหล็ก + มิวเมทัล','สรุปตาราง 5 วัสดุ × 2 การทดสอบ'],
+ see:'อะลูมิเนียม/ทองแดง: แม่เหล็กแทบไม่ลด แต่ WiFi หายเกือบหมด · เหล็ก/มิวเมทัล: สนามแม่เหล็กลดชัดเจน · พลาสติก: ไม่ลดทั้งคู่',
+ pass:'ตารางผลตรงกับหลักการ และอธิบายได้ว่าทำไมฝามิเตอร์ที่มีชีลด์เหล็กต้องเผื่อช่องให้สัญญาณ (ถ้ามีโมดูลไร้สาย)',
+ warn:'ถ้าห่อ ESP32 ด้วยโลหะ ระวังลัดวงจรกับขาบอร์ด ใช้ถุงพลาสติกกั้นก่อน'},
+{id:'induction',ic:'🌀',cat:'mag',lv:'เริ่มต้น',time:'1 ชม.',cost:'≈ 350 ฿',t:'แม่เหล็กผ่านขดลวด เกิดไฟฟ้า',d:'ทำขดลวดเอง ดึงแม่เหล็กผ่าน เห็นแรงดันพุ่งบนกราฟ Serial Plotter เข้าใจหลักของเครื่องกำเนิดไฟฟ้าและเซนเซอร์เหนี่ยวนำ',
+ goal:'เห็นว่าไฟฟ้าเกิดจาก “สนามที่เปลี่ยน” ไม่ใช่สนามคงที่ และยิ่งเร็วยิ่งแรง',
+ parts:['ESP32','ลวดทองแดงอาบน้ำยา 0.2 มม. ยาว ~30 ม. พันบนแกนหลอดพลาสติก','แม่เหล็กทรงกระบอก','ตัวต้านทาน 10k ×2 (ไบแอสกลาง)','ตัวเก็บประจุ 100 nF'],
+ wire:'3.3V ─10k─┬─10k─ GND   (จุดกลาง 1.65V)\n           ├─ ขดลวด ─→ GPIO34\n           └─ 100nF ไป GND\nเปิด Serial Plotter ดูกราฟ',
+ code:'void setup(){Serial.begin(115200);}\nvoid loop(){Serial.println(analogReadMilliVolts(34)-1650);delayMicroseconds(500);}',
+ steps:['ถือแม่เหล็กนิ่งในขดลวด: กราฟนิ่ง','ดึงออกช้าๆ: พุ่งเล็กน้อย','ดึงออกเร็ว: พุ่งสูงขึ้น','ใส่เข้า: พุ่งกลับทิศ','กลับขั้วแม่เหล็ก: ทิศกลับ'],
+ see:'แรงดันเกิดเฉพาะตอนแม่เหล็กเคลื่อนที่ ทิศขึ้นกับเข้า/ออกและขั้ว ความสูงขึ้นกับความเร็ว',
+ pass:'อธิบายได้ว่าทำไมแม่เหล็กคงที่ภายนอกไม่ทำให้เกิดไฟฟ้า แต่ทำให้ Hall/TMR อิ่มตัวได้ และเซนเซอร์เหนี่ยวนำ (ไม่ใช้แม่เหล็ก) จึงทนแม่เหล็กภายนอกได้ดีกว่า'},
+{id:'eddy',ic:'🪙',cat:'mag',lv:'เริ่มต้น',time:'30 นาที',cost:'≈ 300 ฿',t:'แม่เหล็กตกช้าในท่อทองแดง',d:'ปล่อยแม่เหล็กลงท่อทองแดง/อะลูมิเนียมเทียบท่อพลาสติก จับเวลาด้วยเซนเซอร์ เห็นกระแสไหลวน (eddy current) ด้วยตา',
+ goal:'เห็นว่าโลหะที่ไม่ใช่แม่เหล็กโต้ตอบกับ “แม่เหล็กที่เคลื่อนที่” แต่ไม่โต้ตอบกับแม่เหล็กที่อยู่นิ่ง',
+ parts:['ท่อทองแดงหรืออะลูมิเนียม ยาว 30–50 ซม.','ท่อ PVC ยาวเท่ากัน','แม่เหล็กนีโอไดเมียมทรงกระบอกที่ลอดท่อได้','ESP32 + Reed switch 2 ตัวที่ปากท่อและก้นท่อ'],
+ wire:'Reed บน → GPIO32 (INPUT_PULLUP)\nReed ล่าง → GPIO33 (INPUT_PULLUP)\nจับเวลาระหว่าง 2 สัญญาณ',
+ steps:['ปล่อยแม่เหล็กลงท่อ PVC จับเวลา','ปล่อยลงท่อทองแดง จับเวลา','ปล่อยเหรียญหรือน็อตเหล็กลงท่อทองแดงเทียบ','ลองท่อที่มีรอยผ่ายาวตลอด (ถ้ามี)'],
+ see:'ท่อทองแดงแม่เหล็กตกช้ากว่าหลายเท่า แต่ของที่ไม่ใช่แม่เหล็กตกปกติ ท่อที่ผ่ารอยตกเร็วขึ้นเพราะกระแสวนไหลไม่ครบรอบ',
+ pass:'อธิบายได้ว่าทำไมอะลูมิเนียมไม่ช่วยกันแม่เหล็กที่วางนิ่งบนมิเตอร์ แต่ใช้ทำเบรกแม่เหล็กได้'},
+{id:'ct',ic:'🔌',cat:'elec',lv:'กลาง',time:'2 ชม.',cost:'≈ 600 ฿',t:'วัดกระแสด้วยสนามแม่เหล็กรอบสายไฟ',d:'ใช้ CT แบบคล้อง (SCT-013) วัดกระแสโหลด แล้วคล้องทั้งสาย L+N ดูว่าทำไมได้ศูนย์ ซึ่งเป็นหลักของเครื่องวัดไฟรั่ว',
+ goal:'เข้าใจว่ากระแสไฟสร้างสนามแม่เหล็กรอบสาย และการคล้องสายไป-กลับพร้อมกันทำให้สนามหักล้างกัน เหลือแค่ส่วนที่รั่ว',
+ parts:['ESP32','SCT-013-030 (มีตัวต้านทานในตัว ให้ 1V ที่ 30A)','ปลั๊กพ่วงแยกสาย (สายเปิดฉนวนนอกเฉพาะช่วง ไม่ปอกถึงทองแดง)','กาต้มน้ำหรือไดร์เป่าผม','ตัวต้านทาน 10k ×2 + 10 µF'],
+ wire:'3.3V ─10k─┬─10k─ GND   (ไบแอส 1.65V + 10µF ไป GND)\n           └─ SCT-013 ─→ GPIO34\nคำนวณ RMS จาก 1000 ตัวอย่าง',
+ steps:['คล้องเฉพาะสาย L เปิดกาต้มน้ำ อ่านค่ากระแส','เทียบกับแคลมป์มิเตอร์','คล้องทั้ง L และ N: ค่าลดใกล้ศูนย์','ทำต่อด้วยแลปวัดไฟรั่วเพื่อจำลองกระแสรั่วอย่างปลอดภัย'],
+ see:'คล้องสายเดียวอ่านได้ตามโหลด คล้องคู่ได้ราวศูนย์ เพราะกระแสไปกับกลับเท่ากัน',
+ pass:'ค่าคลาดจากแคลมป์มิเตอร์ไม่เกิน 5% ที่โหลดเกิน 3 A',
+ warn:'งานไฟ 220V: ห้ามปอกสายถึงทองแดง ห้ามต่อ CT แบบ “ไม่มีตัวต้านทาน” โดยเปิดวงจรด้านทุติยภูมิ ทำโดยผู้มีความรู้ด้านไฟฟ้า'},
+{id:'noise',ic:'📶',cat:'shield',lv:'กลาง',time:'2–3 ชม.',cost:'≈ 500 ฿',t:'สัญญาณรบกวนทำให้นับพัลส์เพี้ยน',d:'ตั้งใจสร้างสัญญาณรบกวนจากรีเลย์และมอเตอร์ใกล้สายพัลส์ยาว แล้วแก้ทีละวิธี: สายตีเกลียว สายชีลด์ RC ฟิลเตอร์ debounce',
+ goal:'รู้ว่าพัลส์ปลอมมาจากไหน และวิธีไหนแก้ได้ผลเท่าไร ใช้กับมิเตอร์น้ำ มิเตอร์ไฟแบบพัลส์ และเซนเซอร์นับรอบทุกชนิด',
+ parts:['ESP32 2 ตัว (ตัวหนึ่งสร้างพัลส์จริงตามจำนวนที่รู้ อีกตัวนับ)','สายไฟธรรมดา 5 ม. · สายตีเกลียว 5 ม. · สายชีลด์ 5 ม.','รีเลย์ 12V + มอเตอร์ DC เล็ก (ไม่มีไดโอดคร่อม)','ตัวต้านทาน 1k + ตัวเก็บประจุ 100 nF','ไดโอด 1N4007'],
+ wire:'ESP32-A GPIO25 → สายยาว 5 ม. → ESP32-B GPIO27 (นับ)\nGND ของทั้งสองต่อกันผ่านสายเส้นเดียวกัน\nวางรีเลย์+มอเตอร์ให้สายยาวพาดผ่านใกล้ๆ',
+ steps:['ESP32-A ส่ง 1000 พัลส์ ตรวจว่า B นับได้ 1000 (ไม่มีรบกวน)','เปิด-ปิดรีเลย์/มอเตอร์ถี่ๆ ขณะส่ง จดค่าที่นับเกิน','เปลี่ยนเป็นสายตีเกลียว ทดสอบซ้ำ','เพิ่ม RC 1k/100nF ที่ขาเข้า + debounce ในซอฟต์แวร์','ใส่ไดโอดคร่อมขดรีเลย์/มอเตอร์ ทดสอบซ้ำ','สายชีลด์ ต่อชีลด์ลงกราวด์ฝั่งเดียว'],
+ see:'สายธรรมดานับเกินได้มากเมื่อรีเลย์ทำงาน แต่ละวิธีลดลงทีละขั้น ไดโอดคร่อมขดลวดที่ต้นเหตุมักได้ผลมากที่สุด',
+ pass:'หลังใช้ครบทุกวิธี นับ 1000 ได้ 1000 ทุกครั้ง แม้รีเลย์ทำงานต่อเนื่อง'},
+{id:'magneto',ic:'🚗',cat:'mag',lv:'กลาง',time:'2 ชม.',cost:'≈ 450 ฿',t:'แมกนีโตมิเตอร์ 3 แกน ตรวจจับรถ/ประตู',d:'ใช้สนามแม่เหล็กโลกเป็นฐาน เมื่อมีรถหรือประตูเหล็กเข้าใกล้ สนามเปลี่ยน ใช้ทำเซนเซอร์ที่จอดรถหรือแจ้งเตือนประตูเปิดได้ และเป็นตัวจับการรบกวนในมิเตอร์',
+ goal:'อ่านสนาม 3 แกน ตั้งฐาน และตรวจจับการเปลี่ยนแปลงเกินเกณฑ์',
+ parts:['ESP32','QMC5883L หรือ LIS3MDL (I²C)','กล่องกันน้ำ','แม่เหล็กก้อนเล็ก (ทดสอบตัวจับการรบกวน)'],
+ wire:'QMC5883L  VCC → 3.3V · GND → GND\n          SDA → GPIO21 · SCL → GPIO22',
+ steps:['อ่านค่า X/Y/Z ตอนว่าง 30 วินาที เก็บเป็นฐาน','คำนวณขนาด |B − ฐาน|','ขับรถเข้า/ปิดเปิดประตูเหล็ก ดูค่าเปลี่ยน','ตั้งเกณฑ์ + เวลาคงที่ 2 วินาที กันแจ้งผิด','นำแม่เหล็กมาใกล้ ดูว่าค่าพุ่งสูงมาก แยกจาก “รถ” ได้'],
+ see:'รถยนต์เปลี่ยนสนามระดับไม่กี่ร้อยถึงไม่กี่พัน nT–µT ตามระยะ แม่เหล็กถาวรให้ค่าสูงกว่ามาก แยกเหตุการณ์ได้',
+ pass:'ตรวจรถเข้า-ออกถูก 20/20 ครั้ง ไม่แจ้งผิดใน 1 ชั่วโมงที่ไม่มีรถ',
+ warn:'อย่าวางเซนเซอร์ใกล้สายไฟกำลังหรือมอเตอร์ เพราะสนามจากกระแสไฟจะรบกวน'},
+{id:'fanrpm',ic:'🌬️',cat:'meas',lv:'เริ่มต้น',time:'1 ชม.',cost:'≈ 300 ฿',t:'วัดรอบพัดลม/มอเตอร์ด้วย Hall',d:'อ่านรอบจากสาย Tach ของพัดลม 12V หรือติดแม่เหล็กบนเพลา เห็นว่ารอบตกเมื่อกรองฝุ่นตัน ใช้เฝ้าพัดลมตู้ไฟ/ห้องเซิร์ฟเวอร์',
+ goal:'นับรอบจากเซนเซอร์แม่เหล็ก และตั้งแจ้งเตือนเมื่อรอบผิดปกติ',
+ parts:['ESP32','พัดลม 12V แบบ 3 สาย (มี Tach)','อะแดปเตอร์ 12V','ตัวต้านทาน 10k pull-up ไป 3.3V'],
+ wire:'พัดลม แดง → 12V · ดำ → GND (ร่วมกับ ESP32)\nเหลือง (Tach, open-collector) → GPIO27 + pull-up 10k ไป 3.3V',
+ code:'volatile uint32_t c=0;void IRAM_ATTR isr(){c++;}\nvoid setup(){Serial.begin(115200);pinMode(27,INPUT);attachInterrupt(27,isr,FALLING);}\nvoid loop(){delay(1000);noInterrupts();uint32_t n=c;c=0;interrupts();\n Serial.printf("%lu rpm\\n",n*60/2);} // พัดลมส่วนใหญ่ 2 พัลส์/รอบ',
+ steps:['อ่านรอบปกติ','บังลมบางส่วนด้วยกระดาษ ดูรอบเปลี่ยน','ถอดสายไฟพัดลม ดูว่าระบบรู้ว่าพัดลมหยุด','ตั้งเกณฑ์แจ้งเตือนเมื่อรอบต่ำกว่า 70% ของปกติ'],
+ see:'รอบคงที่เมื่อปกติ ลดเมื่อมีภาระ และเป็นศูนย์ทันทีเมื่อพัดลมหยุด',
+ pass:'ค่ารอบตรงกับสเปกพัดลม ±5% และแจ้งเตือนเมื่อหยุดภายใน 5 วินาที'},
+{id:'calib',ic:'🪣',cat:'meas',lv:'กลาง',time:'ครึ่งวัน',cost:'≈ 500 ฿',t:'สอบเทียบมิเตอร์น้ำแบบพัลส์ด้วยถังตวง',d:'เปิดน้ำผ่านมิเตอร์ลงถังตวงที่รู้ปริมาตร เทียบพัลส์ที่นับได้ หาค่า “ลิตรต่อพัลส์” จริง ทดสอบที่อัตราไหลต่ำ กลาง สูง',
+ goal:'หาค่าคงที่ของมิเตอร์และความคลาดเคลื่อนตามอัตราไหล ก่อนนำไปใช้คิดเงินหรือรายงาน',
+ parts:['ESP32 + สายพัลส์ของมิเตอร์','ถังตวง 10–20 ลิตร (หรือชั่งน้ำหนัก 1 กก. ≈ 1 ลิตร)','วาล์วปรับอัตราไหล','นาฬิกาจับเวลา'],
+ wire:'พัลส์มิเตอร์ (Reed/Open-collector) → GPIO27 (INPUT_PULLUP)\nใช้ debounce 5–20 ms ตามความเร็วพัลส์',
+ steps:['ล้างตัวนับ เปิดน้ำอัตราไหลสูง จนได้ 20 ลิตร','จดพัลส์ คำนวณลิตร/พัลส์','ทำซ้ำที่อัตราไหลกลางและต่ำ (หยดเร็ว)','ทำซ้ำแต่ละจุด 3 ครั้ง หาค่าเฉลี่ย','ถ้ามีแลปกันแม่เหล็ก ทำซ้ำขณะวางแม่เหล็ก'],
+ see:'อัตราไหลต่ำมักนับขาด (ใบพัดหมุนไม่ทัน) อัตราไหลกลาง-สูงค่าคงที่ดี',
+ pass:'ที่อัตราไหลกลาง-สูง คลาดไม่เกิน ±2% และรู้อัตราไหลต่ำสุดที่เริ่มนับได้'},
+{id:'earth',ic:'🌍',cat:'elec',lv:'กลาง',time:'1–2 ชม.',cost:'≈ 600 ฿',t:'ตรวจสายดินและขั้วปลั๊กให้ถูกต้อง',d:'ใช้ปลั๊กเช็คสายดินและวงจรตรวจไฟเข้าแบบออปโต ตรวจว่าเต้ารับมีสายดิน และไม่สลับ L/N ก่อนติดตั้งอุปกรณ์ทุกตัว',
+ goal:'ก่อนติดตั้งกล่องวัดไฟหรือเครื่องวัดไฟรั่ว ต้องรู้ว่าระบบสายดินพร้อม ไม่อย่างนั้นค่าที่วัดจะผิดและไม่ปลอดภัย',
+ parts:['ปลั๊กเช็คสายดิน (ปลั๊กเทสเตอร์ 3 ไฟ)','ไขควงวัดไฟ','มัลติมิเตอร์','โมดูลออปโตตรวจไฟ AC 220V (แบบเดียวกับแลปวัดไฟรั่ว)'],
+ wire:'ไม่ต้องต่อสายเอง: เสียบปลั๊กเทสเตอร์ในแต่ละเต้ารับ\n(โมดูลออปโตใช้ตามผังในแลปวัดไฟรั่วเท่านั้น)',
+ steps:['เสียบปลั๊กเทสเตอร์ทุกเต้ารับในพื้นที่ จดผล','ใช้มัลติมิเตอร์วัดแรงดัน L–N และ N–G (ควรต่ำ ไม่กี่โวลต์)','ทำผังว่าเต้ารับไหนไม่มีสายดินหรือสลับขั้ว','แจ้งช่างไฟแก้ไขก่อนติดตั้งอุปกรณ์'],
+ see:'บางเต้ารับไม่มีสายดิน หรือ L/N สลับ ซึ่งพบได้บ่อยในอาคารเก่า',
+ pass:'มีผังเต้ารับครบ และทุกจุดที่จะติดตั้งผ่านการตรวจ',
+ warn:'ห้ามเปิดฝาเต้ารับหรือตู้ไฟเอง ถ้าไม่ใช่ช่างไฟ การแก้ไขสายดินต้องทำโดยช่างที่มีความรู้'}
+];
+let cat='all';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+nLab.textContent=LABS.length;
+filters.innerHTML=CATS.map(([k,v])=>`<button class="btn${k===cat?' on':''}" data-c="${k}">${v}</button>`).join('');
+filters.onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;filters.querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x===b));draw()};
+function draw(){grid.innerHTML=LABS.filter(l=>cat==='all'||l.cat===cat).map(l=>{
+ const inner=`<div class="top"><span class="ic">${l.ic}</span><span class="tg">${l.full&&l.id!=='rd'?'<span class="tag full">ฉบับเต็ม</span>':''}<span class="tag">${esc(l.lv)}</span></span></div><h3>${esc(l.t)}</h3><p>${esc(l.d)}</p>${l.id==='rd'?'<div class="meta"><span>🔑 ต้องใส่รหัสผ่าน</span></div>':`<div class="meta"><span>⏱ <b>${esc(l.time)}</b></span><span>💰 <b>${esc(l.cost)}</b></span></div>`}`;
+ return l.full?`<a class="lab" href="${l.full}">${inner}</a>`:`<button class="lab" data-id="${l.id}">${inner}</button>`}).join('')}
+grid.onclick=e=>{const b=e.target.closest('button.lab');if(b)open_(b.dataset.id)};
+function open_(id){const l=LABS.find(x=>x.id===id);if(!l||l.full)return;
+ dIc.textContent=l.ic;dT.textContent=l.t;
+ dB.innerHTML=`<p class="mu">${esc(l.d)}</p>
+ <div class="see">🎯 <b>เป้าหมาย:</b> ${esc(l.goal)}</div>
+ <div class="two"><div class="blk"><h3>อุปกรณ์ (${esc(l.cost)})</h3><ul>${l.parts.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
+ <div class="blk"><h3>ต่อสาย</h3><pre>${esc(l.wire)}</pre></div></div>
+ ${l.code?`<div class="blk"><h3>โค้ดตัวอย่าง (Arduino ESP32)</h3><pre>${esc(l.code)}</pre></div>`:''}
+ <div class="blk"><h3>ขั้นตอน</h3><ol>${l.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div>
+ <div class="see">👀 <b>สิ่งที่จะเห็น:</b> ${esc(l.see)}</div>
+ <div class="pass">✅ <b>เกณฑ์ผ่าน:</b> ${esc(l.pass)}</div>
+ ${l.warn?`<div class="warn">⚠️ ${esc(l.warn)}</div>`:''}
+ ${['ct','earth'].includes(l.id)?'<a class="btn pri" href="../lab-leak/">ต่อยอด: แลปวัดไฟรั่ว →</a>':''}`;
+ history.replaceState(null,'','#lab-'+id);dlg.showModal();dlg.scrollTop=0}
+dlg.addEventListener('close',()=>history.replaceState(null,'',location.pathname));
+draw();
+if(location.hash.startsWith('#lab-'))open_(location.hash.slice(5));
+</script>
+</body>
+</html>
