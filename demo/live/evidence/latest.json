@@ -1,11 +1,11 @@
 {
-  "record_id": "LEG-20261124-192147",
-  "created_utc": "2026-11-24T12:21:47Z",
+  "record_id": "LEG-20261125-054317",
+  "created_utc": "2026-11-24T22:43:17Z",
   "generator": "CoreDash Live Earth evidence bot (GitHub Actions)",
   "run": {
     "repo": "CoreDashTech/SCADAGateway",
-    "run_id": "45392741281",
-    "commit_before": "709375258b331957421d1528882fa984adb3dc27"
+    "run_id": "45503527755",
+    "commit_before": "7775ddee013303cc65306ce3c738623b624905cf"
   },
   "sources": [
     {
@@ -13,9 +13,9 @@
       "provider": "NASA GIBS",
       "satellite": "Himawari-9 (JMA, geostationary 140.7E)",
       "instrument": "AHI Band 13 clean IR 10.4um",
-      "data_time_utc": "2026-11-24T12:00:00Z",
-      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Himawari_AHI_Band13_Clean_Infrared/default/2026-11-24T12:00:00Z/GoogleMapsCompatible_Level6/0/0/0.png",
-      "tile_sha256": "82c3504fb189b31f7ed203c3f1065e04069fc2fd42dd0ef32c09fdc2632d77dc",
+      "data_time_utc": "2026-11-24T22:10:00Z",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Himawari_AHI_Band13_Clean_Infrared/default/2026-11-24T22:10:00Z/GoogleMapsCompatible_Level6/0/0/0.png",
+      "tile_sha256": "e9a42db67e5248044e4961d291fd332d3e78fa5b031dcf772335bfac570d6842",
       "status": "ok"
     },
     {
@@ -23,9 +23,9 @@
       "provider": "NASA GIBS",
       "satellite": "GPM constellation (NASA/JAXA)",
       "instrument": "IMERG precipitation rate",
-      "product": "IMERG_Precipitation_Rate",
-      "data_time_utc": "2026-11-23T23:30:00Z",
-      "tile_sha256": "652e58dfb065c3fcd3762d82e9b6941a1e5059260d8d72c0aa632addf06e08aa",
+      "product": "IMERG_Precipitation_Rate_30min",
+      "data_time_utc": "2026-11-24T16:30:00Z",
+      "tile_sha256": "ea9b885a87d294f5ea2624cfa2c86a41bd8dd13b9e5d2fb6f7a37d06ce234e67",
       "status": "ok"
     },
     {
@@ -33,17 +33,17 @@
       "provider": "RainViewer",
       "satellite": null,
       "instrument": "ground weather radar composite",
-      "data_time_utc": "2026-11-24T12:20:00Z",
-      "url": "https://tilecache.rainviewer.com/v2/radar/e5363f2351ef",
+      "data_time_utc": "2026-11-24T22:40:00Z",
+      "url": "https://tilecache.rainviewer.com/v2/radar/bbb9cb8b8cd6",
       "status": "ok"
     }
   ],
   "earthquakes": {
     "status": "ok",
     "source": "USGS 2.5_week.geojson",
-    "feed_generated_utc": "2026-11-24T12:21:30Z",
-    "count_7d": 352,
-    "m45_24h": 7,
+    "feed_generated_utc": "2026-11-24T22:42:35Z",
+    "count_7d": 350,
+    "m45_24h": 9,
     "near_thailand_1000km": [
       {
         "usgs_id": "us6000ucnl",
@@ -101,223 +101,223 @@
   },
   "weather": {
     "status": "ok",
-    "source": "MET Norway locationforecast (model, not station) – fallback because Open-Meteo: fetch failed (UND_ERR_CONNECT_TIMEOUT)",
-    "open_meteo_error": "fetch failed (UND_ERR_CONNECT_TIMEOUT)",
+    "source": "Open-Meteo (model, not station)",
+    "open_meteo_error": null,
     "air_quality_error": null,
-    "model_time": "2026-11-24T12:00:00Z",
+    "model_time": "2026-11-25T05:30",
     "cities": [
       {
         "city": "กรุงเทพฯ",
-        "temp_c": 31.1,
+        "temp_c": 27.8,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 54.5
-      },
-      {
-        "city": "เชียงใหม่",
-        "temp_c": 26,
-        "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
+        "wmo": 3,
+        "symbol": null,
         "pm25": 22.8
       },
       {
-        "city": "เชียงราย",
-        "temp_c": 24.6,
+        "city": "เชียงใหม่",
+        "temp_c": 21.6,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 17.4
+        "wmo": 1,
+        "symbol": null,
+        "pm25": 19.9
+      },
+      {
+        "city": "เชียงราย",
+        "temp_c": 19.8,
+        "rain_mm": 0,
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 15
       },
       {
         "city": "แม่ฮ่องสอน",
-        "temp_c": 26.1,
+        "temp_c": 21.1,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 7.5
+        "wmo": 2,
+        "symbol": null,
+        "pm25": 4.9
       },
       {
         "city": "น่าน",
-        "temp_c": 26.6,
+        "temp_c": 21.1,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 4.6
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 7.9
       },
       {
         "city": "ลำปาง",
-        "temp_c": 26.7,
+        "temp_c": 21.4,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 20.8
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 15.7
       },
       {
         "city": "ตาก",
-        "temp_c": 27.3,
+        "temp_c": 23.3,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 17.5
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 16.2
       },
       {
         "city": "พิษณุโลก",
-        "temp_c": 28.9,
+        "temp_c": 24.4,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "clearsky_night",
-        "pm25": 23
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 14.1
       },
       {
         "city": "นครสวรรค์",
-        "temp_c": 28.3,
+        "temp_c": 26,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "clearsky_night",
-        "pm25": 24.2
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 11.6
       },
       {
         "city": "ขอนแก่น",
-        "temp_c": 27.8,
-        "rain_mm": 0.6,
-        "wmo": null,
-        "symbol": "rainshowers_night",
-        "pm25": 6.8
+        "temp_c": 22.6,
+        "rain_mm": 0,
+        "wmo": 1,
+        "symbol": null,
+        "pm25": 3.6
       },
       {
         "city": "อุดรธานี",
-        "temp_c": 26.8,
-        "rain_mm": 0.4,
-        "wmo": null,
-        "symbol": "lightrainshowers_night",
-        "pm25": 6.2
+        "temp_c": 20.9,
+        "rain_mm": 0,
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 4.1
       },
       {
         "city": "หนองคาย",
-        "temp_c": 25.7,
+        "temp_c": 21.2,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 6.5
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 4.7
       },
       {
         "city": "อุบลราชธานี",
-        "temp_c": 28.5,
+        "temp_c": 23.8,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 4.8
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 0.5
       },
       {
         "city": "นครราชสีมา",
-        "temp_c": 27.9,
+        "temp_c": 23.7,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 8
+        "wmo": 2,
+        "symbol": null,
+        "pm25": 1.8
       },
       {
         "city": "สุรินทร์",
-        "temp_c": 28.3,
+        "temp_c": 23.9,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 6.6
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 0.7
       },
       {
         "city": "ชลบุรี",
-        "temp_c": 30.2,
+        "temp_c": 25.7,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 23.4
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 10.4
       },
       {
         "city": "ระยอง",
-        "temp_c": 28.9,
+        "temp_c": 25.8,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "cloudy",
-        "pm25": 11.9
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 16.1
       },
       {
         "city": "ตราด",
-        "temp_c": 29,
+        "temp_c": 24.3,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 8
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 5.4
       },
       {
         "city": "กาญจนบุรี",
-        "temp_c": 28.2,
+        "temp_c": 25.3,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "clearsky_night",
-        "pm25": 19.8
+        "wmo": 2,
+        "symbol": null,
+        "pm25": 14.7
       },
       {
         "city": "ประจวบฯ",
-        "temp_c": 28.3,
+        "temp_c": 26.1,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 9.5
+        "wmo": 3,
+        "symbol": null,
+        "pm25": 11.9
       },
       {
         "city": "ชุมพร",
-        "temp_c": 28.3,
+        "temp_c": 24.4,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 6.9
+        "wmo": 2,
+        "symbol": null,
+        "pm25": 12.1
       },
       {
         "city": "สุราษฎร์ธานี",
-        "temp_c": 27.4,
-        "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 6.6
+        "temp_c": 24.6,
+        "rain_mm": 0.4,
+        "wmo": 80,
+        "symbol": null,
+        "pm25": 4.4
       },
       {
         "city": "ภูเก็ต",
-        "temp_c": 26.4,
+        "temp_c": 26.1,
         "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 5.6
-      },
-      {
-        "city": "นครศรีฯ",
-        "temp_c": 27.5,
-        "rain_mm": 0,
-        "wmo": null,
-        "symbol": "partlycloudy_night",
-        "pm25": 8.8
-      },
-      {
-        "city": "หาดใหญ่",
-        "temp_c": 25.7,
-        "rain_mm": 0,
-        "wmo": null,
-        "symbol": "cloudy",
+        "wmo": 3,
+        "symbol": null,
         "pm25": 9.1
       },
       {
+        "city": "นครศรีฯ",
+        "temp_c": 23.7,
+        "rain_mm": 0.6,
+        "wmo": 80,
+        "symbol": null,
+        "pm25": 5.4
+      },
+      {
+        "city": "หาดใหญ่",
+        "temp_c": 23.9,
+        "rain_mm": 0.3,
+        "wmo": 55,
+        "symbol": null,
+        "pm25": 4
+      },
+      {
         "city": "นราธิวาส",
-        "temp_c": 25.3,
-        "rain_mm": 0.2,
-        "wmo": null,
-        "symbol": "lightrain",
-        "pm25": 6.9
+        "temp_c": 23.8,
+        "rain_mm": 0.1,
+        "wmo": 51,
+        "symbol": null,
+        "pm25": 5.6
       }
     ]
   },
   "disclaimer": "ข้อมูลจากแหล่งเปิด บันทึกอัตโนมัติ อาจล่าช้า/คลาดเคลื่อน ไม่ใช่ประกาศทางการ",
-  "prev_record_id": "LEG-20261124-085117",
-  "prev_sha256": "d3578f90a33d547c60079468b554317921ff5a853318352620855a66ea2ca2d6",
-  "sha256": "652c8dccad27950ee747c7ee5e1d5e89b18a38469a1ba00c11dec0f2b8e525f3"
+  "prev_record_id": "LEG-20261124-192147",
+  "prev_sha256": "652c8dccad27950ee747c7ee5e1d5e89b18a38469a1ba00c11dec0f2b8e525f3",
+  "sha256": "09a31635e1daaaa827fb817b609de22905055f132c601e816cedc18dc1f6329d"
 }
