@@ -23,6 +23,8 @@
 #   MODEM.RSSI                        = CSQ 0–31 → dBm = 2×CSQ − 113 (scale 2, offset −113)
 #   ถ้ามิเตอร์ขึ้น 10426 m³ จริง ให้เปลี่ยน scale ของ 3 ปริมาตรเป็น 1
 #
+# ignoreZero: DCC ส่ง V4Vbat/V4TotalVolume = 0 เมื่ออ่านมิเตอร์ไม่ได้ → เก็บค่าดีล่าสุดไว้ ไม่ให้กราฟตกเป็น 0
+# มิเตอร์ที่พบบน broker (28 พ.ย. 2026): 69090013, 69090014
 # เพิ่มมิเตอร์: คัดลอกบล็อก tags ของ SMCV4-69090014 แล้วแทนเลข 69090014 ทั้งหมด (topic และ id)
 # หน้า water/ อ่านจุดชื่อ SMCV4-<เลข>.total / flow / battery / rssi / temp / event / dccbat / online
 
@@ -55,11 +57,11 @@ devices:
 
 tags:
   # --- SMCV4 69090014 (topic จริง) ---
-  - { id: SMCV4-69090014.total,    device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4TotalVolume, dataType: float32, scale: 0.001, unit: "m³", name: { th: "ปริมาณน้ำสะสม (สุทธิ)", en: "Net totalizer" } }
-  - { id: SMCV4-69090014.forward,  device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4ForwardVolume, dataType: float32, scale: 0.001, unit: "m³", name: { th: "น้ำไหลไปข้างหน้าสะสม", en: "Forward total" } }
-  - { id: SMCV4-69090014.reverse,  device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4ReverseVolume, dataType: float32, scale: 0.001, unit: "m³", name: { th: "น้ำไหลย้อนสะสม", en: "Reverse total" } }
+  - { id: SMCV4-69090014.total,    device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4TotalVolume, dataType: float32, ignoreZero: true, scale: 0.001, unit: "m³", name: { th: "ปริมาณน้ำสะสม (สุทธิ)", en: "Net totalizer" } }
+  - { id: SMCV4-69090014.forward,  device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4ForwardVolume, dataType: float32, ignoreZero: true, scale: 0.001, unit: "m³", name: { th: "น้ำไหลไปข้างหน้าสะสม", en: "Forward total" } }
+  - { id: SMCV4-69090014.reverse,  device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4ReverseVolume, dataType: float32, ignoreZero: true, scale: 0.001, unit: "m³", name: { th: "น้ำไหลย้อนสะสม", en: "Reverse total" } }
   - { id: SMCV4-69090014.flow,     device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4Flowrate, dataType: float32, scale: 0.001, unit: "m³/h", name: { th: "อัตราการไหล", en: "Flow" } }
-  - { id: SMCV4-69090014.battery,  device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4Vbat, dataType: float32, scale: 0.001, unit: "V", name: { th: "แบตเตอรี่มิเตอร์ SMCV4", en: "Meter battery" } }
+  - { id: SMCV4-69090014.battery,  device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4Vbat, dataType: float32, ignoreZero: true, scale: 0.001, unit: "V", name: { th: "แบตเตอรี่มิเตอร์ SMCV4", en: "Meter battery" } }
   - { id: SMCV4-69090014.event,    device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.V4Event, dataType: int16, name: { th: "รหัสเหตุการณ์ SMCV4", en: "SMCV4 event code" } }
   - { id: SMCV4-69090014.dccbat,   device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.DccVbat, dataType: float32, scale: 0.001, unit: "V", name: { th: "แบตเตอรี่ DCC", en: "DCC battery" } }
   - { id: SMCV4-69090014.dccext,   device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.DccVext, dataType: float32, scale: 0.001, unit: "V", name: { th: "ไฟเลี้ยงภายนอก DCC", en: "DCC external supply" } }
@@ -67,11 +69,27 @@ tags:
   - { id: SMCV4-69090014.rssi,     device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.MODEM.RSSI, dataType: int16, scale: 2, offset: -113, unit: "dBm", name: { th: "สัญญาณ NB-IoT/LTE-M", en: "Cellular signal" } }
   - { id: SMCV4-69090014.online,   device: DRAGO-MQTT, topic: drago/dcc/69090014/shadow/update, jsonPath: state.reported.MODEM.ONLINE, dataType: bool, name: { th: "โมเด็มออนไลน์", en: "Modem online" } }
 
+  # --- SMCV4 69090013 ---
+  - { id: SMCV4-69090013.total,    device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.V4TotalVolume, dataType: float32, ignoreZero: true, scale: 0.001, unit: "m³", name: { th: "ปริมาณน้ำสะสม (สุทธิ)", en: "Net totalizer" } }
+  - { id: SMCV4-69090013.forward,  device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.V4ForwardVolume, dataType: float32, ignoreZero: true, scale: 0.001, unit: "m³", name: { th: "น้ำไหลไปข้างหน้าสะสม", en: "Forward total" } }
+  - { id: SMCV4-69090013.reverse,  device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.V4ReverseVolume, dataType: float32, ignoreZero: true, scale: 0.001, unit: "m³", name: { th: "น้ำไหลย้อนสะสม", en: "Reverse total" } }
+  - { id: SMCV4-69090013.flow,     device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.V4Flowrate, dataType: float32, scale: 0.001, unit: "m³/h", name: { th: "อัตราการไหล", en: "Flow" } }
+  - { id: SMCV4-69090013.battery,  device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.V4Vbat, dataType: float32, ignoreZero: true, scale: 0.001, unit: "V", name: { th: "แบตเตอรี่มิเตอร์ SMCV4", en: "Meter battery" } }
+  - { id: SMCV4-69090013.event,    device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.V4Event, dataType: int16, name: { th: "รหัสเหตุการณ์ SMCV4", en: "SMCV4 event code" } }
+  - { id: SMCV4-69090013.dccbat,   device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.DccVbat, dataType: float32, scale: 0.001, unit: "V", name: { th: "แบตเตอรี่ DCC", en: "DCC battery" } }
+  - { id: SMCV4-69090013.dccext,   device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.DccVext, dataType: float32, scale: 0.001, unit: "V", name: { th: "ไฟเลี้ยงภายนอก DCC", en: "DCC external supply" } }
+  - { id: SMCV4-69090013.temp,     device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.DccTemp, dataType: float32, unit: "°C", name: { th: "อุณหภูมิ DCC", en: "DCC temperature" } }
+  - { id: SMCV4-69090013.rssi,     device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.MODEM.RSSI, dataType: int16, scale: 2, offset: -113, unit: "dBm", name: { th: "สัญญาณ NB-IoT/LTE-M", en: "Cellular signal" } }
+  - { id: SMCV4-69090013.online,   device: DRAGO-MQTT, topic: drago/dcc/69090013/shadow/update, jsonPath: state.reported.MODEM.ONLINE, dataType: bool, name: { th: "โมเด็มออนไลน์", en: "Modem online" } }
+
 alarms:
   # V4Vbat 3070 mV ตอนนี้ ตั้งเตือนที่ 3.0 V (ปรับตามชนิดแบตเตอรี่ที่ใช้จริง)
   - { id: M14_LOWBAT,  tag: SMCV4-69090014.battery, op: "<",  value: 3.0, severity: low,    notify: [line], text: { th: "มิเตอร์ 69090014 แบตเตอรี่ต่ำ", en: "Meter 69090014 low battery" } }
   - { id: M14_REVERSE, tag: SMCV4-69090014.flow,    op: "<",  value: 0,   severity: medium, notify: [line], text: { th: "มิเตอร์ 69090014 น้ำไหลย้อน", en: "Meter 69090014 reverse flow" } }
   - { id: M14_OFFLINE, tag: SMCV4-69090014.online,  op: "==", value: 0,   severity: medium, notify: [line], text: { th: "มิเตอร์ 69090014 โมเด็มออฟไลน์", en: "Meter 69090014 modem offline" } }
+  - { id: M13_LOWBAT,  tag: SMCV4-69090013.battery, op: "<",  value: 3.0, severity: low,    notify: [line], text: { th: "มิเตอร์ 69090013 แบตเตอรี่ต่ำ", en: "Meter 69090013 low battery" } }
+  - { id: M13_REVERSE, tag: SMCV4-69090013.flow,    op: "<",  value: 0,   severity: medium, notify: [line], text: { th: "มิเตอร์ 69090013 น้ำไหลย้อน", en: "Meter 69090013 reverse flow" } }
+  - { id: M13_OFFLINE, tag: SMCV4-69090013.online,  op: "==", value: 0,   severity: medium, notify: [line], text: { th: "มิเตอร์ 69090013 โมเด็มออฟไลน์", en: "Meter 69090013 modem offline" } }
   # V4Event: ใส่ alarm เพิ่มเมื่อรู้ความหมายรหัส เช่น
   # - { id: M14_MAGNET, tag: SMCV4-69090014.event, op: "==", value: <รหัสแม่เหล็ก>, severity: critical, notify: [line], text: { th: "มิเตอร์ 69090014 ตรวจพบแม่เหล็ก", en: "Meter 69090014 magnetic tamper" } }
 
