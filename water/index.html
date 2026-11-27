@@ -145,17 +145,28 @@ pre{background:#f4f1e8;border:1px solid var(--line);border-radius:8px;padding:10
   </section>
 
   <section class="page" id="p-data">
+   <div class="card" style="margin-bottom:14px"><h2>0 · รับสดจาก MQTT (WebSocket)</h2>
+    <div class="sub">เบราว์เซอร์ต่อ broker ผ่าน WebSocket แล้วรับข้อความ <code>drago/dcc/+/shadow/update</code> ทุกมิเตอร์ เลขมิเตอร์มาจาก V4MID ในข้อความเอง · ข้อมูลที่รับได้เก็บไว้ในเครื่องนี้ · รหัสผ่านไม่ถูกส่งไปที่อื่นนอกจาก broker</div>
+    <div class="form">
+     <label class="field">ที่อยู่ WebSocket<input type="text" id="lvUrl" value="wss://mqtt-broker.dragodssplus.com:8084/mqtt"></label>
+     <label class="field">Topic<input type="text" id="lvTopic" value="drago/dcc/+/shadow/update"></label>
+     <label class="field">Username<input type="text" id="lvUser" value="drago" autocomplete="off"></label>
+     <label class="field">Password<input type="password" id="lvPass" autocomplete="off"></label>
+    </div>
+    <div class="ctl"><button class="btn pri" id="lvGo">เชื่อมต่อ</button><button class="btn" id="lvStop">หยุด</button><label class="note"><input type="checkbox" id="lvRemember"> จำรหัสและต่ออัตโนมัติในเครื่องนี้</label><button class="btn" id="lvClear">ล้างข้อมูลที่เก็บไว้</button></div>
+    <div class="note" id="lvMsg" style="margin-top:8px">ยังไม่เชื่อมต่อ</div>
+   </div>
    <div class="card" style="margin-bottom:14px"><h2>1 · เชื่อม CoreDash Gateway (ใช้งานจริง)</h2>
     <div class="sub">Gateway รับข้อความจาก Drago MQTT ทุก 15 นาที เก็บประวัติ แล้วให้หน้านี้ดึงผ่าน /api/v1 รหัสผ่าน MQTT อยู่ที่ Gateway เท่านั้น</div>
     <div class="form">
      <label class="field">ที่อยู่ Gateway<input type="text" id="gwUrl" placeholder="https://gw.coredashtech.com"></label>
      <label class="field">API Key (water-dashboard)<input type="password" id="gwKey" autocomplete="off"></label>
-     <label class="field">เลขมิเตอร์ (คั่นด้วย ,)<input type="text" id="gwMeters" value="69090014"></label>
+     <label class="field">เลขมิเตอร์ (คั่นด้วย ,)<input type="text" id="gwMeters" value="69090013,69090014"></label>
     </div>
     <button class="btn pri" id="gwGo">ดึงข้อมูลจาก Gateway</button> <span class="note" id="gwMsg"></span>
    </div>
    <div class="card" style="margin-bottom:14px"><h2>2 · วาง JSON / นำเข้าไฟล์</h2>
-    <div class="sub">วางข้อความจาก MQTT.fx (ทีละบรรทัด หรือ JSON array) หรือไฟล์ประวัติ .jsonl ระบบจับชื่อฟิลด์ให้อัตโนมัติ</div>
+    <div class="sub">คัดลอกข้อความจาก MQTTX มาวางได้เลย (หลายข้อความก็ได้) หรือไฟล์ Export จาก MQTTX / .jsonl · ข้อความรูปแบบ Drago จะถูกเก็บรวมกับข้อมูลสดในเครื่องนี้</div>
     <textarea id="paste" placeholder='วางข้อความจาก MQTTX ได้ทั้งก้อน (topic drago/dcc/…/shadow/update) เช่น {"state":{"reported":{"V4MID":"69090014","V4Epoch":1795798140,"V4TotalVolume":10426,"V4Flowrate":0,"V4Vbat":3070,"DccTemp":30,"MODEM":{"RSSI":23}}}} · หรือไฟล์ Export จาก MQTTX (.json)'></textarea>
     <div class="ctl" style="margin-top:8px"><button class="btn pri" id="pasteGo">ใช้ข้อมูลนี้</button><label class="btn">เลือกไฟล์<input type="file" id="file" accept=".json,.jsonl,.txt" hidden></label><span class="note" id="pasteMsg"></span></div>
     <h3 style="margin-top:14px">การจับคู่ฟิลด์</h3><div class="note">เว้นว่างให้ระบบเดาเอง ใส่ชื่อฟิลด์ (รองรับ a.b) ถ้าเดาไม่ตรง</div>
@@ -195,8 +206,8 @@ const FN={id:'เลขมิเตอร์',ts:'เวลา',total:'ค่า
 function flat(o,p='',out={}){for(const k in o){const v=o[k],key=p?p+'.'+k:k;if(v&&typeof v==='object'&&!Array.isArray(v)&&!/alarm|status|flag|event|alert/i.test(k))flat(v,key,out);else out[key]=v;}return out}
 function getPath(o,p){return p.split('.').reduce((a,k)=>a==null?undefined:a[k],o)}
 function field(msg,f){if(S.map[f])return getPath(msg,S.map[f]);const fl=flat(msg);for(const a of FIELDS[f])for(const k in fl)if(k.split('.').pop().toLowerCase()===a)return fl[k];}
-const AL={magnet:'ตรวจพบแม่เหล็ก',tamper:'ถูกงัดแงะ',leak:'สงสัยน้ำรั่ว',burst:'ท่อแตก',reverse:'น้ำไหลย้อน',lowbattery:'แบตเตอรี่ต่ำ',lowbat:'แบตเตอรี่ต่ำ',dry:'ไม่มีน้ำในท่อ',empty:'ไม่มีน้ำในท่อ',nowater:'ไม่มีน้ำในท่อ',overflow:'ไหลเกินพิกัด'};
-const SEV={magnet:'bad',tamper:'bad',burst:'bad',leak:'warn',reverse:'warn',lowbattery:'warn',lowbat:'warn',dry:'warn',empty:'warn',nowater:'warn',overflow:'warn',offline:'off'};
+const AL={magnet:'ตรวจพบแม่เหล็ก',tamper:'ถูกงัดแงะ',leak:'สงสัยน้ำรั่ว',burst:'ท่อแตก',reverse:'น้ำไหลย้อน',lowbattery:'แบตเตอรี่ต่ำ',lowbat:'แบตเตอรี่ต่ำ',dry:'ไม่มีน้ำในท่อ',empty:'ไม่มีน้ำในท่อ',nowater:'ไม่มีน้ำในท่อ',overflow:'ไหลเกินพิกัด',noread:'อ่านค่ามิเตอร์ไม่ได้'};
+const SEV={magnet:'bad',tamper:'bad',burst:'bad',leak:'warn',reverse:'warn',lowbattery:'warn',lowbat:'warn',dry:'warn',empty:'warn',nowater:'warn',overflow:'warn',noread:'warn',offline:'off'};
 function alarmsOf(a){if(a==null||a===false||a===0||a==='')return[];if(typeof a==='string')return /^(ok|normal|none|0)$/i.test(a)?[]:[a];if(typeof a==='number')return a?['code'+a]:[];if(Array.isArray(a))return a.map(String);return Object.keys(a).filter(k=>a[k]===true||a[k]===1||a[k]==='1');}
 function parseTs(v){if(v==null)return NaN;if(typeof v==='number')return v<1e12?v*1000:v;const t=Date.parse(v);return t;}
 /* Drago DCC shadow: topic drago/dcc/<V4MID>/shadow/update, payload {state:{reported:{V4…,Dcc…,MODEM}}} */
@@ -205,16 +216,18 @@ function unwrap(m){if(!m||typeof m!=='object')return m;let topic=m.topic;
  const r=m.state&&m.state.reported?m.state.reported:m.reported||m;
  if(!r||!('V4TotalVolume' in r||'V4MID' in r))return m;
  const M=r.MODEM||{},csq=num(M.RSSI),bat=num(r.V4Vbat),fl=num(r.V4Flowrate),al={};
- if(bat!=null&&bat/1000<BAT_LOW)al.lowBattery=true;if(num(r.V4Flowrate)<0)al.reverse=true;
+ const noread=!num(r.V4Vbat)&&!num(r.V4TotalVolume)&&!num(r.V4ForwardVolume);if(noread)al.noread=true;else if(bat!=null&&bat/1000<BAT_LOW)al.lowBattery=true;if(num(r.V4Flowrate)<0)al.reverse=true;
  return {meterId:String(r.V4MID||(topic||'').split('/')[2]||r.DccUID||'SMCV4'),ts:r.V4Epoch??r.V4Timestamp,total:r.V4TotalVolume,reverse:r.V4ReverseVolume,
-  flow:fl==null?null:fl/1000,battery:bat==null?null:bat/1000,rssi:csq==null?null:(csq>=0&&csq<=31?2*csq-113:csq),temp:r.DccTemp,event:r.V4Event,
-  dccbat:num(r.DccVbat)==null?null:r.DccVbat/1000,online:M.ONLINE,isp:M.ISP,alarm:al};}
+  flow:noread||fl==null?null:fl/1000,battery:noread||bat==null?null:bat/1000,_noread:noread?1:undefined,dcc:r.DccUID,rssi:csq==null?null:(csq>=0&&csq<=31?2*csq-113:csq),temp:r.DccTemp,event:r.V4Event,
+  dccbat:num(r.DccVbat)==null?null:r.DccVbat/1000,online:M.ONLINE,isp:M.ISP,alarm:al,_drago:1};}
 const BAT_LOW=3.0;
-function ingest(msgs,src){const meters={};let bad=0;const u=src==='paste'?S.unit:1;
+function ingest(msgs,src){const meters={};let bad=0;const u=src==='paste'||src==='live'?S.unit:1;
  msgs=msgs.flatMap(x=>x&&Array.isArray(x.messages)?x.messages.filter(y=>!y.out):[x]).map(unwrap);
  for(const m of msgs){if(!m||typeof m!=='object'){bad++;continue}const t=parseTs(field(m,'ts')),tot=Number(field(m,'total'));if(!isFinite(t)||!isFinite(tot)){bad++;continue}
   const id=String(field(m,'id')??'มิเตอร์');(meters[id]=meters[id]||[]).push({t,total:tot*u,reverse:num(field(m,'reverse'))*u,event:num(m.event),dccbat:num(m.dccbat),flow:num(field(m,'flow')),battery:num(field(m,'battery')),rssi:num(field(m,'rssi')),temp:num(field(m,'temp')),alarms:alarmsOf(field(m,'alarm')).map(s=>s.toLowerCase()),raw:m});}
- for(const id in meters)meters[id].sort((a,b)=>a.t-b.t);return {meters,bad};}
+ for(const id in meters){const a=meters[id].sort((a,b)=>a.t-b.t),keep=[];let last=null;
+  for(const r of a){if(r.raw&&r.raw._noread){if(last==null){continue}r.total=last;r.reverse=null;}else last=r.total;keep.push(r);}meters[id]=keep;if(!keep.length)delete meters[id];}
+ return {meters,bad};}
 function num(v){const n=Number(v);return v==null||v===''||!isFinite(n)?null:n}
 
 /* ---------- demo data (3 meters, 35 days, every 15 min) ---------- */
@@ -233,7 +246,7 @@ function demo(){const now=Math.floor(Date.now()/Q)*Q,start=now-70*D,msgs=[];let 
 function series(id){return id==='ALL'?null:S.meters[id]}
 function intervals(id,from){ // liters per 15-min slot [{t,l}]
  const ids=id==='ALL'?Object.keys(S.meters):[id],out=[];
- for(const k of ids){const a=S.meters[k];for(let i=1;i<a.length;i++){if(a[i].t<from)continue;const dl=(a[i].total-a[i-1].total)*1000,dt=a[i].t-a[i-1].t;if(dl<0||dt<=0||dt>6*H)continue;
+ for(const k of ids){const a=S.meters[k];for(let i=1;i<a.length;i++){if(a[i].t<from)continue;const dl=(a[i].total-a[i-1].total)*1000,dt=a[i].t-a[i-1].t;if(dl<0||dt<=0||dt>6*H||dl/(dt/H)>6250)continue;
   const n=Math.max(1,Math.round(dt/Q));for(let j=0;j<n;j++)out.push({t:a[i].t-(n-1-j)*Q,l:dl/n,id:k});}}
  return out;}
 function daily(id,from,to){const m=new Map();for(let t=from;t<to;t+=D)m.set(dkey(t),0);for(const s of intervals(id,from-D))if(m.has(dkey(s.t-1)))m.set(dkey(s.t-1),m.get(dkey(s.t-1))+s.l);return m;}
@@ -323,7 +336,7 @@ function render(){
  const rows=(S.meter==='ALL'?ids:[S.meter]).flatMap(id=>S.meters[id].slice(-40)).sort((a,b)=>b.t-a.t).slice(0,24);
  $('rawTable').innerHTML='<thead><tr><th>เวลา</th><th>มิเตอร์</th><th class="n">ค่าสะสม (ม³)</th><th class="n">ไหล (ม³/ชม.)</th><th class="n">แบต</th><th class="n">สัญญาณ</th><th class="n">อุณหภูมิ</th><th class="n">Event</th><th>สถานะ</th></tr></thead><tbody>'+rows.map(r=>`<tr><td data-l="เวลา">${tlab(r.t)}</td><td data-l="มิเตอร์">${esc(field(r.raw,'id')??'')}</td><td class="n" data-l="ค่าสะสม">${fmt(r.total,3)}</td><td class="n" data-l="ไหล">${fmt(r.flow,3)}</td><td class="n" data-l="แบต">${r.battery==null?'—':fmt(r.battery,2)}</td><td class="n" data-l="สัญญาณ">${r.rssi??'—'}</td><td class="n" data-l="อุณหภูมิ">${r.temp==null?'—':fmt(r.temp,1)+'°'}</td><td class="n" data-l="Event">${r.event??'—'}</td><td data-l="สถานะ">${r.alarms.length?r.alarms.map(a=>`<span class="pill ${SEV[a]||'warn'}">${esc(AL[a]||a)}</span>`).join(' '):'<span class="pill ok">ปกติ</span>'}</td></tr>`).join('')+'</tbody>';
  $('demoBanner').style.display=S.src==='demo'?'':'none';
- $('srcBox').innerHTML=`<span class="dot" style="background:${S.src==='demo'?'#e7cf93':'#5fd39a'}"></span><b>${S.src==='demo'?'ข้อมูลตัวอย่าง':S.src==='gateway'?'CoreDash Gateway':'JSON ที่นำเข้า'}</b><br>${ids.length} มิเตอร์ · ${Object.values(S.meters).reduce((a,b)=>a+b.length,0).toLocaleString('th-TH')} ข้อความ`;
+ $('srcBox').innerHTML=`<span class="dot" style="background:${S.src==='demo'?'#e7cf93':S.src==='live'&&LV.state&&LV.state!=='ออนไลน์'?'#e7a093':'#5fd39a'}"></span><b>${S.src==='demo'?'ข้อมูลตัวอย่าง':S.src==='gateway'?'CoreDash Gateway':S.src==='live'?(LV.state?'MQTT สด · '+LV.state:'ข้อมูลจริง · เก็บในเครื่องนี้'):'JSON ที่นำเข้า'}</b><br>${ids.length} มิเตอร์ · ${Object.values(S.meters).reduce((a,b)=>a+b.length,0).toLocaleString('th-TH')} ข้อความ`;
 }
 
 /* ---------- pages / controls ---------- */
@@ -344,10 +357,10 @@ function parseText(txt){txt=txt.trim();if(!txt)return[];try{const j=JSON.parse(t
   if(c==='"'&&d>0)q=true;else if(c==='{'){if(d++===0)st=i}else if(c==='}'&&d>0&&--d===0){try{out.push(JSON.parse(txt.slice(st,i+1)))}catch(e){}}}
  return out;}
 function load(msgs,src){const r=ingest(msgs,src);if(!Object.keys(r.meters).length)return r;S.raw=msgs;S.meters=r.meters;S.src=src;S.meter=Object.keys(r.meters).length>1?'ALL':Object.keys(r.meters)[0];render();return r;}
-$('pasteGo').onclick=()=>{const m=parseText($('paste').value),r=load(m,'paste');$('pasteMsg').textContent=Object.keys(r.meters).length?`อ่านได้ ${m.length-r.bad} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์${r.bad?' · ข้าม '+r.bad:''}`:'อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง';};
+$('pasteGo').onclick=()=>{const m=parseText($('paste').value),dr=m.flatMap(x=>x&&Array.isArray(x.messages)?x.messages.filter(y=>!y.out):[x]).map(unwrap).filter(x=>x&&x._drago);if(dr.length){liveAdd(dr);const r=load(LV.msgs,'live');$('pasteMsg').textContent=`เพิ่ม ${dr.length} ข้อความ Drago · รวมในเครื่อง ${LV.msgs.length} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์`;location.hash='overview';return;}const r=load(m,'paste');$('pasteMsg').textContent=Object.keys(r.meters).length?`อ่านได้ ${m.length-r.bad} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์${r.bad?' · ข้าม '+r.bad:''}`:'อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง';};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('paste').value=(await f.text()).slice(0,2e6);$('pasteGo').click();};
 $('demoGo').onclick=()=>{load(demo(),'demo');location.hash='overview';};
-$('gwUrl').value=store.get('gwUrl','');$('gwMeters').value=store.get('gwMeters','69090014');
+$('gwUrl').value=store.get('gwUrl','');$('gwMeters').value=store.get('gwMeters','69090013,69090014');
 $('gwGo').onclick=async()=>{const url=$('gwUrl').value.replace(/\/+$/,''),key=$('gwKey').value.trim(),ids=$('gwMeters').value.split(',').map(s=>s.trim()).filter(Boolean);
  store.set('gwUrl',url);store.set('gwMeters',ids.join(','));const msg=$('gwMsg');if(!url||!key||!ids.length){msg.textContent='ใส่ที่อยู่ API Key และเลขมิเตอร์';return;}
  msg.textContent='กำลังดึงข้อมูล…';const end=new Date(),start=new Date(end-31*D),out=[];
@@ -358,7 +371,33 @@ $('gwGo').onclick=async()=>{const url=$('gwUrl').value.replace(/\/+$/,''),key=$(
   const r=load(out,'gateway');msg.textContent=Object.keys(r.meters).length?`ได้ ${out.length} จุด จาก ${ids.length} มิเตอร์`:'Gateway ตอบกลับแต่ยังไม่มีข้อมูล';
   if(Object.keys(r.meters).length)location.hash='overview';
  }catch(e){msg.textContent='เชื่อมไม่ได้: '+e.message+' (ตรวจที่อยู่ API Key และ cors ใน config)';}};
-load(demo(),'demo');route();
+/* ---------- live MQTT over WebSocket ---------- */
+const LV={msgs:store.get('live',[]),client:null,state:'',t:null};
+function liveAdd(list){const seen=new Set(LV.msgs.map(m=>m.meterId+'|'+m.ts));let n=0;
+ for(const m of list){const k=m.meterId+'|'+m.ts;if(seen.has(k))continue;seen.add(k);LV.msgs.push(m);n++;}
+ LV.msgs.sort((a,b)=>parseTs(a.ts)-parseTs(b.ts));if(LV.msgs.length>15000)LV.msgs=LV.msgs.slice(-15000);store.set('live',LV.msgs);return n;}
+function lvMsg(t){$('lvMsg').innerHTML=t;}
+function lvIds(){return [...new Set(LV.msgs.map(m=>m.meterId))];}
+function loadMqttLib(){return window.mqtt?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js';s.onload=ok;s.onerror=()=>no(new Error('โหลดไลบรารี MQTT ไม่ได้'));document.head.appendChild(s);});}
+async function liveConnect(){const url=$('lvUrl').value.trim(),topic=$('lvTopic').value.trim()||'drago/dcc/+/shadow/update',user=$('lvUser').value.trim(),pass=$('lvPass').value;
+ store.set('lv',{url,topic,user,remember:$('lvRemember').checked});if($('lvRemember').checked)store.set('lvp',pass);else store.set('lvp','');
+ if(location.protocol==='https:'&&/^ws:/i.test(url)){lvMsg('หน้านี้เป็น https ต้องใช้ <b>wss://</b> (WebSocket แบบเข้ารหัส) เท่านั้น');return;}
+ liveStop();lvMsg('กำลังเชื่อมต่อ…');try{await loadMqttLib();}catch(e){lvMsg(e.message);return;}
+ const c=LV.client=mqtt.connect(url,{username:user,password:pass,clientId:'coredash-web-'+Math.random().toString(16).slice(2,8),reconnectPeriod:5000,connectTimeout:8000,protocolVersion:4});
+ c.on('connect',()=>{LV.state='ออนไลน์';c.subscribe(topic,{qos:0},(err,g)=>{if(err||(g&&g[0]&&g[0].qos===128)){lvMsg('เชื่อมต่อได้ แต่ broker ไม่ให้ subscribe <code>'+esc(topic)+'</code>');return;}
+  lvMsg(`<b style="color:#2e7d4f">● ออนไลน์</b> · รอข้อความ <code>${esc(topic)}</code> (ทุก 15 นาที) · ในเครื่อง ${LV.msgs.length} ข้อความ · มิเตอร์ ${esc(lvIds().join(', ')||'—')}`);});if(S.src==='live')render();});
+ c.on('message',(tp,pl)=>{let j;try{j=JSON.parse(pl.toString())}catch(e){return}const m=unwrap({topic:tp,payload:j});if(!m||!m._drago)return;
+  if(liveAdd([m])){lvMsg(`<b style="color:#2e7d4f">● ออนไลน์</b> · ล่าสุด มิเตอร์ ${esc(m.meterId)} เมื่อ ${tlab(parseTs(m.ts))} · ในเครื่อง ${LV.msgs.length} ข้อความ · มิเตอร์ ${esc(lvIds().join(', '))}`);
+   clearTimeout(LV.t);LV.t=setTimeout(()=>{if(S.src==='live'||S.src==='demo')load(LV.msgs,'live');},300);}});
+ c.on('error',e=>{LV.state='ผิดพลาด';lvMsg('เชื่อมต่อไม่ได้: '+esc(e.message||e)+' · ตรวจที่อยู่ WebSocket (port/path) และรหัสผ่าน');});
+ c.on('offline',()=>{LV.state='ออฟไลน์';if(!/ผิดพลาด|ไม่ได้/.test($('lvMsg').textContent))lvMsg('ขาดการเชื่อมต่อ · กำลังลองใหม่ทุก 5 วินาที (ถ้าไม่หาย broker อาจไม่เปิด WebSocket ที่ที่อยู่นี้)');});}
+function liveStop(){if(LV.client){LV.client.end(true);LV.client=null;}LV.state='';}
+const lvs=store.get('lv',null);if(lvs){$('lvUrl').value=lvs.url||$('lvUrl').value;$('lvTopic').value=lvs.topic||$('lvTopic').value;$('lvUser').value=lvs.user||'';$('lvRemember').checked=!!lvs.remember;}
+$('lvPass').value=store.get('lvp','')||'';
+$('lvGo').onclick=liveConnect;$('lvStop').onclick=()=>{liveStop();lvMsg('หยุดแล้ว');render();};
+$('lvClear').onclick=()=>{LV.msgs=[];store.set('live',[]);lvMsg('ล้างข้อมูลในเครื่องแล้ว');load(demo(),'demo');};
+if(LV.msgs.length)load(LV.msgs,'live');else load(demo(),'demo');route();
+if(lvs&&lvs.remember&&$('lvPass').value)liveConnect();
 let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,200);});
 }
 </script>
