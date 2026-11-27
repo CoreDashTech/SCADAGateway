@@ -150,20 +150,20 @@ pre{background:#f4f1e8;border:1px solid var(--line);border-radius:8px;padding:10
     <div class="form">
      <label class="field">ที่อยู่ Gateway<input type="text" id="gwUrl" placeholder="https://gw.coredashtech.com"></label>
      <label class="field">API Key (water-dashboard)<input type="password" id="gwKey" autocomplete="off"></label>
-     <label class="field">เลขมิเตอร์ (คั่นด้วย ,)<input type="text" id="gwMeters" value="10000002"></label>
+     <label class="field">เลขมิเตอร์ (คั่นด้วย ,)<input type="text" id="gwMeters" value="69090014"></label>
     </div>
     <button class="btn pri" id="gwGo">ดึงข้อมูลจาก Gateway</button> <span class="note" id="gwMsg"></span>
    </div>
    <div class="card" style="margin-bottom:14px"><h2>2 · วาง JSON / นำเข้าไฟล์</h2>
     <div class="sub">วางข้อความจาก MQTT.fx (ทีละบรรทัด หรือ JSON array) หรือไฟล์ประวัติ .jsonl ระบบจับชื่อฟิลด์ให้อัตโนมัติ</div>
-    <textarea id="paste" placeholder='{"meterId":"10000002","ts":"2026-11-27T10:15:00+07:00","total":123.456,"flow":0.12,"battery":3.61,"rssi":-82,"alarm":{"magnet":false}}'></textarea>
+    <textarea id="paste" placeholder='วางข้อความจาก MQTTX ได้ทั้งก้อน (topic drago/dcc/…/shadow/update) เช่น {"state":{"reported":{"V4MID":"69090014","V4Epoch":1795798140,"V4TotalVolume":10426,"V4Flowrate":0,"V4Vbat":3070,"DccTemp":30,"MODEM":{"RSSI":23}}}} · หรือไฟล์ Export จาก MQTTX (.json)'></textarea>
     <div class="ctl" style="margin-top:8px"><button class="btn pri" id="pasteGo">ใช้ข้อมูลนี้</button><label class="btn">เลือกไฟล์<input type="file" id="file" accept=".json,.jsonl,.txt" hidden></label><span class="note" id="pasteMsg"></span></div>
     <h3 style="margin-top:14px">การจับคู่ฟิลด์</h3><div class="note">เว้นว่างให้ระบบเดาเอง ใส่ชื่อฟิลด์ (รองรับ a.b) ถ้าเดาไม่ตรง</div>
     <div class="form" id="mapForm"></div>
    </div>
    <div class="card"><h2>3 · ตั้งค่าการแสดงผล</h2>
     <div class="form">
-     <label class="field">หน่วยของค่าสะสมในข้อความ<select id="unit"><option value="1">ลูกบาศก์เมตร (m³)</option><option value="0.001">ลิตร (L)</option></select></label>
+     <label class="field">หน่วยของค่าสะสมในข้อความ<select id="unit"><option value="0.001">ลิตร (L) · ค่าเริ่มต้นของ SMCV4 V4TotalVolume</option><option value="1">ลูกบาศก์เมตร (m³)</option></select></label>
      <label class="field">ค่าน้ำ (บาท/ลบ.ม.)<input type="number" id="price" step="0.25" min="0" value="10.5"></label>
      <label class="field">เกณฑ์สงสัยรั่วกลางคืน (ลิตร/ชม.)<input type="number" id="leakTh" step="1" min="0" value="5"></label>
     </div>
@@ -179,7 +179,7 @@ pre{background:#f4f1e8;border:1px solid var(--line);border-radius:8px;padding:10
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem('cdw.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('cdw.'+k,JSON.stringify(v))}catch(e){}}};
-const S={days:30,meter:'ALL',src:'demo',price:store.get('price',10.5),unit:store.get('unit',1),leakTh:store.get('leakTh',5),map:store.get('map',{}),meters:{},raw:[]};
+const S={days:30,meter:'ALL',src:'demo',price:store.get('price',10.5),unit:store.get('unit2',0.001),leakTh:store.get('leakTh',5),map:store.get('map',{}),meters:{},raw:[]};
 const H=36e5,D=864e5,Q=9e5;
 const fmt=(v,d=1)=>v==null||!isFinite(v)?'—':v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
 const dkey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -199,9 +199,21 @@ const AL={magnet:'ตรวจพบแม่เหล็ก',tamper:'ถูก�
 const SEV={magnet:'bad',tamper:'bad',burst:'bad',leak:'warn',reverse:'warn',lowbattery:'warn',lowbat:'warn',dry:'warn',empty:'warn',nowater:'warn',overflow:'warn',offline:'off'};
 function alarmsOf(a){if(a==null||a===false||a===0||a==='')return[];if(typeof a==='string')return /^(ok|normal|none|0)$/i.test(a)?[]:[a];if(typeof a==='number')return a?['code'+a]:[];if(Array.isArray(a))return a.map(String);return Object.keys(a).filter(k=>a[k]===true||a[k]===1||a[k]==='1');}
 function parseTs(v){if(v==null)return NaN;if(typeof v==='number')return v<1e12?v*1000:v;const t=Date.parse(v);return t;}
-function ingest(msgs){const meters={};let bad=0;
+/* Drago DCC shadow: topic drago/dcc/<V4MID>/shadow/update, payload {state:{reported:{V4…,Dcc…,MODEM}}} */
+function unwrap(m){if(!m||typeof m!=='object')return m;let topic=m.topic;
+ if(typeof m.payload==='string'){try{m=JSON.parse(m.payload)}catch(e){return null}}else if(m.payload&&typeof m.payload==='object')m=m.payload;
+ const r=m.state&&m.state.reported?m.state.reported:m.reported||m;
+ if(!r||!('V4TotalVolume' in r||'V4MID' in r))return m;
+ const M=r.MODEM||{},csq=num(M.RSSI),bat=num(r.V4Vbat),fl=num(r.V4Flowrate),al={};
+ if(bat!=null&&bat/1000<BAT_LOW)al.lowBattery=true;if(num(r.V4Flowrate)<0)al.reverse=true;
+ return {meterId:String(r.V4MID||(topic||'').split('/')[2]||r.DccUID||'SMCV4'),ts:r.V4Epoch??r.V4Timestamp,total:r.V4TotalVolume,reverse:r.V4ReverseVolume,
+  flow:fl==null?null:fl/1000,battery:bat==null?null:bat/1000,rssi:csq==null?null:(csq>=0&&csq<=31?2*csq-113:csq),temp:r.DccTemp,event:r.V4Event,
+  dccbat:num(r.DccVbat)==null?null:r.DccVbat/1000,online:M.ONLINE,isp:M.ISP,alarm:al};}
+const BAT_LOW=3.0;
+function ingest(msgs,src){const meters={};let bad=0;const u=src==='paste'?S.unit:1;
+ msgs=msgs.flatMap(x=>x&&Array.isArray(x.messages)?x.messages.filter(y=>!y.out):[x]).map(unwrap);
  for(const m of msgs){if(!m||typeof m!=='object'){bad++;continue}const t=parseTs(field(m,'ts')),tot=Number(field(m,'total'));if(!isFinite(t)||!isFinite(tot)){bad++;continue}
-  const id=String(field(m,'id')??'มิเตอร์');(meters[id]=meters[id]||[]).push({t,total:tot*S.unit,reverse:num(field(m,'reverse'))*(S.unit),flow:num(field(m,'flow')),battery:num(field(m,'battery')),rssi:num(field(m,'rssi')),temp:num(field(m,'temp')),alarms:alarmsOf(field(m,'alarm')).map(s=>s.toLowerCase()),raw:m});}
+  const id=String(field(m,'id')??'มิเตอร์');(meters[id]=meters[id]||[]).push({t,total:tot*u,reverse:num(field(m,'reverse'))*u,event:num(m.event),dccbat:num(m.dccbat),flow:num(field(m,'flow')),battery:num(field(m,'battery')),rssi:num(field(m,'rssi')),temp:num(field(m,'temp')),alarms:alarmsOf(field(m,'alarm')).map(s=>s.toLowerCase()),raw:m});}
  for(const id in meters)meters[id].sort((a,b)=>a.t-b.t);return {meters,bad};}
 function num(v){const n=Number(v);return v==null||v===''||!isFinite(n)?null:n}
 
@@ -309,7 +321,7 @@ function render(){
  const ev=events();
  $('eventTable').innerHTML=ev.length?'<thead><tr><th>เหตุการณ์</th><th>มิเตอร์</th><th>เริ่ม</th><th>สิ้นสุด</th><th class="n">นาน</th></tr></thead><tbody>'+ev.slice(0,200).map(e=>{const dur=((e.t1||C.end)-e.t0)/H;return `<tr><td data-l="เหตุการณ์"><span class="pill ${SEV[e.k]||'warn'}">${esc(e.k==='offline'?'ขาดการรายงาน':AL[e.k]||e.k)}</span>${e.t1?'':' <b style="color:var(--bad)">ยังไม่หาย</b>'}</td><td data-l="มิเตอร์">${esc(e.id)}</td><td data-l="เริ่ม">${tlab(e.t0)}</td><td data-l="สิ้นสุด">${e.t1?tlab(e.t1):'—'}</td><td class="n" data-l="นาน">${dur<1?fmt(dur*60,0)+' นาที':fmt(dur,1)+' ชม.'}</td></tr>`}).join('')+'</tbody>':'<tbody><tr><td class="empty">ไม่มีเหตุการณ์ผิดปกติ</td></tr></tbody>';
  const rows=(S.meter==='ALL'?ids:[S.meter]).flatMap(id=>S.meters[id].slice(-40)).sort((a,b)=>b.t-a.t).slice(0,24);
- $('rawTable').innerHTML='<thead><tr><th>เวลา</th><th>มิเตอร์</th><th class="n">ค่าสะสม (ม³)</th><th class="n">ไหล (ม³/ชม.)</th><th class="n">แบต</th><th class="n">สัญญาณ</th><th class="n">อุณหภูมิ</th><th>สถานะ</th></tr></thead><tbody>'+rows.map(r=>`<tr><td data-l="เวลา">${tlab(r.t)}</td><td data-l="มิเตอร์">${esc(field(r.raw,'id')??'')}</td><td class="n" data-l="ค่าสะสม">${fmt(r.total,3)}</td><td class="n" data-l="ไหล">${fmt(r.flow,3)}</td><td class="n" data-l="แบต">${r.battery==null?'—':fmt(r.battery,2)}</td><td class="n" data-l="สัญญาณ">${r.rssi??'—'}</td><td class="n" data-l="อุณหภูมิ">${r.temp==null?'—':fmt(r.temp,1)+'°'}</td><td data-l="สถานะ">${r.alarms.length?r.alarms.map(a=>`<span class="pill ${SEV[a]||'warn'}">${esc(AL[a]||a)}</span>`).join(' '):'<span class="pill ok">ปกติ</span>'}</td></tr>`).join('')+'</tbody>';
+ $('rawTable').innerHTML='<thead><tr><th>เวลา</th><th>มิเตอร์</th><th class="n">ค่าสะสม (ม³)</th><th class="n">ไหล (ม³/ชม.)</th><th class="n">แบต</th><th class="n">สัญญาณ</th><th class="n">อุณหภูมิ</th><th class="n">Event</th><th>สถานะ</th></tr></thead><tbody>'+rows.map(r=>`<tr><td data-l="เวลา">${tlab(r.t)}</td><td data-l="มิเตอร์">${esc(field(r.raw,'id')??'')}</td><td class="n" data-l="ค่าสะสม">${fmt(r.total,3)}</td><td class="n" data-l="ไหล">${fmt(r.flow,3)}</td><td class="n" data-l="แบต">${r.battery==null?'—':fmt(r.battery,2)}</td><td class="n" data-l="สัญญาณ">${r.rssi??'—'}</td><td class="n" data-l="อุณหภูมิ">${r.temp==null?'—':fmt(r.temp,1)+'°'}</td><td class="n" data-l="Event">${r.event??'—'}</td><td data-l="สถานะ">${r.alarms.length?r.alarms.map(a=>`<span class="pill ${SEV[a]||'warn'}">${esc(AL[a]||a)}</span>`).join(' '):'<span class="pill ok">ปกติ</span>'}</td></tr>`).join('')+'</tbody>';
  $('demoBanner').style.display=S.src==='demo'?'':'none';
  $('srcBox').innerHTML=`<span class="dot" style="background:${S.src==='demo'?'#e7cf93':'#5fd39a'}"></span><b>${S.src==='demo'?'ข้อมูลตัวอย่าง':S.src==='gateway'?'CoreDash Gateway':'JSON ที่นำเข้า'}</b><br>${ids.length} มิเตอร์ · ${Object.values(S.meters).reduce((a,b)=>a+b.length,0).toLocaleString('th-TH')} ข้อความ`;
 }
@@ -323,24 +335,27 @@ document.querySelectorAll('#rangeSeg button').forEach(b=>b.onclick=()=>{document
 $('mapForm').innerHTML=Object.keys(FN).map(f=>`<label class="field">${FN[f]}<input type="text" data-f="${f}" placeholder="อัตโนมัติ" value="${esc(S.map[f]||'')}"></label>`).join('');
 $('mapForm').querySelectorAll('input').forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v)S.map[i.dataset.f]=v;else delete S.map[i.dataset.f];store.set('map',S.map);if(S.raw.length)load(S.raw,S.src);});
 $('unit').value=String(S.unit);$('price').value=S.price;$('leakTh').value=S.leakTh;
-$('unit').onchange=e=>{S.unit=+e.target.value;store.set('unit',S.unit);if(S.raw.length)load(S.raw,S.src);};
+$('unit').onchange=e=>{S.unit=+e.target.value;store.set('unit2',S.unit);if(S.raw.length)load(S.raw,S.src);};
 $('price').onchange=e=>{S.price=+e.target.value||0;store.set('price',S.price);render();};
 $('leakTh').onchange=e=>{S.leakTh=+e.target.value||0;store.set('leakTh',S.leakTh);render();};
 function parseText(txt){txt=txt.trim();if(!txt)return[];try{const j=JSON.parse(txt);return Array.isArray(j)?j:(j.data&&Array.isArray(j.data)?j.data:[j]);}catch(e){}
- return txt.split(/\r?\n/).map(l=>{const i=l.indexOf('{');if(i<0)return null;try{return JSON.parse(l.slice(i))}catch(e){return null}}).filter(Boolean);}
-function load(msgs,src){const r=ingest(msgs);if(!Object.keys(r.meters).length)return r;S.raw=msgs;S.meters=r.meters;S.src=src;S.meter=Object.keys(r.meters).length>1?'ALL':Object.keys(r.meters)[0];render();return r;}
+ const out=[];let d=0,st=-1,q=false,esc=false; // top-level {…} blocks, ignores "Topic: … QoS: 0" lines and timestamps
+ for(let i=0;i<txt.length;i++){const c=txt[i];if(q){if(esc)esc=false;else if(c==='\\')esc=true;else if(c==='"')q=false;continue}
+  if(c==='"'&&d>0)q=true;else if(c==='{'){if(d++===0)st=i}else if(c==='}'&&d>0&&--d===0){try{out.push(JSON.parse(txt.slice(st,i+1)))}catch(e){}}}
+ return out;}
+function load(msgs,src){const r=ingest(msgs,src);if(!Object.keys(r.meters).length)return r;S.raw=msgs;S.meters=r.meters;S.src=src;S.meter=Object.keys(r.meters).length>1?'ALL':Object.keys(r.meters)[0];render();return r;}
 $('pasteGo').onclick=()=>{const m=parseText($('paste').value),r=load(m,'paste');$('pasteMsg').textContent=Object.keys(r.meters).length?`อ่านได้ ${m.length-r.bad} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์${r.bad?' · ข้าม '+r.bad:''}`:'อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง';};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('paste').value=(await f.text()).slice(0,2e6);$('pasteGo').click();};
 $('demoGo').onclick=()=>{load(demo(),'demo');location.hash='overview';};
-$('gwUrl').value=store.get('gwUrl','');$('gwMeters').value=store.get('gwMeters','10000002');
+$('gwUrl').value=store.get('gwUrl','');$('gwMeters').value=store.get('gwMeters','69090014');
 $('gwGo').onclick=async()=>{const url=$('gwUrl').value.replace(/\/+$/,''),key=$('gwKey').value.trim(),ids=$('gwMeters').value.split(',').map(s=>s.trim()).filter(Boolean);
  store.set('gwUrl',url);store.set('gwMeters',ids.join(','));const msg=$('gwMsg');if(!url||!key||!ids.length){msg.textContent='ใส่ที่อยู่ API Key และเลขมิเตอร์';return;}
  msg.textContent='กำลังดึงข้อมูล…';const end=new Date(),start=new Date(end-31*D),out=[];
- try{for(const id of ids){const pts={};for(const [f,agg] of [['total','max'],['flow','avg'],['battery','avg'],['rssi','avg'],['temp','avg'],['magnet','max'],['leak','max'],['burst','max'],['lowbat','max']]){
+ try{for(const id of ids){const pts={};for(const [f,agg] of [['total','max'],['reverse','max'],['flow','avg'],['battery','avg'],['rssi','avg'],['temp','avg'],['event','max'],['dccbat','avg']]){
    const r=await fetch(`${url}/api/v1/history?point=SMCV4-${encodeURIComponent(id)}.${f}&start=${start.toISOString()}&end=${end.toISOString()}&interval=15m&agg=${agg}`,{headers:{'X-API-Key':key}});
    if(r.status===404)continue;if(!r.ok)throw new Error(f+': HTTP '+r.status);const j=await r.json();for(const p of j.data||[])(pts[p.ts]=pts[p.ts]||{})[f]=p.value;}
-  for(const ts in pts){const p=pts[ts];if(p.total==null)continue;out.push({meterId:id,ts,total:p.total,flow:p.flow,battery:p.battery,rssi:p.rssi,temp:p.temp,alarm:{magnet:!!p.magnet,leak:!!p.leak,burst:!!p.burst,lowBattery:!!p.lowbat}});}}
-  const savedUnit=S.unit;S.unit=1;const r=load(out,'gateway');S.unit=savedUnit;msg.textContent=Object.keys(r.meters).length?`ได้ ${out.length} จุด จาก ${ids.length} มิเตอร์`:'Gateway ตอบกลับแต่ยังไม่มีข้อมูล';
+  for(const ts in pts){const p=pts[ts];if(p.total==null)continue;out.push({meterId:id,ts,total:p.total,reverse:p.reverse,flow:p.flow,battery:p.battery,rssi:p.rssi,temp:p.temp,event:p.event,dccbat:p.dccbat,alarm:{lowBattery:p.battery!=null&&p.battery<BAT_LOW,reverse:p.flow!=null&&p.flow<0}});}}
+  const r=load(out,'gateway');msg.textContent=Object.keys(r.meters).length?`ได้ ${out.length} จุด จาก ${ids.length} มิเตอร์`:'Gateway ตอบกลับแต่ยังไม่มีข้อมูล';
   if(Object.keys(r.meters).length)location.hash='overview';
  }catch(e){msg.textContent='เชื่อมไม่ได้: '+e.message+' (ตรวจที่อยู่ API Key และ cors ใน config)';}};
 load(demo(),'demo');route();
