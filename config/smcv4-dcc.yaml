@@ -1,0 +1,73 @@
+# CoreDash — มิเตอร์น้ำ SMCV4 + Clamp-on DCC (ส่ง JSON ขึ้น MQTT ทุก 15 นาที)
+# Gateway สมัครรับข้อความจาก Drago broker เก็บประวัติ (historian) แล้วให้หน้า water/ ดึงผ่าน REST /api/v1
+#
+# ต้องตั้ง environment ก่อนรัน (ห้ามใส่รหัสผ่านในไฟล์นี้):
+#   DRAGO_MQTT_PASSWORD=...        รหัสผ่าน broker ของ Drago
+#   API_KEY_WATER=...              คีย์ที่หน้า Dashboard ใช้อ่านข้อมูล (สุ่มยาว ≥ 32 ตัว)
+# รัน:  node src/index.js config/smcv4-dcc.yaml
+#
+# TODO ก่อนใช้งานจริง: แก้ topic และ jsonPath ให้ตรงกับข้อความจริง
+#   วิธีดู: เปิด MQTT.fx → Subscribe "#" → คัดลอก topic และ payload 1 ข้อความ
+#   ตัวอย่างด้านล่างสมมติ topic = drago/smcv4/<เลขมิเตอร์>/up และ payload =
+#   {"meterId":"10000002","ts":"2026-11-27T10:15:00+07:00","total":123.456,"reverse":0.012,
+#    "flow":0.0,"battery":3.61,"rssi":-82,"temp":29.5,"alarm":{"magnet":false,"leak":false,"burst":false,"reverse":false,"lowBattery":false}}
+# มิเตอร์เพิ่ม: คัดลอกบล็อก tags ของ SMCV4-10000002 แล้วเปลี่ยนเลข
+
+site:
+  id: WATER-SMCV4
+  name: { th: "มิเตอร์น้ำ SMCV4 · Clamp-on DCC", en: "SMCV4 water meters · Clamp-on DCC" }
+  timezone: Asia/Bangkok
+
+server:
+  port: 8080
+  cors: "https://www.coredashtech.com"
+  commandTtlSec: 30
+
+historian:
+  dir: ./data/history
+  sampleSec: 60          # ข้อความมาทุก 15 นาที เก็บค่าทุก 1 นาทีพอ
+  memoryPoints: 50000    # ~34 วันในหน่วยความจำ ที่เหลืออ่านจากไฟล์ JSONL รายวัน
+
+audit:
+  file: ./data/audit.jsonl
+
+devices:
+  - id: DRAGO-MQTT
+    name: { th: "Drago MQTT broker", en: "Drago MQTT broker" }
+    driver: mqtt
+    url: mqtt://mqtt-broker.dragodssplus.com:1883
+    username: drago
+    passwordEnv: DRAGO_MQTT_PASSWORD
+    clientId: coredash-water-gw
+
+tags:
+  # --- SMCV4 10000002 ---
+  - { id: SMCV4-10000002.total,   device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: total,            dataType: float32, unit: "m³",  name: { th: "ปริมาณน้ำสะสม", en: "Totalizer" } }
+  - { id: SMCV4-10000002.reverse, device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: reverse,          dataType: float32, unit: "m³",  name: { th: "น้ำไหลย้อนสะสม", en: "Reverse total" } }
+  - { id: SMCV4-10000002.flow,    device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: flow,             dataType: float32, unit: "m³/h", name: { th: "อัตราการไหล", en: "Flow" } }
+  - { id: SMCV4-10000002.battery, device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: battery,          dataType: float32, unit: "V",   name: { th: "แบตเตอรี่", en: "Battery" } }
+  - { id: SMCV4-10000002.rssi,    device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: rssi,             dataType: int16,   unit: "dBm", name: { th: "สัญญาณ", en: "Signal" } }
+  - { id: SMCV4-10000002.temp,    device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: temp,             dataType: float32, unit: "°C",  name: { th: "อุณหภูมิ", en: "Temperature" } }
+  - { id: SMCV4-10000002.magnet,  device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: alarm.magnet,     dataType: bool,    name: { th: "ตรวจพบแม่เหล็ก", en: "Magnetic tamper" } }
+  - { id: SMCV4-10000002.leak,    device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: alarm.leak,       dataType: bool,    name: { th: "น้ำรั่ว", en: "Leak" } }
+  - { id: SMCV4-10000002.burst,   device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: alarm.burst,      dataType: bool,    name: { th: "ท่อแตก", en: "Burst" } }
+  - { id: SMCV4-10000002.lowbat,  device: DRAGO-MQTT, topic: drago/smcv4/10000002/up, jsonPath: alarm.lowBattery, dataType: bool,    name: { th: "แบตเตอรี่ต่ำ", en: "Low battery" } }
+
+alarms:
+  - { id: M2_MAGNET, tag: SMCV4-10000002.magnet, op: "==", value: 1, severity: critical, notify: [line], text: { th: "มิเตอร์ 10000002 ตรวจพบแม่เหล็กภายนอก", en: "Meter 10000002 magnetic tamper" } }
+  - { id: M2_LEAK,   tag: SMCV4-10000002.leak,   op: "==", value: 1, severity: medium,   notify: [line], text: { th: "มิเตอร์ 10000002 น้ำไหลต่อเนื่อง (สงสัยรั่ว)", en: "Meter 10000002 continuous flow" } }
+  - { id: M2_BURST,  tag: SMCV4-10000002.burst,  op: "==", value: 1, severity: critical, notify: [line], text: { th: "มิเตอร์ 10000002 ท่อแตก", en: "Meter 10000002 burst" } }
+  - { id: M2_LOWBAT, tag: SMCV4-10000002.battery, op: "<", value: 3.3, delaySec: 0, severity: low, notify: [line], text: { th: "มิเตอร์ 10000002 แบตเตอรี่ต่ำ", en: "Meter 10000002 low battery" } }
+
+interlocks: []
+schedules: []
+users: []
+
+api:
+  rateLimitPerMin: 120
+  maxHistoryPoints: 10000
+  keys:
+    - { id: water-dashboard, name: "Dashboard มิเตอร์น้ำ (coredashtech.com/water)", keyEnv: API_KEY_WATER, role: viewer, scopes: [read:latest, read:history, read:status, read:alarms] }
+
+notify:
+  line: { type: line, tokenEnv: LINE_CHANNEL_TOKEN, to: "" }
