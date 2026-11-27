@@ -180,7 +180,7 @@ pre{background:#f4f1e8;border:1px solid var(--line);border-radius:8px;padding:10
      <label class="field">ค่าน้ำ (บาท/ลบ.ม.)<input type="number" id="price" step="0.25" min="0" value="10.5"></label>
      <label class="field">เกณฑ์สงสัยรั่วกลางคืน (ลิตร/ชม.)<input type="number" id="leakTh" step="1" min="0" value="5"></label>
     </div>
-    <button class="btn" id="demoGo">กลับไปใช้ข้อมูลตัวอย่าง</button>
+    <button class="btn pri" id="realGo">ใช้ข้อมูลจริง</button> <button class="btn" id="demoGo">ดูข้อมูลตัวอย่าง (จำลอง)</button>
    </div>
   </section>
  </main>
@@ -249,7 +249,7 @@ const EN_TX={
  'ใส่ที่อยู่ API Key และเลขมิเตอร์':'Enter the address, API key and meter IDs','กำลังดึงข้อมูล…':'Fetching…','Gateway ตอบกลับแต่ยังไม่มีข้อมูล':'Gateway replied but has no data yet','เชื่อมไม่ได้':'Cannot connect','(ตรวจที่อยู่ API Key และ cors ใน config)':'(check the address, API key and cors in config)',
  'ยังไม่มีข้อมูล':'No data yet','วันนี้':'Today','เฉลี่ย':'Average','เช้า':'Morning','กลางวัน':'Day','เย็น':'Evening','กลางคืน':'Night',
  'บาท/ลบ.ม.':'THB/m³','ลิตร/ชม. (ต่ำสุด)':'L/h (minimum)','ลิตร/ชม.':'L/h','ลบ.ม.':'m³','ม³/ชม.':'m³/h','ม³':'m³','ลิตร':'L','ชม.':'h','นาที':'min',
- 'หน้าหลัก':'Home',
+ 'หน้าหลัก':'Home','ข้อมูลยังไม่พอวิเคราะห์':'Not enough data yet','ต้องมีรายงานอย่างน้อย 2 รอบต่อมิเตอร์ (ห่างกัน 15 นาที) กราฟและสรุปจะเริ่มขึ้นเอง':'At least 2 reports per meter (15 minutes apart) are needed; charts and insights will appear automatically','ยังไม่มีข้อมูลจริง':'No real data yet','ระบบเก็บข้อมูลจาก MQTT อัปเดตทุกชั่วโมง หรือไปที่':'The MQTT collector updates every hour, or go to','เพื่อเชื่อมสดหรือวางข้อความจาก MQTTX':'to connect live or paste messages from MQTTX','ข้อมูลจริง · อัปเดต':'Real data · updated','ใช้ข้อมูลจริง':'Use real data','ดูข้อมูลตัวอย่าง (จำลอง)':'View sample data (simulated)',
  'วางข้อความจาก MQTTX ได้ทั้งก้อน (topic drago/dcc/…/shadow/update) เช่น {"state":{"reported":{"V4MID":"69090014","V4Epoch":1795798140,"V4TotalVolume":10426,"V4Flowrate":0,"V4Vbat":3070,"DccTemp":30,"MODEM":{"RSSI":23}}}} · หรือไฟล์ Export จาก MQTTX (.json)':'Paste whole MQTTX messages (topic drago/dcc/…/shadow/update), e.g. {"state":{"reported":{"V4MID":"69090014","V4Epoch":1795798140,"V4TotalVolume":10426,"V4Flowrate":0,"V4Vbat":3070,"DccTemp":30,"MODEM":{"RSSI":23}}}} · or an MQTTX export file (.json)'
 };
 const EN_KEYS=Object.keys(EN_TX).sort((a,b)=>b.length-a.length);
@@ -351,7 +351,8 @@ function chart(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart($
 const base=(y)=>({responsive:true,maintainAspectRatio:false,animation:{duration:400},plugins:{legend:{display:false},tooltip:{backgroundColor:'#13233f',padding:10,titleFont:{weight:'700'}}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkipPadding:12}},y:{beginAtZero:true,title:{display:!!y,text:y},grid:{color:'#efeadf'}}}});
 const MCOL=['#1f6fb2','#b8892b','#2f8a5b','#7a4fb0','#c0563c','#3b8c96'];
 function render(){
- const ids=Object.keys(S.meters);if(!ids.length){$('kpis').innerHTML='<div class="empty card">ยังไม่มีข้อมูล</div>';return;}
+ const ids=Object.keys(S.meters);if(!ids.length){$('kpis').innerHTML='<div class="empty card" style="grid-column:1/-1">ยังไม่มีข้อมูลจริง · ระบบเก็บข้อมูลจาก MQTT อัปเดตทุกชั่วโมง หรือไปที่ <a href="#data">แหล่งข้อมูล</a> เพื่อเชื่อมสดหรือวางข้อความจาก MQTTX</div>';
+  $('demoBanner').style.display='none';$('subtitle').textContent='';$('srcBox').innerHTML='<span class="dot" style="background:#e7a093"></span><b>ยังไม่มีข้อมูลจริง</b>';return;}
  const sel=$('meterSel');sel.innerHTML=(ids.length>1?'<option value="ALL">ทุกมิเตอร์ ('+ids.length+')</option>':'')+ids.map(i=>`<option value="${esc(i)}">มิเตอร์ ${esc(i)}</option>`).join('');
  if(S.meter!=='ALL'&&!S.meters[S.meter])S.meter=ids.length>1?'ALL':ids[0];if(ids.length===1)S.meter=ids[0];sel.value=S.meter;
  const C=compute(),m3=l=>l/1000,chg=C.pSame>0?(C.mThis-C.pSame)/C.pSame*100:null;
@@ -380,11 +381,12 @@ function render(){
  const pk=C.hour.indexOf(Math.max(...C.hour)),dvals=[...C.dm.entries()].slice(0,-1),mx=dvals.reduce((a,b)=>b[1]>a[1]?b:a,['',0]);
  const wdTot=Array(7).fill(0);C.heat.forEach((r,w)=>wdTot[w]=r.reduce((a,b)=>a+b,0));const wTop=wdTot.indexOf(Math.max(...wdTot));
  const nightVals=[...C.night.values()].filter(v=>v!=null),leakN=nightVals.slice(-7).filter(v=>v>S.leakTh).length;
+ if(!C.sl.length){$('insights').innerHTML='<div><i>…</i><p><b>ข้อมูลยังไม่พอวิเคราะห์</b> ต้องมีรายงานอย่างน้อย 2 รอบต่อมิเตอร์ (ห่างกัน 15 นาที) กราฟและสรุปจะเริ่มขึ้นเอง</p></div>';}else{
  const ins=[['⏰',`<b>ชั่วโมงที่ใช้น้ำมากที่สุด ${String(pk).padStart(2,'0')}:00–${String(pk+1).padStart(2,'0')}:00</b> คิดเป็น ${fmt(C.hour[pk]/(C.hour.reduce((a,b)=>a+b,0)||1)*100,0)}% ของทั้งช่วง`],
   ['📅',`<b>วันที่ใช้มากที่สุด ${mx[0]?dlab(Date.parse(mx[0]+'T12:00')):'—'}</b> ${fmt(m3(mx[1]),2)} ลบ.ม. · วันในสัปดาห์ที่ใช้มากสุดคือวัน${['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'][wTop]}`],
   [leakN>=3?'!':'✓',leakN>=3?`<b style="color:var(--bad)">สงสัยน้ำรั่ว</b> ${leakN} ใน 7 คืนล่าสุดมีน้ำไหลช่วงตี 2–4 เกิน ${S.leakTh} ลิตร/ชม. ควรตรวจก๊อกและท่อ`:`<b>ไม่พบสัญญาณน้ำรั่ว</b> ช่วงตี 2–4 น้ำไหลต่ำกว่า ${S.leakTh} ลิตร/ชม. เกือบทุกคืน`],
   ['฿',`<b>ประมาณการทั้งเดือน ฿${fmt(m3(C.mThis)/Math.max(1,(C.end-new Date(new Date(C.end).getFullYear(),new Date(C.end).getMonth(),1))/D)*new Date(new Date(C.end).getFullYear(),new Date(C.end).getMonth()+1,0).getDate()*S.price,0)}</b> ถ้าใช้ในอัตราเดียวกับที่ผ่านมาของเดือนนี้`]];
- $('insights').innerHTML=ins.map(x=>`<div><i style="${x[0]==='!'?'background:#f7e1e1;color:#b83a3a':''}">${x[0]}</i><p>${x[1]}</p></div>`).join('');
+ $('insights').innerHTML=ins.map(x=>`<div><i style="${x[0]==='!'?'background:#f7e1e1;color:#b83a3a':''}">${x[0]}</i><p>${x[1]}</p></div>`).join('');}
  // heatmap
  const hmax=Math.max(1,...C.heat.flat()),col=v=>{const t=Math.min(1,v/hmax),st=[[238,244,250],[127,182,224],[31,111,178],[19,35,63]],s=t*3,i=Math.min(2,Math.floor(s)),f=s-i;return `rgb(${st[i].map((c,j)=>Math.round(c+(st[i+1][j]-c)*f)).join(',')})`;};
  $('heat').innerHTML='<span></span>'+Array.from({length:24},(_,h)=>`<span>${h%3?'':String(h).padStart(2,'0')}</span>`).join('')+[1,2,3,4,5,6,0].map(w=>`<span class="r">${WD[w]}</span>`+C.heat[w].map((v,h)=>`<div class="c" style="background:${col(v)}" title="${WD[w]} ${String(h).padStart(2,'0')}:00 · ${fmt(v,1)} ลิตร"></div>`).join('')).join('');
@@ -404,7 +406,7 @@ function render(){
  const rows=(S.meter==='ALL'?ids:[S.meter]).flatMap(id=>S.meters[id].slice(-40)).sort((a,b)=>b.t-a.t).slice(0,24);
  $('rawTable').innerHTML='<thead><tr><th>เวลา</th><th>มิเตอร์</th><th class="n">ค่าสะสม (ม³)</th><th class="n">ไหล (ม³/ชม.)</th><th class="n">แบต</th><th class="n">สัญญาณ</th><th class="n">อุณหภูมิ</th><th class="n">Event</th><th>สถานะ</th></tr></thead><tbody>'+rows.map(r=>`<tr><td data-l="เวลา">${tlab(r.t)}</td><td data-l="มิเตอร์">${esc(field(r.raw,'id')??'')}</td><td class="n" data-l="ค่าสะสม">${fmt(r.total,3)}</td><td class="n" data-l="ไหล">${fmt(r.flow,3)}</td><td class="n" data-l="แบต">${r.battery==null?'—':fmt(r.battery,2)}</td><td class="n" data-l="สัญญาณ">${r.rssi??'—'}</td><td class="n" data-l="อุณหภูมิ">${r.temp==null?'—':fmt(r.temp,1)+'°'}</td><td class="n" data-l="Event">${r.event??'—'}</td><td data-l="สถานะ">${r.alarms.length?r.alarms.map(a=>`<span class="pill ${SEV[a]||'warn'}">${esc(AL[a]||a)}</span>`).join(' '):'<span class="pill ok">ปกติ</span>'}</td></tr>`).join('')+'</tbody>';
  $('demoBanner').style.display=S.src==='demo'?'':'none';
- $('srcBox').innerHTML=`<span class="dot" style="background:${S.src==='demo'?'#e7cf93':S.src==='live'&&LV.state&&LV.state!=='ออนไลน์'?'#e7a093':'#5fd39a'}"></span><b>${S.src==='demo'?'ข้อมูลตัวอย่าง':S.src==='gateway'?'CoreDash Gateway':S.src==='live'?(LV.state?'MQTT สด · '+LV.state:'ข้อมูลจริง · เก็บในเครื่องนี้'):'JSON ที่นำเข้า'}</b><br>${ids.length} มิเตอร์ · ${Object.values(S.meters).reduce((a,b)=>a+b.length,0).toLocaleString('th-TH')} ข้อความ`;
+ $('srcBox').innerHTML=`<span class="dot" style="background:${S.src==='demo'?'#e7cf93':S.src==='live'&&LV.state&&LV.state!=='ออนไลน์'?'#e7a093':'#5fd39a'}"></span><b>${S.src==='demo'?'ข้อมูลตัวอย่าง':S.src==='gateway'?'CoreDash Gateway':S.src==='live'?(LV.state?'MQTT สด · '+LV.state:CLOUD.updated?'ข้อมูลจริง · อัปเดต '+tlab(CLOUD.updated):'ข้อมูลจริง · เก็บในเครื่องนี้'):'JSON ที่นำเข้า'}</b><br>${ids.length} มิเตอร์ · ${Object.values(S.meters).reduce((a,b)=>a+b.length,0).toLocaleString('th-TH')} ข้อความ`;
 }
 
 /* ---------- pages / controls ---------- */
@@ -425,7 +427,7 @@ function parseText(txt){txt=txt.trim();if(!txt)return[];try{const j=JSON.parse(t
   if(c==='"'&&d>0)q=true;else if(c==='{'){if(d++===0)st=i}else if(c==='}'&&d>0&&--d===0){try{out.push(JSON.parse(txt.slice(st,i+1)))}catch(e){}}}
  return out;}
 function load(msgs,src){const r=ingest(msgs,src);if(!Object.keys(r.meters).length)return r;S.raw=msgs;S.meters=r.meters;S.src=src;S.meter=Object.keys(r.meters).length>1?'ALL':Object.keys(r.meters)[0];render();return r;}
-$('pasteGo').onclick=()=>{const m=parseText($('paste').value),dr=m.flatMap(x=>x&&Array.isArray(x.messages)?x.messages.filter(y=>!y.out):[x]).map(unwrap).filter(x=>x&&x._drago);if(dr.length){liveAdd(dr);const r=load(LV.msgs,'live');$('pasteMsg').textContent=`เพิ่ม ${dr.length} ข้อความ Drago · รวมในเครื่อง ${LV.msgs.length} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์`;location.hash='overview';return;}const r=load(m,'paste');$('pasteMsg').textContent=Object.keys(r.meters).length?`อ่านได้ ${m.length-r.bad} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์${r.bad?' · ข้าม '+r.bad:''}`:'อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง';};
+$('pasteGo').onclick=()=>{const m=parseText($('paste').value),dr=m.flatMap(x=>x&&Array.isArray(x.messages)?x.messages.filter(y=>!y.out):[x]).map(unwrap).filter(x=>x&&x._drago);if(dr.length){liveAdd(dr);const r=load(realMsgs(),'live');$('pasteMsg').textContent=`เพิ่ม ${dr.length} ข้อความ Drago · รวมในเครื่อง ${LV.msgs.length} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์`;location.hash='overview';return;}const r=load(m,'paste');$('pasteMsg').textContent=Object.keys(r.meters).length?`อ่านได้ ${m.length-r.bad} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์${r.bad?' · ข้าม '+r.bad:''}`:'อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง';};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('paste').value=(await f.text()).slice(0,2e6);$('pasteGo').click();};
 $('demoGo').onclick=()=>{load(demo(),'demo');location.hash='overview';};
 $('gwUrl').value=store.get('gwUrl','');$('gwMeters').value=store.get('gwMeters','69090013,69090014');
@@ -456,15 +458,23 @@ async function liveConnect(){const url=$('lvUrl').value.trim(),topic=$('lvTopic'
   lvMsg(`<b style="color:#2e7d4f">● ออนไลน์</b> · รอข้อความ <code>${esc(topic)}</code> (ทุก 15 นาที) · ในเครื่อง ${LV.msgs.length} ข้อความ · มิเตอร์ ${esc(lvIds().join(', ')||'—')}`);});if(S.src==='live')render();});
  c.on('message',(tp,pl)=>{let j;try{j=JSON.parse(pl.toString())}catch(e){return}const m=unwrap({topic:tp,payload:j});if(!m||!m._drago)return;
   if(liveAdd([m])){lvMsg(`<b style="color:#2e7d4f">● ออนไลน์</b> · ล่าสุด มิเตอร์ ${esc(m.meterId)} เมื่อ ${tlab(parseTs(m.ts))} · ในเครื่อง ${LV.msgs.length} ข้อความ · มิเตอร์ ${esc(lvIds().join(', '))}`);
-   clearTimeout(LV.t);LV.t=setTimeout(()=>{if(S.src==='live'||S.src==='demo')load(LV.msgs,'live');},300);}});
+   clearTimeout(LV.t);LV.t=setTimeout(()=>{if(S.src!=='gateway'&&S.src!=='paste')load(realMsgs(),'live');},300);}});
  c.on('error',e=>{LV.state='ผิดพลาด';lvMsg('เชื่อมต่อไม่ได้: '+esc(e.message||e)+' · ตรวจที่อยู่ WebSocket (port/path) และรหัสผ่าน');});
  c.on('offline',()=>{LV.state='ออฟไลน์';if(!/ผิดพลาด|ไม่ได้/.test($('lvMsg').textContent))lvMsg('ขาดการเชื่อมต่อ · กำลังลองใหม่ทุก 5 วินาที (ถ้าไม่หาย broker อาจไม่เปิด WebSocket ที่ที่อยู่นี้)');});}
 function liveStop(){if(LV.client){LV.client.end(true);LV.client=null;}LV.state='';}
 const lvs=store.get('lv',null);if(lvs){$('lvUrl').value=lvs.url||$('lvUrl').value;$('lvTopic').value=lvs.topic||$('lvTopic').value;$('lvUser').value=lvs.user||'';$('lvRemember').checked=!!lvs.remember;}
 $('lvPass').value=store.get('lvp','')||'';
 $('lvGo').onclick=liveConnect;$('lvStop').onclick=()=>{liveStop();lvMsg('หยุดแล้ว');render();};
-$('lvClear').onclick=()=>{LV.msgs=[];store.set('live',[]);lvMsg('ล้างข้อมูลในเครื่องแล้ว');load(demo(),'demo');};
-if(LV.msgs.length)load(LV.msgs,'live');else load(demo(),'demo');route();
+$('lvClear').onclick=()=>{LV.msgs=[];store.set('live',[]);lvMsg('ล้างข้อมูลในเครื่องแล้ว');const all=realMsgs();if(all.length)load(all,'live');else showNone();};
+/* ---------- real data: water/data/latest.json (เก็บโดย GitHub Actions ทุกชั่วโมง) + ข้อมูลสดในเครื่อง ---------- */
+const CLOUD={msgs:[],updated:null};
+function realMsgs(){const m=new Map();for(const x of CLOUD.msgs.concat(LV.msgs))m.set(x.meterId+'|'+parseTs(x.ts),x);return [...m.values()];}
+async function loadCloud(first){try{const r=await fetch('data/latest.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);const j=await r.json();CLOUD.updated=Date.parse(j.updated)||null;
+  CLOUD.msgs=(j.records||[]).map(x=>Object.assign({},x,{_drago:1,alarm:{noread:!!x._noread,lowBattery:!x._noread&&x.battery!=null&&x.battery<BAT_LOW,reverse:x.flow!=null&&x.flow<0}}));}catch(e){}
+ if(first||S.src==='live'||S.src==='none'){const all=realMsgs();if(all.length)load(all,'live');else showNone();}}
+function showNone(){S.src='none';S.meters={};S.raw=[];render();}
+$('realGo').onclick=()=>{S.src='none';loadCloud(true);location.hash='overview';};
+route();loadCloud(true);setInterval(()=>loadCloud(false),5*60e3);
 if(lvs&&lvs.remember&&$('lvPass').value)liveConnect();
 let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,200);});
 }
