@@ -1,1 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CoreDash Water · SMCV4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a classic utility ledger — calm, exact, executive
+   IDEA: the meter-reading book of a water authority, turned into a live web app
+   PICTURE: daily consumption bars + "when water is used" heatmap
+   COLOUR and TYPE: deep navy chrome, ivory paper, brass gold accent, water blue data; Noto Serif Thai titles + Sarabun
+   LAYOUT: navy sidebar, KPI strip, main chart + insights, then pages for usage, meters, events, data */
+:root{--navy:#13233f;--navy2:#1c3157;--paper:#f6f3ec;--card:#fffdf8;--ink:#1d2433;--mu:#6b7385;--line:#e4dfd2;--gold:#b8892b;--gold2:#e7cf93;--water:#1f6fb2;--water2:#7fb6e0;--ok:#2f8a5b;--warn:#c27c12;--bad:#b83a3a}
+*{box-sizing:border-box;margin:0;padding:0;min-width:0}
+html{scroll-padding-top:72px}
+body{font:15.5px/1.55 Sarabun,system-ui,sans-serif;background:var(--paper);color:var(--ink);overflow-x:clip}
+h1,h2,h3{font-family:'Noto Serif Thai',Sarabun,serif;color:var(--navy);line-height:1.2}
+h1{font-size:clamp(22px,2.6vw,30px)}h2{font-size:19px}h3{font-size:16px}
+.mu{color:var(--mu)}b{font-weight:700}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{background:linear-gradient(180deg,var(--navy),#0e1a30);color:#dfe6f3;padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Noto Serif Thai';font-size:18px;color:#fff}
+.logo i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#fff3cf,var(--gold));color:var(--navy);font-style:normal;font-weight:700}
+.logo small{display:block;font-family:Sarabun;font-size:12px;color:var(--gold2);letter-spacing:.02em}
+.nav{display:grid;gap:4px}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;color:#c8d2e6;text-decoration:none;font-weight:600;min-height:44px}
+.nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav a.on{background:rgba(231,207,147,.14);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+.nav svg{width:18px;height:18px;flex:none}
+.side .src{margin-top:auto;font-size:12.5px;color:#9fb0cf;border-top:1px solid rgba(255,255,255,.1);padding-top:12px}
+.side .src b{color:#fff}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+main{padding:22px clamp(14px,3vw,36px) 48px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--navy)}
+.top p{color:var(--mu);font-size:14px}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,textarea,button{font:inherit}
+select,input[type=text],input[type=number],input[type=password],textarea{border:1px solid #cfc8b6;background:#fff;border-radius:9px;padding:8px 10px;font-size:16px;color:var(--ink);min-height:42px}
+textarea{width:100%;min-height:150px;font:13px/1.45 ui-monospace,Menlo,monospace}
+.btn{border:1px solid #cfc8b6;background:#fff;border-radius:9px;padding:8px 14px;min-height:42px;font-weight:600;cursor:pointer;color:var(--navy)}
+.btn:hover{border-color:var(--navy)}.btn.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.nav a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid #cfc8b6;border-radius:9px;overflow:hidden;background:#fff}
+.seg button{border:0;background:none;padding:8px 13px;min-height:40px;cursor:pointer;font-weight:600;color:var(--mu)}
+.seg button.on{background:var(--navy);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative}
+.kpi span{font-size:13px;color:var(--mu);font-weight:600}
+.kpi b{display:block;font-family:'Noto Serif Thai';font-size:clamp(22px,2.3vw,28px);color:var(--navy);line-height:1.25;white-space:nowrap}
+.kpi em{font-style:normal;font-size:13px;font-weight:600}
+.up{color:var(--bad)}.down{color:var(--ok)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card h2{margin-bottom:2px}.card .sub{font-size:13.5px;color:var(--mu);margin-bottom:10px}
+.g2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+.g2e{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.fig{position:relative;height:300px}.fig.sm{height:230px}
+.ins{display:grid;gap:10px}
+.ins div{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;padding:10px 0;border-bottom:1px dashed var(--line)}
+.ins div:last-child{border:0}
+.ins i{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-family:'Noto Serif Thai';background:#f0e6cc;color:var(--gold)}
+.ins p{font-size:14.5px}
+.heat{display:grid;grid-template-columns:52px repeat(24,minmax(0,1fr));gap:2px;font-size:11.5px}
+.heat span{text-align:center;color:var(--mu)}
+.heat .c{aspect-ratio:1/1;border-radius:3px;cursor:default}
+.heat .r{text-align:right;padding-right:6px;align-self:center;font-weight:600;color:var(--ink)}
+.scale{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mu);margin-top:10px}
+.scale i{height:9px;width:160px;border-radius:5px;background:linear-gradient(90deg,#eef4fa,#7fb6e0,#1f6fb2,#13233f)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12.5px;color:var(--mu);font-weight:700;background:#faf7ef}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.click{cursor:pointer}tr.click:hover td{background:#faf6ea}
+.pill{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:#e3f2e9;color:var(--ok)}.pill.warn{background:#fbefd9;color:var(--warn)}.pill.bad{background:#f7e1e1;color:var(--bad)}.pill.off{background:#eceef2;color:var(--mu)}
+.scroll{overflow-x:auto}
+.page{display:none}.page.on{display:block}
+.field{display:grid;gap:4px;font-size:13.5px;color:var(--mu);font-weight:600}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0}
+.note{font-size:13px;color:var(--mu);margin-top:8px}
+.banner{background:#fff6dd;border:1px solid var(--gold2);border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px}
+pre{background:#f4f1e8;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12.5px;overflow-x:auto;max-height:240px}
+.empty{padding:30px;text-align:center;color:var(--mu)}
+.spark{width:110px;height:28px;display:block}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.g2,.g2e{grid-template-columns:1fr}}
+@media(max-width:760px){.app{grid-template-columns:1fr}.side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}.nav{display:flex;overflow-x:auto;width:100%}.nav a{white-space:nowrap;flex:none}.side .src{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.heat{grid-template-columns:40px repeat(24,minmax(0,1fr));font-size:9px}}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8.5em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:8em;margin-inline-start:-8.5em;color:var(--mu);font-size:12.5px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="side">
+  <div class="logo"><i>C</i><div>CoreDash Water<small>SMCV4 · Clamp-on DCC</small></div></div>
+  <nav class="nav" id="nav">
+   <a href="#overview" data-p="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-8 9 8M5 10v10h14V10"/></svg>ภาพรวม</a>
+   <a href="#usage" data-p="usage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>ช่วงเวลาที่ใช้น้ำ</a>
+   <a href="#meters" data-p="meters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 12l4-3"/></svg>มิเตอร์</a>
+   <a href="#events" data-p="events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>เหตุการณ์</a>
+   <a href="#data" data-p="data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/></svg>แหล่งข้อมูล</a>
+  </nav>
+  <div class="src" id="srcBox"></div>
+ </aside>
 
+ <main>
+  <div class="top">
+   <div><h1 id="title">ภาพรวมการใช้น้ำ</h1><p id="subtitle"></p></div>
+   <div class="ctl">
+    <select id="meterSel" aria-label="เลือกมิเตอร์"></select>
+    <div class="seg" id="rangeSeg"><button data-d="7">7 วัน</button><button data-d="30" class="on">30 วัน</button></div>
+   </div>
+  </div>
+  <div class="banner" id="demoBanner">กำลังแสดง<b>ข้อมูลตัวอย่าง</b> (จำลองรูปแบบส่งทุก 15 นาที) · ไปที่ <a href="#data">แหล่งข้อมูล</a> เพื่อเชื่อม Gateway หรือวาง JSON จริงจาก MQTT</div>
+
+  <section class="page" id="p-overview">
+   <div class="kpis" id="kpis"></div>
+   <div class="g2">
+    <div class="card"><h2>ปริมาณน้ำรายวัน</h2><div class="sub" id="dailySub"></div><div class="fig"><canvas id="cDaily"></canvas></div></div>
+    <div class="card"><h2>สิ่งที่ควรรู้</h2><div class="sub">สรุปจากข้อมูลอัตโนมัติ</div><div class="ins" id="insights"></div></div>
+   </div>
+   <div class="g2e">
+    <div class="card"><h2>รูปแบบการใช้ 24 ชั่วโมง</h2><div class="sub">วันนี้เทียบกับค่าเฉลี่ยช่วงที่เลือก (ลิตรต่อ 15 นาที)</div><div class="fig sm"><canvas id="cDay"></canvas></div></div>
+    <div class="card"><h2>สัดส่วนตามช่วงเวลา</h2><div class="sub">เช้า 05–09 · กลางวัน 09–17 · เย็น 17–22 · กลางคืน 22–05</div><div class="fig sm"><canvas id="cShare"></canvas></div></div>
+   </div>
+  </section>
+
+  <section class="page" id="p-usage">
+   <div class="card" style="margin-bottom:14px"><h2>ใช้น้ำวันไหน เวลาไหน</h2><div class="sub">ค่าเฉลี่ยลิตรต่อชั่วโมง แยกตามวันในสัปดาห์และชั่วโมง ยิ่งเข้มยิ่งใช้มาก</div><div class="heat" id="heat"></div><div class="scale">น้อย<i></i>มาก<span id="heatMax"></span></div></div>
+   <div class="g2e">
+    <div class="card"><h2>ปริมาณรายชั่วโมง (ช่วงที่เลือก)</h2><div class="sub">รวมทุกวัน แสดงชั่วโมงที่ใช้น้ำสูงสุด</div><div class="fig sm"><canvas id="cHour"></canvas></div></div>
+    <div class="card"><h2>การไหลช่วงกลางคืน 02:00–04:00</h2><div class="sub">ถ้าไม่เป็นศูนย์ติดต่อกันหลายคืน มักเป็นน้ำรั่วหรือก๊อกปิดไม่สนิท</div><div class="fig sm"><canvas id="cNight"></canvas></div></div>
+   </div>
+  </section>
+
+  <section class="page" id="p-meters">
+   <div class="card"><h2>มิเตอร์ทั้งหมด</h2><div class="sub">คลิกแถวเพื่อดูมิเตอร์นั้นในหน้าภาพรวม · ออนไลน์ = รายงานภายใน 45 นาที</div>
+    <div class="scroll"><table class="stack" id="meterTable"></table></div></div>
+  </section>
+
+  <section class="page" id="p-events">
+   <div class="card" style="margin-bottom:14px"><h2>เหตุการณ์และแจ้งเตือน</h2><div class="sub">แม่เหล็ก · น้ำรั่ว · ท่อแตก · ไหลย้อน · แบตเตอรี่ต่ำ · ขาดการรายงาน</div>
+    <div class="scroll"><table class="stack" id="eventTable"></table></div></div>
+   <div class="card"><h2>ข้อความล่าสุด</h2><div class="sub">ค่าที่อ่านได้ต่อรอบรายงาน (15 นาที)</div><div class="scroll"><table class="stack" id="rawTable"></table></div></div>
+  </section>
+
+  <section class="page" id="p-data">
+   <div class="card" style="margin-bottom:14px"><h2>1 · เชื่อม CoreDash Gateway (ใช้งานจริง)</h2>
+    <div class="sub">Gateway รับข้อความจาก Drago MQTT ทุก 15 นาที เก็บประวัติ แล้วให้หน้านี้ดึงผ่าน /api/v1 รหัสผ่าน MQTT อยู่ที่ Gateway เท่านั้น</div>
+    <div class="form">
+     <label class="field">ที่อยู่ Gateway<input type="text" id="gwUrl" placeholder="https://gw.coredashtech.com"></label>
+     <label class="field">API Key (water-dashboard)<input type="password" id="gwKey" autocomplete="off"></label>
+     <label class="field">เลขมิเตอร์ (คั่นด้วย ,)<input type="text" id="gwMeters" value="10000002"></label>
+    </div>
+    <button class="btn pri" id="gwGo">ดึงข้อมูลจาก Gateway</button> <span class="note" id="gwMsg"></span>
+   </div>
+   <div class="card" style="margin-bottom:14px"><h2>2 · วาง JSON / นำเข้าไฟล์</h2>
+    <div class="sub">วางข้อความจาก MQTT.fx (ทีละบรรทัด หรือ JSON array) หรือไฟล์ประวัติ .jsonl ระบบจับชื่อฟิลด์ให้อัตโนมัติ</div>
+    <textarea id="paste" placeholder='{"meterId":"10000002","ts":"2026-11-27T10:15:00+07:00","total":123.456,"flow":0.12,"battery":3.61,"rssi":-82,"alarm":{"magnet":false}}'></textarea>
+    <div class="ctl" style="margin-top:8px"><button class="btn pri" id="pasteGo">ใช้ข้อมูลนี้</button><label class="btn">เลือกไฟล์<input type="file" id="file" accept=".json,.jsonl,.txt" hidden></label><span class="note" id="pasteMsg"></span></div>
+    <h3 style="margin-top:14px">การจับคู่ฟิลด์</h3><div class="note">เว้นว่างให้ระบบเดาเอง ใส่ชื่อฟิลด์ (รองรับ a.b) ถ้าเดาไม่ตรง</div>
+    <div class="form" id="mapForm"></div>
+   </div>
+   <div class="card"><h2>3 · ตั้งค่าการแสดงผล</h2>
+    <div class="form">
+     <label class="field">หน่วยของค่าสะสมในข้อความ<select id="unit"><option value="1">ลูกบาศก์เมตร (m³)</option><option value="0.001">ลิตร (L)</option></select></label>
+     <label class="field">ค่าน้ำ (บาท/ลบ.ม.)<input type="number" id="price" step="0.25" min="0" value="10.5"></label>
+     <label class="field">เกณฑ์สงสัยรั่วกลางคืน (ลิตร/ชม.)<input type="number" id="leakTh" step="1" min="0" value="5"></label>
+    </div>
+    <button class="btn" id="demoGo">กลับไปใช้ข้อมูลตัวอย่าง</button>
+   </div>
+  </section>
+ </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem('cdw.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('cdw.'+k,JSON.stringify(v))}catch(e){}}};
+const S={days:30,meter:'ALL',src:'demo',price:store.get('price',10.5),unit:store.get('unit',1),leakTh:store.get('leakTh',5),map:store.get('map',{}),meters:{},raw:[]};
+const H=36e5,D=864e5,Q=9e5;
+const fmt=(v,d=1)=>v==null||!isFinite(v)?'—':v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const dkey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dlab=t=>new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+const tlab=t=>new Date(t).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const WD=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+
+/* ---------- field detection ---------- */
+const FIELDS={id:['meterid','meter_id','meter','devid','deviceid','device_id','deveui','sn','serial','id','addr'],ts:['ts','time','timestamp','datetime','date','t','reporttime'],
+ total:['total','totalvolume','volume','forward','forwardvolume','cumulative','reading','index','accumulate','acc','totalflow'],reverse:['reverse','reversevolume','backflow','reverse_total'],
+ flow:['flow','flowrate','rate','instantflow'],battery:['battery','bat','batt','vbat','voltage','batvolt'],rssi:['rssi','signal','csq','snr'],temp:['temp','temperature','watertemp'],alarm:['alarm','alarms','status','flags','event','events','alert']};
+const FN={id:'เลขมิเตอร์',ts:'เวลา',total:'ค่าสะสม',reverse:'ไหลย้อนสะสม',flow:'อัตราการไหล',battery:'แบตเตอรี่',rssi:'สัญญาณ',temp:'อุณหภูมิ',alarm:'สถานะ/แจ้งเตือน'};
+function flat(o,p='',out={}){for(const k in o){const v=o[k],key=p?p+'.'+k:k;if(v&&typeof v==='object'&&!Array.isArray(v)&&!/alarm|status|flag|event|alert/i.test(k))flat(v,key,out);else out[key]=v;}return out}
+function getPath(o,p){return p.split('.').reduce((a,k)=>a==null?undefined:a[k],o)}
+function field(msg,f){if(S.map[f])return getPath(msg,S.map[f]);const fl=flat(msg);for(const a of FIELDS[f])for(const k in fl)if(k.split('.').pop().toLowerCase()===a)return fl[k];}
+const AL={magnet:'ตรวจพบแม่เหล็ก',tamper:'ถูกงัดแงะ',leak:'สงสัยน้ำรั่ว',burst:'ท่อแตก',reverse:'น้ำไหลย้อน',lowbattery:'แบตเตอรี่ต่ำ',lowbat:'แบตเตอรี่ต่ำ',dry:'ไม่มีน้ำในท่อ',empty:'ไม่มีน้ำในท่อ',nowater:'ไม่มีน้ำในท่อ',overflow:'ไหลเกินพิกัด'};
+const SEV={magnet:'bad',tamper:'bad',burst:'bad',leak:'warn',reverse:'warn',lowbattery:'warn',lowbat:'warn',dry:'warn',empty:'warn',nowater:'warn',overflow:'warn',offline:'off'};
+function alarmsOf(a){if(a==null||a===false||a===0||a==='')return[];if(typeof a==='string')return /^(ok|normal|none|0)$/i.test(a)?[]:[a];if(typeof a==='number')return a?['code'+a]:[];if(Array.isArray(a))return a.map(String);return Object.keys(a).filter(k=>a[k]===true||a[k]===1||a[k]==='1');}
+function parseTs(v){if(v==null)return NaN;if(typeof v==='number')return v<1e12?v*1000:v;const t=Date.parse(v);return t;}
+function ingest(msgs){const meters={};let bad=0;
+ for(const m of msgs){if(!m||typeof m!=='object'){bad++;continue}const t=parseTs(field(m,'ts')),tot=Number(field(m,'total'));if(!isFinite(t)||!isFinite(tot)){bad++;continue}
+  const id=String(field(m,'id')??'มิเตอร์');(meters[id]=meters[id]||[]).push({t,total:tot*S.unit,reverse:num(field(m,'reverse'))*(S.unit),flow:num(field(m,'flow')),battery:num(field(m,'battery')),rssi:num(field(m,'rssi')),temp:num(field(m,'temp')),alarms:alarmsOf(field(m,'alarm')).map(s=>s.toLowerCase()),raw:m});}
+ for(const id in meters)meters[id].sort((a,b)=>a.t-b.t);return {meters,bad};}
+function num(v){const n=Number(v);return v==null||v===''||!isFinite(n)?null:n}
+
+/* ---------- demo data (3 meters, 35 days, every 15 min) ---------- */
+function demo(){const now=Math.floor(Date.now()/Q)*Q,start=now-70*D,msgs=[];let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+ const prof=h=>[.25,.05,0,0,.2,1.6,3.2,3,1.8,1,.9,1.2,1.5,1,.8,.9,1.2,2,2.8,3,2.4,1.6,.9,.5][h];
+ [['10000001',22,1],['10000002',14,.8],['10000003',30,1.3]].forEach(([id,base,k],mi)=>{let tot=base*10,bat=3.65-mi*.05;
+  for(let t=start;t<=now;t+=Q){const d=new Date(t),h=d.getHours(),we=d.getDay()%6===0,
+    leak=id==='10000002'&&t>now-6*D?6:0,
+    L=Math.max(0,(prof(h)*(we?1.25:1)*k*(18+rnd()*14)*(rnd()<.15?0:1))/4+leak/4*(1+rnd()*.3));
+   tot+=L/1000;bat-=.0000025;const al={magnet:id==='10000003'&&t>now-9*D-3*H&&t<now-9*D,leak:leak>0&&h>=2&&h<4,burst:false,reverse:false,lowBattery:bat<3.3};
+   if(id==='10000001'&&t>now-3*D-5*H&&t<now-3*D-1*H)continue;
+   msgs.push({meterId:id,ts:new Date(t).toISOString(),total:+tot.toFixed(4),reverse:0,flow:+(L*4/1000).toFixed(4),battery:+bat.toFixed(3),rssi:Math.round(-75-mi*6-rnd()*10),temp:+(27+3*Math.sin((h-6)/24*6.28)+rnd()).toFixed(1),alarm:al});}});
+ return msgs;}
+
+/* ---------- analysis ---------- */
+function series(id){return id==='ALL'?null:S.meters[id]}
+function intervals(id,from){ // liters per 15-min slot [{t,l}]
+ const ids=id==='ALL'?Object.keys(S.meters):[id],out=[];
+ for(const k of ids){const a=S.meters[k];for(let i=1;i<a.length;i++){if(a[i].t<from)continue;const dl=(a[i].total-a[i-1].total)*1000,dt=a[i].t-a[i-1].t;if(dl<0||dt<=0||dt>6*H)continue;
+  const n=Math.max(1,Math.round(dt/Q));for(let j=0;j<n;j++)out.push({t:a[i].t-(n-1-j)*Q,l:dl/n,id:k});}}
+ return out;}
+function daily(id,from,to){const m=new Map();for(let t=from;t<to;t+=D)m.set(dkey(t),0);for(const s of intervals(id,from-D))if(m.has(dkey(s.t-1)))m.set(dkey(s.t-1),m.get(dkey(s.t-1))+s.l);return m;}
+function compute(){const now=Date.now(),last=Math.max(0,...Object.values(S.meters).flatMap(a=>a.length?[a[a.length-1].t]:[]))||now;
+ const end=Math.max(now,last),today0=new Date(end);today0.setHours(0,0,0,0);const from=+today0-(S.days-1)*D;
+ const sl=intervals(S.meter,from),dm=daily(S.meter,from,+today0+D);
+ const todayL=dm.get(dkey(+today0))||0,yest=intervals(S.meter,+today0-D).filter(s=>s.t-1>=+today0-D&&s.t<=end-D).reduce((a,s)=>a+s.l,0);
+ const days=[...dm.values()],full=days.slice(0,-1),avg=full.length?full.reduce((a,b)=>a+b,0)/full.length:0;
+ const m0=new Date(end);m0.setDate(1);m0.setHours(0,0,0,0);const mThis=intervals(S.meter,+m0).reduce((a,s)=>a+s.l,0);
+ const p0=new Date(m0);p0.setMonth(p0.getMonth()-1);const dayN=(end-m0)/D,first=Math.min(...Object.values(S.meters).map(a=>a[0].t)),pSame=first<=+p0+H?intervals(S.meter,+p0).filter(s=>s.t<+p0+dayN*D).reduce((a,s)=>a+s.l,0):0;
+ const hour=Array(24).fill(0),heat=Array.from({length:7},()=>Array(24).fill(0)),heatN=Array.from({length:7},()=>Array(24).fill(0)),todayQ=Array(96).fill(null),avgQ=Array(96).fill(0),share=[0,0,0,0];
+ for(const s of sl){const d=new Date(s.t-1),h=d.getHours(),q=h*4+Math.floor(d.getMinutes()/15);hour[h]+=s.l;heat[d.getDay()][h]+=s.l;avgQ[q]+=s.l/S.days;
+  share[h>=5&&h<9?0:h>=9&&h<17?1:h>=17&&h<22?2:3]+=s.l;if(s.t-1>=+today0)todayQ[q]=(todayQ[q]||0)+s.l;}
+ const dayCount=Array(7).fill(0);for(let t=from;t<+today0+D;t+=D)dayCount[new Date(t).getDay()]++;
+ for(let w=0;w<7;w++)for(let h=0;h<24;h++)heat[w][h]=dayCount[w]?heat[w][h]/dayCount[w]:0;
+ const night=new Map();for(const k of dm.keys())night.set(k,null);
+ const slot={};for(const s of sl){const h=new Date(s.t-1).getHours();if(h>=2&&h<4)slot[s.t]=(slot[s.t]||0)+s.l;}const nightBy={};for(const t in slot){const k=dkey(+t-1);(nightBy[k]=nightBy[k]||[]).push(slot[t]*4);}
+ for(const k in nightBy)if(night.has(k))night.set(k,Math.min(...nightBy[k]));
+ return {end,today0:+today0,from,dm,todayL,yest,avg,mThis,pSame,hour,heat,todayQ,avgQ,share,night,sl};}
+function meterStatus(id){const a=S.meters[id];if(!a||!a.length)return null;const L=a[a.length-1],now=Math.max(Date.now(),...Object.values(S.meters).map(x=>x[x.length-1].t));
+ const online=now-L.t<45*60e3,act=L.alarms.filter(x=>x!=='lowbattery'||true);return {L,online,alarms:act};}
+function events(){const ev=[];for(const id in S.meters){const a=S.meters[id];let open={};
+ for(let i=0;i<a.length;i++){const r=a[i],set=new Set(r.alarms);
+  if(i&&r.t-a[i-1].t>75*60e3)ev.push({id,k:'offline',t0:a[i-1].t+Q,t1:r.t});
+  for(const k of set)if(!open[k])open[k]={id,k,t0:r.t,t1:null};
+  for(const k in open)if(!set.has(k)){open[k].t1=r.t;ev.push(open[k]);delete open[k];}}
+ for(const k in open)ev.push(open[k]);}
+ return ev.sort((x,y)=>y.t0-x.t0);}
+
+/* ---------- render ---------- */
+Chart.defaults.font.family='Sarabun, system-ui, sans-serif';Chart.defaults.font.size=12.5;Chart.defaults.color='#6b7385';Chart.defaults.borderColor='#ece7da';
+const charts={};
+function chart(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart($(id),Object.assign({options:{}},cfg));}
+const base=(y)=>({responsive:true,maintainAspectRatio:false,animation:{duration:400},plugins:{legend:{display:false},tooltip:{backgroundColor:'#13233f',padding:10,titleFont:{weight:'700'}}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkipPadding:12}},y:{beginAtZero:true,title:{display:!!y,text:y},grid:{color:'#efeadf'}}}});
+const MCOL=['#1f6fb2','#b8892b','#2f8a5b','#7a4fb0','#c0563c','#3b8c96'];
+function render(){
+ const ids=Object.keys(S.meters);if(!ids.length){$('kpis').innerHTML='<div class="empty card">ยังไม่มีข้อมูล</div>';return;}
+ const sel=$('meterSel');sel.innerHTML=(ids.length>1?'<option value="ALL">ทุกมิเตอร์ ('+ids.length+')</option>':'')+ids.map(i=>`<option value="${esc(i)}">มิเตอร์ ${esc(i)}</option>`).join('');
+ if(S.meter!=='ALL'&&!S.meters[S.meter])S.meter=ids.length>1?'ALL':ids[0];if(ids.length===1)S.meter=ids[0];sel.value=S.meter;
+ const C=compute(),m3=l=>l/1000,chg=C.pSame>0?(C.mThis-C.pSame)/C.pSame*100:null;
+ const st=ids.map(meterStatus),on=st.filter(s=>s&&s.online).length,alarmsOpen=st.reduce((a,s)=>a+(s?s.alarms.length:0),0)+(ids.length-on);
+ $('subtitle').textContent=(S.meter==='ALL'?'ทุกมิเตอร์':'มิเตอร์ '+S.meter)+' · ข้อมูลล่าสุด '+tlab(Math.max(...st.map(s=>s?s.L.t:0)))+' · รายงานทุก 15 นาที';
+ $('kpis').innerHTML=[
+  ['ใช้น้ำวันนี้',fmt(m3(C.todayL),2)+' ม³',`<em class="${C.todayL>C.yest?'up':'down'}">${C.yest?(C.todayL>=C.yest?'▲ ':'▼ ')+fmt(Math.abs(C.todayL-C.yest),0)+' ลิตร เทียบเมื่อวานเวลาเดียวกัน':'—'}</em>`],
+  ['ใช้น้ำเดือนนี้',fmt(m3(C.mThis),1)+' ม³',chg==null?'<em class="mu">ยังไม่มีเดือนก่อนให้เทียบ</em>':`<em class="${chg>0?'up':'down'}">${chg>0?'▲':'▼'} ${fmt(Math.abs(chg),0)}% เทียบช่วงเดียวกันเดือนก่อน</em>`],
+  ['ค่าน้ำโดยประมาณ (เดือนนี้)','฿'+fmt(m3(C.mThis)*S.price,0),`<em class="mu">${fmt(S.price,2)} บาท/ลบ.ม.</em>`],
+  ['เฉลี่ยต่อวัน',fmt(m3(C.avg),2)+' ม³',`<em class="mu">${S.days} วันล่าสุด ไม่นับวันนี้</em>`],
+  ['มิเตอร์ออนไลน์',on+' / '+ids.length,alarmsOpen?`<em class="up">⚠ ${alarmsOpen} รายการต้องตรวจสอบ</em>`:'<em class="down">ปกติทุกเครื่อง</em>']
+ ].map(k=>`<div class="kpi"><span>${k[0]}</span><b>${k[1]}</b>${k[2]}</div>`).join('');
+ // daily bars (stacked per meter when ALL)
+ const labels=[...C.dm.keys()].map(k=>dlab(Date.parse(k+'T12:00:00')));
+ const showIds=S.meter==='ALL'?ids:[S.meter];
+ chart('cDaily',{type:'bar',data:{labels,datasets:showIds.map((id,i)=>{const dm=daily(id,C.from,C.today0+D);return {label:'มิเตอร์ '+id,data:[...dm.values()].map(v=>+(v/1000).toFixed(3)),backgroundColor:showIds.length>1?MCOL[i%6]:[...dm.keys()].map((k,j,a)=>j===a.length-1?'#b8892b':'#1f6fb2'),borderRadius:4,maxBarThickness:28};})},
+  options:Object.assign(base('ลบ.ม.'),{plugins:{legend:{display:showIds.length>1,position:'bottom'},tooltip:base().plugins.tooltip},scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:0,autoSkipPadding:10}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'ลบ.ม.'},grid:{color:'#efeadf'}}}})});
+ $('dailySub').textContent=`${S.days} วันล่าสุด · แท่งสีทอง = วันนี้ (ยังไม่ครบวัน) · รวม ${fmt(m3([...C.dm.values()].reduce((a,b)=>a+b,0)),1)} ลบ.ม.`;
+ const ql=Array.from({length:96},(_,i)=>String(Math.floor(i/4)).padStart(2,'0')+':'+String(i%4*15).padStart(2,'0'));
+ chart('cDay',{type:'line',data:{labels:ql,datasets:[{label:'วันนี้',data:C.todayQ.map(v=>v==null?null:+v.toFixed(1)),borderColor:'#b8892b',backgroundColor:'rgba(184,137,43,.15)',fill:true,tension:.3,pointRadius:0,borderWidth:2},{label:'เฉลี่ย',data:C.avgQ.map(v=>+v.toFixed(1)),borderColor:'#1f6fb2',borderDash:[5,4],pointRadius:0,borderWidth:2,tension:.3}]},
+  options:Object.assign(base('ลิตร'),{plugins:{legend:{display:true,position:'bottom'},tooltip:base().plugins.tooltip},interaction:{mode:'index',intersect:false},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9,maxRotation:0}},y:{beginAtZero:true,grid:{color:'#efeadf'}}}})});
+ const shT=C.share.reduce((a,b)=>a+b,0)||1;
+ chart('cShare',{type:'doughnut',data:{labels:['เช้า','กลางวัน','เย็น','กลางคืน'],datasets:[{data:C.share.map(v=>+(v/1000).toFixed(2)),backgroundColor:['#e7cf93','#7fb6e0','#1f6fb2','#13233f'],borderWidth:2,borderColor:'#fffdf8'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{generateLabels:c=>c.data.labels.map((l,i)=>({text:`${l}  ${fmt(C.share[i]/shT*100,0)}%`,fillStyle:c.data.datasets[0].backgroundColor[i],strokeStyle:'transparent',index:i}))}},tooltip:{callbacks:{label:x=>` ${x.label}: ${x.raw} ลบ.ม.`}}}}});
+ // insights
+ const pk=C.hour.indexOf(Math.max(...C.hour)),dvals=[...C.dm.entries()].slice(0,-1),mx=dvals.reduce((a,b)=>b[1]>a[1]?b:a,['',0]);
+ const wdTot=Array(7).fill(0);C.heat.forEach((r,w)=>wdTot[w]=r.reduce((a,b)=>a+b,0));const wTop=wdTot.indexOf(Math.max(...wdTot));
+ const nightVals=[...C.night.values()].filter(v=>v!=null),leakN=nightVals.slice(-7).filter(v=>v>S.leakTh).length;
+ const ins=[['⏰',`<b>ชั่วโมงที่ใช้น้ำมากที่สุด ${String(pk).padStart(2,'0')}:00–${String(pk+1).padStart(2,'0')}:00</b> คิดเป็น ${fmt(C.hour[pk]/(C.hour.reduce((a,b)=>a+b,0)||1)*100,0)}% ของทั้งช่วง`],
+  ['📅',`<b>วันที่ใช้มากที่สุด ${mx[0]?dlab(Date.parse(mx[0]+'T12:00')):'—'}</b> ${fmt(m3(mx[1]),2)} ลบ.ม. · วันในสัปดาห์ที่ใช้มากสุดคือวัน${['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'][wTop]}`],
+  [leakN>=3?'!':'✓',leakN>=3?`<b style="color:var(--bad)">สงสัยน้ำรั่ว</b> ${leakN} ใน 7 คืนล่าสุดมีน้ำไหลช่วงตี 2–4 เกิน ${S.leakTh} ลิตร/ชม. ควรตรวจก๊อกและท่อ`:`<b>ไม่พบสัญญาณน้ำรั่ว</b> ช่วงตี 2–4 น้ำไหลต่ำกว่า ${S.leakTh} ลิตร/ชม. เกือบทุกคืน`],
+  ['฿',`<b>ประมาณการทั้งเดือน ฿${fmt(m3(C.mThis)/Math.max(1,(C.end-new Date(new Date(C.end).getFullYear(),new Date(C.end).getMonth(),1))/D)*new Date(new Date(C.end).getFullYear(),new Date(C.end).getMonth()+1,0).getDate()*S.price,0)}</b> ถ้าใช้ในอัตราเดียวกับที่ผ่านมาของเดือนนี้`]];
+ $('insights').innerHTML=ins.map(x=>`<div><i style="${x[0]==='!'?'background:#f7e1e1;color:#b83a3a':''}">${x[0]}</i><p>${x[1]}</p></div>`).join('');
+ // heatmap
+ const hmax=Math.max(1,...C.heat.flat()),col=v=>{const t=Math.min(1,v/hmax),st=[[238,244,250],[127,182,224],[31,111,178],[19,35,63]],s=t*3,i=Math.min(2,Math.floor(s)),f=s-i;return `rgb(${st[i].map((c,j)=>Math.round(c+(st[i+1][j]-c)*f)).join(',')})`;};
+ $('heat').innerHTML='<span></span>'+Array.from({length:24},(_,h)=>`<span>${h%3?'':String(h).padStart(2,'0')}</span>`).join('')+[1,2,3,4,5,6,0].map(w=>`<span class="r">${WD[w]}</span>`+C.heat[w].map((v,h)=>`<div class="c" style="background:${col(v)}" title="${WD[w]} ${String(h).padStart(2,'0')}:00 · ${fmt(v,1)} ลิตร"></div>`).join('')).join('');
+ $('heatMax').textContent=' · สูงสุด '+fmt(hmax,0)+' ลิตร/ชม.';
+ chart('cHour',{type:'bar',data:{labels:Array.from({length:24},(_,h)=>String(h).padStart(2,'0')),datasets:[{data:C.hour.map(v=>+(v/1000).toFixed(3)),backgroundColor:C.hour.map((v,h)=>h===pk?'#b8892b':'#1f6fb2'),borderRadius:3}]},options:base('ลบ.ม.')});
+ const nk=[...C.night.keys()];
+ chart('cNight',{type:'line',data:{labels:nk.map(k=>dlab(Date.parse(k+'T12:00'))),datasets:[{data:[...C.night.values()].map(v=>v==null?null:+v.toFixed(1)),borderColor:'#13233f',pointBackgroundColor:[...C.night.values()].map(v=>v>S.leakTh?'#b83a3a':'#2f8a5b'),pointRadius:4,spanGaps:true},{data:nk.map(()=>S.leakTh),borderColor:'#b83a3a',borderDash:[5,4],pointRadius:0,borderWidth:1.5}]},options:base('ลิตร/ชม. (ต่ำสุด)')});
+ // meters table
+ $('meterTable').innerHTML='<thead><tr><th>มิเตอร์</th><th>สถานะ</th><th class="n">ค่าสะสม (ม³)</th><th class="n">วันนี้ (ลิตร)</th><th>14 วัน</th><th class="n">แบตเตอรี่</th><th class="n">สัญญาณ</th><th>รายงานล่าสุด</th></tr></thead><tbody>'+ids.map((id,i)=>{const s=st[i],dm=daily(id,C.today0-13*D,C.today0+D),v=[...dm.values()],mxv=Math.max(1,...v);
+  const pill=!s.online?'<span class="pill off">ขาดการรายงาน</span>':s.alarms.length?s.alarms.map(a=>`<span class="pill ${SEV[a]||'warn'}">${esc(AL[a]||a)}</span>`).join(' '):'<span class="pill ok">ปกติ</span>';
+  const sp=v.map((x,j)=>`${(j/(v.length-1)*110).toFixed(1)},${(26-x/mxv*24).toFixed(1)}`).join(' ');
+  return `<tr class="click" data-id="${esc(id)}"><td data-l="มิเตอร์"><b>${esc(id)}</b></td><td data-l="สถานะ">${pill}</td><td class="n" data-l="ค่าสะสม">${fmt(s.L.total,3)}</td><td class="n" data-l="วันนี้">${fmt(v[v.length-1],0)}</td><td data-l="14 วัน"><svg class="spark" viewBox="0 0 110 28"><polyline points="${sp}" fill="none" stroke="${MCOL[i%6]}" stroke-width="2"/></svg></td><td class="n" data-l="แบตเตอรี่">${s.L.battery==null?'—':fmt(s.L.battery,2)+' V'}</td><td class="n" data-l="สัญญาณ">${s.L.rssi==null?'—':s.L.rssi+' dBm'}</td><td data-l="ล่าสุด">${tlab(s.L.t)}</td></tr>`;}).join('')+'</tbody>';
+ document.querySelectorAll('#meterTable tr.click').forEach(r=>r.onclick=()=>{S.meter=r.dataset.id;location.hash='overview';render();});
+ // events
+ const ev=events();
+ $('eventTable').innerHTML=ev.length?'<thead><tr><th>เหตุการณ์</th><th>มิเตอร์</th><th>เริ่ม</th><th>สิ้นสุด</th><th class="n">นาน</th></tr></thead><tbody>'+ev.slice(0,200).map(e=>{const dur=((e.t1||C.end)-e.t0)/H;return `<tr><td data-l="เหตุการณ์"><span class="pill ${SEV[e.k]||'warn'}">${esc(e.k==='offline'?'ขาดการรายงาน':AL[e.k]||e.k)}</span>${e.t1?'':' <b style="color:var(--bad)">ยังไม่หาย</b>'}</td><td data-l="มิเตอร์">${esc(e.id)}</td><td data-l="เริ่ม">${tlab(e.t0)}</td><td data-l="สิ้นสุด">${e.t1?tlab(e.t1):'—'}</td><td class="n" data-l="นาน">${dur<1?fmt(dur*60,0)+' นาที':fmt(dur,1)+' ชม.'}</td></tr>`}).join('')+'</tbody>':'<tbody><tr><td class="empty">ไม่มีเหตุการณ์ผิดปกติ</td></tr></tbody>';
+ const rows=(S.meter==='ALL'?ids:[S.meter]).flatMap(id=>S.meters[id].slice(-40)).sort((a,b)=>b.t-a.t).slice(0,24);
+ $('rawTable').innerHTML='<thead><tr><th>เวลา</th><th>มิเตอร์</th><th class="n">ค่าสะสม (ม³)</th><th class="n">ไหล (ม³/ชม.)</th><th class="n">แบต</th><th class="n">สัญญาณ</th><th class="n">อุณหภูมิ</th><th>สถานะ</th></tr></thead><tbody>'+rows.map(r=>`<tr><td data-l="เวลา">${tlab(r.t)}</td><td data-l="มิเตอร์">${esc(field(r.raw,'id')??'')}</td><td class="n" data-l="ค่าสะสม">${fmt(r.total,3)}</td><td class="n" data-l="ไหล">${fmt(r.flow,3)}</td><td class="n" data-l="แบต">${r.battery==null?'—':fmt(r.battery,2)}</td><td class="n" data-l="สัญญาณ">${r.rssi??'—'}</td><td class="n" data-l="อุณหภูมิ">${r.temp==null?'—':fmt(r.temp,1)+'°'}</td><td data-l="สถานะ">${r.alarms.length?r.alarms.map(a=>`<span class="pill ${SEV[a]||'warn'}">${esc(AL[a]||a)}</span>`).join(' '):'<span class="pill ok">ปกติ</span>'}</td></tr>`).join('')+'</tbody>';
+ $('demoBanner').style.display=S.src==='demo'?'':'none';
+ $('srcBox').innerHTML=`<span class="dot" style="background:${S.src==='demo'?'#e7cf93':'#5fd39a'}"></span><b>${S.src==='demo'?'ข้อมูลตัวอย่าง':S.src==='gateway'?'CoreDash Gateway':'JSON ที่นำเข้า'}</b><br>${ids.length} มิเตอร์ · ${Object.values(S.meters).reduce((a,b)=>a+b.length,0).toLocaleString('th-TH')} ข้อความ`;
+}
+
+/* ---------- pages / controls ---------- */
+const TT={overview:'ภาพรวมการใช้น้ำ',usage:'ช่วงเวลาที่ใช้น้ำ',meters:'มิเตอร์',events:'เหตุการณ์และแจ้งเตือน',data:'แหล่งข้อมูลและการตั้งค่า'};
+function route(){const p=(location.hash.slice(1)||'overview');const pg=TT[p]?p:'overview';document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+pg));document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===pg));$('title').textContent=TT[pg];requestAnimationFrame(render);}
+addEventListener('hashchange',route);
+$('meterSel').onchange=e=>{S.meter=e.target.value;render();};
+document.querySelectorAll('#rangeSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#rangeSeg button').forEach(x=>x.classList.toggle('on',x===b));S.days=+b.dataset.d;render();});
+$('mapForm').innerHTML=Object.keys(FN).map(f=>`<label class="field">${FN[f]}<input type="text" data-f="${f}" placeholder="อัตโนมัติ" value="${esc(S.map[f]||'')}"></label>`).join('');
+$('mapForm').querySelectorAll('input').forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v)S.map[i.dataset.f]=v;else delete S.map[i.dataset.f];store.set('map',S.map);if(S.raw.length)load(S.raw,S.src);});
+$('unit').value=String(S.unit);$('price').value=S.price;$('leakTh').value=S.leakTh;
+$('unit').onchange=e=>{S.unit=+e.target.value;store.set('unit',S.unit);if(S.raw.length)load(S.raw,S.src);};
+$('price').onchange=e=>{S.price=+e.target.value||0;store.set('price',S.price);render();};
+$('leakTh').onchange=e=>{S.leakTh=+e.target.value||0;store.set('leakTh',S.leakTh);render();};
+function parseText(txt){txt=txt.trim();if(!txt)return[];try{const j=JSON.parse(txt);return Array.isArray(j)?j:(j.data&&Array.isArray(j.data)?j.data:[j]);}catch(e){}
+ return txt.split(/\r?\n/).map(l=>{const i=l.indexOf('{');if(i<0)return null;try{return JSON.parse(l.slice(i))}catch(e){return null}}).filter(Boolean);}
+function load(msgs,src){const r=ingest(msgs);if(!Object.keys(r.meters).length)return r;S.raw=msgs;S.meters=r.meters;S.src=src;S.meter=Object.keys(r.meters).length>1?'ALL':Object.keys(r.meters)[0];render();return r;}
+$('pasteGo').onclick=()=>{const m=parseText($('paste').value),r=load(m,'paste');$('pasteMsg').textContent=Object.keys(r.meters).length?`อ่านได้ ${m.length-r.bad} ข้อความ · ${Object.keys(r.meters).length} มิเตอร์${r.bad?' · ข้าม '+r.bad:''}`:'อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง';};
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('paste').value=(await f.text()).slice(0,2e6);$('pasteGo').click();};
+$('demoGo').onclick=()=>{load(demo(),'demo');location.hash='overview';};
+$('gwUrl').value=store.get('gwUrl','');$('gwMeters').value=store.get('gwMeters','10000002');
+$('gwGo').onclick=async()=>{const url=$('gwUrl').value.replace(/\/+$/,''),key=$('gwKey').value.trim(),ids=$('gwMeters').value.split(',').map(s=>s.trim()).filter(Boolean);
+ store.set('gwUrl',url);store.set('gwMeters',ids.join(','));const msg=$('gwMsg');if(!url||!key||!ids.length){msg.textContent='ใส่ที่อยู่ API Key และเลขมิเตอร์';return;}
+ msg.textContent='กำลังดึงข้อมูล…';const end=new Date(),start=new Date(end-31*D),out=[];
+ try{for(const id of ids){const pts={};for(const [f,agg] of [['total','max'],['flow','avg'],['battery','avg'],['rssi','avg'],['temp','avg'],['magnet','max'],['leak','max'],['burst','max'],['lowbat','max']]){
+   const r=await fetch(`${url}/api/v1/history?point=SMCV4-${encodeURIComponent(id)}.${f}&start=${start.toISOString()}&end=${end.toISOString()}&interval=15m&agg=${agg}`,{headers:{'X-API-Key':key}});
+   if(r.status===404)continue;if(!r.ok)throw new Error(f+': HTTP '+r.status);const j=await r.json();for(const p of j.data||[])(pts[p.ts]=pts[p.ts]||{})[f]=p.value;}
+  for(const ts in pts){const p=pts[ts];if(p.total==null)continue;out.push({meterId:id,ts,total:p.total,flow:p.flow,battery:p.battery,rssi:p.rssi,temp:p.temp,alarm:{magnet:!!p.magnet,leak:!!p.leak,burst:!!p.burst,lowBattery:!!p.lowbat}});}}
+  const savedUnit=S.unit;S.unit=1;const r=load(out,'gateway');S.unit=savedUnit;msg.textContent=Object.keys(r.meters).length?`ได้ ${out.length} จุด จาก ${ids.length} มิเตอร์`:'Gateway ตอบกลับแต่ยังไม่มีข้อมูล';
+  if(Object.keys(r.meters).length)location.hash='overview';
+ }catch(e){msg.textContent='เชื่อมไม่ได้: '+e.message+' (ตรวจที่อยู่ API Key และ cors ใน config)';}};
+load(demo(),'demo');route();
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,200);});
+}
+</script>
+</body>
+</html>
