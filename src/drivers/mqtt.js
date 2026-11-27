@@ -54,7 +54,8 @@ class MqttDriver {
       try { data = JSON.parse(text); } catch (_) { data = text; }
       for (const tag of list) {
         const v = coerce(typeof data === 'object' ? pick(data, tag.jsonPath) : data, tag);
-        if (v !== undefined) this.store.update(tag.id, v, 'good');
+        // ignoreZero: DCC sends 0 when it could not read the meter; keep the last good value
+        if (v !== undefined && !(tag.ignoreZero && v === 0)) this.store.update(tag.id, v, 'good');
       }
       this.health.ok(Date.now() - t0);
     });
