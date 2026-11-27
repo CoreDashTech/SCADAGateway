@@ -1,0 +1,52 @@
+name: CoreDash Water · เก็บข้อมูลมิเตอร์ SMCV4 จาก Drago MQTT
+
+# ทุกชั่วโมง ฟังข้อความ drago/dcc/+/shadow/update 55 นาที แล้วบันทึกลง water/data/latest.json
+# ต้องตั้ง Settings → Secrets and variables → Actions → New repository secret: DRAGO_MQTT_PASSWORD
+on:
+  schedule:
+    - cron: '2 * * * *'
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: 'ฟังกี่นาที'
+        default: '55'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: water-mqtt
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: ติดตั้ง mqtt
+        run: |
+          mkdir -p /tmp/mq && cd /tmp/mq && npm init -y >/dev/null && npm install --ignore-scripts --no-audit --no-fund mqtt@5.16.1
+          cp -r /tmp/mq/node_modules "$GITHUB_WORKSPACE/node_modules"
+      - name: ฟังข้อความจาก broker
+        id: collect
+        env:
+          DRAGO_MQTT_PASSWORD: ${{ secrets.DRAGO_MQTT_PASSWORD }}
+          LISTEN_MIN: ${{ github.event.inputs.minutes || '55' }}
+        run: node scripts/water-mqtt-collect.mjs
+      - name: บันทึกเข้า repo
+        if: always()
+        run: |
+          git config user.name "coredash-water-bot"
+          git config user.email "water-bot@users.noreply.github.com"
+          git add water/data/latest.json
+          if git diff --cached --quiet; then echo "ไม่มีข้อมูลใหม่"; exit 0; fi
+          git commit -m "water: SMCV4 data +${{ steps.collect.outputs.added || 0 }} messages"
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep $((i*7))
+          done
+          exit 1
