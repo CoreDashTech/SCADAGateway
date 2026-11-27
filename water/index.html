@@ -29,6 +29,7 @@ h1{font-size:clamp(22px,2.6vw,30px)}h2{font-size:19px}h3{font-size:16px}
 .nav a:hover{background:rgba(255,255,255,.06);color:#fff}
 .nav a.on{background:rgba(231,207,147,.14);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
 .nav svg{width:18px;height:18px;flex:none}
+.tools{display:flex;align-items:center;justify-content:space-between;gap:8px}.tools .home{display:inline-flex;align-items:center;gap:4px;color:#c8d2e6;text-decoration:none;font-size:13.5px;font-weight:600;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.14);min-height:36px}.tools .home:hover{color:#fff;border-color:var(--gold2)}.tools .home svg{width:15px;height:15px}.lang{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:8px;overflow:hidden}.lang a{color:#c8d2e6;text-decoration:none;font-size:12.5px;font-weight:700;padding:0 11px;min-height:36px;display:inline-flex;align-items:center}.lang a.on{background:var(--gold2);color:var(--navy)}
 .side .src{margin-top:auto;font-size:12.5px;color:#9fb0cf;border-top:1px solid rgba(255,255,255,.1);padding-top:12px}
 .side .src b{color:#fff}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
@@ -93,6 +94,7 @@ pre{background:#f4f1e8;border:1px solid var(--line);border-radius:8px;padding:10
 <div class="app">
  <aside class="side">
   <div class="logo"><i>C</i><div>CoreDash Water<small>SMCV4 · Clamp-on DCC</small></div></div>
+  <div class="tools"><a class="home" id="homeBtn" href="../"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>หน้าหลัก</a><span class="lang" id="langSeg"><a href="?lang=th" data-l="th">TH</a><a href="?lang=en" data-l="en">EN</a></span></div>
   <nav class="nav" id="nav">
    <a href="#overview" data-p="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-8 9 8M5 10v10h14V10"/></svg>ภาพรวม</a>
    <a href="#usage" data-p="usage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>ช่วงเวลาที่ใช้น้ำ</a>
@@ -192,11 +194,77 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const store={get(k,d){try{const v=localStorage.getItem('cdw.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('cdw.'+k,JSON.stringify(v))}catch(e){}}};
 const S={days:30,meter:'ALL',src:'demo',price:store.get('price',10.5),unit:store.get('unit2',0.001),leakTh:store.get('leakTh',5),map:store.get('map',{}),meters:{},raw:[]};
 const H=36e5,D=864e5,Q=9e5;
-const fmt=(v,d=1)=>v==null||!isFinite(v)?'—':v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt=(v,d=1)=>v==null||!isFinite(v)?'—':v.toLocaleString(LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
 const dkey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-const dlab=t=>new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'});
-const tlab=t=>new Date(t).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-const WD=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+const dlab=t=>new Date(t).toLocaleDateString(LOC,{day:'numeric',month:'short'});
+const tlab=t=>new Date(t).toLocaleString(LOC,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+/* ---------- language TH / EN ---------- */
+const LANG=(()=>{let q=null;try{q=new URLSearchParams(location.search).get('lang')}catch(e){}if(q==='en'||q==='th'){store.set('lang',q);return q}return store.get('lang','th')==='en'?'en':'th'})();
+const LOC=LANG==='en'?'en-GB':'th-TH';
+const WDF={'อาทิตย์':'Sunday','จันทร์':'Monday','อังคาร':'Tuesday','พุธ':'Wednesday','พฤหัสบดี':'Thursday','ศุกร์':'Friday','เสาร์':'Saturday'};
+const EN_RX=[
+ [/วันในสัปดาห์ที่ใช้มากสุดคือวัน(อาทิตย์|จันทร์|อังคาร|พุธ|พฤหัสบดี|ศุกร์|เสาร์)/g,(m,d)=>'busiest weekday: '+WDF[d]],
+ [/ใน (\d+) คืนล่าสุดมีน้ำไหลช่วงตี 2–4 เกิน ([\d.,]+) ลิตร\/ชม\. ควรตรวจก๊อกและท่อ/g,'of the last $1 nights had flow at 02:00–04:00 above $2 L/h. Check taps and pipes'],
+ [/ช่วงตี 2–4 น้ำไหลต่ำกว่า ([\d.,]+) ลิตร\/ชม\. เกือบทุกคืน/g,'Flow at 02:00–04:00 stayed below $1 L/h on almost every night'],
+ [/คิดเป็น ([\d.,]+)% ของทั้งช่วง/g,'$1% of the period'],
+ [/(\d+) วันล่าสุด · แท่งสีทอง = วันนี้ \(ยังไม่ครบวัน\) · รวม ([\d.,]+) ลบ\.ม\./g,'Last $1 days · gold bar = today (in progress) · total $2 m³'],
+ [/(\d+) วันล่าสุด ไม่นับวันนี้/g,'last $1 days, excluding today'],
+ [/ได้ (\d+) จุด จาก (\d+) มิเตอร์/g,'Got $1 points from $2 meters'],[/เพิ่ม (\d+) ข้อความ Drago/g,'Added $1 Drago messages'],[/อ่านได้ (\d+) ข้อความ/g,'Read $1 messages'],[/ข้าม (\d+)/g,'skipped $1'],
+ [/ล่าสุด มิเตอร์ (\S+) เมื่อ/g,'latest: meter $1 at'],
+ [/(\d+) มิเตอร์/g,'$1 meters'],[/มิเตอร์ (\d+)/g,'Meter $1'],[/^มิเตอร์$/g,'Meters'],[/(\d+) ข้อความ/g,'$1 messages'],[/(\d+) จุด/g,'$1 points'],
+ [/^(\d+) วัน$/g,'$1 days'],[/(\d+) วัน\b/g,'$1 days']
+];
+const EN_TX={
+ 'ภาพรวมการใช้น้ำ':'Water usage overview','ภาพรวม':'Overview','ช่วงเวลาที่ใช้น้ำ':'Usage by time','เหตุการณ์และแจ้งเตือน':'Events & alerts','เหตุการณ์':'Events','แหล่งข้อมูลและการตั้งค่า':'Data sources & settings','แหล่งข้อมูล':'Data sources',
+ 'กำลังแสดง':'Showing ','ข้อมูลตัวอย่าง':'sample data','(จำลองรูปแบบส่งทุก 15 นาที) · ไปที่':' (simulated 15-minute reports) · go to','เพื่อเชื่อม Gateway หรือวาง JSON จริงจาก MQTT':'to connect the Gateway or paste real JSON from MQTT',
+ 'ใช้น้ำวันนี้':'Used today','ใช้น้ำเดือนนี้':'Used this month','ค่าน้ำโดยประมาณ (เดือนนี้)':'Estimated bill (this month)','เฉลี่ยต่อวัน':'Daily average','มิเตอร์ออนไลน์':'Meters online',
+ 'ลิตร เทียบเมื่อวานเวลาเดียวกัน':'L vs. yesterday at the same time','% เทียบช่วงเดียวกันเดือนก่อน':'% vs. the same period last month','ยังไม่มีเดือนก่อนให้เทียบ':'No previous month to compare yet','รายการต้องตรวจสอบ':'items need attention','ปกติทุกเครื่อง':'All meters normal',
+ 'ปริมาณน้ำรายวัน':'Daily consumption','สิ่งที่ควรรู้':'Key insights','สรุปจากข้อมูลอัตโนมัติ':'Generated automatically from the data','รูปแบบการใช้ 24 ชั่วโมง':'24-hour usage pattern','วันนี้เทียบกับค่าเฉลี่ยช่วงที่เลือก (ลิตรต่อ 15 นาที)':'Today vs. the average of the selected range (litres per 15 min)',
+ 'สัดส่วนตามช่วงเวลา':'Share by time of day','เช้า 05–09 · กลางวัน 09–17 · เย็น 17–22 · กลางคืน 22–05':'Morning 05–09 · Day 09–17 · Evening 17–22 · Night 22–05',
+ 'ชั่วโมงที่ใช้น้ำมากที่สุด':'Peak hour','วันที่ใช้มากที่สุด':'Peak day','ประมาณการทั้งเดือน':'Month forecast','ถ้าใช้ในอัตราเดียวกับที่ผ่านมาของเดือนนี้':'at this month’s rate so far','ไม่พบสัญญาณน้ำรั่ว':'No sign of leaks','สงสัยน้ำรั่ว':'Possible leak',
+ 'ใช้น้ำวันไหน เวลาไหน':'Which days and hours water is used','ค่าเฉลี่ยลิตรต่อชั่วโมง แยกตามวันในสัปดาห์และชั่วโมง ยิ่งเข้มยิ่งใช้มาก':'Average litres per hour by weekday and hour. Darker means more use','น้อย':'Low','มาก':'High','สูงสุด':'max',
+ 'ปริมาณรายชั่วโมง (ช่วงที่เลือก)':'Hourly consumption (selected range)','รวมทุกวัน แสดงชั่วโมงที่ใช้น้ำสูงสุด':'All days combined, peak hour highlighted','การไหลช่วงกลางคืน 02:00–04:00':'Night flow 02:00–04:00','ถ้าไม่เป็นศูนย์ติดต่อกันหลายคืน มักเป็นน้ำรั่วหรือก๊อกปิดไม่สนิท':'Non-zero for several nights in a row usually means a leak or a dripping tap',
+ 'มิเตอร์ทั้งหมด':'All meters','คลิกแถวเพื่อดูมิเตอร์นั้นในหน้าภาพรวม · ออนไลน์ = รายงานภายใน 45 นาที':'Click a row to open that meter in the overview · online = reported within 45 min',
+ 'ค่าสะสม (ม³)':'Totalizer (m³)','วันนี้ (ลิตร)':'Today (L)','14 วัน':'14 days','รายงานล่าสุด':'Last report','ไหล (ม³/ชม.)':'Flow (m³/h)',
+ 'แม่เหล็ก · น้ำรั่ว · ท่อแตก · ไหลย้อน · แบตเตอรี่ต่ำ · ขาดการรายงาน':'Magnet · leak · burst · reverse flow · low battery · missed reports','ข้อความล่าสุด':'Latest messages','ค่าที่อ่านได้ต่อรอบรายงาน (15 นาที)':'Values per report cycle (15 min)',
+ 'ไม่มีเหตุการณ์ผิดปกติ':'No abnormal events','ยังไม่หาย':'ongoing','เริ่ม':'Start','สิ้นสุด':'End','นาน':'Duration',
+ 'ตรวจพบแม่เหล็ก':'Magnet detected','ถูกงัดแงะ':'Tampered','ท่อแตก':'Burst','น้ำไหลย้อน':'Reverse flow','แบตเตอรี่ต่ำ':'Low battery','ไม่มีน้ำในท่อ':'Empty pipe','ไหลเกินพิกัด':'Over-range flow','อ่านค่ามิเตอร์ไม่ได้':'Meter read failed','ขาดการรายงาน':'Missed reports','ปกติ':'Normal',
+ 'รับสดจาก MQTT (WebSocket)':'Live from MQTT (WebSocket)','เบราว์เซอร์ต่อ broker ผ่าน WebSocket แล้วรับข้อความ':'The browser connects to the broker over WebSocket and receives',
+ 'ทุกมิเตอร์ เลขมิเตอร์มาจาก V4MID ในข้อความเอง · ข้อมูลที่รับได้เก็บไว้ในเครื่องนี้ · รหัสผ่านไม่ถูกส่งไปที่อื่นนอกจาก broker':'from every meter. Meter IDs come from V4MID in each message · received data is kept on this device · the password goes only to the broker',
+ 'ที่อยู่ WebSocket':'WebSocket address','เชื่อมต่อ':'Connect','หยุด':'Stop','จำรหัสและต่ออัตโนมัติในเครื่องนี้':'Remember password and auto-connect on this device','ล้างข้อมูลที่เก็บไว้':'Clear stored data','ยังไม่เชื่อมต่อ':'Not connected',
+ 'เชื่อม CoreDash Gateway (ใช้งานจริง)':'Connect CoreDash Gateway (production)','Gateway รับข้อความจาก Drago MQTT ทุก 15 นาที เก็บประวัติ แล้วให้หน้านี้ดึงผ่าน /api/v1 รหัสผ่าน MQTT อยู่ที่ Gateway เท่านั้น':'The Gateway receives Drago MQTT messages every 15 minutes, keeps history and serves this page via /api/v1. The MQTT password stays on the Gateway only',
+ 'ที่อยู่ Gateway':'Gateway address','เลขมิเตอร์ (คั่นด้วย ,)':'Meter IDs (comma-separated)','ดึงข้อมูลจาก Gateway':'Fetch from Gateway',
+ 'วาง JSON / นำเข้าไฟล์':'Paste JSON / import file','คัดลอกข้อความจาก MQTTX มาวางได้เลย (หลายข้อความก็ได้) หรือไฟล์ Export จาก MQTTX / .jsonl · ข้อความรูปแบบ Drago จะถูกเก็บรวมกับข้อมูลสดในเครื่องนี้':'Paste messages copied from MQTTX (several at once is fine), or an MQTTX export / .jsonl file · Drago-format messages are merged with live data on this device',
+ 'ใช้ข้อมูลนี้':'Use this data','เลือกไฟล์':'Choose file','การจับคู่ฟิลด์':'Field mapping','เว้นว่างให้ระบบเดาเอง ใส่ชื่อฟิลด์ (รองรับ a.b) ถ้าเดาไม่ตรง':'Leave blank to auto-detect; enter a field name (a.b supported) if detection is wrong','อัตโนมัติ':'auto',
+ 'ตั้งค่าการแสดงผล':'Display settings','หน่วยของค่าสะสมในข้อความ':'Totalizer unit in messages','ลิตร (L) · ค่าเริ่มต้นของ SMCV4 V4TotalVolume':'Litres (L) · SMCV4 V4TotalVolume default','ลูกบาศก์เมตร (m³)':'Cubic metres (m³)',
+ 'ค่าน้ำ (บาท/ลบ.ม.)':'Water price (THB/m³)','เกณฑ์สงสัยรั่วกลางคืน (ลิตร/ชม.)':'Night leak threshold (L/h)','กลับไปใช้ข้อมูลตัวอย่าง':'Back to sample data',
+ 'เลขมิเตอร์':'Meter ID','เวลา':'Time','ค่าสะสม':'Totalizer','ไหลย้อนสะสม':'Reverse total','อัตราการไหล':'Flow rate','แบตเตอรี่':'Battery','แบต':'Batt.','สัญญาณ':'Signal','อุณหภูมิ':'Temp.','สถานะ/แจ้งเตือน':'Status/alarm','สถานะ':'Status',
+ 'ทุกมิเตอร์':'All meters','ข้อมูลล่าสุด':'latest data','รายงานทุก':'reports every','เลือกมิเตอร์':'Select meter','มิเตอร์':'Meter',
+ 'ข้อมูลจริง · เก็บในเครื่องนี้':'Real data · stored on this device','MQTT สด':'MQTT live','ออนไลน์':'online','ออฟไลน์':'offline','ผิดพลาด':'error','JSON ที่นำเข้า':'Imported JSON',
+ 'รอข้อความ':'waiting for','(ทุก 15 นาที)':'(every 15 min)','ในเครื่อง':'on device','ล่าสุด':'latest',
+ 'กำลังเชื่อมต่อ…':'Connecting…','เชื่อมต่อได้ แต่ broker ไม่ให้ subscribe':'Connected, but the broker refused the subscription to','เชื่อมต่อไม่ได้':'Cannot connect','ตรวจที่อยู่ WebSocket (port/path) และรหัสผ่าน':'check the WebSocket address (port/path) and password',
+ 'ขาดการเชื่อมต่อ':'Disconnected','กำลังลองใหม่ทุก 5 วินาที (ถ้าไม่หาย broker อาจไม่เปิด WebSocket ที่ที่อยู่นี้)':'retrying every 5 seconds (if it persists, the broker may not offer WebSocket at this address)',
+ 'หน้านี้เป็น https ต้องใช้':'This page is https; use','(WebSocket แบบเข้ารหัส) เท่านั้น':'(encrypted WebSocket) only','โหลดไลบรารี MQTT ไม่ได้':'Could not load the MQTT library','หยุดแล้ว':'Stopped','ล้างข้อมูลในเครื่องแล้ว':'Stored data cleared',
+ 'รวมในเครื่อง':'stored total','อ่านไม่ได้: ไม่พบฟิลด์เวลาหรือค่าสะสม ลองกำหนดชื่อฟิลด์ด้านล่าง':'Could not read: no time or totalizer field found. Try the field mapping below',
+ 'ใส่ที่อยู่ API Key และเลขมิเตอร์':'Enter the address, API key and meter IDs','กำลังดึงข้อมูล…':'Fetching…','Gateway ตอบกลับแต่ยังไม่มีข้อมูล':'Gateway replied but has no data yet','เชื่อมไม่ได้':'Cannot connect','(ตรวจที่อยู่ API Key และ cors ใน config)':'(check the address, API key and cors in config)',
+ 'ยังไม่มีข้อมูล':'No data yet','วันนี้':'Today','เฉลี่ย':'Average','เช้า':'Morning','กลางวัน':'Day','เย็น':'Evening','กลางคืน':'Night',
+ 'บาท/ลบ.ม.':'THB/m³','ลิตร/ชม. (ต่ำสุด)':'L/h (minimum)','ลิตร/ชม.':'L/h','ลบ.ม.':'m³','ม³/ชม.':'m³/h','ม³':'m³','ลิตร':'L','ชม.':'h','นาที':'min',
+ 'หน้าหลัก':'Home',
+ 'วางข้อความจาก MQTTX ได้ทั้งก้อน (topic drago/dcc/…/shadow/update) เช่น {"state":{"reported":{"V4MID":"69090014","V4Epoch":1795798140,"V4TotalVolume":10426,"V4Flowrate":0,"V4Vbat":3070,"DccTemp":30,"MODEM":{"RSSI":23}}}} · หรือไฟล์ Export จาก MQTTX (.json)':'Paste whole MQTTX messages (topic drago/dcc/…/shadow/update), e.g. {"state":{"reported":{"V4MID":"69090014","V4Epoch":1795798140,"V4TotalVolume":10426,"V4Flowrate":0,"V4Vbat":3070,"DccTemp":30,"MODEM":{"RSSI":23}}}} · or an MQTTX export file (.json)'
+};
+const EN_KEYS=Object.keys(EN_TX).sort((a,b)=>b.length-a.length);
+function tr(s){if(LANG!=='en'||typeof s!=='string'||!/[฀-๿]/.test(s))return s;
+ for(const [a,b] of EN_RX)s=s.replace(a,b);for(const k of EN_KEYS)if(s.includes(k))s=s.split(k).join(EN_TX[k]);return s;}
+function trAny(v){return typeof v==='string'?tr(v):Array.isArray(v)?v.map(trAny):v&&typeof v==='object'&&typeof v.text==='string'?Object.assign(v,{text:tr(v.text)}):v;}
+function trNode(n){if(n.nodeType===3){if(n.parentNode&&n.parentNode.closest&&n.parentNode.closest('script,style'))return;const t=tr(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t;return;}
+ if(n.nodeType!==1||n.matches('script,style'))return;for(const a of ['placeholder','title','aria-label']){const v=n.getAttribute(a);if(v){const t=tr(v);if(t!==v)n.setAttribute(a,t);}}
+ const w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);let x;while(x=w.nextNode())if(x!==n)trNode(x);}
+function trChart(cfg){if(LANG!=='en')return cfg;const d=cfg.data||{};if(d.labels)d.labels=trAny(d.labels);(d.datasets||[]).forEach(s=>{if(s.label)s.label=tr(s.label)});
+ const wrap=o=>{if(!o||typeof o!=='object')return;for(const k in o){const v=o[k];if(typeof v==='function')o[k]=function(...a){return trAny(v.apply(this,a))};else if(typeof v==='string')o[k]=tr(v);else if(v&&typeof v==='object'&&!(v instanceof HTMLElement))wrap(v);}};wrap(cfg.options);return cfg;}
+if(LANG==='en'){document.documentElement.lang='en';new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')trNode(m.target);else m.addedNodes.forEach(trNode);if(m.type==='attributes')trNode(m.target);}}).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});trNode(document.body);}
+(()=>{const a=$('langSeg');if(!a)return;a.querySelectorAll('a').forEach(x=>{x.classList.toggle('on',x.dataset.l===LANG);x.onclick=e=>{e.preventDefault();store.set('lang',x.dataset.l);const u=new URL(location.href);u.searchParams.set('lang',x.dataset.l);location.href=u.toString();};});
+ $('homeBtn').href=LANG==='en'?'../en.html':'../';})();
+const WD=LANG==='en'?['Sun','Mon','Tue','Wed','Thu','Fri','Sat']:['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 
 /* ---------- field detection ---------- */
 const FIELDS={id:['meterid','meter_id','meter','devid','deviceid','device_id','deveui','sn','serial','id','addr'],ts:['ts','time','timestamp','datetime','date','t','reporttime'],
@@ -279,7 +347,7 @@ function events(){const ev=[];for(const id in S.meters){const a=S.meters[id];let
 /* ---------- render ---------- */
 Chart.defaults.font.family='Sarabun, system-ui, sans-serif';Chart.defaults.font.size=12.5;Chart.defaults.color='#6b7385';Chart.defaults.borderColor='#ece7da';
 const charts={};
-function chart(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart($(id),Object.assign({options:{}},cfg));}
+function chart(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart($(id),trChart(Object.assign({options:{}},cfg)));}
 const base=(y)=>({responsive:true,maintainAspectRatio:false,animation:{duration:400},plugins:{legend:{display:false},tooltip:{backgroundColor:'#13233f',padding:10,titleFont:{weight:'700'}}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkipPadding:12}},y:{beginAtZero:true,title:{display:!!y,text:y},grid:{color:'#efeadf'}}}});
 const MCOL=['#1f6fb2','#b8892b','#2f8a5b','#7a4fb0','#c0563c','#3b8c96'];
 function render(){
@@ -340,7 +408,7 @@ function render(){
 }
 
 /* ---------- pages / controls ---------- */
-const TT={overview:'ภาพรวมการใช้น้ำ',usage:'ช่วงเวลาที่ใช้น้ำ',meters:'มิเตอร์',events:'เหตุการณ์และแจ้งเตือน',data:'แหล่งข้อมูลและการตั้งค่า'};
+const TT0={overview:'ภาพรวมการใช้น้ำ',usage:'ช่วงเวลาที่ใช้น้ำ',meters:'มิเตอร์',events:'เหตุการณ์และแจ้งเตือน',data:'แหล่งข้อมูลและการตั้งค่า'};const TT=Object.fromEntries(Object.entries(TT0).map(([k,v])=>[k,tr(v)]));
 function route(){const p=(location.hash.slice(1)||'overview');const pg=TT[p]?p:'overview';document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+pg));document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===pg));$('title').textContent=TT[pg];requestAnimationFrame(render);}
 addEventListener('hashchange',route);
 $('meterSel').onchange=e=>{S.meter=e.target.value;render();};
