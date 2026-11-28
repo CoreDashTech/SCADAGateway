@@ -85,14 +85,21 @@ async function main() {
   const url = process.env.DRAGO_MQTT_URL || 'mqtt://mqtt-broker.dragodssplus.com:1883';
   const topic = process.env.WATER_TOPIC || 'drago/dcc/+/shadow/update';
   const listenMs = Number(process.env.LISTEN_MIN || 55) * 60e3;
-  let got = 0, connected = false;
+  let got = 0, connected = false, lastErr = '', subOk = null;
   const c = mqtt.connect(url, {
     username: process.env.DRAGO_MQTT_USER || 'drago', password: pass,
     clientId: 'coredash-water-collect-' + Math.random().toString(16).slice(2, 8),
     protocolVersion: 4, reconnectPeriod: 5000, connectTimeout: 15000, clean: true
   });
-  c.on('connect', () => { connected = true; console.log('connected, subscribing', topic); c.subscribe(topic, { qos: 0 }); });
-  c.on('error', (e) => console.error('mqtt:', e.message));
+  c.on('connect', () => {
+    connected = true; console.log('connected, subscribing', topic);
+    c.subscribe(topic, { qos: 0 }, (err, granted) => {
+      subOk = !err && !(granted && granted[0] && granted[0].qos === 128);
+      console.log(subOk ? 'subscribed OK' : '::error::broker refused subscription to ' + topic);
+    });
+  });
+  c.on('close', () => { if (!connected) console.log('connection closed before CONNACK'); });
+  c.on('error', (e) => { lastErr = e.message; console.error('::warning::mqtt error: ' + e.message); });
   c.on('message', (tp, pl) => {
     let j; try { j = JSON.parse(pl.toString()); } catch (_) { return; }
     const r = normalize(tp, j); if (!r) return;
@@ -102,7 +109,10 @@ async function main() {
   });
   const finish = () => {
     c.end(true);
-    const n = save(records);
+    // ไม่เขียนไฟล์ถ้าไม่มีข้อความใหม่ (กัน commit ว่างทุกชั่วโมง)
+    const n = got ? save(records) : records.length;
+    if (!connected) console.log(`::error::could not connect to ${url} as ${process.env.DRAGO_MQTT_USER || 'drago'}: ${lastErr || 'no CONNACK (blocked port/firewall?)'}`);
+    else if (!got) console.log(`::warning::connected (subscribe ${subOk === false ? 'REFUSED' : 'ok'}) but no messages on ${topic} in ${listenMs / 60e3} min`);
     console.log(`received ${got} messages, ${n} records stored (was ${before})`);
     if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `added=${got}\nrecords=${n}\n`);
     process.exit(connected ? 0 : 1);
